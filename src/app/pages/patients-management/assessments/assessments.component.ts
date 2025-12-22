@@ -63,7 +63,7 @@ export class AssessmentsComponent implements OnInit {
   isVisible = false;
   newUrl : URL;
   modalData : any = '';
-  statusFilter: string = '';
+  statusFilter = '';
   public pageInfo: PageInfo;
   public onlyMyAssessments = (localStorage.getItem('onlyMyAssessmentsPatients') === 'true');
 
