@@ -72,17 +72,17 @@ export class QuestionComponent {
       );
   }
 
-  private initAnswer(question: Question): void {
-    const answers = this.assessmentFormService.assessmentSnapshot?.questionnaireAssessment?.answers ?? [];
-    this.answer = answers.find((a) => a.question === question._id) ?? this.createBlankAnswer(question);
-  }
-
   onKeyPress = (evt: any) => {
     const charCode = evt.which || evt.keyCode;
     if ((charCode < 48 || charCode > 57) && charCode !== 46) {
       evt.preventDefault();
     }
   }
+  
+  private initAnswer(question: Question): void {
+    const answers = this.assessmentFormService.assessmentSnapshot?.questionnaireAssessment?.answers ?? [];
+    this.answer = answers.find((a) => a.question === question._id) ?? this.createBlankAnswer(question);
+  }  
 
   private createBlankAnswer(question: Question): Answer {
     const answer: Answer = {
