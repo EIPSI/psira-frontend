@@ -7,8 +7,10 @@ COPY . .
 
 RUN npm ci
 
-RUN npm run build:dev
+# RUN npm run build:dev
+ARG NG_CONF
 
+RUN npm run build:${NG_CONF}
 
 ### Production container build #####################################
 FROM nginx:mainline-alpine AS production
