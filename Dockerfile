@@ -1,4 +1,3 @@
-# ---- Build stage ----
 FROM node:14 AS builder
 WORKDIR /app
 
@@ -7,17 +6,15 @@ RUN npm ci
 
 COPY . .
 
-# build config: dev | staging | production
-ARG NG_CONF=production
+# build config: dev (default) | staging | production
+ARG NG_CONF=dev
 
-# (opcional) si tu "npm run env -s" lee FRONTEND_MAIL u otras vars:
 ARG FRONTEND_MAIL=""
 ENV FRONTEND_MAIL=${FRONTEND_MAIL}
 
 RUN npm run build:${NG_CONF}
 
-# ---- Runtime stage ----
-FROM nginx:mainline-alpine AS runtime
+FROM nginx:mainline-alpine AS production
 
 COPY ./.nginx/nginx.conf /etc/nginx/nginx.conf
 RUN rm -rf /usr/share/nginx/html/*
