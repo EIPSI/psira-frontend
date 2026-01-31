@@ -27,7 +27,15 @@ jobs:
         run: npm run lint:ts
 
       - name: Build
-        run: npm run build:dev
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "develop" ]; then
+            npm run build:staging
+          elif [ "${GITHUB_REF_NAME}" = "main" ]; then
+            npm run build:production
+          else
+            npm run build:dev
+          fi
+      #  run: npm run build:dev
           
       # - name: Run tests
       #   run: npm run test
