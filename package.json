@@ -6,7 +6,7 @@
     "ng": "ng",
     "build:dev": "npm run env -s && ng build --configuration=dev",
     "build:staging": "npm run env -s && ng build --configuration=staging",
-    "build:production": "npm run env -s && ng build --configuration=production"    
+    "build:production": "npm run env -s && ng build --configuration=production",    
     "start": "npm run env -s && ng serve",
     "start:dev": "npm run env -s && ng serve --configuration=dev",
     "serve:sw": "npm run build -s && npx http-server ./dist -p 4200",
