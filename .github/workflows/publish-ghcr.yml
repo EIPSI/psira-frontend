@@ -54,11 +54,33 @@ jobs:
           echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
 
 
+      - name: Compute build args
+        id: buildargs
+        shell: bash
+        run: |
+          # Default to production unless we're explicitly on develop
+          NG_CONF="production"
+
+          if [[ "${GITHUB_REF_TYPE}" == "branch" ]]; then
+            if [[ "${GITHUB_REF_NAME}" == "develop" ]]; then
+              NG_CONF="staging"
+            elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+              NG_CONF="production"
+            fi
+          elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            NG_CONF="production"
+          fi
+
+          echo "ng_conf=$NG_CONF" >> "$GITHUB_OUTPUT"
+
+
       - name: Build & Push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            NG_CONF=${{ steps.buildargs.outputs.ng_conf }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
