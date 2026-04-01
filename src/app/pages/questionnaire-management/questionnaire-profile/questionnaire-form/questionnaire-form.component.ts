@@ -86,6 +86,13 @@ export class QuestionnaireFormComponent {
     );
   }
 
+  public downloadTemplate(): void {
+    const link = document.createElement('a');
+    link.href = 'assets/questionnaire-template.xlsx';
+    link.download = 'questionnaire-template.xlsx';
+    link.click();
+  }
+
   public async initQuestionnaire(): Promise<void> {
     const data = this.activatedRoute.snapshot.queryParamMap.get('questionnaire');
     if (!data) return;
