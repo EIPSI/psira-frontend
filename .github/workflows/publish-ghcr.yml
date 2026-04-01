@@ -60,5 +60,7 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            NG_CONF=${{ steps.buildargs.outputs.ng_conf }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
