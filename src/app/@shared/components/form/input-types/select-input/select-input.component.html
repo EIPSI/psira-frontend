@@ -16,6 +16,7 @@
       [attr.autocomplete]="autoFill"
       [nzPlaceHolder]="field.description"
       [formControlName]="field.name"
+      [nzMode]="field.mode || 'default'"
       [ngClass]="{
         'has-error': inputIsValid() === false,
         'has-success': inputIsValid() === true

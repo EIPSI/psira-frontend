@@ -71,6 +71,9 @@ export class CreatePatientComponent implements OnInit {
         if (this.patient.birthDate) {
           this.patient.birthDate = decryptedData.birthDate.slice(0, 10);
         }
+        if (this.patient.departments) {
+          (this.patient as any).departmentIds = this.patient.departments.map((d: any) => d.id);
+        }
         this.populateForm = true;
       } else {
         this.inputMode = true;
@@ -163,18 +166,27 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private getDepartments(): void {
-    const filter = {
-      users: {
+    const filter: any = {};
+    if (!this.perms.isSuperAdmin()) {
+      filter.users = {
         id: {
           eq: JSON.parse(localStorage.getItem('user')).id,
         },
-      },
-    };
-    this.departmentsService.departments({ paging:{first: 50}, filter }).subscribe((response) => {
-      this.patientForm.groups[0].fields[6].options = response.data.departments.edges.map((e: any) => ({
+      };
+    }
+    this.departmentsService.departments({ paging: { first: 50 }, filter }).subscribe((response) => {
+      const options = response.data.departments.edges.map((e: any) => ({
         label: e.node.name,
         value: e.node.id,
       }));
+      const createFormField = this.patientForm.groups[0].fields.find((f) => f.name === 'departmentIds');
+      const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'departmentIds');
+      if (createFormField) {
+        createFormField.options = options;
+      }
+      if (updateFormField) {
+        updateFormField.options = options;
+      }
     });
   }
 }

@@ -17,6 +17,7 @@ export interface Field {
     | 'dateRange'
     | 'array'
     | 'file';
+  mode?: 'multiple' | 'tags' | 'default';
   children?: Field[];
   rows?: any;
   iconName?: string;

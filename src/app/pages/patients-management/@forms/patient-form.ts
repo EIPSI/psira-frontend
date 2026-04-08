@@ -83,13 +83,14 @@ const informationFields: Field[] = [
 ];
 
 const departmentsField: Field = {
-  value: '',
+  value: [],
   name: 'departmentIds',
   title: 'Department',
   label: 'Department',
   translationPath: 'forms.patients.department',
   description: 'Select Department',
-  type: 'checkBox',
+  type: 'select',
+  mode: 'multiple',
   validationMessage: 'please select Department',
   isRequired: false,
   options: [],
@@ -303,7 +304,7 @@ const getForm = (createMode: boolean): Form => {
       {
         title: 'Patient Information',
         translationPath: 'forms.patients.patientInformation',
-        fields: createMode ? [...informationFields, departmentsField] : informationFields,
+        fields: [...informationFields, departmentsField],
       },
       {
         title: 'Patient Address',
