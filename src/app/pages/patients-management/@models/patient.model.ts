@@ -26,6 +26,7 @@ export class PatientModel {
 
   public static updateData(json: any): Patient {
     const excludedProperties = [
+      'departments',
       'caseManagers',
       'informants',
       'updatedAt',
