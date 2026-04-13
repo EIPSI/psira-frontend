@@ -171,9 +171,20 @@ export class CreatePatientComponent implements OnInit {
       );
   }
 
+  private getAccessScope(): 'ALL' | 'DEPARTMENT' | 'ASSIGNED' {
+    if (this.perms.permissionsOnly(PermissionKey.VIEW_ALL_PATIENTS)) {
+      return 'ALL';
+    }
+    if (this.perms.permissionsOnly(PermissionKey.VIEW_DEPARTMENT_PATIENTS)) {
+      return 'DEPARTMENT';
+    }
+    return 'ASSIGNED';
+  }
+
   private getDepartments(): void {
+    const scope = this.getAccessScope();
     const filter: any = {};
-    if (!this.perms.isSuperAdmin()) {
+    if (scope !== 'ALL') {
       filter.users = {
         id: {
           eq: JSON.parse(localStorage.getItem('user')).id,
@@ -197,7 +208,24 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private getCaseManagers(): void {
-    this.usersService.getUsers({ paging: { first: 100 } }).subscribe((response) => {
+    const scope = this.getAccessScope();
+    const user = JSON.parse(localStorage.getItem('user'));
+    const filter: any = {};
+
+    if (scope === 'DEPARTMENT') {
+      const departmentIds = user.departments?.map((d: any) => d.id) || [];
+      filter.departments = {
+        id: {
+          in: departmentIds,
+        },
+      };
+    } else if (scope === 'ASSIGNED') {
+      filter.id = {
+        eq: user.id,
+      };
+    }
+
+    this.usersService.getUsers({ paging: { first: 100 }, filter }).subscribe((response) => {
       const options = response.data.users.edges.map((e: any) => ({
         label: [e.node.firstName, e.node.lastName].filter((n: any) => !!n).join(' '),
         value: e.node.id,
