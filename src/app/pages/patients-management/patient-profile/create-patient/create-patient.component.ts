@@ -75,10 +75,10 @@ export class CreatePatientComponent implements OnInit {
           this.patient.birthDate = decryptedData.birthDate.slice(0, 10);
         }
         if (this.patient.departments) {
-          (this.patient as any).departmentIds = this.patient.departments.map((d: any) => d.id);
+          this.patient.departmentIds = this.patient.departments.map((d: any) => d.id);
         }
         if (this.patient.caseManagers) {
-          (this.patient as any).caseManagerIds = this.patient.caseManagers.map((m: any) => m.id);
+          this.patient.caseManagerIds = this.patient.caseManagers.map((m: any) => m.id);
         }
         this.populateForm = true;
       } else {
@@ -122,9 +122,14 @@ export class CreatePatientComponent implements OnInit {
     this.populateForm = false;
     const emergencyContacts = patient.emergencyContacts;
     patient.emergencyContacts = undefined;
+
+    if (this.getAccessScope() === 'ASSIGNED') {
+      patient.caseManagerIds = [JSON.parse(localStorage.getItem('user')).id];
+    }
+
     this.loadingMessage = `Creating patient ${patient.firstName} ${patient.lastName}`;
     this.patientsService
-      .createPatient(patient)
+      .createPatient(PatientModel.updateData(patient))
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -150,7 +155,7 @@ export class CreatePatientComponent implements OnInit {
     this.loadingMessage = `Updating patient ${patient.firstName} ${patient.lastName}`;
     patient.emergencyContacts = undefined;
     this.patientsService
-      .updatePatient(patient)
+      .updatePatient(PatientModel.updateData(patient))
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -234,9 +239,11 @@ export class CreatePatientComponent implements OnInit {
       const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'caseManagerIds');
       if (createFormField) {
         createFormField.options = options;
+        createFormField.disabled = scope === 'ASSIGNED';
       }
       if (updateFormField) {
         updateFormField.options = options;
+        updateFormField.disabled = scope === 'ASSIGNED';
       }
     });
   }
