@@ -13,6 +13,7 @@ import { PermissionKey } from '@app/@shared/@types/permission';
 import { ErrorHandlerService } from '../../../../@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
 import { DepartmentsService } from '../../@services/departments.service';
+import { UsersService } from '@app/pages/user-management/@services/users.service';
 
 const CryptoJS = require('crypto-js');
 
@@ -40,6 +41,7 @@ export class CreatePatientComponent implements OnInit {
     private errorService: ErrorHandlerService,
     private activatedRoute: ActivatedRoute,
     private departmentsService: DepartmentsService,
+    private usersService: UsersService,
     private router: Router,
     public perms: AppPermissionsService
   ) {}
@@ -47,6 +49,7 @@ export class CreatePatientComponent implements OnInit {
   ngOnInit(): void {
     this.getPatientFromUrl();
     this.getDepartments();
+    this.getCaseManagers();
   }
 
   public submitForm(patientData: Patient): void {
@@ -73,6 +76,9 @@ export class CreatePatientComponent implements OnInit {
         }
         if (this.patient.departments) {
           (this.patient as any).departmentIds = this.patient.departments.map((d: any) => d.id);
+        }
+        if (this.patient.caseManagers) {
+          (this.patient as any).caseManagerIds = this.patient.caseManagers.map((m: any) => m.id);
         }
         this.populateForm = true;
       } else {
@@ -181,6 +187,23 @@ export class CreatePatientComponent implements OnInit {
       }));
       const createFormField = this.patientForm.groups[0].fields.find((f) => f.name === 'departmentIds');
       const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'departmentIds');
+      if (createFormField) {
+        createFormField.options = options;
+      }
+      if (updateFormField) {
+        updateFormField.options = options;
+      }
+    });
+  }
+
+  private getCaseManagers(): void {
+    this.usersService.getUsers({ paging: { first: 100 } }).subscribe((response) => {
+      const options = response.data.users.edges.map((e: any) => ({
+        label: [e.node.firstName, e.node.lastName].filter((n: any) => !!n).join(' '),
+        value: e.node.id,
+      }));
+      const createFormField = this.patientForm.groups[0].fields.find((f) => f.name === 'caseManagerIds');
+      const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'caseManagerIds');
       if (createFormField) {
         createFormField.options = options;
       }

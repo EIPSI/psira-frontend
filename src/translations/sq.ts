@@ -240,6 +240,7 @@ export default {
       birthDate: 'Data e Lindjes',
       gender: 'Gjinia',
       department: 'Departamenti',
+      caseManager: 'Menaxheri i Rastit',
       patientAddress: 'Adresa e Klientit',
       street: 'Emri i Rrugës',
       addressNumber: 'Numri i Hyrjes',

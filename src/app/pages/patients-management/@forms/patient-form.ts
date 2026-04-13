@@ -97,6 +97,21 @@ const departmentsField: Field = {
   span: 8,
 };
 
+const caseManagersField: Field = {
+  value: [],
+  name: 'caseManagerIds',
+  title: 'Case Manager',
+  label: 'Case Manager',
+  translationPath: 'forms.patients.caseManager',
+  description: 'Select Case Manager',
+  type: 'select',
+  mode: 'multiple',
+  validationMessage: 'please select Case Manager',
+  isRequired: false,
+  options: [],
+  span: 8,
+};
+
 const addressFields: Field[] = [
   {
     value: '',
@@ -304,7 +319,7 @@ const getForm = (createMode: boolean): Form => {
       {
         title: 'Patient Information',
         translationPath: 'forms.patients.patientInformation',
-        fields: [...informationFields, departmentsField],
+        fields: [...informationFields, departmentsField, caseManagersField],
       },
       {
         title: 'Patient Address',

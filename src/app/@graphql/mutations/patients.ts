@@ -63,6 +63,13 @@ const createPatient = gql`
         updatedAt
         deletedAt
       }
+      departments {
+        id
+        name
+        description
+        createdAt
+        updatedAt
+      }
       status {
         id
         name
@@ -137,6 +144,13 @@ const archiveOnePatient = gql`
         updatedAt
         deletedAt
       }
+      departments {
+        id
+        name
+        description
+        createdAt
+        updatedAt
+      }
       status {
         id
         name
@@ -210,6 +224,13 @@ const updatePatient = gql`
         createdAt
         updatedAt
         deletedAt
+      }
+      departments {
+        id
+        name
+        description
+        createdAt
+        updatedAt
       }
       status {
         id

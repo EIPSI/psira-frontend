@@ -234,6 +234,7 @@ export default {
       birthDate: 'Tarehe ya Kuzaliwa',
       gender: 'Jinsia',
       department: 'Idara',
+      caseManager: 'Muhudumu',
       patientAddress: 'Taarifa za Makazi',
       street: 'Jina la Mtaa',
       addressNumber: 'Namba ya Mtaa',

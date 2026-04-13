@@ -241,6 +241,7 @@ export default {
       birthDate: 'Geburtsdatum',
       gender: 'Geschlecht',
       department: 'Abteilung',
+      caseManager: 'Fallführende Person',
       patientAddress: 'Adresse',
       street: 'Strasse',
       addressNumber: 'Hausnummer',
