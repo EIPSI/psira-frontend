@@ -72,6 +72,13 @@ const getPatients = gql`
             updatedAt
             deletedAt
           }
+          departments {
+            id
+            name
+            description
+            createdAt
+            updatedAt
+          }
           status {
             id
             name
