@@ -1,5 +1,8 @@
 export enum PermissionKey {
   VIEW_PATIENTS = 'view patients',
+  VIEW_ALL_PATIENTS = 'view all patients',
+  VIEW_DEPARTMENT_PATIENTS = 'view department patients',
+  VIEW_ASSIGNED_PATIENTS = 'view assigned patients',
   MANAGE_PATIENTS = 'manage patients',
   DELETE_PATIENTS = 'delete patients',
 
