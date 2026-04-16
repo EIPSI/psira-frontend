@@ -43,7 +43,7 @@ export class CreateEmailTemplateComponent implements OnInit {
     name: '',
     subject: '',
     body: `<div><span style="background-color: transparent; font-size: 1rem;">Greetings!</span><br></div>
-    <div>MHIRA is sending you an assessment.&nbsp;<br></div>
+    <div>PSIRA is sending you an assessment.&nbsp;<br></div>
     <div><span style="background-color: transparent; font-size: 1rem;">Please click the link below to start the assessment!&nbsp;</span><br></div>
     <div><br></div>
     <a href="{{link}}" style="background-color:#007BFF; color: #fff; display: inline-block; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Go to assessment</a>
@@ -126,7 +126,7 @@ export class CreateEmailTemplateComponent implements OnInit {
         this.nzMessage.success(message, { nzDuration: 3000 });
       });
       message$.unsubscribe();
-      this.router.navigate(['/mhira/administration/email-templates'])
+      this.router.navigate(['/psira/administration/email-templates'])
     },
     (err) => {
       this.nzMessage.error(`${err}`, { nzDuration: 3000 });
@@ -141,7 +141,7 @@ export class CreateEmailTemplateComponent implements OnInit {
         this.nzMessage.success(message, { nzDuration: 3000 });
       });
       message$.unsubscribe();
-      this.router.navigate(['/mhira/administration/email-templates']);
+      this.router.navigate(['/psira/administration/email-templates']);
     },
     (err) => {
       this.nzMessage.error(`${err}`, { nzDuration: 3000 });
