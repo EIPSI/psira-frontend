@@ -23,7 +23,7 @@ function transformObjectToPath<T extends object | string>(
 }
 
 @Injectable({ providedIn: 'root' })
-export class MhiraTranslations extends GenericClass<typeof en>() {
+export class psiraTranslations extends GenericClass<typeof en>() {
   constructor() {
     super();
     Object.assign(this, transformObjectToPath('', en));
