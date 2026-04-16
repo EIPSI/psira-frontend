@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { MhiraTranslations } from '../../@core/mhira-translations';
+import { psiraTranslations } from '../../@core/psira-translations';
 import { Disclaimers } from '@app/pages/administration/@types/disclaimers';
 import { DisclaimersService } from '@app/pages/administration/@services/disclaimers.service';
 import { finalize } from 'rxjs/operators';
@@ -22,7 +22,7 @@ export class DashboardComponent implements OnInit {
   public isLoading = false;
 
   constructor(
-    public translations: MhiraTranslations,
+    public translations: psiraTranslations,
     private authService: AuthService,
     private disclaimersService: DisclaimersService,
     private errorService: ErrorHandlerService,
