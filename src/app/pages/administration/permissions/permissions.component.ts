@@ -91,7 +91,7 @@ export class PermissionsComponent implements OnInit {
       JSON.stringify(this.permissions[event.index]),
       environment.secretKey
     ).toString();
-    this.router.navigate(['/mhira/permissions/plan-permissions'], {
+    this.router.navigate(['/psira/permissions/plan-permissions'], {
       state: {
         title: `${this.permissions[event.index].name}`,
       },
