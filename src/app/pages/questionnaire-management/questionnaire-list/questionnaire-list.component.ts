@@ -88,7 +88,7 @@ export class QuestionnaireListComponent {
 
   public onSelect(questionnaire: FormattedQuestionnaireVersion): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(questionnaire), environment.secretKey).toString();
-    this.router.navigate(['/mhira/questionnaire-management/questionnaire-form'], {
+    this.router.navigate(['/psira/questionnaire-management/questionnaire-form'], {
       queryParams: {
         questionnaire: dataString,
       },
