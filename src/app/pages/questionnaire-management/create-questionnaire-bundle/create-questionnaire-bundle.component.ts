@@ -81,7 +81,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
           this.nzMessage.success(message, { nzDuration: 3000 });
         });
         message$.unsubscribe();
-        this.router.navigate(['/mhira/questionnaire-management/questionnaire-bundles-list']);
+        this.router.navigate(['/psira/questionnaire-management/questionnaire-bundles-list']);
       },
       (err) => {
         this.nzMessage.error(`${err}`, { nzDuration: 3000 });
@@ -98,7 +98,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
           this.nzMessage.success(message, { nzDuration: 3000 });
         });
         message$.unsubscribe();
-        this.router.navigate(['/mhira/questionnaire-management/questionnaire-bundles-list']);
+        this.router.navigate(['/psira/questionnaire-management/questionnaire-bundles-list']);
       },
       (err) => {
         this.nzMessage.error(`${err}`, { nzDuration: 3000 });
