@@ -139,7 +139,7 @@ export class PatientsListComponent {
 
   public onPatientSelect(patient: FormattedPatient): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(patient), environment.secretKey).toString();
-    this.router.navigate(['/mhira/case-management/profile'], {
+    this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
         profile: dataString,
       },
