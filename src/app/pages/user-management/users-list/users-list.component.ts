@@ -96,7 +96,7 @@ export class UsersListComponent {
 
   public onUserSelect(user: FormattedUser): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(user), environment.secretKey).toString();
-    this.router.navigate(['/mhira/user-management/user-form'], {
+    this.router.navigate(['/psira/user-management/user-form'], {
       queryParams: {
         user: dataString,
       },
