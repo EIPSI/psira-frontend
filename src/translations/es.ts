@@ -16,8 +16,8 @@ export default {
     scripts: 'Scripts',
   },
   dashboard: {
-    welcome: 'Bienvenido/a a MHIRA',
-    name: 'MHIRA',
+    welcome: 'Bienvenido/a a PSIRA',
+    name: 'PSIRA',
     header: 'Seleccione el informe que desea generar:',
   },
   assessments: {
