@@ -6,7 +6,7 @@ import { Answer } from '../@types/answer';
 import { AssessmentService } from '../../pages/assessment/@services/assessment.service';
 import { ErrorHandlerService } from '../../@shared/services/error-handler.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { psiraTranslations } from '../../@core/psira-translations';
+import { PsiraTranslations } from '../../@core/psira-translations';
 import { forkJoin } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { Disclaimers } from '@app/pages/administration/@types/disclaimers';
@@ -37,7 +37,7 @@ export class AssessmentOverviewComponent implements OnInit {
 
   constructor(
     public assessmentFormService: AssessmentFormService,
-    public translations: psiraTranslations,
+    public translations: PsiraTranslations,
     private disclaimersService: DisclaimersService,
     private cdr: ChangeDetectorRef,
     private assessmentService: AssessmentService,
