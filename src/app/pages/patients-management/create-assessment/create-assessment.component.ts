@@ -169,7 +169,7 @@ export class CreateAssessmentComponent implements OnInit {
   public goBack(patient: FormattedPatient): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
     console.log(this.patient);
-    this.router.navigate(['/mhira/case-management/profile'], {
+    this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
         profile: dataString,
       },
