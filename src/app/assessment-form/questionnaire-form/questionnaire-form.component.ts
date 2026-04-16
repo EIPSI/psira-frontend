@@ -9,7 +9,7 @@ import { Answer } from '../@types/answer';
 import { Question } from '../@types/question';
 import { SkipLogic } from '../skip-logic';
 import { ErrorHandlerService } from '../../@shared/services/error-handler.service';
-import { MhiraTranslations } from '../../@core/mhira-translations';
+import { psiraTranslations } from '../../@core/psira-translations';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -39,7 +39,7 @@ export class QuestionnaireFormComponent {
     private activtedRoute: ActivatedRoute,
     private assessmentFormService: AssessmentFormService,
     private errorService: ErrorHandlerService,
-    public translations: MhiraTranslations,
+    public translations: psiraTranslations,
     private modalService: NzModalService,
     private translate: TranslateService,
     private router: Router,
