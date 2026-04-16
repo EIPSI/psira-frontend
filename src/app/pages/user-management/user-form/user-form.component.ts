@@ -179,7 +179,7 @@ export class UserFormComponent implements OnInit {
       .deleteOneUser(deleteObject)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
-        () => this.router.navigate(['/mhira/user-management/users']),
+        () => this.router.navigate(['/psira/user-management/users']),
         (error) =>
           this.errorService.handleError(error, {
             prefix: `Unable to delete user "${user.firstName} ${user.lastName}"`,
@@ -337,7 +337,7 @@ export class UserFormComponent implements OnInit {
     this.populateForm = false;
     this.resetForm = false;
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
-    this.router.navigate(['/mhira/user-management/user-form'], {
+    this.router.navigate(['/psira/user-management/user-form'], {
       state: {
         title: `${this.user.firstName} ${this.user.lastName}`,
       },
