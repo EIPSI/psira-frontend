@@ -100,7 +100,7 @@ export class EmailTemplatesComponent implements OnInit {
   }: ActionArgs<any, ActionKey>): void {
     switch (action.key) {
       case ActionKey.EDIT:
-        this.router.navigate([`/mhira/administration/create-template/${assessmentAdministration.id}`])
+        this.router.navigate([`/psira/administration/create-template/${assessmentAdministration.id}`])
         return;
     }
   }
