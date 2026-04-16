@@ -83,14 +83,14 @@ const informationFields: Field[] = [
 ];
 
 const departmentsField: Field = {
-  value: [],
+  value: null, // 1. Cambiamos [] por null
   name: 'departmentIds',
   title: 'Department',
   label: 'Department',
   translationPath: 'forms.patients.department',
   description: 'Select Department',
   type: 'select',
-  mode: 'multiple',
+  // mode: 'multiple', // 2. BORRAMOS esta línea o la comentamos
   validationMessage: 'please select Department',
   isRequired: false,
   options: [],
@@ -98,14 +98,14 @@ const departmentsField: Field = {
 };
 
 const caseManagersField: Field = {
-  value: [],
+  value: null, // 3. Cambiamos [] por null
   name: 'caseManagerIds',
   title: 'Case Manager',
   label: 'Case Manager',
   translationPath: 'forms.patients.caseManager',
   description: 'Select Case Manager',
   type: 'select',
-  mode: 'multiple',
+  // mode: 'multiple', // 4. BORRAMOS esta línea o la comentamos
   validationMessage: 'please select Case Manager',
   isRequired: false,
   options: [],

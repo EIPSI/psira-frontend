@@ -230,7 +230,7 @@ export class CreatePatientComponent implements OnInit {
       };
     }
 
-    this.usersService.getUsers({ paging: { first: 100 }, filter }).subscribe((response) => {
+    this.usersService.getUsers({ paging: { first: 50 }, filter }).subscribe((response) => {
       const options = response.data.users.edges.map((e: any) => ({
         label: [e.node.firstName, e.node.lastName].filter((n: any) => !!n).join(' '),
         value: e.node.id,
