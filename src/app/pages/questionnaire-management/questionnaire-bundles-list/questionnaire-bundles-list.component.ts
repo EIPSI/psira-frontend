@@ -88,7 +88,7 @@ export class QuestionnaireBundlesListComponent implements OnInit {
     switch (action.key) {
       case ActionKey.EDIT:
         this.router.navigate([
-          `/mhira/questionnaire-management/create-questionnaire-bundle/${assessmentAdministration._id}`,
+          `/psira/questionnaire-management/create-questionnaire-bundle/${assessmentAdministration._id}`,
         ]);
         return;
 
