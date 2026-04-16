@@ -77,7 +77,7 @@ export class QuestionnaireFormComponent {
           this.isExisting ? 'Questionnaire updated successfully' : 'Questionnaire created successfully',
           { nzDuration: 3000 }
         );
-        this.router.navigate(['/mhira/questionnaire-management/questionnaire-list']);
+        this.router.navigate(['/psira/questionnaire-management/questionnaire-list']);
       },
       (error) =>
         this.errorService.handleError(error, {
