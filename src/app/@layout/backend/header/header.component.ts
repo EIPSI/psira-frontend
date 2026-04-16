@@ -66,7 +66,7 @@ export class HeaderComponent implements OnInit {
 
   editUserProfile() {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
-    this.router.navigate(['/mhira/user-management/user-form'], {
+    this.router.navigate(['/psira/user-management/user-form'], {
       state: {
         title: `${this.user.firstName} ${this.user.lastName}`,
       },
