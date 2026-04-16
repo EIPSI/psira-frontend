@@ -12,7 +12,7 @@ const appRoutes: Routes = [
     loadChildren: () => import('./assessment-form/assessment-form.module').then((m) => m.AssessmentFormModule),
   },
   {
-    path: 'mhira',
+    path: 'psira',
     canActivate: [AuthGuard],
     component: BackendLayoutComponent,
     loadChildren: () => import('./pages/pages.module').then((m) => m.PagesModule),
@@ -24,7 +24,7 @@ const appRoutes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'mhira',
+    redirectTo: 'psira',
     pathMatch: 'full',
   },
   {
