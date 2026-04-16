@@ -89,7 +89,7 @@ export class ReportsComponent implements OnInit {
 
   public onReportSelect(report: FormattedReport): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(report), environment.secretKey).toString();
-    this.router.navigate(['/mhira/administration/create-report'], {
+    this.router.navigate(['/psira/administration/create-report'], {
       queryParams: {
         report: dataString,
       },
@@ -112,7 +112,7 @@ export class ReportsComponent implements OnInit {
   }
 
   navigate() {
-    this.router.navigate(['/mhira/administration/create-report']);
+    this.router.navigate(['/psira/administration/create-report']);
   }
 
   private createSearchFilter(searchString: string): Array<{ [K in keyof Partial<Reports>]: {} }> {
