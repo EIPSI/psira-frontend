@@ -90,6 +90,9 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private createEmergencyContacts(patientId: number, contacts: Contact[]) {
+    if (!contacts || contacts.length === 0) {
+      return;
+    }
     this.isLoading = true;
     contacts.map((contact: Contact) => {
       contact.patientId = patientId;
@@ -205,9 +208,11 @@ export class CreatePatientComponent implements OnInit {
       const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'departmentIds');
       if (createFormField) {
         createFormField.options = options;
+        createFormField.disabled = scope === 'ASSIGNED';
       }
       if (updateFormField) {
         updateFormField.options = options;
+        updateFormField.disabled = scope === 'ASSIGNED';
       }
     });
   }
