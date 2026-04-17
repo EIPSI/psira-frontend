@@ -75,10 +75,10 @@ export class CreatePatientComponent implements OnInit {
           this.patient.birthDate = decryptedData.birthDate.slice(0, 10);
         }
         if (this.patient.departments) {
-          this.patient.departmentIds = this.patient.departments.map((d: any) => d.id);
+          this.patient.departmentIds = (this.patient.departments as any)[0]?.id;
         }
         if (this.patient.caseManagers) {
-          this.patient.caseManagerIds = this.patient.caseManagers.map((m: any) => m.id);
+          this.patient.caseManagerIds = (this.patient.caseManagers as any)[0]?.id;
         }
         this.populateForm = true;
       } else {
