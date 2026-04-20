@@ -90,7 +90,7 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private createEmergencyContacts(patientId: number, contacts: Contact[]) {
-    if (!contacts || contacts.length === 0) {
+    if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
       return;
     }
     this.isLoading = true;
