@@ -57,7 +57,7 @@ export class AppComponent implements OnInit {
         filter((key) => !!key),
         untilDestroyed(this)
       )
-      .subscribe((key) => this.titleService.setTitle(this.translateService.instant(key) + ' | MHIRA'));
+      .subscribe((key) => this.titleService.setTitle(this.translateService.instant(key) + ' | PSIRA'));
   }
 
   private initStoredLang() {

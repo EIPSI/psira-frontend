@@ -14,7 +14,7 @@ export const EnvironmentBase = {
   production: false,
   secretKey: 'hfsdjfhdufhiuegewurge8365746543785643785638276423874',
   hmr: false,
-  baseURL: 'https://dev-api.mhira.net/graphql',
+  baseURL: 'https://dev-api.psira.net/graphql',
   defaultLanguage: 'en-US',
   supportedLanguages: ['en-US', 'fr-FR'],
   email: true,

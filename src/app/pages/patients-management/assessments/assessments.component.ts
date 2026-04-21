@@ -193,13 +193,13 @@ export class AssessmentsComponent implements OnInit {
   }
 
   navigate() {
-    this.router.navigate(['/mhira/case-management/create-assessment']);
+    this.router.navigate(['/psira/case-management/create-assessment']);
   }
 
   public onPatientSelect(): void {
     console.log(this.patient);
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
-    this.router.navigate(['/mhira/case-management/create-assessment'], {
+    this.router.navigate(['/psira/case-management/create-assessment'], {
       queryParams: {
         profile: dataString,
       },
@@ -208,7 +208,7 @@ export class AssessmentsComponent implements OnInit {
 
   public onAssessmentSelect(assessment: FormattedAssessment): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(assessment), environment.secretKey).toString();
-    this.router.navigate(['/mhira/case-management/create-assessment'], {
+    this.router.navigate(['/psira/case-management/create-assessment'], {
       queryParams: {
         assessment: dataString,
       },

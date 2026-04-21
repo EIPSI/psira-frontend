@@ -24,7 +24,7 @@ import { PermissionGuard } from './permission.guard';
 import { TypescriptTranslationLoader } from './@core/typescript-translation-loader';
 import { registerLocale as registerLocalCountry } from 'i18n-iso-countries';
 import { registerLocale as registerLocaleLanguage } from '@cospired/i18n-iso-languages';
-import { MhiraMissingTranslationHandler } from './@core/mhira-missing-translation-handler';
+import { PsiraMissingTranslationHandler } from './@core/psira-missing-translation-handler';
 import { TranslationCode } from './@shared/@types/translation';
 import { CustomDirectivesModule } from './@shared/directives/custom-directives.module'
 
@@ -38,7 +38,7 @@ const translationConfig: TranslateModuleConfig = {
   },
   missingTranslationHandler: {
     provide: MissingTranslationHandler,
-    useClass: MhiraMissingTranslationHandler,
+    useClass: PsiraMissingTranslationHandler,
   },
 };
 

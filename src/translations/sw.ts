@@ -16,8 +16,8 @@ export default {
     scripts: 'Hati',
   },
   dashboard: {
-    welcome: 'Karibu  MHIRA',
-    name: 'MHIRA',
+    welcome: 'Karibu  PSIRA',
+    name: 'PSIRA',
     header: 'Chagua ripoti unayotaka kuripoti:',
   },
   assessments: {

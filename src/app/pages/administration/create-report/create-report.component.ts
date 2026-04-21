@@ -61,7 +61,7 @@ export class CreateReportComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/mhira/administration/reports']);
+    this.router.navigate(['/psira/administration/reports']);
   }
 
   reportHasRole(roleId: number): boolean {
@@ -200,7 +200,7 @@ export class CreateReportComponent implements OnInit {
     this.populateForm = false;
     this.resetForm = true;
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.report), environment.secretKey).toString();
-    this.router.navigate(['/mhira/administration/create-report'], {
+    this.router.navigate(['/psira/administration/create-report'], {
       state: {
         title: `${this.report.name} `,
       },

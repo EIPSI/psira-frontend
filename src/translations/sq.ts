@@ -16,8 +16,8 @@ export default {
     scripts: 'Skriptet',
   },
   dashboard: {
-    welcome: 'Mirë se Vini në MHIRA',
-    name: 'MHIRA',
+    welcome: 'Mirë se Vini në PSIRA',
+    name: 'PSIRA',
     header: 'Zgjidhni raportin që dëshironi të gjeneroni:',
   },
   assessments: {

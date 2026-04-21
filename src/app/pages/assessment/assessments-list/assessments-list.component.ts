@@ -192,7 +192,7 @@ export class AssessmentsListComponent {
 
     public onAssessmentSelect(assessment : FormattedAssessment): void {
         const dataString = CryptoJS.AES.encrypt(JSON.stringify(assessment), environment.secretKey).toString();
-        this.router.navigate(['/mhira/assessments/plan-assessments'], {
+        this.router.navigate(['/psira/assessments/plan-assessments'], {
             queryParams: {
                 assessment: dataString
             }

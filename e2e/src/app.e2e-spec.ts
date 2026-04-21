@@ -28,9 +28,9 @@ describe('When the app loads', () => {
       await login.login();
     });
 
-    it('Should display the "Welcome to MHIRA" Message.', async () => {
+    it('Should display the "Welcome to PSIRA" Message.', async () => {
       await browser.wait(until.visibilityOf(shell.welcomeText), 5000, 'Element taking too long to appear');
-      expect(await shell.getParagraphText()).toEqual('Welcome to MHIRA');
+      expect(await shell.getParagraphText()).toEqual('Welcome to PSIRA');
       await browser.sleep(3000);
     });
   });

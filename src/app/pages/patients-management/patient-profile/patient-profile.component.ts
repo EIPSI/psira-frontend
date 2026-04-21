@@ -44,7 +44,7 @@ export class PatientProfileComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/mhira/case-management/patients']);
+    this.router.navigate(['/psira/case-management/patients']);
   }
 
   getToken() {

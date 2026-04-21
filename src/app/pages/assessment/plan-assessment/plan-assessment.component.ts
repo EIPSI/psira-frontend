@@ -268,7 +268,7 @@ export class PlanAssessmentComponent implements OnInit {
       () => {
         this.nzMessage.success('Assessment created', { nzDuration: 3000 });
         this.editMode = false;
-        this.router.navigate(['/mhira/assessments/planned-assessments']);
+        this.router.navigate(['/psira/assessments/planned-assessments']);
       },
       (err) => this.errorService.handleError(err, { prefix: 'Unable to create assessment ' })
     );
@@ -313,7 +313,7 @@ export class PlanAssessmentComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/mhira/assessments/planned-assessments']);
+    this.router.navigate(['/psira/assessments/planned-assessments']);
   }
 
   public onChangeDelivery(result: Date): void {

@@ -110,7 +110,7 @@ export class CreatePatientComponent implements OnInit {
           this.populateForm = false;
           this.resetForm = true;
           this.message.success('Emergency contacts have successfully been created');
-          this.router.navigate(['/mhira/case-management/patients']);
+          this.router.navigate(['/psira/case-management/patients']);
         },
         (error) =>
           this.errorService.handleError(error, {
@@ -141,7 +141,7 @@ export class CreatePatientComponent implements OnInit {
       .subscribe(
         async ({ data }: any) => {
           const patientData = data.createOnePatient;
-          this.router.navigate(['/mhira/case-management/patients']);
+          this.router.navigate(['/psira/case-management/patients']);
           this.message.success('Patient has successfully been created');
           patient.emergencyContacts = emergencyContacts;
           this.createEmergencyContacts(patientData.id, emergencyContacts);
@@ -170,7 +170,7 @@ export class CreatePatientComponent implements OnInit {
           const patientData = data.updateOnePatient;
           PatientModel.fromJson(patientData);
           this.message.create('success', `Patient has successfully been updated`);
-          this.router.navigate(['/mhira/case-management/patients']);
+          this.router.navigate(['/psira/case-management/patients']);
         },
         (error) =>
           this.errorService.handleError(error, {
