@@ -92,7 +92,7 @@ const departmentsField: Field = {
   type: 'select',
   // mode: 'multiple', // 2. BORRAMOS esta línea o la comentamos
   validationMessage: 'please select Department',
-  isRequired: false,
+  isRequired: true,
   options: [],
   span: 8,
 };
