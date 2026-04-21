@@ -27,7 +27,9 @@ export class ErrorHandlerService {
 
       // show graphQL Errors
       for (const e of error.graphQLErrors) {
-        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${e.message}` : e.message;
+        // Use e.extensions.message if available, otherwise fallback to e.message
+        const specificMessage = (e as any).extensions?.message || e.message;
+        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${specificMessage}` : specificMessage;
         this.dispatchError(msg, e, options, 5000);
       }
     } else if (isSkipLogicError(error)) {

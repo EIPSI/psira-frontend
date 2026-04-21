@@ -55,4 +55,21 @@ export class SelectInputComponent implements OnInit {
   handleValueChange(input: any) {
     this.valueChange.emit(input);
   }
+
+  getSelectedLabel(): string {
+    if (this.field?.value === undefined || this.field?.value === null || this.field?.value === '') {
+      return '-';
+    }
+    if (!this.field?.options?.length) {
+      return this.field.value.toString();
+    }
+    const findLabel = (val: any) => {
+      const option = this.field.options.find((opt: any) => opt.value === val);
+      return option ? option.label : val;
+    };
+    if (Array.isArray(this.field.value)) {
+      return (this.field.value as any[]).map((val: any) => findLabel(val)).join(', ');
+    }
+    return findLabel(this.field.value);
+  }
 }

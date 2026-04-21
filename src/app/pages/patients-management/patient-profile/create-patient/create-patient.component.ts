@@ -13,6 +13,7 @@ import { PermissionKey } from '@app/@shared/@types/permission';
 import { ErrorHandlerService } from '../../../../@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
 import { DepartmentsService } from '../../@services/departments.service';
+import { UsersService } from '@app/pages/user-management/@services/users.service';
 
 const CryptoJS = require('crypto-js');
 
@@ -40,6 +41,7 @@ export class CreatePatientComponent implements OnInit {
     private errorService: ErrorHandlerService,
     private activatedRoute: ActivatedRoute,
     private departmentsService: DepartmentsService,
+    private usersService: UsersService,
     private router: Router,
     public perms: AppPermissionsService
   ) {}
@@ -47,6 +49,7 @@ export class CreatePatientComponent implements OnInit {
   ngOnInit(): void {
     this.getPatientFromUrl();
     this.getDepartments();
+    this.getCaseManagers();
   }
 
   public submitForm(patientData: Patient): void {
@@ -71,6 +74,12 @@ export class CreatePatientComponent implements OnInit {
         if (this.patient.birthDate) {
           this.patient.birthDate = decryptedData.birthDate.slice(0, 10);
         }
+        if (this.patient.departments) {
+          this.patient.departmentIds = (this.patient.departments as any)[0]?.id;
+        }
+        if (this.patient.caseManagers) {
+          this.patient.caseManagerIds = (this.patient.caseManagers as any)[0]?.id;
+        }
         this.populateForm = true;
       } else {
         this.inputMode = true;
@@ -81,6 +90,9 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private createEmergencyContacts(patientId: number, contacts: Contact[]) {
+    if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
+      return;
+    }
     this.isLoading = true;
     contacts.map((contact: Contact) => {
       contact.patientId = patientId;
@@ -113,9 +125,14 @@ export class CreatePatientComponent implements OnInit {
     this.populateForm = false;
     const emergencyContacts = patient.emergencyContacts;
     patient.emergencyContacts = undefined;
+
+    if (this.getAccessScope() === 'ASSIGNED') {
+      patient.caseManagerIds = [JSON.parse(localStorage.getItem('user')).id];
+    }
+
     this.loadingMessage = `Creating patient ${patient.firstName} ${patient.lastName}`;
     this.patientsService
-      .createPatient(patient)
+      .createPatient(PatientModel.updateData(patient))
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -141,7 +158,7 @@ export class CreatePatientComponent implements OnInit {
     this.loadingMessage = `Updating patient ${patient.firstName} ${patient.lastName}`;
     patient.emergencyContacts = undefined;
     this.patientsService
-      .updatePatient(patient)
+      .updatePatient(PatientModel.updateData(patient))
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -162,19 +179,77 @@ export class CreatePatientComponent implements OnInit {
       );
   }
 
+  private getAccessScope(): 'ALL' | 'DEPARTMENT' | 'ASSIGNED' {
+    if (this.perms.permissionsOnly(PermissionKey.VIEW_ALL_PATIENTS)) {
+      return 'ALL';
+    }
+    if (this.perms.permissionsOnly(PermissionKey.VIEW_DEPARTMENT_PATIENTS)) {
+      return 'DEPARTMENT';
+    }
+    return 'ASSIGNED';
+  }
+
   private getDepartments(): void {
-    const filter = {
-      users: {
+    const scope = this.getAccessScope();
+    const filter: any = {};
+    if (scope !== 'ALL') {
+      filter.users = {
         id: {
           eq: JSON.parse(localStorage.getItem('user')).id,
         },
-      },
-    };
-    this.departmentsService.departments({ paging:{first: 50}, filter }).subscribe((response) => {
-      this.patientForm.groups[0].fields[6].options = response.data.departments.edges.map((e: any) => ({
+      };
+    }
+    this.departmentsService.departments({ paging: { first: 50 }, filter }).subscribe((response) => {
+      const options = response.data.departments.edges.map((e: any) => ({
         label: e.node.name,
         value: e.node.id,
       }));
+      const createFormField = this.patientForm.groups[0].fields.find((f) => f.name === 'departmentIds');
+      const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'departmentIds');
+      if (createFormField) {
+        createFormField.options = options;
+        createFormField.disabled = scope === 'ASSIGNED';
+      }
+      if (updateFormField) {
+        updateFormField.options = options;
+        updateFormField.disabled = scope === 'ASSIGNED';
+      }
+    });
+  }
+
+  private getCaseManagers(): void {
+    const scope = this.getAccessScope();
+    const user = JSON.parse(localStorage.getItem('user'));
+    const filter: any = {};
+
+    if (scope === 'DEPARTMENT') {
+      const departmentIds = user.departments?.map((d: any) => d.id) || [];
+      filter.departments = {
+        id: {
+          in: departmentIds,
+        },
+      };
+    } else if (scope === 'ASSIGNED') {
+      filter.id = {
+        eq: user.id,
+      };
+    }
+
+    this.usersService.getUsers({ paging: { first: 50 }, filter }).subscribe((response) => {
+      const options = response.data.users.edges.map((e: any) => ({
+        label: [e.node.firstName, e.node.lastName].filter((n: any) => !!n).join(' '),
+        value: e.node.id,
+      }));
+      const createFormField = this.patientForm.groups[0].fields.find((f) => f.name === 'caseManagerIds');
+      const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'caseManagerIds');
+      if (createFormField) {
+        createFormField.options = options;
+        createFormField.disabled = scope === 'ASSIGNED';
+      }
+      if (updateFormField) {
+        updateFormField.options = options;
+        updateFormField.disabled = scope === 'ASSIGNED';
+      }
     });
   }
 }
