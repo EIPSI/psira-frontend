@@ -26,6 +26,7 @@ export class PatientModel {
 
   public static updateData(json: any): Patient {
     const excludedProperties = [
+      'departments',
       'caseManagers',
       'informants',
       'updatedAt',
@@ -49,6 +50,15 @@ export class PatientModel {
         }
       }
     }
+
+    if ('departmentIds' in patient && !Array.isArray(patient.departmentIds)) {
+      patient.departmentIds = patient.departmentIds ? [patient.departmentIds] : [];
+    }
+
+    if ('caseManagerIds' in patient && !Array.isArray(patient.caseManagerIds)) {
+      patient.caseManagerIds = patient.caseManagerIds ? [patient.caseManagerIds] : [];
+    }
+
     return patient;
   }
 

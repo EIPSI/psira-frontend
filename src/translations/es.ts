@@ -246,6 +246,7 @@ export default {
       birthDate: 'Fecha de Nacimiento',
       gender: 'Sexo',
       department: 'Institución',
+      caseManager: 'Encargado del Caso',      
       patientAddress: 'Dirección del Paciente',
       street: 'Calle',
       addressNumber: 'Número',
