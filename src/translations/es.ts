@@ -265,6 +265,7 @@ export default {
       postalCode: 'Código Postal',
       country: 'País',
       emergency: 'Contacto de Emergencia',
+      emergencyContacts: 'Contactos de Emergencia',
       note: 'Nota',
       addCaregiver: 'Añadir Cuidador',
     },
