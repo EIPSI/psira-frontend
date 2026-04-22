@@ -156,7 +156,11 @@ export class Convert {
           : 'FAILED',
     };
 
-    assessment.formattedPatient = [json.patient?.firstName, json.patient?.middleName, json.patient?.lastName]
+    assessment.formattedPatient = [
+      json.patient?.firstName || json.targetUser?.firstName,
+      json.patient?.middleName || json.targetUser?.middleName,
+      json.patient?.lastName || json.targetUser?.lastName,
+    ]
       .filter((s) => !!s)
       .join(' ');
 
@@ -170,7 +174,7 @@ export class Convert {
       };
     }
 
-    assessment.patientMedicalRecordNo = assessment.patient.medicalRecordNo;
+    assessment.patientMedicalRecordNo = assessment.patient?.medicalRecordNo || assessment.targetUser?.workID;
     assessment.clinicianWorkId = assessment.clinician?.workID;
 
     assessment.formatedDeliveryDate = assessment.deliveryDate

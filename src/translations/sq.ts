@@ -329,6 +329,7 @@ export default {
   planAssessment: {
     assessmentName: 'Emri i Vlerësimit',
     patient: 'Zgjidhni klientin të cilit i përket ky vlerësim',
+    target: 'Target of Assessment',
     clinician: 'Mjeku',
     informant: 'Informatori',
   },

@@ -26,10 +26,12 @@ export interface Assessment {
   uuid?: string;
   name: string;
   assessmentType: AssessmentAdministration;
-  patientId: number;
+  patientId?: number;
+  targetUserId?: number;
   note: string;
   clinicianId: number;
-  patient: Patient;
+  patient?: Patient;
+  targetUser?: User;
   clinician?: User;
   informantType: string;
   questionnaireAssessmentId?: string;
