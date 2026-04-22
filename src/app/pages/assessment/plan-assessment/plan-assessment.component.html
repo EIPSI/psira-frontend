@@ -4,6 +4,15 @@
   <section nz-col nzSpan="10">
     <form nz-form [formGroup]="assessmentForm" (submit)="onSubmitAssessment()">
       <nz-form-item>
+        <nz-form-label>{{ 'planAssessment.target' | translate }}</nz-form-label>
+        <nz-form-control>
+          <nz-radio-group [(ngModel)]="targetType" [ngModelOptions]="{standalone: true}" (ngModelChange)="onTargetTypeChange($event)" [nzDisabled]="!editMode">
+            <label nz-radio nzValue="patient">{{ 'createAssessment.patient' | translate }}</label>
+            <label nz-radio nzValue="user">{{ 'createAssessment.departmentsUser' | translate }}</label>
+          </nz-radio-group>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item *ngIf="targetType === 'patient'">
         <nz-form-label nzFor="patient">{{ 'planAssessment.patient' | translate }}</nz-form-label>
         <nz-form-control>
           <app-patient-picker
@@ -11,6 +20,16 @@
             [readonly]="!editMode"
             (selectPatient)="onPatientSelect($event)"
           ></app-patient-picker>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item *ngIf="targetType === 'user'">
+        <nz-form-label nzFor="user">{{ 'createAssessment.departmentsUser' | translate }}</nz-form-label>
+        <nz-form-control>
+          <app-user-picker
+            [readonly]="!editMode"
+            [selectedUser]="selectedTargetUser"
+            (selectUser)="onTargetUserSelect($event)"
+          ></app-user-picker>
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
