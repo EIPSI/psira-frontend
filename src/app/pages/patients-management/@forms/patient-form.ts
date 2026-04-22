@@ -200,10 +200,10 @@ const contactFields: Field[] = [
     title: 'Email Address',
     label: 'Email Address',
     translationPath: 'forms.patients.email',
-    description: 'Enter email address',
+    description: 'Enter email address (required for system access)',
     type: 'text',
     validationMessage: 'please enter email address',
-    isRequired: false,
+    isRequired: true,
     span: 8,
   },
   {
