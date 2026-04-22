@@ -1,0 +1,35 @@
+<div class="container-fluid">
+  <div class="row m-t-20">
+    <div class="col-md-12">
+      <h2 [translate]="'patientDashboard.welcome'" [translateParams]="{ name: user?.firstName }"></h2>
+      <p [translate]="'patientDashboard.intro'"></p>
+    </div>
+  </div>
+
+  <div class="row m-t-20">
+    <div *ngIf="loading" class="col-md-12 text-center">
+      <nz-spin nzSize="large"></nz-spin>
+    </div>
+
+    <div *ngIf="!loading && assessments.length === 0" class="col-md-12">
+      <nz-empty [nzNotFoundContent]="'patientDashboard.noAssessments' | translate"></nz-empty>
+    </div>
+
+    <div *ngFor="let assessment of assessments" class="col-md-4 m-b-20">
+      <nz-card [nzTitle]="assessment.name" [nzExtra]="extraTemplate">
+        <div class="assessment-details">
+          <p><strong>{{ 'patientDashboard.date' | translate }}:</strong> {{ assessment.createdAt | date:'shortDate' }}</p>
+          <p><strong>{{ 'patientDashboard.status' | translate }}:</strong> 
+            <nz-tag [nzColor]="assessment.formattedStatus?.color">{{ assessment.status }}</nz-tag>
+          </p>
+          <p><strong>{{ 'patientDashboard.type' | translate }}:</strong> {{ assessment.formattedAssessmentType }}</p>
+        </div>
+        <ng-template #extraTemplate>
+          <button nz-button nzType="primary" (click)="startAssessment(assessment)">
+            {{ 'patientDashboard.start' | translate }}
+          </button>
+        </ng-template>
+      </nz-card>
+    </div>
+  </div>
+</div>
