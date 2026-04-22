@@ -52,7 +52,12 @@ export class LoginComponent implements OnInit {
         if (data?.login?.user?.passwordChangeRequired) {
           this.router.navigate(['/auth/change-password']);
         } else {
-          this.router.navigate(['/']);
+          const isPatient = data.login.user.roles?.some((role: any) => role.code === 'PATIENT');
+          if (isPatient) {
+            this.router.navigate(['/psira/patient-dashboard']);
+          } else {
+            this.router.navigate(['/']);
+          }
         }
       },
       (error) => {

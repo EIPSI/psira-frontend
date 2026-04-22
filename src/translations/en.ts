@@ -20,6 +20,15 @@ export default {
     name: 'PSIRA',
     header: 'Select the report you want to generate:',
   },
+  patientDashboard: {
+    welcome: 'Welcome, {{name}}!',
+    intro: 'Here are your pending assessments.',
+    noAssessments: 'You have no pending assessments.',
+    date: 'Date',
+    status: 'Status',
+    type: 'Type',
+    start: 'Start',
+  },
   assessments: {
     myAssessment: 'My Assessments',
     archivedAssessments: 'Show Archived',

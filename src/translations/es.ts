@@ -20,6 +20,15 @@ export default {
     name: 'PSIRA',
     header: 'Seleccione el informe que desea generar:',
   },
+  patientDashboard: {
+    welcome: '¡Bienvenido/a, {{name}}!',
+    intro: 'Aquí están sus evaluaciones pendientes.',
+    noAssessments: 'No tiene evaluaciones pendientes.',
+    date: 'Fecha',
+    status: 'Estado',
+    type: 'Tipo',
+    start: 'Comenzar',
+  },
   assessments: {
     myAssessment: 'Mi Evaluación',
     archivedAssessments: 'Mostrar Evaluaciones Archivadas',
