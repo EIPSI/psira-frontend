@@ -16,6 +16,23 @@
   justify-content: space-between;
 }
 
+.patient-header {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+
+  h1 {
+    margin-bottom: 0;
+  }
+
+  .status-selector {
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+  }
+}
+
 a {
   color: white;
 }
