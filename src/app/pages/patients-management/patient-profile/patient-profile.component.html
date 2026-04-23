@@ -1,7 +1,23 @@
 <div class="buttons">
   <button nz-button nzType="primary" (click)="goBack()">Back</button>
 </div>
-<h1 *ngIf="patientTitle">{{ patientTitle }}</h1>
+<div class="patient-header" *ngIf="patientTitle">
+  <h1>{{ patientTitle }}</h1>
+  <div class="status-selector" *ngIf="patient">
+    <nz-select
+      [ngModel]="patient.statusId"
+      (ngModelChange)="changeStatus($event)"
+      [nzPlaceHolder]="'tables.patients.status' | translate"
+      [nzLoading]="loading"
+      style="width: 200px;"
+    >
+      <nz-option *ngFor="let status of patientStatuses" [nzValue]="status.id" [nzLabel]="status.name"></nz-option>
+    </nz-select>
+    <nz-tag *ngIf="patient.formattedStatus" [nzColor]="patient.formattedStatus.color" style="margin-left: 10px;">
+      {{ patient.formattedStatus.title }}
+    </nz-tag>
+  </div>
+</div>
 <nz-tabset nzSize="large">
   <nz-tab *ngIf="patientTitle" [nzTitle]="'core.assessments' | translate">
     <app-assessments [patient]="patient"></app-assessments>

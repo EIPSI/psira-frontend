@@ -31,7 +31,8 @@ const CryptoJS = require('crypto-js');
 enum ActionKey {
   DELETE_PATIENT,
   ARCHIVE_PATIENT,
-  RESTORE_PATIENT
+  RESTORE_PATIENT,
+  CHANGE_STATUS,
 }
 
 @Component({
@@ -156,6 +157,9 @@ export class PatientsListComponent {
         return;
       case ActionKey.DELETE_PATIENT:
         this.deletePatient(patient);
+        return;
+      case ActionKey.CHANGE_STATUS:
+        this.changePatientStatus(patient);
         return;
     }
   }
@@ -371,6 +375,7 @@ export class PatientsListComponent {
 
   private setActions(): void {
     if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
+      this.actions = [...this.actions, { key: ActionKey.CHANGE_STATUS, title: 'Change Status' }];
       this.actions = [...this.actions, { key: ActionKey.ARCHIVE_PATIENT, title: 'Archive Patient' }];
       this.actions = [...this.actions, { key: ActionKey.RESTORE_PATIENT, title: 'Restore Patient' }];
     }
