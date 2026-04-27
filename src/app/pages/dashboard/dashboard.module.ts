@@ -6,9 +6,17 @@ import { TranslateModule } from '@ngx-translate/core';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { ReportsComponent } from './reports/reports.component';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { MasterDataModule } from '@shared/@modules/master-data/master-data.module';
 
 @NgModule({
   declarations: [DashboardComponent, ReportsComponent],
-  imports: [CommonModule, DashboardRoutingModule, TranslateModule.forChild(), NzTabsModule, NzModalModule],
+  imports: [
+    CommonModule,
+    DashboardRoutingModule,
+    TranslateModule.forChild(),
+    NzTabsModule,
+    NzModalModule,
+    MasterDataModule,
+  ],
 })
 export class DashboardModule {}

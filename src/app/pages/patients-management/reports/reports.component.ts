@@ -1,9 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormattedPatient } from '@app/pages/patients-management/@types/formatted-patient';
 import { Reports } from '@app/pages/administration/@types/reports';
 import { finalize } from 'rxjs/operators';
 import { ReportsResourcesService } from '@app/pages/patients-management/@services/reports-resources.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
+import { TableColumn } from '@shared/@modules/master-data/@types/list';
 
 @Component({
   selector: 'app-reports',
@@ -12,10 +14,39 @@ import { ErrorHandlerService } from '@shared/services/error-handler.service';
 })
 export class ReportsComponent implements OnInit {
   @Input() public patient: FormattedPatient;
-  reports: Reports[];
+  reports: Reports[] = [];
   public isLoading = false;
+  public columns: TableColumn<Partial<Reports>>[] = [
+    {
+      title: 'Name',
+      name: 'name',
+      translationPath: 'tables.reports.name',
+      sort: true,
+    },
+    {
+      title: 'Description',
+      name: 'description',
+      translationPath: 'tables.reports.description',
+    },
+    {
+      title: 'Report Type',
+      name: 'resources',
+      translationPath: 'tables.reports.resources',
+      sort: true,
+    },
+    {
+      title: 'Shiny App',
+      name: 'appName',
+      translationPath: 'tables.reports.appName',
+      sort: true,
+    },
+  ];
 
-  constructor(private errorService: ErrorHandlerService, private reportsResourcesService: ReportsResourcesService) {}
+  constructor(
+    private errorService: ErrorHandlerService,
+    private reportsResourcesService: ReportsResourcesService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.getReportsByResources();
@@ -34,11 +65,9 @@ export class ReportsComponent implements OnInit {
       );
   }
 
-  generateLink(url: string) {
-    if (url.indexOf('/') !== 0) {
-      url = '/' + url;
-    }
-    console.log(url + '?patient_id=' + this.patient.id);
-    window.open(url + '?patient_id=' + this.patient.id, '_blank').focus();
+  generateLink(report: Reports) {
+    this.router.navigate(['/psira/reports', report.id], {
+      queryParams: { patient_id: this.patient.id },
+    });
   }
 }

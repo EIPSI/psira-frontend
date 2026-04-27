@@ -96,6 +96,54 @@ const addRolesToReport = gql`
   }
 `;
 
+const startReportSession = gql`
+  mutation($reportId: Int!, $patientId: Int) {
+    startReportSession(reportId: $reportId, patientId: $patientId) {
+      id
+      reportId
+      userId
+      patientId
+      startedAt
+      lastSeenAt
+      endedAt
+      durationSeconds
+      active
+    }
+  }
+`;
+
+const heartbeatReportSession = gql`
+  mutation($sessionId: Int!) {
+    heartbeatReportSession(sessionId: $sessionId) {
+      id
+      reportId
+      userId
+      patientId
+      startedAt
+      lastSeenAt
+      endedAt
+      durationSeconds
+      active
+    }
+  }
+`;
+
+const endReportSession = gql`
+  mutation($sessionId: Int!) {
+    endReportSession(sessionId: $sessionId) {
+      id
+      reportId
+      userId
+      patientId
+      startedAt
+      lastSeenAt
+      endedAt
+      durationSeconds
+      active
+    }
+  }
+`;
+
 export const ReportsMutations = {
   createOneReport,
   createManyReports,
@@ -103,4 +151,7 @@ export const ReportsMutations = {
   updateManyReports,
   deleteOneReport,
   addRolesToReport,
+  startReportSession,
+  heartbeatReportSession,
+  endReportSession,
 };

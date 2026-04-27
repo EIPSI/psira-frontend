@@ -4,6 +4,7 @@ import {
   CreateOneReportInput,
   CreateReportInput,
   Reports,
+  ShinyApp,
   UpdateOneReportInput,
   UpdateReport,
 } from '@app/pages/administration/@types/reports';
@@ -20,6 +21,7 @@ import { Filter } from '@shared/@types/filter';
 import { Sorting } from '@shared/@types/sorting';
 import { Convert } from '@shared/classes/convert';
 import { ReportForm } from '@app/pages/administration/@forms/report.form';
+import { Field } from '@shared/components/form/@types/field';
 
 const CryptoJS = require('crypto-js');
 
@@ -31,8 +33,9 @@ const CryptoJS = require('crypto-js');
 export class CreateReportComponent implements OnInit {
   roles: Role[] = [];
   selectedRoles: Role[] = [];
+  shinyApps: ShinyApp[] = [];
   report: Reports;
-  reportForm = ReportForm;
+  reportForm = JSON.parse(JSON.stringify(ReportForm));
   inputMode = true;
   isLoading = false;
   showCancelButton = false;
@@ -55,6 +58,7 @@ export class CreateReportComponent implements OnInit {
   ngOnInit(): void {
     this.getReportFromUrl();
     this.getRoles();
+    this.getAvailableShinyApps();
     if(this.report){
       this.selectedRoles = this.report?.roles?.filter((role) => this.reportHasRole(role.id));
     }
@@ -79,12 +83,19 @@ export class CreateReportComponent implements OnInit {
   }
 
   public submitForm(reportData: CreateReportInput): void {
+    reportData.url = this.getUrlForApp(reportData.appName) || reportData.url;
     if (this.report) {
       reportData.id = this.report.id;
       this.updateReport(reportData);
     } else {
       this.createReport(reportData);
     }
+  }
+
+  handleReportInputChange({ name, value }: { name: string; value: string }) {
+    if (name !== 'appName') return;
+
+    this.setFieldValue('url', this.getUrlForApp(value));
   }
 
   getReportFromUrl(): void {
@@ -224,5 +235,47 @@ export class CreateReportComponent implements OnInit {
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
     );
+  }
+
+  getAvailableShinyApps() {
+    this.reportsService.availableShinyApps().subscribe(
+      ({ data }: any) => {
+        this.shinyApps = data.availableShinyApps;
+        this.setFieldOptions(
+          'appName',
+          this.shinyApps.map((app) => ({
+            label: app.title,
+            value: app.appName,
+          }))
+        );
+
+        if (this.report?.appName) {
+          this.setFieldValue('url', this.getUrlForApp(this.report.appName) || this.report.url);
+        }
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load Shiny apps' })
+    );
+  }
+
+  private getUrlForApp(appName?: string): string {
+    if (!appName) return '';
+    return this.shinyApps.find((app) => app.appName === appName)?.url || `/shiny/${appName}`;
+  }
+
+  private setFieldOptions(name: string, options: Field['options']) {
+    const field = this.getField(name);
+    if (field) field.options = options;
+  }
+
+  private setFieldValue(name: string, value: Field['value']) {
+    const field = this.getField(name);
+    if (field) field.value = value;
+  }
+
+  private getField(name: string): Field | undefined {
+    for (const group of this.reportForm.groups) {
+      const field = group.fields.find((item: Field) => item.name === name);
+      if (field) return field;
+    }
   }
 }

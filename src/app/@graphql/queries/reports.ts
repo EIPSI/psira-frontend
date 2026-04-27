@@ -33,6 +33,51 @@ const reports = gql`
   }
 `;
 
+const availableShinyApps = gql`
+  query {
+    availableShinyApps {
+      appName
+      title
+      url
+    }
+  }
+`;
+
+const getReportForCurrentUser = gql`
+  query($id: Int!) {
+    getReportForCurrentUser(id: $id) {
+      id
+      name
+      description
+      resources
+      appName
+      url
+      status
+    }
+  }
+`;
+
+const getReportEmbed = gql`
+  query($id: Int!, $patientId: Int) {
+    getReportEmbed(id: $id, patientId: $patientId) {
+      embedUrl
+      expiresAt
+      report {
+        id
+        name
+        description
+        resources
+        appName
+        url
+        status
+      }
+    }
+  }
+`;
+
 export const ReportsQueries = {
   reports,
+  availableShinyApps,
+  getReportForCurrentUser,
+  getReportEmbed,
 };

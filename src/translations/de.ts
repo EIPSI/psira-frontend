@@ -110,7 +110,9 @@ export default {
     },
     reports: {
       name: 'Name',
+      description: 'Beschreibung',
       resources: 'Art des Berichts',
+      appName: 'Shiny App',
       roles: 'Rollen mit Zugang zum Bericht',
       status: 'Status',
       repositoryLink: 'Repository',

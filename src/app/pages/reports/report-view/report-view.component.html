@@ -1,0 +1,25 @@
+<section class="report-view">
+  <div class="report-toolbar">
+    <button nz-button nzType="default" (click)="goBack()">
+      <i nz-icon nzType="arrow-left"></i>
+      Back
+    </button>
+    <div class="report-title">
+      <h2>{{ report?.name || 'Report' }}</h2>
+      <p *ngIf="report?.description">{{ report.description }}</p>
+    </div>
+  </div>
+
+  <nz-spin [nzSpinning]="isLoading">
+    <div *ngIf="notFound" class="empty-state">
+      Report not found or unavailable.
+    </div>
+
+    <iframe
+      *ngIf="reportUrl && !notFound"
+      class="report-frame"
+      [src]="reportUrl"
+      title="Report"
+    ></iframe>
+  </nz-spin>
+</section>
