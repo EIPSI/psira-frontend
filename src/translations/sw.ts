@@ -103,7 +103,9 @@ export default {
     },
     reports: {
       name: 'Jina',
+      description: 'Maelezo',
       resources: 'Aina ya Ripoti',
+      appName: 'Shiny App',
       roles: 'Majukumu',
       status: 'Hali',
       repositoryLink: 'Kiungo cha Hifadhi',

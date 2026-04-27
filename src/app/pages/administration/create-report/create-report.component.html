@@ -14,6 +14,7 @@
       [showCancelButton]="showCancelButton"
       [loadingMessage]="loadingMessage"
       (submitForm)="submitForm($event)"
+      (inputChange)="handleReportInputChange($event)"
       (inputModeChanged)="inputMode = $event"
     >
     </app-form>

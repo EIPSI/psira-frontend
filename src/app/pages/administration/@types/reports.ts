@@ -16,6 +16,26 @@ export interface Reports {
   updatedAt?: string;
 }
 
+export interface ShinyApp {
+  appName: string;
+  title: string;
+  url: string;
+}
+
+export interface ReportSession {
+  id: number;
+  reportId: number;
+  userId: number;
+  patientId?: number;
+  startedAt: string;
+  lastSeenAt: string;
+  endedAt?: string;
+  durationSeconds: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CreateOneReportInput {
   report: CreateReportInput;
 }

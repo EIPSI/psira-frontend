@@ -10,6 +10,13 @@ const routes: Routes = [
     loadChildren: () => import('./dashboard/dashboard.module').then((m) => m.DashboardModule),
   },
   {
+    path: 'reports',
+    data: {
+      breadcrumbI18nKey: 'menu.reports',
+    },
+    loadChildren: () => import('./reports/reports.module').then((m) => m.ReportsModule),
+  },
+  {
     path: 'case-management',
     data: {
       breadcrumbI18nKey: 'menu.caseManagement',
