@@ -6,7 +6,11 @@ import { Observable } from 'rxjs';
 import { FetchResult } from 'apollo-link';
 import { Apollo } from 'apollo-angular';
 import { ReportsQueries } from '@app/@graphql/queries/reports';
-import { Reports, UpdateOneReportInput, CreateOneReportInput } from '@app/pages/administration/@types/reports';
+import {
+  Reports,
+  UpdateOneReportInput,
+  CreateOneReportInput,
+} from '@app/pages/administration/@types/reports';
 import { ReportsMutations } from '@app/@graphql/mutations/reports';
 import { NestJsQueriesService } from '@shared/services/nestjs-queries.service';
 
@@ -24,6 +28,53 @@ export class ReportsService {
         filter: params && params.filter ? params.filter : undefined,
         sorting: params && params.sorting ? params.sorting : undefined,
       },
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  availableShinyApps(): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: ReportsQueries.availableShinyApps,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  getReportForCurrentUser(id: number): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: ReportsQueries.getReportForCurrentUser,
+      variables: { id },
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  getReportEmbed(id: number, patientId?: number): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: ReportsQueries.getReportEmbed,
+      variables: { id, patientId },
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  startReportSession(reportId: number, patientId?: number): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: ReportsMutations.startReportSession,
+      variables: { reportId, patientId },
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  heartbeatReportSession(sessionId: number): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: ReportsMutations.heartbeatReportSession,
+      variables: { sessionId },
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  endReportSession(sessionId: number): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: ReportsMutations.endReportSession,
+      variables: { sessionId },
       fetchPolicy: 'no-cache',
     });
   }

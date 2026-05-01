@@ -112,6 +112,21 @@ const caseManagersField: Field = {
   span: 8,
 };
 
+const caseManagersField: Field = {
+  value: null, // 3. Cambiamos [] por null
+  name: 'caseManagerIds',
+  title: 'Case Manager',
+  label: 'Case Manager',
+  translationPath: 'forms.patients.caseManager',
+  description: 'Select Case Manager',
+  type: 'select',
+  // mode: 'multiple', // 4. BORRAMOS esta línea o la comentamos
+  validationMessage: 'please select Case Manager',
+  isRequired: false,
+  options: [],
+  span: 8,
+};
+
 const addressFields: Field[] = [
   {
     value: '',

@@ -108,7 +108,9 @@ export default {
     },
     reports: {
       name: 'Emri',
+      description: 'Përshkrimi',
       resources: 'Lloji i Raportit',
+      appName: 'Shiny App',
       roles: 'Rolet',
       status: 'Statusi',
       repositoryLink: 'Linku i Repozitorit',
