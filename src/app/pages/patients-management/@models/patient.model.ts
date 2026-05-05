@@ -6,8 +6,16 @@ export class PatientModel {
     const name = [json.firstName, json.middleName, json.lastName].filter((s) => !!s).join(' ');
     json.patientTitle = [json.medicalRecordNo, name].filter((s) => !!s).join(' - ');
 
+    const statusColors: { [key: string]: string } = {
+      active: 'green',
+      finished: 'blue',
+      pending: 'gold',
+      dropped: 'red',
+      archived: 'gray',
+    };
+
     json.formattedStatus = {
-      color: json.status ? 'green' : 'orange',
+      color: json.status ? statusColors[json.status.name.toLowerCase()] || 'green' : 'orange',
       title: json?.status?.name ?? 'not set',
     };
 

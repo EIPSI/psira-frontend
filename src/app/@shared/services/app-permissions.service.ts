@@ -57,6 +57,11 @@ export class AppPermissionsService {
     return !!user?.roles?.find?.((role) => role.isSuperAdmin);
   }
 
+  isPatient(): boolean {
+    const user = JSON.parse(localStorage.getItem('user')) as User;
+    return !!user?.roles?.some?.((role) => role.code === 'PATIENT');
+  }
+
   getUserHierarchy(): number {
     const user = JSON.parse(localStorage.getItem('user')) as User;
     return user.roles[0].hierarchy;

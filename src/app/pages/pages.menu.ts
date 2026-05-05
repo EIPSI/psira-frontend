@@ -12,6 +12,14 @@ export const MENU: SideNavInterface[] | any = [
     submenu: [],
   },
   {
+    path: 'patient-dashboard',
+    title: 'menu.dashboard',
+    iconType: 'nzIcon',
+    iconTheme: 'outline',
+    icon: 'home',
+    submenu: [],
+  },
+  {
     path: 'case-management',
     title: 'menu.caseManagement',
     iconType: 'nzIcon',

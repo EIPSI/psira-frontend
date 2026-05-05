@@ -12,7 +12,7 @@
       </div>
       <div nz-row nzGutter="16">
         <ng-container *ngFor="let field of group.fields; let i = index">
-          <div nz-col class="gutter-row form-item" [nzSpan]="field?.span">
+          <div nz-col class="gutter-row form-item" [nzSpan]="field?.span" *ngIf="!field.hidden">
             <ng-container [ngSwitch]="field.type">
               <div *ngSwitchCase="'text'">
                 <app-text-input

@@ -332,6 +332,7 @@ export default {
   planAssessment: {
     assessmentName: 'Bezeichnung der Testung',
     patient: 'Wählen Sie den Patienten aus, zu dem diese Bewertung gehört',
+    target: 'Target of Assessment',
     clinician: 'Kliniker',
     informant: 'Informant',
   },

@@ -20,6 +20,15 @@ export default {
     name: 'PSIRA',
     header: 'Select the report you want to generate:',
   },
+  patientDashboard: {
+    welcome: 'Welcome, {{name}}!',
+    intro: 'Here are your pending assessments.',
+    noAssessments: 'You have no pending assessments.',
+    date: 'Date',
+    status: 'Status',
+    type: 'Type',
+    start: 'Start',
+  },
   assessments: {
     myAssessment: 'My Assessments',
     archivedAssessments: 'Show Archived',
@@ -267,6 +276,7 @@ export default {
       postalCode: 'Postal Code',
       country: 'Country',
       emergency: 'Emergency Contacts',
+      emergencyContacts: 'Emergency Contacts',
       note: 'Note',
       addCaregiver: 'Add Caregiver',
     },
@@ -337,6 +347,7 @@ export default {
   planAssessment: {
     assessmentName: 'Assessment Name',
     patient: 'Select the patient this assesment belongs to',
+    target: 'Target of Assessment',
     clinician: 'Clinician',
     informant: 'Informant',
   },

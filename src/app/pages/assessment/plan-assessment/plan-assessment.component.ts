@@ -48,6 +48,8 @@ export class PlanAssessmentComponent implements OnInit {
   public data: Partial<AssessmentAdministration>[];
   public pageInfo: PageInfo;
   public selectedPatient: Patient;
+  public selectedTargetUser: User;
+  public targetType: 'patient' | 'user' = 'patient';
   @Input() public patient: FormattedPatient;
   @Input() public caregivers: SelectedCaregiver[] = [];
   public selectedInformant: any = null;
@@ -285,6 +287,30 @@ export class PlanAssessmentComponent implements OnInit {
     });
   }
 
+  public onTargetUserSelect(user: User) {
+    this.selectedTargetUser = user;
+    this.assessmentForm.patchValue({
+      targetUserId: user?.id,
+    });
+  }
+
+  public onTargetTypeChange(type: 'patient' | 'user') {
+    this.targetType = type;
+    if (type === 'patient') {
+      this.assessmentForm.get('patientId').setValidators(Validators.required);
+      this.assessmentForm.get('targetUserId').clearValidators();
+      this.assessmentForm.get('targetUserId').setValue(null);
+      this.selectedTargetUser = null;
+    } else {
+      this.assessmentForm.get('targetUserId').setValidators(Validators.required);
+      this.assessmentForm.get('patientId').clearValidators();
+      this.assessmentForm.get('patientId').setValue(null);
+      this.selectedPatient = null;
+    }
+    this.assessmentForm.get('patientId').updateValueAndValidity();
+    this.assessmentForm.get('targetUserId').updateValueAndValidity();
+  }
+
   public onPatientSelect(patient: Patient) {
     this.assessmentForm.patchValue({
       patientId: patient?.id,
@@ -405,6 +431,7 @@ export class PlanAssessmentComponent implements OnInit {
       this.assessmentForm = this.formBuilder.group({
         assessmentTypeId: [null, Validators.required],
         patientId: [null, Validators.required],
+        targetUserId: [null],
         clinicianId: [null, Validators.required],
         questionnaires: [null, Validators.required],
         informantType: [null],
@@ -423,6 +450,7 @@ export class PlanAssessmentComponent implements OnInit {
       this.assessmentForm = this.formBuilder.group({
         assessmentTypeId: [null, Validators.required],
         patientId: [null, Validators.required],
+        targetUserId: [null],
         clinicianId: [null, Validators.required],
         questionnaires: [null, Validators.required],
         informantType: [null],
@@ -449,6 +477,13 @@ export class PlanAssessmentComponent implements OnInit {
         this.editMode = false;
         this.fullAssessment = assessment;
         this.assessmentUrl = new URL(this.generateAssessmentURL(this.fullAssessment?.uuid), window.location.origin);
+        if (this.fullAssessment.targetUserId) {
+          this.onTargetTypeChange('user');
+          this.selectedTargetUser = this.fullAssessment.targetUser;
+        } else {
+          this.onTargetTypeChange('patient');
+          this.selectedPatient = this.fullAssessment.patient;
+        }
         this.assessmentForm.patchValue({
           emailReminder: this.fullAssessment.emailReminder,
           assessmentTypeId: {
@@ -457,6 +492,7 @@ export class PlanAssessmentComponent implements OnInit {
           },
           informantType: this.fullAssessment.informantType,
           patientId: this.fullAssessment.patientId,
+          targetUserId: this.fullAssessment.targetUserId,
           clinicianId: this.fullAssessment.clinicianId,
           informantPatient: this.fullAssessment.patient,
           informantClinicianId: this.fullAssessment.informantClinician?.id || null,

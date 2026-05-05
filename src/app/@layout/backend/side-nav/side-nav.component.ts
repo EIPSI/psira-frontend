@@ -11,7 +11,7 @@ import { AppPermissionsService } from '@shared/services/app-permissions.service'
 export class SideNavComponent implements OnInit {
   isFolded: boolean;
   isSideNavDark: boolean;
-  public menuItems = MENU;
+  public menuItems: any[] = [];
   @Input() isCollapsed = false;
 
   constructor(private themeService: ThemeConstantService, public perms: AppPermissionsService) {}
@@ -19,6 +19,18 @@ export class SideNavComponent implements OnInit {
   ngOnInit(): void {
     this.themeService.isMenuFoldedChanges.subscribe((isFolded) => (this.isFolded = isFolded));
     this.themeService.isSideNavDarkChanges.subscribe((isDark) => (this.isSideNavDark = isDark));
+    this.filterMenu();
+  }
+
+  filterMenu() {
+    const isPatient = this.perms.isPatient();
+    this.menuItems = MENU.filter((item: any) => {
+      if (isPatient) {
+        return item.path === 'patient-dashboard';
+      } else {
+        return item.path !== 'patient-dashboard';
+      }
+    });
   }
 
   toggleCollapsed(): void {

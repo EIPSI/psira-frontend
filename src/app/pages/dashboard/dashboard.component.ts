@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { PsiraTranslations } from '../../@core/psira-translations';
 import { Disclaimers } from '@app/pages/administration/@types/disclaimers';
 import { DisclaimersService } from '@app/pages/administration/@services/disclaimers.service';
@@ -26,10 +27,16 @@ export class DashboardComponent implements OnInit {
     private authService: AuthService,
     private disclaimersService: DisclaimersService,
     private errorService: ErrorHandlerService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user?.roles?.some((role: any) => role.code === 'PATIENT')) {
+      this.router.navigate(['/psira/patient-dashboard']);
+      return;
+    }
     this.getUser();
     this.getDescription();
   }

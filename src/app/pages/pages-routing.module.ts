@@ -10,11 +10,11 @@ const routes: Routes = [
     loadChildren: () => import('./dashboard/dashboard.module').then((m) => m.DashboardModule),
   },
   {
-    path: 'reports',
+    path: 'patient-dashboard',
     data: {
-      breadcrumbI18nKey: 'menu.reports',
+      breadcrumbI18nKey: 'menu.dashboard',
     },
-    loadChildren: () => import('./reports/reports.module').then((m) => m.ReportsModule),
+    loadChildren: () => import('./patient-dashboard/patient-dashboard.module').then((m) => m.PatientDashboardModule),
   },
   {
     path: 'case-management',

@@ -20,6 +20,15 @@ export default {
     name: 'PSIRA',
     header: 'Seleccione el informe que desea generar:',
   },
+  patientDashboard: {
+    welcome: '¡Bienvenido/a, {{name}}!',
+    intro: 'Aquí están sus evaluaciones pendientes.',
+    noAssessments: 'No tiene evaluaciones pendientes.',
+    date: 'Fecha',
+    status: 'Estado',
+    type: 'Tipo',
+    start: 'Comenzar',
+  },
   assessments: {
     myAssessment: 'Mi Evaluación',
     archivedAssessments: 'Mostrar Evaluaciones Archivadas',
@@ -267,6 +276,7 @@ export default {
       postalCode: 'Código Postal',
       country: 'País',
       emergency: 'Contacto de Emergencia',
+      emergencyContacts: 'Contactos de Emergencia',
       note: 'Nota',
       addCaregiver: 'Añadir Cuidador',
     },
@@ -337,6 +347,7 @@ export default {
   planAssessment: {
     assessmentName: 'Nombre de la Evaluación',
     patient: 'Seleccione el paciente al que pertenece esta evaluación',
+    target: 'Objetivo de la Evaluación',
     clinician: 'Terapeuta',
     informant: 'Tipo de Informante',
   },

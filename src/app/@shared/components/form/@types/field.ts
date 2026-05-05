@@ -29,6 +29,7 @@ export interface Field {
   validationMessage?: string;
   isRequired?: boolean;
   disabled?: boolean;
+  hidden?: boolean;
   isValid?: boolean;
   span?: number;
   translationPath?: string;

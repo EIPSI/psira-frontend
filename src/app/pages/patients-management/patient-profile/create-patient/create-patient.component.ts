@@ -245,10 +245,12 @@ export class CreatePatientComponent implements OnInit {
       if (createFormField) {
         createFormField.options = options;
         createFormField.disabled = scope === 'ASSIGNED';
+        createFormField.hidden = scope === 'ASSIGNED';
       }
       if (updateFormField) {
         updateFormField.options = options;
         updateFormField.disabled = scope === 'ASSIGNED';
+        updateFormField.hidden = scope === 'ASSIGNED';
       }
     });
   }
