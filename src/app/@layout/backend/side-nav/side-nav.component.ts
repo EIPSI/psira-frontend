@@ -11,7 +11,7 @@ import { AppPermissionsService } from '@shared/services/app-permissions.service'
 export class SideNavComponent implements OnInit {
   isFolded: boolean;
   isSideNavDark: boolean;
-  public menuItems = [];
+  public menuItems: any[] = [];
   @Input() isCollapsed = false;
 
   constructor(private themeService: ThemeConstantService, public perms: AppPermissionsService) {}
