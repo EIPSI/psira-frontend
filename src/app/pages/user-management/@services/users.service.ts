@@ -28,6 +28,30 @@ export class UsersService {
     });
   }
 
+  getTherapists(filter?: any): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: UsersQueries.therapists,
+      variables: filter,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  getSupervisors(filter?: any): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: UsersQueries.supervisors,
+      variables: filter,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  getSupervisorVisiblePatients(filter: { therapistId: number; supervisorId: number }): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: UsersQueries.supervisorVisiblePatients,
+      variables: filter,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
   createUser(createOneUserInput: CreateOneUserInput): Observable<FetchResult<any>> {
     return this.apollo.mutate({
       mutation: UsersMutations.createOneUser,
@@ -80,6 +104,46 @@ export class UsersService {
     return this.apollo.mutate({
       mutation: UsersMutations.softDeleteUser,
       variables: { id: user.id },
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  assignTherapistSupervisor(relationship: { therapistId: number; supervisorId: number }): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: UsersMutations.assignTherapistSupervisor,
+      variables: relationship,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  unassignTherapistSupervisor(relationship: { therapistId: number; supervisorId: number }): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: UsersMutations.unassignTherapistSupervisor,
+      variables: relationship,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  assignSupervisorPatientVisibility(relationship: {
+    therapistId: number;
+    supervisorId: number;
+    patientId: number;
+  }): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: UsersMutations.assignSupervisorPatientVisibility,
+      variables: relationship,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  unassignSupervisorPatientVisibility(relationship: {
+    therapistId: number;
+    supervisorId: number;
+    patientId: number;
+  }): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: UsersMutations.unassignSupervisorPatientVisibility,
+      variables: relationship,
       fetchPolicy: 'no-cache',
     });
   }

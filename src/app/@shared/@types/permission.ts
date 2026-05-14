@@ -8,6 +8,7 @@ export enum PermissionKey {
 
   VIEW_ASSESSMENTS = 'view assessments',
   MANAGE_ASSESSMENTS = 'manage assessments',
+  ASSIGN_ANY_ASSESSMENT_USER = 'assign any assessment user',
   DELETE_ASSESSMENTS = 'delete assessments',
 
   VIEW_USERS = 'view users',

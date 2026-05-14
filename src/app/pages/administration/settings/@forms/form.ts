@@ -92,6 +92,42 @@ const general: Form & { groups: { fields: { name: keyof Setting }[] }[] } = {
   ],
 };
 
+const automaticEmails: Form & { groups: { fields: { name: keyof Setting }[] }[] } = {
+  submitButtonText: 'Save',
+  groups: [
+    {
+      fields: [
+        {
+          title: 'Send first login emails',
+          name: 'sendWelcomeEmails',
+          type: 'radio',
+          options: [
+            { value: true, label: 'Enabled' },
+            { value: false, label: 'Disabled' },
+          ],
+          isRequired: false,
+          description: 'Enable automatic first login emails',
+          validationMessage: '',
+          span: 8,
+          value: true,
+        },
+        {
+          title: 'First login email template',
+          name: 'welcomeEmailTemplateId',
+          type: 'select',
+          options: [],
+          isRequired: false,
+          description: 'Select first login template',
+          validationMessage: '',
+          span: 8,
+          value: undefined,
+        },
+      ],
+    },
+  ],
+};
+
 export const settingsForms = {
   general,
+  automaticEmails,
 };

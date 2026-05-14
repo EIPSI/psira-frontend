@@ -143,7 +143,9 @@ export class DepartmentsComponent implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe((response) => {
         if (getAllDepartments) {
-          this.departments = response.data.departments.edges.map((e: any) => e.node);
+          this.departments = response.data.departments.edges
+            .map((e: any) => e.node)
+            .filter((department: Department) => department.name !== 'Particular');
         } else {
           this.data = response.data.departments.edges.map((e: any) => e.node);
         }

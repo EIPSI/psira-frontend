@@ -30,6 +30,8 @@ export const ReportForm: Form = {
           type: 'select',
           options: [
             { label: 'Patients', value: 'Patients' },
+            { label: 'Therapists', value: 'Therapists' },
+            { label: 'Supervisors', value: 'Supervisors' },
             { label: 'Dashboard', value: 'Dashboard' },
           ],
           validationMessage: 'please Enter Report resources',

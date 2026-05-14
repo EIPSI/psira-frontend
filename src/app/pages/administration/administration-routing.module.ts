@@ -142,7 +142,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'emailTemplates.createTemplate',
           permissions: {
-            only: [PermissionKey.VIEW_SETTINGS],
+            only: [PermissionKey.MANAGE_TEMPLATES],
           },
         },
         canActivate: [PermissionGuard],
@@ -153,7 +153,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'emailTemplates.createTemplate',
           permissions: {
-            only: [PermissionKey.VIEW_SETTINGS],
+            only: [PermissionKey.MANAGE_TEMPLATES],
           },
         },
         canActivate: [PermissionGuard],

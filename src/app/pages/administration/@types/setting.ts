@@ -7,4 +7,6 @@ export interface Setting {
   maxLoginAttempts: number;
   passwordLifeTimeInDays: number;
   passwordReUseCutoffInDays: number;
+  sendWelcomeEmails: boolean;
+  welcomeEmailTemplateId: number;
 }

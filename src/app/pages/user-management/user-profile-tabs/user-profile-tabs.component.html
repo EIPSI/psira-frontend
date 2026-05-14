@@ -1,0 +1,57 @@
+<div class="user-header" *ngIf="userTitle">
+  <h1>{{ userTitle }}</h1>
+</div>
+
+<nz-tabset nzSize="large">
+  <nz-tab [nzTitle]="'core.assessments' | translate">
+    <app-master-data-list [columns]="assessmentColumns" [data]="assessments"></app-master-data-list>
+  </nz-tab>
+  <nz-tab [nzTitle]="'core.profile' | translate">
+    <app-user-form></app-user-form>
+  </nz-tab>
+  <nz-tab *ngIf="isTherapist" [nzTitle]="'menu.supervisors' | translate">
+    <div class="assignment-row">
+      <nz-select
+        [(ngModel)]="selectedSupervisorId"
+        [nzLoading]="supervisorsLoading"
+        nzPlaceHolder="Supervisor"
+        class="assignment-select"
+      >
+        <nz-option
+          *ngFor="let supervisor of availableSupervisors"
+          [nzValue]="supervisor.id"
+          [nzLabel]="formatUserName(supervisor)"
+        ></nz-option>
+      </nz-select>
+      <button nz-button nzType="primary" [disabled]="!selectedSupervisorId" (click)="assignSupervisor()">
+        {{ 'core.add' | translate }}
+      </button>
+    </div>
+
+    <ul nz-list [nzDataSource]="supervisors" [nzLoading]="supervisorsLoading">
+      <li nz-list-item *ngFor="let supervisor of supervisors" nzNoFlex>
+        <div class="supervisor-row">
+          <span>{{ formatUserName(supervisor) }}</span>
+          <button nz-button nzType="link" (click)="unassignSupervisor(supervisor)">
+            {{ 'core.remove' | translate }}
+          </button>
+        </div>
+      </li>
+    </ul>
+  </nz-tab>
+  <nz-tab [nzTitle]="'core.departments' | translate">
+    <nz-list [nzDataSource]="user?.departments || []" [nzRenderItem]="department">
+      <ng-template #department let-item>
+        <nz-list-item>{{ item.name }}</nz-list-item>
+      </ng-template>
+    </nz-list>
+  </nz-tab>
+  <nz-tab [nzTitle]="'core.reports' | translate">
+    <app-master-data-list
+      [columns]="reportColumns"
+      [data]="reports"
+      [loading]="reportsLoading"
+      (rowClick)="generateReport($event)"
+    ></app-master-data-list>
+  </nz-tab>
+</nz-tabset>

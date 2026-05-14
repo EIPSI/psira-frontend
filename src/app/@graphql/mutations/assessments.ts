@@ -198,6 +198,8 @@ const createOneMongoAssessment = gql`
   mutation($assessment: CreateFullAssessmentInput!) {
     createNewAssessment(assessment: $assessment) {
       id
+      targetUserId
+      responderUserId
     }
   }
 `;
@@ -206,6 +208,8 @@ const updateOneMongoAssessment = gql`
   mutation($assessment: UpdateFullAssessmentInput!) {
     updateAssessment(assessment: $assessment) {
       id
+      targetUserId
+      responderUserId
     }
   }
 `;

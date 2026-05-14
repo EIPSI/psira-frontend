@@ -87,6 +87,7 @@ export class CreateEmailTemplateComponent implements OnInit {
           this.emailForm.controls['status'].setValue(this.emailTemplate?.status);
           this.emailForm.controls['module'].setValue(this.emailTemplate?.module);
           this.emailForm.controls['isPublic'].setValue(this.emailTemplate?.isPublic);
+          this.allDepartments = this.emailTemplate?.isPublic;
           this.emailForm.controls['departmentIds'].setValue(this.emailTemplate?.departments.map((dep: any) => dep.id));
           this.selectedDepartments = this.emailTemplate?.departments.map((dep: any) => dep.id);
         });
@@ -100,7 +101,9 @@ export class CreateEmailTemplateComponent implements OnInit {
       .pipe()
       .subscribe(
         ({ data }: any) => {
-          this.listOfDepartments = data.departments.edges.map((department: any) => Convert.toDepartment(department.node));
+          this.listOfDepartments = data.departments.edges
+            .map((department: any) => Convert.toDepartment(department.node))
+            .filter((department: any) => department.name !== 'Particular');
         },
         (err) => this.errorService.handleError(err, { prefix: 'Unable to load departments' })
       );
@@ -119,7 +122,7 @@ export class CreateEmailTemplateComponent implements OnInit {
   }
 
   onFormSubmit(){
-    this.emailForm.controls['departmentIds'].setValue(this.selectedDepartments);
+    this.emailForm.controls['departmentIds'].setValue(this.emailForm.value.isPublic ? [] : this.selectedDepartments);
     this.emailTemplatesService.createEmailTemplate(this.emailForm.value).subscribe(() => {
       this.emailForm.reset();
       const message$ = this.translate.get('emailTemplates.created').subscribe((message) => {
@@ -134,7 +137,7 @@ export class CreateEmailTemplateComponent implements OnInit {
   }
 
   onFormUpdateSubmit(){
-    this.emailForm.controls['departmentIds'].setValue(this.selectedDepartments);
+    this.emailForm.controls['departmentIds'].setValue(this.emailForm.value.isPublic ? [] : this.selectedDepartments);
     this.emailTemplatesService.updateEmailTemplate({id: this.selectedId, ...this.emailForm.value}).subscribe(() => {
       this.emailForm.reset();
       const message$ = this.translate.get('emailTemplates.updated').subscribe((message) => {

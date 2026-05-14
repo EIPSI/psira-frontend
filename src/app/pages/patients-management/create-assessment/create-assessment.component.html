@@ -29,16 +29,17 @@
             </nz-form-item>
             <nz-form-item style="margin-bottom: 15px">
                 <nz-radio-group formControlName="informantType" nzButtonStyle="solid" [nzDisabled]="!editMode" [(ngModel)]="typeSelected" (ngModelChange)="onSelectChange($event)">
-                    <h5>Informant Type</h5>
+                    <h5>Who responds?</h5>
                     <label nz-radio-button nzValue="PATIENT">{{ 'createAssessment.patient' | translate }}</label>
-                    <label nz-radio-button nzValue="USER">{{ 'createAssessment.departmentsUser' | translate }}</label>
                     <label nz-radio-button nzValue="CAREGIVER">{{ 'createAssessment.patientsCaregiver' | translate }}</label>
+                    <label nz-radio-button nzValue="CASE_MANAGER">Case administrator</label>
+                    <label nz-radio-button nzValue="OTHER_USER">Other user</label>
                 </nz-radio-group>
             </nz-form-item>
             <nz-form-item *ngIf="typeSelected === 'PATIENT'">
                 <nz-input-group>
                     <h5>{{ 'createAssessment.patient' | translate }}</h5>
-                    <nz-select [nzBorderless]="!editMode" class="input-class" [nzDisabled]="!editMode" [(ngModel)]="selectedInformant" formControlName="informantPatient">
+                    <nz-select [nzBorderless]="!editMode" class="input-class" [nzDisabled]="!editMode" [(ngModel)]="selectedInformant" (ngModelChange)="onResponderSelect($event)" formControlName="responderUserId">
                         <nz-option *ngFor="let data of dataToSelect" [nzLabel]="data.label" [nzValue]="data.value">{{
             data.label
             }}</nz-option>
@@ -46,10 +47,10 @@
                     <p>Self Rating.</p>
                 </nz-input-group>
             </nz-form-item>
-            <nz-form-item *ngIf="typeSelected === 'USER'">
+            <nz-form-item *ngIf="typeSelected === 'CASE_MANAGER' || typeSelected === 'OTHER_USER'">
                 <nz-input-group>
-                    <h5>{{ 'createAssessment.departmentsUser' | translate }}</h5>
-                    <nz-select [nzBorderless]="!editMode" class="input-class" [nzDisabled]="!editMode" [(ngModel)]="selectedInformant" formControlName="informantClinicianId">
+                    <h5>{{ typeSelected === 'CASE_MANAGER' ? 'Case administrator' : ('createAssessment.departmentsUser' | translate) }}</h5>
+                    <nz-select [nzBorderless]="!editMode" class="input-class" [nzDisabled]="!editMode" [(ngModel)]="selectedInformant" (ngModelChange)="onResponderSelect($event)" formControlName="responderUserId">
                         <nz-option *ngFor="let data of dataToSelect" [nzLabel]="data.label" [nzValue]="data.value">{{
             data.label
             }}</nz-option>
@@ -59,7 +60,11 @@
             <nz-form-item *ngIf="typeSelected === 'CAREGIVER'">
                 <nz-input-group>
                     <h5>{{ 'createAssessment.patientsCaregiver' | translate }}</h5>
-                    <nz-select [nzBorderless]="!editMode" [nzOptions]="options" class="input-class" [nzDisabled]="!editMode" [(ngModel)]="selectedInformant" formControlName="informantCaregiverRelation"></nz-select>
+                    <nz-select [nzBorderless]="!editMode" class="input-class" [nzDisabled]="!editMode" [(ngModel)]="selectedInformant" (ngModelChange)="onResponderSelect($event)" formControlName="responderUserId">
+                        <nz-option *ngFor="let data of dataToSelect" [nzLabel]="data.label" [nzValue]="data.value">{{
+            data.label
+            }}</nz-option>
+                    </nz-select>
                 </nz-input-group>
             </nz-form-item>
             <!-- Start Update -->

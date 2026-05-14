@@ -48,7 +48,7 @@ const informationFields: Field[] = [
     description: 'Enter medical record number',
     type: 'text',
     validationMessage: 'please enter medical record number',
-    isRequired: true,
+    isRequired: false,
     span: 8,
   },
   {
@@ -92,7 +92,7 @@ const departmentsField: Field = {
   type: 'select',
   // mode: 'multiple', // 2. BORRAMOS esta línea o la comentamos
   validationMessage: 'please select Department',
-  isRequired: false,
+  isRequired: true,
   options: [],
   span: 8,
 };
@@ -200,10 +200,10 @@ const contactFields: Field[] = [
     title: 'Email Address',
     label: 'Email Address',
     translationPath: 'forms.patients.email',
-    description: 'Enter email address',
+    description: 'Enter email address (required for system access)',
     type: 'text',
     validationMessage: 'please enter email address',
-    isRequired: false,
+    isRequired: true,
     span: 8,
   },
   {

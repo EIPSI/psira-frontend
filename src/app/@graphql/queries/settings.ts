@@ -9,6 +9,10 @@ const settings = gql`
       timeFormat
       dateTimeFormat
       maxLoginAttempts
+      passwordLifeTimeInDays
+      passwordReUseCutoffInDays
+      sendWelcomeEmails
+      welcomeEmailTemplateId
     }
   }
 `;

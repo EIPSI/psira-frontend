@@ -16,6 +16,7 @@ const graphqlString = `
       note
       caregiver{
       id
+      userId
       firstName
       middleName
       lastName

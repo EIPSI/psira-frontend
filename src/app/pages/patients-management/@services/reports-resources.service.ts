@@ -11,9 +11,13 @@ export class ReportsResourcesService {
   constructor(private apollo: Apollo) {}
 
   getPatientCaseManagers(): Observable<FetchResult<any>> {
+    return this.getReportsByResource('Patients');
+  }
+
+  getReportsByResource(resource: string): Observable<FetchResult<any>> {
     return this.apollo.query({
       query: ReportsByResourcesQueries.getReportsByResources,
-      variables: { resource: 'Patients' },
+      variables: { resource },
       fetchPolicy: 'no-cache',
     });
   }

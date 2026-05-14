@@ -173,6 +173,30 @@ const userAcceptedTerm = gql`
   }
 `;
 
+const assignTherapistSupervisor = gql`
+  mutation($therapistId: Int!, $supervisorId: Int!) {
+    assignTherapistSupervisor(therapistId: $therapistId, supervisorId: $supervisorId)
+  }
+`;
+
+const unassignTherapistSupervisor = gql`
+  mutation($therapistId: Int!, $supervisorId: Int!) {
+    unassignTherapistSupervisor(therapistId: $therapistId, supervisorId: $supervisorId)
+  }
+`;
+
+const assignSupervisorPatientVisibility = gql`
+  mutation($therapistId: Int!, $supervisorId: Int!, $patientId: Int!) {
+    assignSupervisorPatientVisibility(therapistId: $therapistId, supervisorId: $supervisorId, patientId: $patientId)
+  }
+`;
+
+const unassignSupervisorPatientVisibility = gql`
+  mutation($therapistId: Int!, $supervisorId: Int!, $patientId: Int!) {
+    unassignSupervisorPatientVisibility(therapistId: $therapistId, supervisorId: $supervisorId, patientId: $patientId)
+  }
+`;
+
 export const UsersMutations = {
   createOneUser,
   updateOneUser,
@@ -181,4 +205,8 @@ export const UsersMutations = {
   updateUserPassword,
   changeUserPassword,
   userAcceptedTerm,
+  assignTherapistSupervisor,
+  unassignTherapistSupervisor,
+  assignSupervisorPatientVisibility,
+  unassignSupervisorPatientVisibility,
 };

@@ -1,10 +1,17 @@
 import { SideNavInterface } from '@app/@layout/backend/side-nav.type';
 import { PermissionKey as PK } from '@app/@shared/@types/permission';
-import { environment } from '@env/environment';
 
 export const MENU: SideNavInterface[] | any = [
   {
     path: 'dashboard',
+    title: 'menu.dashboard',
+    iconType: 'nzIcon',
+    iconTheme: 'outline',
+    icon: 'home',
+    submenu: [],
+  },
+  {
+    path: 'patient-dashboard',
     title: 'menu.dashboard',
     iconType: 'nzIcon',
     iconTheme: 'outline',
@@ -41,6 +48,22 @@ export const MENU: SideNavInterface[] | any = [
         iconType: '',
         iconTheme: '',
         permissions: [PK.VIEW_PATIENTS],
+        submenu: [],
+      },
+      {
+        path: 'user-management/therapists',
+        title: 'menu.therapistsList',
+        iconType: '',
+        iconTheme: '',
+        permissions: [PK.VIEW_USERS],
+        submenu: [],
+      },
+      {
+        path: 'user-management/supervisors',
+        title: 'menu.supervisorsList',
+        iconType: '',
+        iconTheme: '',
+        permissions: [PK.VIEW_USERS],
         submenu: [],
       },
     ],
@@ -142,7 +165,7 @@ export const MENU: SideNavInterface[] | any = [
   {
     path: 'administration',
     title: 'menu.administration',
-    permissions: [PK.VIEW_ROLES_PERMISSIONS, PK.VIEW_SETTINGS, PK.VIEW_SYSCONF],
+    permissions: [PK.VIEW_ROLES_PERMISSIONS, PK.VIEW_SETTINGS, PK.VIEW_SYSCONF, PK.VIEW_TEMPLATES],
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'setting',
@@ -214,15 +237,15 @@ export const MENU: SideNavInterface[] | any = [
         iconTheme: '',
         submenu: [],
       },
-      // {
-      //   path: 'administration/email-templates',
-      //   title: 'menu.emailTemplates',
-      //   permissions: [PK.VIEW_SETTINGS],
-      //   iconType: 'nzIcon',
-      //   iconTheme: 'outline',
-      //   icon: 'code',
-      //   submenu: [],
-      // },
+      {
+        path: 'administration/email-templates',
+        title: 'menu.emailTemplates',
+        permissions: [PK.VIEW_TEMPLATES],
+        iconType: 'nzIcon',
+        iconTheme: 'outline',
+        icon: 'mail',
+        submenu: [],
+      },
       {
         path: 'administration/version',
         title: 'menu.version',
@@ -232,46 +255,31 @@ export const MENU: SideNavInterface[] | any = [
         icon: 'code',
         submenu: [],
       },
-      // {
-      //   path: 'administration/settings',
-      //   title: 'menu.settings',
-      //   permissions: [PK.VIEW_SETTINGS, PK.VIEW_SYSCONF],
-      //   iconType: '',
-      //   iconTheme: '',
-      //   submenu: [
-      //     {
-      //       path: 'administration/settings/system-configuration',
-      //       title: 'menu.systemConfiguration',
-      //       permissions: [PK.VIEW_SYSCONF],
-      //       iconType: '',
-      //       iconTheme: '',
-      //       submenu: [],
-      //     },
-      //     {
-      //       path: 'administration/settings/patient-statuses',
-      //       title: 'menu.patientStatuses',
-      //       permissions: [PK.VIEW_SETTINGS],
-      //       iconType: '',
-      //       iconTheme: '',
-      //       submenu: [],
-      //     },
-      //   ],
-      // },
+      {
+        path: 'administration/settings',
+        title: 'menu.settings',
+        permissions: [PK.VIEW_SETTINGS, PK.VIEW_SYSCONF],
+        iconType: '',
+        iconTheme: '',
+        submenu: [
+          {
+            path: 'administration/settings/system-configuration',
+            title: 'menu.systemConfiguration',
+            permissions: [PK.VIEW_SYSCONF],
+            iconType: '',
+            iconTheme: '',
+            submenu: [],
+          },
+          {
+            path: 'administration/settings/automatic-emails',
+            title: 'menu.automaticEmails',
+            permissions: [PK.VIEW_SYSCONF],
+            iconType: '',
+            iconTheme: '',
+            submenu: [],
+          },
+        ],
+      },
     ],
   },
 ];
-
-// Logic for conditionally adding email templates
-// button on the menu, if env variable is true..
-
-if (environment.email) {
-  MENU[5].submenu.splice(8, 0, {
-    path: 'administration/email-templates',
-    title: 'menu.emailTemplates',
-    permissions: [PK.VIEW_SETTINGS],
-    iconType: 'nzIcon',
-    iconTheme: 'outline',
-    icon: 'code',
-    submenu: [],
-  });
-}

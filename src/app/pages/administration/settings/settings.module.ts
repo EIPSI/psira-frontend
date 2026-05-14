@@ -10,6 +10,7 @@ import { PatientStatusesService } from '../../patients-management/@services/pati
 import { SettingsRoutingModule } from './settings-routing.module';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { AutomaticEmailSettingsComponent } from './automatic-email-settings/automatic-email-settings.component';
 
 const antModules = [NzAlertModule, NzDrawerModule];
 
@@ -23,7 +24,7 @@ const antModules = [NzAlertModule, NzDrawerModule];
     SharedModule,
     SettingsRoutingModule,
   ],
-  declarations: [PatientStatusesComponent, SystemConfigurationComponent],
+  declarations: [PatientStatusesComponent, SystemConfigurationComponent, AutomaticEmailSettingsComponent],
   providers: [PatientStatusesService],
 })
 export class SettingsModule {}

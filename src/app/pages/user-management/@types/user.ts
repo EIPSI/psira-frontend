@@ -51,4 +51,6 @@ export interface CreateUserInput {
   birthDate?: string;
   nationality?: string;
   acceptedTerm?: boolean;
+  departmentIds?: number[];
+  roleCodes?: string[];
 }

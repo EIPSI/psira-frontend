@@ -7,6 +7,11 @@ import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { ReportsComponent } from './reports/reports.component';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { MasterDataModule } from '@shared/@modules/master-data/master-data.module';
+import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzButtonModule } from 'ng-zorro-antd/button';
 
 @NgModule({
   declarations: [DashboardComponent, ReportsComponent],
@@ -17,6 +22,11 @@ import { MasterDataModule } from '@shared/@modules/master-data/master-data.modul
     NzTabsModule,
     NzModalModule,
     MasterDataModule,
+    NzCardModule,
+    NzSpinModule,
+    NzEmptyModule,
+    NzTagModule,
+    NzButtonModule,
   ],
 })
 export class DashboardModule {}

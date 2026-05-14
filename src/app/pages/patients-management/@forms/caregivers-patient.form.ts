@@ -130,10 +130,10 @@ export const CaregiversPatientForm: Form = {
           label: 'Email',
           // disabled: true,
           translationPath: 'forms.patients.email',
-          description: 'Enter contact email',
+          description: 'Enter contact email (required for system access)',
           type: 'text',
           validationMessage: 'please enter contact email',
-          isRequired: false,
+          isRequired: true,
           span: 12,
         },
         {

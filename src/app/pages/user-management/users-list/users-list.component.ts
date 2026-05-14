@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormattedUser } from '../@types/formatted-user';
 
 import { Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { UsersService } from '@app/pages/user-management/@services/users.service';
 import { environment } from '@env/environment';
 import { PageInfo, Paging } from '@shared/@types/paging';
@@ -55,16 +56,22 @@ export class UsersListComponent {
   public pageInfo: PageInfo;
 
   public actions: Action<ActionKey>[] = [];
+  public roleCodeFilter: string;
 
   constructor(
     private usersService: UsersService,
     private router: Router,
+    private activatedRoute: ActivatedRoute,
     public perms: AppPermissionsService,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
     private departmentsService: DepartmentsService,
     private rolesService: RolesService
   ) {
+    this.roleCodeFilter = this.activatedRoute.snapshot.data?.roleCode;
+    if (this.roleCodeFilter) {
+      this.userRequestOptions.filter = this.withRoleFilter({});
+    }
     this.getUsers();
     this.getDepartments();
     this.getRoles();
@@ -85,20 +92,21 @@ export class UsersListComponent {
   }
 
   public onFilter(filter: Filter): void {
-    this.userRequestOptions.filter = filter;
+    this.userRequestOptions.filter = this.withRoleFilter(filter);
     this.getUsers();
   }
 
   public onSearch(searchString: string): void {
-    this.userRequestOptions.filter = { or: this.createSearchFilter(searchString) };
+    this.userRequestOptions.filter = this.withRoleFilter({ or: this.createSearchFilter(searchString) });
     this.getUsers();
   }
 
   public onUserSelect(user: FormattedUser): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(user), environment.secretKey).toString();
-    this.router.navigate(['/psira/user-management/user-form'], {
+    this.router.navigate([this.roleCodeFilter ? '/psira/user-management/profile' : '/psira/user-management/user-form'], {
       queryParams: {
         user: dataString,
+        roleCode: this.roleCodeFilter,
       },
     });
   }
@@ -155,7 +163,9 @@ export class UsersListComponent {
 
   private getDepartments(): void {
     this.departmentsService.departments({paging: {first: 50}}).subscribe(({ data }) => {
-      const departments: Department[] = data.departments.edges.map((e: any) => e.node);
+      const departments: Department[] = data.departments.edges
+        .map((e: any) => e.node)
+        .filter((department: Department) => department.name !== 'Particular');
       const column = this.columns.find((c) => c.name === 'formattedDepartments');
       column.filterField.options = departments.map((d) => ({ label: d.name, value: d.id }));
       this.columns = [...this.columns]; // trigger re-render
@@ -194,5 +204,16 @@ export class UsersListComponent {
         },
       },
     ];
+  }
+
+  private withRoleFilter(filter: Filter): Filter {
+    if (!this.roleCodeFilter) return filter;
+
+    const roleFilter = { roles: { code: { eq: this.roleCodeFilter } } } as any;
+    if (!filter || !Object.keys(filter).length) return roleFilter;
+
+    return {
+      and: [roleFilter, filter],
+    } as any;
   }
 }

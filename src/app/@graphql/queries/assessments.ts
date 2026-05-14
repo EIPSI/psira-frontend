@@ -17,6 +17,8 @@ const assessments = gql`
           emailStatus
           receiverEmail
           patientId
+          targetUserId
+          responderUserId
           mailTemplateId
           clinicianId
           submissionDate
@@ -29,6 +31,46 @@ const assessments = gql`
           deletedAt
           informantType
           clinician {
+            id
+            username
+            active
+            firstName
+            middleName
+            lastName
+            email
+            phone
+            workID
+            address
+            gender
+            birthDate
+            nationality
+            createdAt
+            updatedAt
+          }
+          targetUser {
+            id
+            username
+            active
+            firstName
+            middleName
+            lastName
+            email
+            phone
+            workID
+            address
+            gender
+            birthDate
+            nationality
+            createdAt
+            updatedAt
+            roles {
+              id
+              name
+              hierarchy
+              code
+            }
+          }
+          responderUser {
             id
             username
             active
@@ -213,6 +255,8 @@ const getFullAssessment = gql`
       informantType
       informantCaregiverRelation
       patientId
+      targetUserId
+      responderUserId
       clinicianId
       questionnaireAssessmentId
       informantClinician {
@@ -232,6 +276,46 @@ const getFullAssessment = gql`
         createdAt
         updatedAt
         deletedAt
+      }
+      targetUser {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+        roles {
+          id
+          name
+          hierarchy
+          code
+        }
+      }
+      responderUser {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
       }
       questionnaireAssessment {
         questionnaireBundles{

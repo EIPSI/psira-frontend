@@ -68,11 +68,13 @@ export class FormComponent implements OnInit {
   isValidForm(form?: Form): boolean {
     let isValid = true;
     form.groups.map((group: FieldGroup) => {
-      group.fields.map((field: Field) => {
-        if (field.type !== 'array') {
-          isValid = field.isValid && isValid;
-        }
-      });
+      if (!group.hidden) {
+        group.fields.map((field: Field) => {
+          if (!field.hidden && field.type !== 'array') {
+            isValid = field.isValid && isValid;
+          }
+        });
+      }
     });
     return isValid;
   }

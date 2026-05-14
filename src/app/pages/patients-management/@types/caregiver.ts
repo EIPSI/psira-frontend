@@ -3,6 +3,7 @@ import { Patient } from '@app/pages/patients-management/@types/patient';
 
 export interface Caregiver {
   id?: number;
+  userId?: number;
   patientId?: number;
   firstName: string;
   middleName?: string;
@@ -54,7 +55,9 @@ export interface SelectedCaregiver {
   email: string;
   firstName: string;
   id: number;
+  userId?: number;
   lastName: string;
   middleName: string;
   phone: string;
+  relation?: string;
 }

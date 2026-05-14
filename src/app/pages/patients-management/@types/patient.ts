@@ -6,6 +6,7 @@ import { Department } from '../../administration/@types/department';
 
 export interface Patient {
   id?: number;
+  userId?: number;
   statusId?: number;
   departmentIds?: number[];
   caseManagerIds?: number[];

@@ -26,7 +26,7 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   },
   {
     name: 'patientMedicalRecordNo',
-    title: 'Patient Hospital ID',
+    title: 'ID',
     translationPath: 'plannedAssessments.patientMedicalRecordNo',
   },
   {

@@ -117,6 +117,8 @@ export class CreateAssessmentComponent implements OnInit {
     this.formGroup = this.formBuilder.group({
       assessmentTypeId: [null, Validators.required],
       clinicianId: [null, Validators.required],
+      targetUserId: [null, Validators.required],
+      responderUserId: [null, Validators.required],
       informantPatient: [null],
       informantClinicianId: [null],
       informantCaregiverRelation: [null],
@@ -184,20 +186,44 @@ export class CreateAssessmentComponent implements OnInit {
       this.dataToSelect = [
         {
           label: this.patient.firstName + ' ' + this.patient.lastName + ' ' + this.patient.medicalRecordNo,
-          value: this.patient.id,
+          value: this.patient.userId,
+          email: this.patient.email,
         },
       ];
-      this.selectedInformant = this.patient?.id;
-    } else if (event === `USER`) {
+      this.selectedInformant = this.patient?.userId;
+    } else if (event === `CASE_MANAGER`) {
+      this.dataToSelect = (this.patient?.caseManagers ?? []).map((user) => ({
+        label: user.firstName + ' ' + user.lastName,
+        value: user.id,
+        email: user.email,
+      }));
+      this.selectedInformant = this.dataToSelect[0]?.value;
+    } else if (event === `OTHER_USER`) {
       this.dataToSelect = this.users.map((user) => ({
         label: user.firstName + ' ' + user.lastName,
         value: user.id,
+        email: user.email,
       }));
-      this.selectedInformant = this.users[0]?.id;
+      this.selectedInformant = this.dataToSelect[0]?.value;
     } else if (event === `CAREGIVER`) {
-      this.dataToSelect = this.options;
-      this.selectedInformant = this.options[0].value;
+      this.dataToSelect = this.caregivers
+        .filter((caregiver) => caregiver.userId)
+        .map((caregiver) => ({
+          label: [caregiver.firstName, caregiver.lastName, caregiver.relation ? `(${caregiver.relation})` : null]
+            .filter(Boolean)
+            .join(' '),
+          value: caregiver.userId,
+          email: caregiver.email,
+          relation: caregiver.relation,
+        }));
+      this.selectedInformant = this.dataToSelect[0]?.value;
     }
+    this.applySelectedResponder();
+  }
+
+  public onResponderSelect(userId: number): void {
+    this.selectedInformant = userId;
+    this.applySelectedResponder();
   }
 
   public onQuestionnaireSelected(questionnaires: QuestionnaireVersion[]): void {
@@ -265,10 +291,12 @@ export class CreateAssessmentComponent implements OnInit {
         console.log(PatientModel.fromJson(patient));
         this.patient = PatientModel.fromJson(patient);
         this.patientEmail = this.patient.email;
+        this.onSelectChange(this.typeSelected);
       }
     });
     if (this.editMode) {
-      this.selectedInformant = this.patient.id;
+      this.selectedInformant = this.patient.userId;
+      this.applySelectedResponder();
     }
   }
 
@@ -285,18 +313,23 @@ export class CreateAssessmentComponent implements OnInit {
 
     const questionnaires = this.selectedQuestionnaires.map((q) => q._id);
     const { informant, informantPatient, ...rest } = this.formGroup.value;
+    this.applySelectedResponder();
     const newAssessmentData = {
       ...rest,
       questionnaires,
       patientId: this.fullAssessment?.patientId ?? this.patient.id,
+      targetUserId: this.patient?.userId,
     };
 
-    if (this.typeSelected === `USER`) {
+    if (this.typeSelected === `OTHER_USER` || this.typeSelected === `CASE_MANAGER`) {
       newAssessmentData.informantCaregiverRelation = null;
+      newAssessmentData.informantClinicianId = newAssessmentData.responderUserId;
     }
 
     if (this.typeSelected === `CAREGIVER`) {
       newAssessmentData.informantClinicianId = null;
+      newAssessmentData.informantCaregiverRelation =
+        this.dataToSelect.find((entry: any) => entry.value === newAssessmentData.responderUserId)?.relation ?? null;
     }
 
     if (this.typeSelected === 'PATIENT') {
@@ -347,6 +380,8 @@ export class CreateAssessmentComponent implements OnInit {
       clinicianId: this.fullAssessment.clinician.id,
       deliveryDate: this.fullAssessment.deliveryDate,
       informantType: this.fullAssessment.informantType,
+      targetUserId: this.fullAssessment.targetUserId,
+      responderUserId: this.fullAssessment.responderUserId,
       mailTemplateId: this.fullAssessment.mailTemplateId,
       informantPatient: this.fullAssessment.patient,
       emailReminder: this.fullAssessment.emailReminder,
@@ -371,32 +406,39 @@ export class CreateAssessmentComponent implements OnInit {
     this.selectedAssessment = this.fullAssessment.assessmentType?.id;
     // this.formGroup.controls.note.disable();
 
-    if (this.fullAssessment.informantClinician) {
-      this.typeSelected = `USER`;
-      this.selectedInformant = this.fullAssessment.informantClinician.id;
+    if (this.fullAssessment.informantType === 'CASE_MANAGER' || this.fullAssessment.informantType === 'OTHER_USER') {
+      this.typeSelected = this.fullAssessment.informantType;
+      this.selectedInformant = this.fullAssessment.targetUserId || this.fullAssessment.informantClinician?.id;
       this.dataToSelect = [
         {
-          label: this.fullAssessment.informantClinician.firstName,
-          value: this.fullAssessment.informantClinician.id,
+          label:
+            this.fullAssessment.targetUser?.firstName ||
+            this.fullAssessment.informantClinician?.firstName ||
+            'Selected user',
+          value: this.selectedInformant,
+          email: this.fullAssessment.receiverEmail,
         },
       ];
     } else if (this.fullAssessment.informantCaregiverRelation) {
       this.typeSelected = `CAREGIVER`;
-      this.selectedInformant = this.fullAssessment.informantCaregiverRelation;
+      this.selectedInformant = this.fullAssessment.targetUserId;
       this.dataToSelect = [
         {
           label: this.fullAssessment.informantCaregiverRelation,
-          value: this.fullAssessment.informantCaregiverRelation,
+          value: this.fullAssessment.targetUserId,
+          email: this.fullAssessment.receiverEmail,
+          relation: this.fullAssessment.informantCaregiverRelation,
         },
       ];
     } else {
       this.typeSelected = 'PATIENT';
-      this.selectedInformant = this.fullAssessment.patient.id;
+      this.selectedInformant = this.fullAssessment.targetUserId || this.fullAssessment.patient.userId;
       this.dataToSelect = [
         {
           label:
             this.fullAssessment.patient.firstName + ' ' + this.patient.lastName + ' ' + this.patient.medicalRecordNo,
-          value: this.fullAssessment.patient.id,
+          value: this.selectedInformant,
+          email: this.fullAssessment.receiverEmail,
         },
       ];
     }
@@ -453,8 +495,14 @@ export class CreateAssessmentComponent implements OnInit {
       .subscribe((response) => {
         this.caregivers = response.data.patientCaregivers.edges
           .filter((e: any) => e.node.caregiver)
-          .map((caregiver: any) => caregiver.node.caregiver);
+          .map((caregiver: any) => ({
+            ...caregiver.node.caregiver,
+            relation: caregiver.node.relation,
+          }));
         this.pageInfo = response.data.patientCaregivers.pageInfo;
+        if (this.typeSelected === 'CAREGIVER') {
+          this.onSelectChange(this.typeSelected);
+        }
       });
   }
 
@@ -475,5 +523,14 @@ export class CreateAssessmentComponent implements OnInit {
     const cryptoId = CryptoJS.AES.encrypt(assesmentUuid, environment.secretKey).toString();
     const tree = this.router.createUrlTree(['/assessment/overview'], { queryParams: { assessment: cryptoId } });
     return this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
+  }
+
+  private applySelectedResponder(): void {
+    const responder = this.dataToSelect.find((entry: any) => entry.value === this.selectedInformant);
+    this.formGroup.patchValue({
+      responderUserId: this.selectedInformant,
+      receiverEmail: responder?.email ?? null,
+    });
+    this.patientEmail = responder?.email ?? '';
   }
 }

@@ -12,6 +12,7 @@ const getPatients = gql`
       edges {
         node {
           id
+          userId
           statusId
           medicalRecordNo
           firstName
