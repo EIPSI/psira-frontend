@@ -18,47 +18,6 @@
   </nz-tab>
   <nz-tab nzTitle="Settings">
     <div nz-row nzGutter="16">
-      <div *ngIf="roles.length > 0" nz-col>
-        <nz-card style="width: 300px" nzTitle="{{ user?.firstName }}'s Roles">
-          <nz-checkbox-wrapper style="width: 100%">
-            <div nz-row>
-              <div nz-col nzSpan="24" *ngFor="let role of roles">
-                <label
-                  [disabled]="
-                    !perms.permissionsOnly([PK.MANAGE_USERS]) ||
-                    !perms.hasAccessLevelToUser(user) ||
-                    !perms.hasAccessLevelToRole(role)
-                  "
-                  nz-checkbox
-                  [nzValue]="role.id"
-                  [ngModel]="userHasRole(role.id)"
-                  (ngModelChange)="assignRoleToUser(role, $event)"
-                  >{{ role.name }}</label
-                >
-              </div>
-            </div>
-          </nz-checkbox-wrapper>
-        </nz-card>
-      </div>
-      <div nz-col>
-        <nz-card style="width: 300px" nzTitle="{{ user?.firstName }}'s Departments">
-          <nz-checkbox-wrapper style="width: 100%">
-            <div nz-row>
-              <div nz-col nzSpan="24" *ngFor="let department of departments">
-                <label
-                  nz-checkbox
-                  [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
-                  [nzValue]="department.id"
-                  [ngModel]="userHasDepartment(department.id)"
-                  (ngModelChange)="assignDepartmentToUser(department, $event)"
-                  >{{ department.name }}</label
-                >
-              </div>
-            </div>
-          </nz-checkbox-wrapper>
-        </nz-card>
-      </div>
-
       <div nz-col>
         <nz-card style="width: 300px" nzTitle="Enable or Disable {{ user?.firstName }}">
           <p>To disable and Enable {{ user?.firstName }} toggle the switch below.</p>

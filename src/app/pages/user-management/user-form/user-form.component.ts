@@ -63,6 +63,7 @@ export class UserFormComponent implements OnInit {
   selectedDepartments: number[] = [];
   unselectedDepartments: number[];
   currentUser: User;
+  private defaultRoleCode: string;
 
   get userTitle(): string {
     const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
@@ -84,7 +85,7 @@ export class UserFormComponent implements OnInit {
   ngOnInit(): void {
     this.getUserFromUrl();
     this.getUser();
-    this.getRoles();
+    this.getRoles({ paging: { first: 50 } });
     this.getDepartments({paging: {first: 50}});
   }
 
@@ -96,17 +97,14 @@ export class UserFormComponent implements OnInit {
       .subscribe(
         ({ data }: any) => {
           const page = data.departments;
-          page.edges.map((departmentData: any) => {
-            const _department = Convert.toDepartment(departmentData.node);
-            this.departments.push(_department);
-          });
+          this.departments = page.edges
+            .map((departmentData: any) => Convert.toDepartment(departmentData.node))
+            .filter((department: Department) => department.name !== 'Particular');
 
           this.profileFields.groups.map((group) => {
             group.fields.map((field) => {
               if (field.name === 'departmentId') {
-                field.options = page.edges.map((departmentData: any) => {
-                  const department: Department = departmentData.node;
-                  this.departments.push(department);
+                field.options = this.departments.map((department: Department) => {
                   return {
                     value: department.id,
                     label: `${department.name}`,
@@ -153,6 +151,7 @@ export class UserFormComponent implements OnInit {
             if (field.name === 'roleId') field.options = options;
           })
         );
+        this.applyDefaultRole();
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
     );
@@ -218,20 +217,25 @@ export class UserFormComponent implements OnInit {
       this.populateForm = false;
       this.resetForm = false;
       if (params.user) {
+        this.defaultRoleCode = params.roleCode;
+        this.newMode = false;
         this.inputMode = false;
         this.showCancelButton = true;
         const bytes = CryptoJS.AES.decrypt(params.user, environment.secretKey);
         const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-        this.user = decryptedData;
+        this.user = this.withProfileRelations(decryptedData);
         if (this.user.birthDate) this.user.birthDate = decryptedData.birthDate.slice(0, 10);
         this.profileFields = userForms.userProfileEdit;
         this.populateForm = true;
       } else {
-        this.user = {};
-        this.resetForm = true;
+        this.defaultRoleCode = params.roleCode;
+        this.user = { password: this.generateTemporaryPassword() } as User & { password: string };
+        this.resetForm = false;
         this.newMode = true;
         this.inputMode = true;
         this.profileFields = userForms.userProfile;
+        this.applyDefaultRole();
+        this.populateForm = true;
         this.showCancelButton = false;
       }
     });
@@ -241,12 +245,11 @@ export class UserFormComponent implements OnInit {
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    formData.username = formData.username.toLowerCase();
-    if (formData.password !== formData.passwordConfirmation) {
-      this.errorService.handleError(new Error(`Passwords don't match`));
-      return;
-    }
-    formData.passwordConfirmation = undefined;
+    formData.username = formData.email.toLowerCase();
+    formData.roleCodes = this.getRoleCodes(formData.roleId ?? []);
+    formData.departmentIds = formData.departmentId ?? [];
+    delete formData.roleId;
+    delete formData.departmentId;
     const inputData: CreateUserInput = Object.assign({}, formData);
     const userInput: CreateOneUserInput = {
       user: inputData,
@@ -266,12 +269,7 @@ export class UserFormComponent implements OnInit {
           this.message.create('success', `User has successfully been created`);
 
           this.user = UserModel.fromJson(data.createOneUser);
-          if (this.selectedRoles.length > 0) {
-            this.assignRoles();
-          }
-          if (this.selectedDepartments.length > 0) {
-            this.assignDepartments();
-          }
+          this.user = this.withProfileRelations(this.user);
           this.afterCreate();
         },
         (error) =>
@@ -282,6 +280,12 @@ export class UserFormComponent implements OnInit {
   }
 
   updateUser(userUpdates: CreateUserInput) {
+    userUpdates.username = userUpdates.email?.toLowerCase();
+    userUpdates.roleCodes = this.getRoleCodes((userUpdates as any).roleId ?? []);
+    userUpdates.departmentIds = (userUpdates as any).departmentId ?? [];
+    delete (userUpdates as any).roleId;
+    delete (userUpdates as any).departmentId;
+
     const userInput: UpdateOneUserInput = {
       id: this.user.id,
       update: userUpdates,
@@ -301,6 +305,7 @@ export class UserFormComponent implements OnInit {
       .subscribe(
         async ({ data }) => {
           this.user = UserModel.fromJson(data.updateOneUser);
+          this.user = this.withProfileRelations(this.user);
           this._child.toggleEdit();
           this.message.create('success', `User has successfully been updated`);
         },
@@ -337,12 +342,13 @@ export class UserFormComponent implements OnInit {
     this.populateForm = false;
     this.resetForm = false;
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
-    this.router.navigate(['/psira/user-management/user-form'], {
+    this.router.navigate([this.defaultRoleCode ? '/psira/user-management/profile' : '/psira/user-management/user-form'], {
       state: {
         title: `${this.user.firstName} ${this.user.lastName}`,
       },
       queryParams: {
         user: dataString,
+        roleCode: this.defaultRoleCode,
       },
     });
     this.newMode = false;
@@ -351,11 +357,20 @@ export class UserFormComponent implements OnInit {
   assignRoles(role?: Role) {
     this.isLoading = true;
     const rolesIds: number[] = role ? [role.id] : this.selectedRoles;
-    this.rolesService
-      .addRolesToUser(this.user.id, rolesIds)
+    const currentRoleIds = this.user.roles?.map((userRole) => userRole.id) ?? [];
+    const nextRoleIds = [...new Set([...currentRoleIds, ...rolesIds])];
+    this.usersService
+      .updateUser({
+        id: this.user.id,
+        update: { roleCodes: this.getRoleCodes(nextRoleIds) },
+      })
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
-        () => this.message.create('success', `the role(s) have been successful assigned to ${this.user.firstName}`),
+        ({ data }) => {
+          this.user = UserModel.fromJson(data.updateOneUser);
+          this.user = this.withProfileRelations(this.user);
+          this.message.create('success', `the role(s) have been successful assigned to ${this.user.firstName}`);
+        },
         (error) =>
           this.errorService.handleError(error, {
             prefix: `Unable to assign role(s) to ${this.user.firstName}`,
@@ -366,16 +381,31 @@ export class UserFormComponent implements OnInit {
   unassignRoles(role?: Role) {
     this.isLoading = true;
     const rolesIds: number[] = role ? [role.id] : this.unselectedRoles;
-    this.rolesService
-      .removeRolesFromUser(this.user.id, rolesIds)
+    const currentRoleIds = this.user.roles?.map((userRole) => userRole.id) ?? [];
+    const nextRoleIds = currentRoleIds.filter((roleId) => !rolesIds.includes(roleId));
+    this.usersService
+      .updateUser({
+        id: this.user.id,
+        update: { roleCodes: this.getRoleCodes(nextRoleIds) },
+      })
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
-        () => this.message.create('success', `the role(s) have been successful removed from ${this.user.firstName}`),
+        ({ data }) => {
+          this.user = UserModel.fromJson(data.updateOneUser);
+          this.user = this.withProfileRelations(this.user);
+          this.message.create('success', `the role(s) have been successful removed from ${this.user.firstName}`);
+        },
         (error) =>
           this.errorService.handleError(error, {
             prefix: `Unable to remove role(s) to ${this.user.firstName}`,
           })
       );
+  }
+
+  private getRoleCodes(roleIds: number[]): string[] {
+    return this.roles
+      .filter((role) => roleIds.includes(role.id))
+      .map((role) => role.code);
   }
 
   assignRoleToUser(role: Role, checked: boolean) {
@@ -434,17 +464,7 @@ export class UserFormComponent implements OnInit {
       if (this.user.id != null) {
         this.updateUser(form);
       } else {
-        if (form.password !== form.passwordConfirmation) {
-          this.errorService.handleError(new Error(`Passwords don't match`));
-        } else {
-          if (form.roleId) {
-            this.selectedRoles.push(form.roleId);
-          }
-          if (form.departmentId) {
-            this.selectedDepartments.push(form.departmentId);
-          }
-          this.createUser(form);
-        }
+        this.createUser(form);
       }
     }
   }
@@ -490,5 +510,31 @@ export class UserFormComponent implements OnInit {
 
   isCurrentUser(): boolean {
     return this.user?.id && this.currentUser?.id && this.user.id === this.currentUser.id;
+  }
+
+  private generateTemporaryPassword(): string {
+    const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  }
+
+  private withProfileRelations(user: User): User {
+    (user as any).roleId = user.roles?.map((role) => role.id) ?? [];
+    (user as any).departmentId = user.departments?.map((department) => department.id) ?? [];
+    return user;
+  }
+
+  private applyDefaultRole(): void {
+    if (!this.newMode || !this.defaultRoleCode || !this.roles.length || !this.user) return;
+
+    const defaultRole = this.roles.find((role) => role.code === this.defaultRoleCode);
+    if (!defaultRole) return;
+
+    (this.user as any).roleId = [defaultRole.id];
+    this.populateForm = false;
+    setTimeout(() => (this.populateForm = true));
   }
 }

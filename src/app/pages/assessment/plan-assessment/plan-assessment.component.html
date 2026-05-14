@@ -4,12 +4,16 @@
   <section nz-col nzSpan="10">
     <form nz-form [formGroup]="assessmentForm" (submit)="onSubmitAssessment()">
       <nz-form-item>
-        <nz-form-label>{{ 'planAssessment.target' | translate }}</nz-form-label>
+        <nz-form-label>Objetivo de la Evaluación</nz-form-label>
         <nz-form-control>
-          <nz-radio-group [(ngModel)]="targetType" [ngModelOptions]="{standalone: true}" (ngModelChange)="onTargetTypeChange($event)" [nzDisabled]="!editMode">
-            <label nz-radio nzValue="patient">{{ 'createAssessment.patient' | translate }}</label>
-            <label nz-radio nzValue="user">{{ 'createAssessment.departmentsUser' | translate }}</label>
-          </nz-radio-group>
+          <nz-select
+            [(ngModel)]="targetRoleCode"
+            [ngModelOptions]="{standalone: true}"
+            [nzDisabled]="!editMode"
+            (ngModelChange)="onTargetRoleChange($event)"
+          >
+            <nz-option *ngFor="let role of availableRoles" [nzValue]="role.code" [nzLabel]="role.name"></nz-option>
+          </nz-select>
         </nz-form-control>
       </nz-form-item>
       <nz-form-item *ngIf="targetType === 'patient'">
@@ -23,13 +27,25 @@
         </nz-form-control>
       </nz-form-item>
       <nz-form-item *ngIf="targetType === 'user'">
-        <nz-form-label nzFor="user">{{ 'createAssessment.departmentsUser' | translate }}</nz-form-label>
+        <nz-form-label nzFor="user">Usuario</nz-form-label>
         <nz-form-control>
-          <app-user-picker
-            [readonly]="!editMode"
-            [selectedUser]="selectedTargetUser"
-            (selectUser)="onTargetUserSelect($event)"
-          ></app-user-picker>
+          <nz-select
+            nzShowSearch
+            nzServerSearch
+            nzAllowClear
+            nzPlaceHolder="Search..."
+            [nzShowArrow]="false"
+            [nzDisabled]="!editMode"
+            formControlName="targetUserId"
+            (nzOnSearch)="searchTargetUsers($event)"
+            (ngModelChange)="onTargetUserOptionSelect($event)"
+          >
+            <nz-option
+              *ngFor="let user of targetUsers"
+              [nzValue]="user.id"
+              [nzLabel]="user.firstName + ' ' + user.lastName"
+            ></nz-option>
+          </nz-select>
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
@@ -58,65 +74,32 @@
         </nz-form-control>
       </nz-form-item>
       <nz-form-item style="margin-bottom: 15px">
-        <nz-radio-group
-          formControlName="informantType"
-          nzButtonStyle="solid"
-          [nzDisabled]="!editMode"
-          [(ngModel)]="typeSelected"
-          (ngModelChange)="onSelectChange($event)"
-        >
-          <h5>Informant Type</h5>
-          <label nz-radio-button nzValue="PATIENT">{{ 'createAssessment.patient' | translate }}</label>
-          <label nz-radio-button nzValue="USER">{{ 'createAssessment.departmentsUser' | translate }}</label>
-          <label nz-radio-button nzValue="CAREGIVER">{{ 'createAssessment.patientsCaregiver' | translate }}</label>
-        </nz-radio-group>
-      </nz-form-item>
-      <nz-form-item *ngIf="typeSelected === 'PATIENT'">
         <nz-input-group>
-          <h5>{{ 'createAssessment.patient' | translate }}</h5>
+          <h5>¿Quién Responde?</h5>
           <nz-select
-            [nzBorderless]="!editMode"
-            class="input-class"
+            formControlName="informantType"
             [nzDisabled]="!editMode"
-            [(ngModel)]="selectedInformant"
-            formControlName="informantPatient"
+            [(ngModel)]="typeSelected"
+            (ngModelChange)="onSelectChange($event)"
           >
-          <ng-container *ngIf="dataToSelect[0].value !== undefined">
-            <nz-option *ngFor="let data of dataToSelect" [nzLabel]="data.label" [nzValue]="data.value">{{
-              data.label
-            }}</nz-option>
-          </ng-container>
-          </nz-select>
-        </nz-input-group>
-        <p>Self Rating.</p>
-      </nz-form-item>
-      <nz-form-item *ngIf="typeSelected === 'USER'">
-        <nz-input-group>
-          <h5>{{ 'createAssessment.departmentsUser' | translate }}</h5>
-          <nz-select
-            [nzBorderless]="!editMode"
-            class="input-class"
-            [nzDisabled]="!editMode"
-            [(ngModel)]="selectedInformant"
-            formControlName="informantClinicianId"
-          >
-            <nz-option *ngFor="let data of dataToSelect" [nzLabel]="data.label" [nzValue]="data.value">{{
-              data.label
-            }}</nz-option>
+            <nz-option *ngFor="let role of availableRoles" [nzValue]="role.code" [nzLabel]="role.name"></nz-option>
           </nz-select>
         </nz-input-group>
       </nz-form-item>
-      <nz-form-item *ngIf="typeSelected === 'CAREGIVER'">
+      <nz-form-item>
         <nz-input-group>
-          <h5>{{ 'createAssessment.patientsCaregiver' | translate }}</h5>
+          <h5>Usuario que responde</h5>
           <nz-select
             [nzBorderless]="!editMode"
-            [nzOptions]="options"
             class="input-class"
             [nzDisabled]="!editMode"
             [(ngModel)]="selectedInformant"
-            formControlName="informantCaregiverRelation"
+            formControlName="responderUserId"
+            (ngModelChange)="applySelectedResponder($event)"
           >
+            <nz-option *ngFor="let data of responderOptions" [nzLabel]="data.label" [nzValue]="data.value">{{
+              data.label
+            }}</nz-option>
           </nz-select>
         </nz-input-group>
       </nz-form-item>
@@ -196,7 +179,7 @@
         <h5 style="margin-top: 20px">Send Email</h5>
         <div class="email-label-wrapper">
           <label [disableControl]="!editMode" formControlName="emailReminder" [nzValue]="fullAssessment?.emailReminder" [nzTooltipPlacement]="['topLeft', 'leftTop']" nz-tooltip nzTooltipTitle="Email will be sent on the selected delivery date!" class="email-label" [(nzChecked)]="checked" nz-checkbox>Sent assessment via email</label>
-          <input [disableControl]="!editMode" [ngModel]="patient?.email" style="width: 100%; height: min-content;" formControlName="receiverEmail" nz-input placeholder="youremail@domain.com" [value]="fullAssessment?.patient?.email" [disabled]="!checked" />
+          <input [disableControl]="!editMode" style="width: 100%; height: min-content;" formControlName="receiverEmail" nz-input placeholder="youremail@domain.com" readonly />
         </div>
         <nz-form-item>
           <nz-input-group *ngIf="assessmentForm.controls.emailReminder.value === true">

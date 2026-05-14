@@ -103,7 +103,94 @@ const getUserProfile = gql`
   }
 `;
 
+const supervisionUserFields = `
+  edges {
+    cursor
+    node {
+      id
+      username
+      active
+      firstName
+      middleName
+      lastName
+      email
+      phone
+      workID
+      departments {
+        id
+        name
+        description
+        active
+      }
+      roles {
+        id
+        name
+        isSuperAdmin
+        hierarchy
+        code
+      }
+      permissions {
+        id
+        name
+      }
+    }
+  }
+  pageInfo {
+    startCursor
+    endCursor
+    hasNextPage
+    hasPreviousPage
+  }
+`;
+
+const therapists = gql`
+  query($first: Int, $after: String, $last: Int, $before: String, $searchKeyword: String, $supervisorId: Int) {
+    therapists(
+      first: $first
+      after: $after
+      last: $last
+      before: $before
+      searchKeyword: $searchKeyword
+      supervisorId: $supervisorId
+    ) {
+      ${supervisionUserFields}
+    }
+  }
+`;
+
+const supervisors = gql`
+  query($first: Int, $after: String, $last: Int, $before: String, $searchKeyword: String, $therapistId: Int) {
+    supervisors(
+      first: $first
+      after: $after
+      last: $last
+      before: $before
+      searchKeyword: $searchKeyword
+      therapistId: $therapistId
+    ) {
+      ${supervisionUserFields}
+    }
+  }
+`;
+
+const supervisorVisiblePatients = gql`
+  query($therapistId: Int!, $supervisorId: Int!) {
+    supervisorVisiblePatients(therapistId: $therapistId, supervisorId: $supervisorId) {
+      id
+      firstName
+      middleName
+      lastName
+      medicalRecordNo
+      email
+      phone
+    }
+  }
+`;
+
 export const UsersQueries = {
   getUsers,
   getUserProfile,
+  therapists,
+  supervisors,
+  supervisorVisiblePatients,
 };

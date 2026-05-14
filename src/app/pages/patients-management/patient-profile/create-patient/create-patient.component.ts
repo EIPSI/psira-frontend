@@ -200,10 +200,13 @@ export class CreatePatientComponent implements OnInit {
       };
     }
     this.departmentsService.departments({ paging: { first: 50 }, filter }).subscribe((response) => {
-      const options = response.data.departments.edges.map((e: any) => ({
-        label: e.node.name,
-        value: e.node.id,
-      }));
+      const options = response.data.departments.edges
+        .map((e: any) => e.node)
+        .filter((department: any) => department.name !== 'Particular')
+        .map((department: any) => ({
+          label: department.name,
+          value: department.id,
+        }));
       const createFormField = this.patientForm.groups[0].fields.find((f) => f.name === 'departmentIds');
       const updateFormField = this.patientUpdateForm.groups[0].fields.find((f) => f.name === 'departmentIds');
       if (createFormField) {

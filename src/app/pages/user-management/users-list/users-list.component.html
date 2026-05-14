@@ -19,6 +19,7 @@
       nzType="primary"
       nzShape="circle"
       routerLink="/psira/user-management/user-form"
+      [queryParams]="roleCodeFilter ? { roleCode: roleCodeFilter } : null"
       *ngIf="perms.permissionsOnly([PK.MANAGE_USERS])"
     >
       <i nz-icon nzType="plus"></i>

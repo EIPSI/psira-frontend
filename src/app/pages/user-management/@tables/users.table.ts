@@ -33,7 +33,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Work ID',
+    title: 'ID',
     name: 'workID',
     translationPath: 'tables.users.workID',
     sort: true,
@@ -53,7 +53,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Username',
+    title: 'Email / Username',
     name: 'username',
     translationPath: 'tables.users.username',
     sort: true,

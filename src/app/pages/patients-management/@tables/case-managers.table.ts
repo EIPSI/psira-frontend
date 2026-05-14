@@ -33,7 +33,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Work ID',
+    title: 'ID',
     name: 'workID',
     translationPath: 'tables.casemanagers.workID',
     sort: true,

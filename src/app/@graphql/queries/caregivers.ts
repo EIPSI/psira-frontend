@@ -7,6 +7,7 @@ const caregivers = gql`
         cursor
         node {
           id
+          userId
           #          emergencyContact
           firstName
           middleName

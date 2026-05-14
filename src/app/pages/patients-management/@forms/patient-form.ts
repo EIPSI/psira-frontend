@@ -48,7 +48,7 @@ const informationFields: Field[] = [
     description: 'Enter medical record number',
     type: 'text',
     validationMessage: 'please enter medical record number',
-    isRequired: true,
+    isRequired: false,
     span: 8,
   },
   {

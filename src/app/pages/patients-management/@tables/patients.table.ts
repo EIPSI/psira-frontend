@@ -34,7 +34,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     },
   },
   {
-    title: 'Hospital ID',
+    title: 'ID',
     name: 'medicalRecordNo',
     translationPath: 'tables.patients.medicalRecordNo',
     sort: true,

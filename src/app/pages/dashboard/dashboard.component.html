@@ -1,5 +1,33 @@
 <nz-tabset nzSize="large">
-  <nz-tab nzTitle="Dashboard">
+  <nz-tab nzTitle="General">
+    <div class="container-fluid">
+      <div class="row m-t-20">
+        <div *ngIf="assessmentsLoading" class="col-md-12 text-center">
+          <nz-spin nzSize="large"></nz-spin>
+        </div>
+
+        <div *ngIf="!assessmentsLoading && assessments.length === 0" class="col-md-12">
+          <nz-empty nzNotFoundContent="No pending assessments"></nz-empty>
+        </div>
+
+        <div *ngFor="let assessment of assessments" class="col-md-4 m-b-20">
+          <nz-card [nzTitle]="assessment.name" [nzExtra]="extraTemplate">
+            <div class="assessment-details">
+              <p><strong>Date:</strong> {{ assessment.createdAt | date:'shortDate' }}</p>
+              <p><strong>Status:</strong>
+                <nz-tag [nzColor]="assessment.formattedStatus?.color">{{ assessment.status }}</nz-tag>
+              </p>
+              <p><strong>Type:</strong> {{ assessment.formattedAssessmentType }}</p>
+            </div>
+            <ng-template #extraTemplate>
+              <button nz-button nzType="primary" (click)="startAssessment(assessment)">Start</button>
+            </ng-template>
+          </nz-card>
+        </div>
+      </div>
+    </div>
+  </nz-tab>
+  <nz-tab nzTitle="Reports" *ngIf="reports.length > 0">
     <app-reports></app-reports>
   </nz-tab>
 </nz-tabset>

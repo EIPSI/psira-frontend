@@ -42,7 +42,7 @@ export class RolesAndPermissionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.getPermissions({ paging: this.permissionsPaging });
-    this.getRoles();
+    this.getRoles({ paging: this.rolesPaging });
   }
 
   getPermissions(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting }) {
@@ -103,7 +103,9 @@ export class RolesAndPermissionsComponent implements OnInit {
         .addPermissionsToRole(role.id, [permission.id])
         .pipe(finalize(() => (this.loading = false)))
         .subscribe(
-          () => {},
+          () => {
+            role.permissions = [...(role.permissions ?? []), permission];
+          },
           (error: any) =>
             this.errorService.handleError(error, {
               prefix: `Unable to assign permission "${permission.name}" to role "${role.name}"`,
@@ -114,7 +116,9 @@ export class RolesAndPermissionsComponent implements OnInit {
         .removePermissionsFromRole(role.id, [permission.id])
         .pipe(finalize(() => (this.loading = false)))
         .subscribe(
-          () => {},
+          () => {
+            role.permissions = role.permissions?.filter((rolePermission) => rolePermission.id !== permission.id) ?? [];
+          },
           (error: any) =>
             this.errorService.handleError(error, {
               prefix: `Unable to remove permission "${permission.name}" from role "${role.name}"`,

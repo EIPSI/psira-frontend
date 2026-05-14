@@ -27,6 +27,10 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { EmailTemplatesService } from '@app/pages/administration/@services/email-templates.service';
 import { DEFAULT_PAGE_SIZE } from '@app/@shared/@modules/master-data/@types/list';
 import { QuestionnaireBundlesService } from '@app/pages/questionnaire-management/@services/questionnaire-bundles.service';
+import { RolesService } from '@app/pages/administration/@services/roles.service';
+import { Role } from '@app/pages/administration/@types/role';
+import { UsersService } from '@app/pages/user-management/@services/users.service';
+import { CaregiversPatientService } from '@app/pages/patients-management/@services/caregivers-patient.service';
 
 const CryptoJS = require('crypto-js');
 
@@ -50,6 +54,12 @@ export class PlanAssessmentComponent implements OnInit {
   public selectedPatient: Patient;
   public selectedTargetUser: User;
   public targetType: 'patient' | 'user' = 'patient';
+  public roles: Role[] = [];
+  public availableRoles: Role[] = [];
+  public targetRoleCode = 'PATIENT';
+  public responderRoleCode = 'PATIENT';
+  public targetUsers: User[] = [];
+  public responderOptions: Array<{ label: string; value: number; email?: string; relation?: string }> = [];
   @Input() public patient: FormattedPatient;
   @Input() public caregivers: SelectedCaregiver[] = [];
   public selectedInformant: any = null;
@@ -173,6 +183,9 @@ export class PlanAssessmentComponent implements OnInit {
     private bundlesService: QuestionnaireBundlesService,
     private departmentsService: DepartmentsService,
     private assessmentAdministrationService: AssessmentAdministrationService,
+    private rolesService: RolesService,
+    private usersService: UsersService,
+    private caregiversPatientService: CaregiversPatientService,
     public perms: AppPermissionsService,
     private router: Router,
     private locationStrategy: LocationStrategy,
@@ -181,12 +194,10 @@ export class PlanAssessmentComponent implements OnInit {
 
   public ngOnInit(): void {
     this.getAssessmentTypes();
+    this.getRoles();
     this.initAssessment();
     this.userAutoSelect();
     this.hasEmail = environment.email;
-    setTimeout(() => {
-      console.log('FULL ASSESSMENT: ', this.fullAssessment);
-    }, 1000);
   }
 
   get datesFieldAsFormArray(): FormArray {
@@ -210,26 +221,10 @@ export class PlanAssessmentComponent implements OnInit {
     if (!this.editMode) {
       return;
     }
-    console.log(this.patient);
-    console.log(this.selectedPatient);
-    if (event === 'PATIENT') {
-      this.dataToSelect = [
-        {
-          label: this.patient?.firstName + ' ' + this.patient?.lastName + ' ' + this.patient?.medicalRecordNo,
-          value: this.patient?.id,
-        },
-      ];
-      this.selectedInformant = this.patient?.id;
-    } else if (event === `USER`) {
-      this.dataToSelect = this.users.map((user) => ({
-        label: user.firstName + ' ' + user.lastName,
-        value: user.id,
-      }));
-      this.selectedInformant = this.users[0]?.id;
-    } else if (event === `CAREGIVER`) {
-      this.dataToSelect = this.options;
-      this.selectedInformant = this.options[0].value;
-    }
+    this.responderRoleCode = event;
+    this.typeSelected = event;
+    this.clearResponderSelection();
+    this.populateResponderOptions();
   }
 
   public userAutoSelect() {
@@ -241,22 +236,27 @@ export class PlanAssessmentComponent implements OnInit {
     if (this.assessmentForm.invalid) return;
     const questionnaires = this.selectedQuestionnaires.map((q) => q._id);
     const { informant, informantPatient, ...rest } = this.assessmentForm.value;
+    this.applySelectedResponder();
     const newAssessmentData = {
       ...rest,
       questionnaires,
     };
 
-    if (this.typeSelected === `USER`) {
+    if (this.responderRoleCode !== `CAREGIVER`) {
       newAssessmentData.informantCaregiverRelation = null;
     }
 
-    if (this.typeSelected === `CAREGIVER`) {
+    if (this.responderRoleCode === `CAREGIVER`) {
       newAssessmentData.informantClinicianId = null;
+      newAssessmentData.informantCaregiverRelation =
+        this.responderOptions.find((entry) => entry.value === newAssessmentData.responderUserId)?.relation ?? null;
     }
 
-    if (this.typeSelected === 'PATIENT') {
+    if (this.responderRoleCode === 'PATIENT') {
       newAssessmentData.informantClinicianId = null;
       newAssessmentData.informantCaregiverRelation = null;
+    } else if (this.responderRoleCode !== 'CAREGIVER') {
+      newAssessmentData.informantClinicianId = newAssessmentData.responderUserId;
     }
 
     const action = this.fullAssessment?.id
@@ -292,14 +292,84 @@ export class PlanAssessmentComponent implements OnInit {
     this.assessmentForm.patchValue({
       targetUserId: user?.id,
     });
+    this.defaultResponderToTargetRole();
+    this.populateResponderOptions();
+  }
+
+  public onTargetRoleChange(roleCode: string): void {
+    this.targetRoleCode = roleCode;
+    this.targetType = roleCode === 'PATIENT' ? 'patient' : 'user';
+    this.selectedPatient = null;
+    this.selectedTargetUser = null;
+    this.patient = null;
+    this.caregivers = [];
+    this.users = [];
+    this.targetUsers = [];
+    this.responderOptions = [];
+    this.selectedInformant = null;
+    this.defaultResponderToTargetRole();
+    this.assessmentForm.patchValue({
+      patientId: null,
+      targetUserId: null,
+      responderUserId: null,
+      receiverEmail: null,
+    });
+
+    if (this.targetType === 'patient') {
+      this.assessmentForm.get('patientId').setValidators(Validators.required);
+    } else {
+      this.assessmentForm.get('patientId').clearValidators();
+    }
+    this.assessmentForm.get('targetUserId').setValidators(Validators.required);
+    this.assessmentForm.get('patientId').updateValueAndValidity();
+    this.assessmentForm.get('targetUserId').updateValueAndValidity();
+
+    if (this.targetType === 'user') {
+      const currentUser = JSON.parse(localStorage.getItem('user')) as User;
+      if (currentUser?.roles?.some((role) => role.code === roleCode)) {
+        this.targetUsers = [currentUser];
+      }
+    }
+  }
+
+  public searchTargetUsers(search: string): void {
+    if (!search || this.targetRoleCode === 'PATIENT') return;
+
+    this.usersService
+      .getUsers({
+        filter: {
+          and: [
+            { roles: { code: { eq: this.targetRoleCode } } },
+            { or: this.createUserSearchFilter(search) },
+          ],
+        },
+      })
+      .subscribe(
+        ({ data }: any) => {
+          this.targetUsers = data.users.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load users' })
+      );
+  }
+
+  public onTargetUserOptionSelect(userId: number): void {
+    const user = this.targetUsers.find((entry) => entry.id === userId);
+    if (!user) return;
+
+    this.selectedTargetUser = user;
+    this.assessmentForm.patchValue({
+      patientId: null,
+      targetUserId: user.id,
+    });
+    this.defaultResponderToTargetRole();
+    this.populateResponderOptions();
   }
 
   public onTargetTypeChange(type: 'patient' | 'user') {
     this.targetType = type;
     if (type === 'patient') {
       this.assessmentForm.get('patientId').setValidators(Validators.required);
-      this.assessmentForm.get('targetUserId').clearValidators();
-      this.assessmentForm.get('targetUserId').setValue(null);
+      this.assessmentForm.get('targetUserId').setValidators(Validators.required);
       this.selectedTargetUser = null;
     } else {
       this.assessmentForm.get('targetUserId').setValidators(Validators.required);
@@ -312,26 +382,21 @@ export class PlanAssessmentComponent implements OnInit {
   }
 
   public onPatientSelect(patient: Patient) {
+    this.patient = patient;
+    this.selectedPatient = patient;
     this.assessmentForm.patchValue({
       patientId: patient?.id,
+      targetUserId: patient?.userId,
     });
-    if (this.typeSelected !== 'PATIENT') {
-      return;
-    }
-    this.patient = patient;
-    this.selectedInformant = patient?.id;
-    this.dataToSelect = [
-      {
-        label: patient?.firstName + ' ' + patient?.lastName + ' ' + patient?.medicalRecordNo,
-        value: patient?.id,
-      },
-    ];
+    this.defaultResponderToTargetRole();
     this.users = [];
 
     if (this.fullAssessment?.patientId || this.patient?.id) {
       this.getUserDepartments({
         filter: { and: [{ patients: { id: { eq: this.fullAssessment?.patientId ?? this.patient?.id } } }] },
       });
+      this.getCaregivers(this.fullAssessment?.patientId ?? this.patient?.id);
+      this.populateResponderOptions();
     }
 
     this.emailTemplates = [];
@@ -432,6 +497,7 @@ export class PlanAssessmentComponent implements OnInit {
         assessmentTypeId: [null, Validators.required],
         patientId: [null, Validators.required],
         targetUserId: [null],
+        responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
         questionnaires: [null, Validators.required],
         informantType: [null],
@@ -451,6 +517,7 @@ export class PlanAssessmentComponent implements OnInit {
         assessmentTypeId: [null, Validators.required],
         patientId: [null, Validators.required],
         targetUserId: [null],
+        responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
         questionnaires: [null, Validators.required],
         informantType: [null],
@@ -478,10 +545,10 @@ export class PlanAssessmentComponent implements OnInit {
         this.fullAssessment = assessment;
         this.assessmentUrl = new URL(this.generateAssessmentURL(this.fullAssessment?.uuid), window.location.origin);
         if (this.fullAssessment.targetUserId) {
-          this.onTargetTypeChange('user');
+          this.onTargetRoleChange(this.fullAssessment.patientId ? 'PATIENT' : this.fullAssessment.targetUser?.roles?.[0]?.code ?? 'PATIENT');
           this.selectedTargetUser = this.fullAssessment.targetUser;
         } else {
-          this.onTargetTypeChange('patient');
+          this.onTargetRoleChange('PATIENT');
           this.selectedPatient = this.fullAssessment.patient;
         }
         this.assessmentForm.patchValue({
@@ -493,6 +560,7 @@ export class PlanAssessmentComponent implements OnInit {
           informantType: this.fullAssessment.informantType,
           patientId: this.fullAssessment.patientId,
           targetUserId: this.fullAssessment.targetUserId,
+          responderUserId: this.fullAssessment.responderUserId,
           clinicianId: this.fullAssessment.clinicianId,
           informantPatient: this.fullAssessment.patient,
           informantClinicianId: this.fullAssessment.informantClinician?.id || null,
@@ -518,7 +586,9 @@ export class PlanAssessmentComponent implements OnInit {
         this.fullAssessment = this.fullAssessment;
         this.patient = this.fullAssessment.patient;
         this.selectedAssessment = this.fullAssessment.assessmentType?.id;
-        this.typeSelected = this.fullAssessment.informantType;
+        this.targetRoleCode = this.fullAssessment.patientId ? 'PATIENT' : this.fullAssessment.targetUser?.roles?.[0]?.code ?? 'PATIENT';
+        this.responderRoleCode = this.fullAssessment.informantType || 'PATIENT';
+        this.typeSelected = this.responderRoleCode;
         if (this.fullAssessment.informantClinician) {
           this.selectedInformant = this.fullAssessment.informantClinician.id;
           this.dataToSelect = [
@@ -553,6 +623,175 @@ export class PlanAssessmentComponent implements OnInit {
       (error) =>
         this.errorService.handleError(error, { prefix: `Unable to load the assessment with ID "${assessmentId}"` })
     );
+  }
+
+  public applySelectedResponder(userId: number = this.selectedInformant): void {
+    this.selectedInformant = userId;
+    const responder = this.responderOptions.find((entry: any) => entry.value === userId);
+    if (!responder) {
+      this.assessmentForm.patchValue({ responderUserId: null, receiverEmail: null });
+      return;
+    }
+    this.assessmentForm.patchValue({
+      responderUserId: userId,
+      receiverEmail: responder.email ?? null,
+    });
+  }
+
+  private clearResponderSelection(): void {
+    this.selectedInformant = null;
+    this.responderOptions = [];
+    this.assessmentForm.patchValue({
+      responderUserId: null,
+      receiverEmail: null,
+    });
+  }
+
+  private defaultResponderToTargetRole(): void {
+    this.responderRoleCode = this.targetRoleCode;
+    this.typeSelected = this.targetRoleCode;
+    this.assessmentForm.patchValue({ informantType: this.targetRoleCode });
+    this.clearResponderSelection();
+  }
+
+  private getRoles(): void {
+    const currentUser = JSON.parse(localStorage.getItem('user')) as User;
+    const currentHierarchy = Math.min(...(currentUser?.roles ?? []).map((role) => role.hierarchy));
+    const canAssignAnyAssessmentUser =
+      currentUser?.isSuperUser ||
+      currentUser?.roles?.some((role) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
+      currentUser?.permissions?.some((permission) => permission.name === PermissionKey.ASSIGN_ANY_ASSESSMENT_USER) ||
+      currentUser?.roles?.some((role) =>
+        role.permissions?.some((permission) => permission.name === PermissionKey.ASSIGN_ANY_ASSESSMENT_USER)
+      );
+
+    this.rolesService.roles({ paging: { first: 50 } }).subscribe(
+      ({ data }: any) => {
+        this.roles = data.roles.edges.map((edge: any) => edge.node);
+        this.availableRoles = this.roles
+          .filter((role) => canAssignAnyAssessmentUser || role.hierarchy > currentHierarchy)
+          .sort((a, b) => a.hierarchy - b.hierarchy);
+
+        const defaultRole = this.availableRoles.find((role) => role.code === 'PATIENT') ?? this.availableRoles[0];
+        if (defaultRole && !this.availableRoles.some((role) => role.code === this.targetRoleCode)) {
+          this.targetRoleCode = defaultRole.code;
+          this.responderRoleCode = defaultRole.code;
+          this.typeSelected = defaultRole.code;
+          this.onTargetRoleChange(defaultRole.code);
+        }
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+    );
+  }
+
+  private getCaregivers(patientId: number): void {
+    this.caregiversPatientService
+      .caregiversPatient({
+        filter: { and: [{ patient: { id: { eq: patientId } } }] },
+      })
+      .subscribe(
+        ({ data }: any) => {
+          this.caregivers = data.patientCaregivers.edges
+            .filter((edge: any) => edge.node.caregiver?.userId)
+            .map((edge: any) => ({
+              ...edge.node.caregiver,
+              relation: edge.node.relation,
+            }));
+          if (this.responderRoleCode === 'CAREGIVER') {
+            this.populateResponderOptions();
+          }
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load caregivers' })
+      );
+  }
+
+  private populateResponderOptions(): void {
+    const targetUserId = this.targetRoleCode === 'PATIENT' ? this.selectedPatient?.userId : this.selectedTargetUser?.id;
+    const targetEmail = this.targetRoleCode === 'PATIENT' ? this.selectedPatient?.email : this.selectedTargetUser?.email;
+
+    if (this.responderRoleCode === this.targetRoleCode && targetUserId) {
+      this.responderOptions = [
+        {
+          label:
+            this.targetRoleCode === 'PATIENT'
+              ? [this.selectedPatient?.firstName, this.selectedPatient?.lastName].filter(Boolean).join(' ')
+              : [this.selectedTargetUser?.firstName, this.selectedTargetUser?.lastName].filter(Boolean).join(' '),
+          value: targetUserId,
+          email: targetEmail,
+        },
+      ];
+      this.selectedInformant = targetUserId;
+      this.applySelectedResponder();
+      return;
+    }
+
+    if (this.responderRoleCode === 'CAREGIVER' && this.targetRoleCode === 'PATIENT') {
+      this.responderOptions = this.caregivers.map((caregiver) => ({
+        label: [caregiver.firstName, caregiver.lastName, caregiver.relation ? `(${caregiver.relation})` : null]
+          .filter(Boolean)
+          .join(' '),
+        value: caregiver.userId as number,
+        email: caregiver.email,
+        relation: caregiver.relation,
+      }));
+      this.selectedInformant = this.responderOptions.length ? this.responderOptions[0].value : null;
+      this.applySelectedResponder();
+      return;
+    }
+
+    if (this.targetRoleCode === 'PATIENT' && this.selectedPatient?.id) {
+      this.loadDepartmentResponders(this.selectedPatient.id, this.responderRoleCode);
+    } else if (this.selectedTargetUser?.departments?.length) {
+      this.loadDepartmentUserResponders(
+        this.selectedTargetUser.departments.map((department) => department.id),
+        this.responderRoleCode
+      );
+    } else {
+      this.responderOptions = [];
+      this.selectedInformant = null;
+      this.assessmentForm.patchValue({ responderUserId: null, receiverEmail: null });
+    }
+  }
+
+  private loadDepartmentResponders(patientId: number, roleCode: string): void {
+    this.departmentsService
+      .departments({ filter: { and: [{ patients: { id: { eq: patientId } } }] } })
+      .subscribe(({ data }: any) => {
+        const departmentIds = data.departments.edges.map((edge: any) => edge.node.id);
+        this.loadDepartmentUserResponders(departmentIds, roleCode);
+      });
+  }
+
+  private loadDepartmentUserResponders(departmentIds: number[], roleCode: string): void {
+    this.usersService
+      .getUsers({
+        filter: {
+          and: [{ departments: { id: { in: departmentIds } } }, { roles: { code: { eq: roleCode } } }],
+        },
+      })
+      .subscribe(
+        ({ data }: any) => {
+          this.responderOptions = data.users.edges.map((edge: any) => ({
+            label: [edge.node.firstName, edge.node.lastName].filter(Boolean).join(' '),
+            value: edge.node.id,
+            email: edge.node.email,
+          }));
+          this.selectedInformant = this.responderOptions.length ? this.responderOptions[0].value : null;
+          this.applySelectedResponder();
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load responders' })
+      );
+  }
+
+  private createUserSearchFilter(searchString: string) {
+    const keyword = `%${searchString}%`;
+    return [
+      { firstName: { iLike: keyword } },
+      { middleName: { iLike: keyword } },
+      { lastName: { iLike: keyword } },
+      { username: { iLike: keyword } },
+      { email: { iLike: keyword } },
+    ];
   }
 
   // tslint:disable

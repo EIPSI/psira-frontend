@@ -1,0 +1,24 @@
+.user-header {
+  margin-bottom: 16px;
+}
+
+.user-header h1 {
+  margin: 0;
+}
+
+.assignment-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.assignment-select {
+  min-width: 280px;
+}
+
+.supervisor-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}

@@ -199,6 +199,7 @@ const createOneMongoAssessment = gql`
     createNewAssessment(assessment: $assessment) {
       id
       targetUserId
+      responderUserId
     }
   }
 `;
@@ -208,6 +209,7 @@ const updateOneMongoAssessment = gql`
     updateAssessment(assessment: $assessment) {
       id
       targetUserId
+      responderUserId
     }
   }
 `;

@@ -58,10 +58,7 @@ export class PatientDashboardComponent implements OnInit {
   }
 
   getAssessments(patientId?: number) {
-    const orFilter: any[] = [{ targetUserId: { eq: this.user.id } }];
-    if (patientId) {
-      orFilter.push({ patientId: { eq: patientId } });
-    }
+    const orFilter: any[] = [{ responderUserId: { eq: this.user.id } }];
     this.assessmentService
       .getAssessments({
         filter: {

@@ -45,6 +45,7 @@
     [resetForm]="resetForm"
     [inputMode]="true"
     [showCancelButton]="false"
+    (searchOptions)="searchPatients($event)"
     (submitForm)="onSubmitForm($event)"
   >
   </app-form>

@@ -23,6 +23,8 @@ import {
 } from '@app/pages/patients-management/@types/caregiver';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { PatientsService } from '@app/pages/patients-management/@services/patients.service';
+import { CaregiversPatientService } from '@app/pages/patients-management/@services/caregivers-patient.service';
 
 enum ActionKey {
   DELETE_CAREGIVER,
@@ -61,6 +63,8 @@ export class CaregiverListComponent implements OnInit {
 
   constructor(
     private caregiversService: CaregiversService,
+    private caregiversPatientService: CaregiversPatientService,
+    private patientsService: PatientsService,
     public perms: AppPermissionsService,
     private errorService: ErrorHandlerService,
     private modalService: NzModalService
@@ -68,6 +72,7 @@ export class CaregiverListComponent implements OnInit {
 
   ngOnInit(): void {
     this.getCaregiver();
+    this.populatePatientsDropDown({});
     if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
       this.actions = [{ key: ActionKey.DELETE_CAREGIVER, title: 'Delete Caregiver' }];
     }
@@ -134,6 +139,15 @@ export class CaregiverListComponent implements OnInit {
     this.deleteCaregiverPatient(context);
   }
 
+  public searchPatients(search: any): void {
+    if (search.field.name !== 'patientId') return;
+
+    const keyword = `%${search.keyword}%`;
+    this.populatePatientsDropDown({
+      or: [{ firstName: { iLike: keyword } }, { middleName: { iLike: keyword } }, { lastName: { iLike: keyword } }],
+    });
+  }
+
   public handleRowClick(event: any) {
     if (!this.perms.permissionsOnly([PermissionKey.MANAGE_PATIENTS])) return;
     this.populateForm = true;
@@ -158,6 +172,20 @@ export class CaregiverListComponent implements OnInit {
   private createSearchFilter(searchString: string): Array<{ [K in keyof Partial<FormattedCaregiver>]: {} }> {
     if (!searchString) return [];
     return [{ firstName: { iLike: `%${searchString}%` } }, { lastName: { iLike: `%${searchString}%` } }];
+  }
+
+  private populatePatientsDropDown(filter: any): void {
+    this.patientsService.patients({ paging: { first: 25 }, filter }).subscribe(
+      ({ data }: any) => {
+        const options = data.patients.edges.map((patient: any) => ({
+          value: patient.node.id,
+          label: [patient.node.medicalRecordNo, patient.node.firstName, patient.node.lastName].filter(Boolean).join(' '),
+        }));
+        const patientField = this.caregiverForm.groups[0].fields.find((field) => field.name === 'patientId');
+        if (patientField) patientField.options = options;
+      },
+      (err) => this.errorService.handleError(err, { prefix: 'Unable to load patients' })
+    );
   }
 
   private async deleteCaregiver(caregiver: FormattedCaregiver): Promise<void> {
@@ -212,15 +240,44 @@ export class CaregiverListComponent implements OnInit {
   }
 
   private createCaregiver(caregiver: Caregiver): void {
+    const patientCaregiverData = {
+      patientId: caregiver.patientId,
+      relation: caregiver.relation,
+      note: caregiver.note,
+      emergency: caregiver.emergency,
+    };
+    const caregiverInput = { ...caregiver };
+    delete caregiverInput.patientId;
+    delete caregiverInput.relation;
+    delete caregiverInput.note;
+    delete caregiverInput.emergency;
+
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
     this.caregiversService
-      .createCaregiver(caregiver)
+      .createCaregiver(caregiverInput)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         ({ data }) => {
-          // mutate reference to trigger change detection
+          if (patientCaregiverData.patientId) {
+            this.caregiversPatientService
+              .addCaregiversToPatient(patientCaregiverData.patientId, {
+                ...data.createOneCaregiver,
+                relation: patientCaregiverData.relation,
+                note: patientCaregiverData.note,
+                emergency: patientCaregiverData.emergency,
+              })
+              .subscribe(
+                () => {
+                  this.closeCreatePanel();
+                  this.getCaregiver();
+                },
+                (err) => this.errorService.handleError(err, { prefix: 'Unable to link Caregiver to patient' })
+              );
+            return;
+          }
+
           this.data = [...this.data, data.createOneCaregiver];
           this.closeCreatePanel();
           this.getCaregiver();
@@ -231,6 +288,10 @@ export class CaregiverListComponent implements OnInit {
 
   private updateCaregiver(caregiver: Caregiver): void {
     const caregiverLocal = JSON.parse(JSON.stringify(caregiver));
+    delete caregiverLocal.patientId;
+    delete caregiverLocal.relation;
+    delete caregiverLocal.emergency;
+    delete caregiverLocal.note;
     const id = caregiverLocal.id;
     delete caregiverLocal.id;
     const updateOneCaregiverInput: UpdateOneCaregiverInput = {

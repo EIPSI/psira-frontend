@@ -6,6 +6,7 @@ import { SharedModule } from '@shared';
 import { UserManagementRoutingModule } from './user-management-routing.module';
 import { UsersListComponent } from './users-list/users-list.component';
 import { UserFormComponent } from './user-form/user-form.component';
+import { UserProfileTabsComponent } from './user-profile-tabs/user-profile-tabs.component';
 import { FormsModule } from '@angular/forms';
 import { AppFormModule } from '../../@shared/components/form/app-form.module';
 import { MasterDataModule } from '../../@shared/@modules/master-data/master-data.module';
@@ -20,6 +21,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzListModule } from 'ng-zorro-antd/list';
 import { NzMessageModule } from 'ng-zorro-antd/message';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -45,6 +47,7 @@ const antModules = [
   NzTableModule,
   NzCheckboxModule,
   NzSpinModule,
+  NzSelectModule,
 ];
 
 @NgModule({
@@ -59,6 +62,6 @@ const antModules = [
     NzSwitchModule,
     MasterDataModule,
   ],
-  declarations: [UsersListComponent, UserFormComponent],
+  declarations: [UsersListComponent, UserFormComponent, UserProfileTabsComponent],
 })
 export class UserManagementModule {}

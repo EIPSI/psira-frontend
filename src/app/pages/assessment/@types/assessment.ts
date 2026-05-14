@@ -19,6 +19,8 @@ export enum AssessmentInformant {
   PATIENT = 'PATIENT',
   USER = 'USER',
   CAREGIVER = 'CAREGIVER',
+  CASE_MANAGER = 'CASE_MANAGER',
+  OTHER_USER = 'OTHER_USER',
 }
 
 export interface Assessment {
@@ -28,10 +30,12 @@ export interface Assessment {
   assessmentType: AssessmentAdministration;
   patientId?: number;
   targetUserId?: number;
+  responderUserId?: number;
   note: string;
   clinicianId: number;
   patient?: Patient;
   targetUser?: User;
+  responderUser?: User;
   clinician?: User;
   informantType: string;
   questionnaireAssessmentId?: string;
@@ -41,6 +45,7 @@ export interface Assessment {
   informantCaregiverRelation?: string;
   informantClinician?: User;
   emailStatus: string;
+  receiverEmail?: string;
   questionnaireAssessment:any;
   questionnaires: []
 }

@@ -18,6 +18,7 @@ const assessments = gql`
           receiverEmail
           patientId
           targetUserId
+          responderUserId
           mailTemplateId
           clinicianId
           submissionDate
@@ -47,6 +48,29 @@ const assessments = gql`
             updatedAt
           }
           targetUser {
+            id
+            username
+            active
+            firstName
+            middleName
+            lastName
+            email
+            phone
+            workID
+            address
+            gender
+            birthDate
+            nationality
+            createdAt
+            updatedAt
+            roles {
+              id
+              name
+              hierarchy
+              code
+            }
+          }
+          responderUser {
             id
             username
             active
@@ -232,6 +256,7 @@ const getFullAssessment = gql`
       informantCaregiverRelation
       patientId
       targetUserId
+      responderUserId
       clinicianId
       questionnaireAssessmentId
       informantClinician {
@@ -253,6 +278,29 @@ const getFullAssessment = gql`
         deletedAt
       }
       targetUser {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+        roles {
+          id
+          name
+          hierarchy
+          code
+        }
+      }
+      responderUser {
         id
         username
         active
