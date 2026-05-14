@@ -483,6 +483,24 @@ export class PlanAssessmentComponent implements OnInit {
     return this.assessmentForm.get('dates') as FormArray;
   }
 
+  public applySelectedResponder(userId: number = this.selectedInformant): void {
+    this.selectedInformant = userId;
+    const responder = this.responderOptions.find((entry: any) => entry.value === userId);
+    if (!responder) {
+      this.assessmentForm.patchValue({ responderUserId: null, receiverEmail: null });
+      return;
+    }
+    this.assessmentForm.patchValue({
+      responderUserId: userId,
+      receiverEmail: responder.email ?? null,
+    });
+  }
+
+  // tslint:disable
+  public copyAssessmentLink(url: any) {
+    this.clipboard.copy(url);
+  }
+
   private initAssessment() {
     let assessmentId: number;
 
@@ -623,19 +641,6 @@ export class PlanAssessmentComponent implements OnInit {
       (error) =>
         this.errorService.handleError(error, { prefix: `Unable to load the assessment with ID "${assessmentId}"` })
     );
-  }
-
-  public applySelectedResponder(userId: number = this.selectedInformant): void {
-    this.selectedInformant = userId;
-    const responder = this.responderOptions.find((entry: any) => entry.value === userId);
-    if (!responder) {
-      this.assessmentForm.patchValue({ responderUserId: null, receiverEmail: null });
-      return;
-    }
-    this.assessmentForm.patchValue({
-      responderUserId: userId,
-      receiverEmail: responder.email ?? null,
-    });
   }
 
   private clearResponderSelection(): void {
@@ -792,11 +797,6 @@ export class PlanAssessmentComponent implements OnInit {
       { username: { iLike: keyword } },
       { email: { iLike: keyword } },
     ];
-  }
-
-  // tslint:disable
-  public copyAssessmentLink(url: any) {
-    this.clipboard.copy(url);
   }
 
   private generateAssessmentURL(assesmentUuid: string): string {

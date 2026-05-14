@@ -88,6 +88,15 @@ export class DashboardComponent implements OnInit {
       );
   }
 
+  public startAssessment(assessment: FormattedAssessment): void {
+    const cryptoId = CryptoJS.AES.encrypt(assessment.uuid, environment.secretKey).toString();
+    const tree = this.router.createUrlTree(['/assessment/overview'], {
+      queryParams: { assessment: cryptoId },
+    });
+    const url = this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
+    window.open(url, '_blank');
+  }
+
   private getDescription(): void {
     this.disclaimersService
       .disclaimers()
@@ -137,12 +146,4 @@ export class DashboardComponent implements OnInit {
       );
   }
 
-  public startAssessment(assessment: FormattedAssessment): void {
-    const cryptoId = CryptoJS.AES.encrypt(assessment.uuid, environment.secretKey).toString();
-    const tree = this.router.createUrlTree(['/assessment/overview'], {
-      queryParams: { assessment: cryptoId },
-    });
-    const url = this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
-    window.open(url, '_blank');
-  }
 }

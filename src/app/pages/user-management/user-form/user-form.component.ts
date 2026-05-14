@@ -402,12 +402,6 @@ export class UserFormComponent implements OnInit {
       );
   }
 
-  private getRoleCodes(roleIds: number[]): string[] {
-    return this.roles
-      .filter((role) => roleIds.includes(role.id))
-      .map((role) => role.code);
-  }
-
   assignRoleToUser(role: Role, checked: boolean) {
     if (checked) {
       this.assignRoles(role);
@@ -519,6 +513,12 @@ export class UserFormComponent implements OnInit {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     return password;
+  }
+
+  private getRoleCodes(roleIds: number[]): string[] {
+    return this.roles
+      .filter((role) => roleIds.includes(role.id))
+      .map((role) => role.code);
   }
 
   private withProfileRelations(user: User): User {
