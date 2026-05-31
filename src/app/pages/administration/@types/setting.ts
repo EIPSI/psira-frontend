@@ -9,4 +9,8 @@ export interface Setting {
   passwordReUseCutoffInDays: number;
   sendWelcomeEmails: boolean;
   welcomeEmailTemplateId: number;
+  googleCalendarEnabled?: boolean;
+  googleCalendarClientId?: string;
+  googleCalendarClientSecret?: string;
+  googleCalendarRedirectUri?: string;
 }

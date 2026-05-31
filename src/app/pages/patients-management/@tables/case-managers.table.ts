@@ -63,6 +63,13 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
+    title: 'Role',
+    name: 'formattedRoles',
+    translationPath: 'tables.casemanagers.roles',
+    altName: 'roles',
+    render: 'tag',
+  },
+  {
     title: 'Departments',
     name: 'formattedDepartments',
     translationPath: 'tables.casemanagers.username',

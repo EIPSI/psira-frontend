@@ -6,3 +6,63 @@
   (submitForm)="saveSettings($event)"
   [form]="settingsForm"
 ></app-form>
+
+<nz-card class="integration-card" nzTitle="Google Calendar">
+  <div class="integration-status">
+    <nz-tag [nzColor]="googleCalendarSettings.googleCalendarEnabled ? 'green' : 'default'">
+      {{ googleCalendarSettings.googleCalendarEnabled ? 'Activo' : 'Oculto' }}
+    </nz-tag>
+    <span>
+      Configura la app OAuth oficial de PSIRA. Si queda inactivo o incompleto, los usuarios no verán el botón para conectar Google Calendar.
+    </span>
+  </div>
+
+  <label class="integration-field">
+    <span>Activar integración</span>
+    <nz-switch
+      [(ngModel)]="googleCalendarSettings.googleCalendarEnabled"
+      [nzDisabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+    ></nz-switch>
+  </label>
+
+  <label class="integration-field">
+    <span>Client ID</span>
+    <input
+      nz-input
+      [(ngModel)]="googleCalendarSettings.googleCalendarClientId"
+      [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      placeholder="Google OAuth Client ID"
+    />
+  </label>
+
+  <label class="integration-field">
+    <span>Client Secret</span>
+    <input
+      nz-input
+      type="password"
+      [(ngModel)]="googleCalendarSettings.googleCalendarClientSecret"
+      [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      placeholder="Dejar vacío para conservar el valor actual"
+    />
+  </label>
+
+  <label class="integration-field">
+    <span>Redirect URI</span>
+    <input
+      nz-input
+      [(ngModel)]="googleCalendarSettings.googleCalendarRedirectUri"
+      [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      placeholder="https://tu-dominio/psira/calendar/google-callback"
+    />
+  </label>
+
+  <button
+    nz-button
+    nzType="primary"
+    [nzLoading]="googleCalendarSaving"
+    [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+    (click)="saveGoogleCalendarSettings()"
+  >
+    Guardar Google Calendar
+  </button>
+</nz-card>

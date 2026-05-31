@@ -1,33 +1,194 @@
 <button nz-button routerLink="/psira/questionnaire-management/questionnaire-bundles-list" nzType="secondary">Go back</button>
-<div nz-row>
-    <div nz-col nzSpan="24">
-        <form nz-form [formGroup]="bundleForm">
-            <nz-form-item>
-              <nz-form-label [nzSpan]="6">{{'emailTemplates.name' | translate}}</nz-form-label>
-              <nz-form-control [nzSpan]="14">
-                <input placeholder="Select bundle name..." formControlName="name" nz-input name="name" type="text" id="name">
-              </nz-form-control>
-            </nz-form-item >
-            <nz-form-item>
-                <nz-form-label [nzSpan]="6">Questionnaires</nz-form-label>
-                <nz-form-control [nzSpan]="14">
-                    <app-questionnaire-selection 
-                        [selectedQuestionnaires]="selectedQuestionnaires"
-                        (selectionChange)="onQuestionnaireSelected($event)">
-                    </app-questionnaire-selection>
-                </nz-form-control>
-              </nz-form-item >
-            <nz-form-item>
-              <nz-form-label [nzSpan]="6">Departments</nz-form-label>
-              <nz-form-control [nzSpan]="14">
-                  <nz-checkbox-wrapper style="width: 100%; margin-top: 5px;" (nzOnChange)="selectDepartments($event)">
-                      <label style="align-items: center;" [ngModel]="bundleHasDepartment(option.id)" [ngModelOptions]="{standalone: true}" *ngFor="let option of listOfDepartments" [nzValue]="option.id" nz-checkbox>{{option.name}}</label>
-                  </nz-checkbox-wrapper><br><br>
-              </nz-form-control>
-            </nz-form-item>
-            <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="submit" nzType="primary">Submit</button>
-            <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button nzType="primary">Update</button>
-        </form>
-    </div>
-</div>
 
+<form nz-form [formGroup]="bundleForm" class="bundle-form">
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'emailTemplates.name' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <input placeholder="Select bundle name..." formControlName="name" nz-input name="name" type="text" id="name" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">Status</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <nz-switch formControlName="active" nzCheckedChildren="Activa" nzUnCheckedChildren="Inactiva"></nz-switch>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">Departments</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="selectAllDepartments()">
+        Select all departments
+      </button>
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="removeAllDepartments()">
+        Remove departments
+      </button>
+      <nz-checkbox-wrapper style="width: 100%; margin-top: 5px;">
+        <label
+          style="align-items: center;"
+          *ngFor="let option of listOfDepartments"
+          [nzValue]="option.id"
+          [ngModel]="departmentIsSelected(option.id)"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="toggleDepartment(option.id, $event)"
+          nz-checkbox
+        >
+          {{ option.name }}
+        </label>
+      </nz-checkbox-wrapper>
+    </nz-form-control>
+  </nz-form-item>
+
+  <section class="structure-header">
+    <div>
+      <h3>Evaluation sequence structure</h3>
+      <p>{{ countQuestionnaires() }} questionnaires / {{ countGroups() }} groups</p>
+    </div>
+  </section>
+
+  <section class="root-node" *ngIf="rootNode as root">
+    <div class="node-row root-row">
+      <span class="drag-placeholder"></span>
+      <span class="node-kind">ROOT GROUP</span>
+      <input
+        class="group-label"
+        nz-input
+        [(ngModel)]="root.label"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Root group label"
+      />
+      <nz-select class="mode-select" [ngModel]="root.type" [ngModelOptions]="{ standalone: true }" (ngModelChange)="setRootType($event)">
+        <nz-option nzValue="FIXED_GROUP" nzLabel="Fixed group"></nz-option>
+        <nz-option nzValue="RANDOM_GROUP" nzLabel="Randomized group"></nz-option>
+      </nz-select>
+      <ng-container *ngIf="root.type === 'RANDOM_GROUP'">
+        <nz-select class="mode-select" [(ngModel)]="root.randomizationMode" [ngModelOptions]="{ standalone: true }">
+          <nz-option nzValue="RANDOM_ORDER" nzLabel="Random order"></nz-option>
+          <nz-option nzValue="REPLACEMENT" nzLabel="Replacement"></nz-option>
+        </nz-select>
+        <label class="number-field" *ngIf="root.randomizationMode === 'REPLACEMENT'">
+          <span>Items to select (how many from this group)</span>
+          <nz-input-number
+            [(ngModel)]="root.selectionCount"
+            [ngModelOptions]="{ standalone: true }"
+            [nzMin]="1"
+          ></nz-input-number>
+        </label>
+      </ng-container>
+    </div>
+
+    <div class="child-toolbar">
+      <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(root)">Add questionnaire</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(root)">Add fixed group</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(root)">Add randomized group</button>
+    </div>
+    <p class="random-help" *ngIf="root.type === 'RANDOM_GROUP'">
+      Relative weight controls probability inside this group. Random order uses it to decide what appears earlier;
+      replacement uses it to decide which items are selected.
+    </p>
+
+    <ng-container
+      *ngTemplateOutlet="nodeList; context: { nodes: root.children, parent: root, level: 1, inRandomGroup: root.type === 'RANDOM_GROUP' }"
+    ></ng-container>
+  </section>
+
+  <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="button" nzType="primary">Submit</button>
+  <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button type="button" nzType="primary">Update</button>
+</form>
+
+<ng-template #nodeList let-nodes="nodes" let-parent="parent" let-level="level" let-inRandomGroup="inRandomGroup">
+  <div
+    class="node-list"
+    cdkDropList
+    [id]="dropListId(parent)"
+    [cdkDropListData]="nodes"
+    [cdkDropListConnectedTo]="dropListIds()"
+    (cdkDropListDropped)="dropNode($event)"
+    [style.--level]="level"
+  >
+    <div class="node" *ngFor="let node of nodes; let i = index" cdkDrag>
+      <div class="node-row">
+        <button type="button" nz-button nzShape="circle" class="drag-handle" cdkDragHandle>
+          <i nz-icon nzType="drag"></i>
+        </button>
+        <span class="node-kind">{{ node.type }}</span>
+
+        <ng-container [ngSwitch]="node.type">
+          <nz-select
+            *ngSwitchCase="'QUESTIONNAIRE'"
+            class="questionnaire-select"
+            [(ngModel)]="node.questionnaireId"
+            [ngModelOptions]="{ standalone: true }"
+            nzShowSearch
+          >
+            <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
+          </nz-select>
+
+          <input
+            *ngSwitchDefault
+            class="group-label"
+            nz-input
+            [(ngModel)]="node.label"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Group label"
+          />
+        </ng-container>
+
+        <ng-container *ngIf="node.type === 'RANDOM_GROUP'">
+          <nz-select class="mode-select" [(ngModel)]="node.randomizationMode" [ngModelOptions]="{ standalone: true }">
+            <nz-option nzValue="RANDOM_ORDER" nzLabel="Random order"></nz-option>
+            <nz-option nzValue="REPLACEMENT" nzLabel="Replacement"></nz-option>
+          </nz-select>
+          <label class="number-field" *ngIf="node.randomizationMode === 'REPLACEMENT'">
+            <span>Items to select (how many from this group)</span>
+            <nz-input-number
+              [(ngModel)]="node.selectionCount"
+              [ngModelOptions]="{ standalone: true }"
+              [nzMin]="1"
+            ></nz-input-number>
+          </label>
+        </ng-container>
+
+        <label class="number-field" *ngIf="inRandomGroup">
+          <span>Relative weight (selection/order probability)</span>
+          <nz-input-number
+            [(ngModel)]="node.weight"
+            [ngModelOptions]="{ standalone: true }"
+            [nzMin]="0"
+            nzPlaceHolder="1"
+          ></nz-input-number>
+        </label>
+
+        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, -1)" [disabled]="i === 0">
+          <i nz-icon nzType="up"></i>
+        </button>
+        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, 1)" [disabled]="i === nodes.length - 1">
+          <i nz-icon nzType="down"></i>
+        </button>
+        <button type="button" nz-button nzDanger nzShape="circle" (click)="removeNode(nodes, i)">
+          <i nz-icon nzType="delete"></i>
+        </button>
+      </div>
+
+      <div class="child-toolbar" *ngIf="node.type !== 'QUESTIONNAIRE'">
+        <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(node)">Add child questionnaire</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(node)">Add child fixed group</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(node)">Add child randomized group</button>
+      </div>
+      <p class="random-help" *ngIf="node.type === 'RANDOM_GROUP'">
+        Relative weight controls probability inside this group. Random order uses it to decide what appears earlier;
+        replacement uses it to decide which items are selected.
+      </p>
+
+      <ng-container *ngIf="node.type !== 'QUESTIONNAIRE'">
+        <ng-container
+          *ngTemplateOutlet="
+            nodeList;
+            context: { nodes: node.children, parent: node, level: level + 1, inRandomGroup: node.type === 'RANDOM_GROUP' }
+          "
+        ></ng-container>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>

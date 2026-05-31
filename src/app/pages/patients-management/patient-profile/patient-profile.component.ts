@@ -23,6 +23,7 @@ export class PatientProfileComponent implements OnInit {
   filter: CaseManagerFilter;
   patientStatuses: PatientStatus[] = [];
   loading = false;
+  selectedTabIndex = 0;
 
   get patientTitle(): string {
     const name = [this.patient?.firstName, this.patient?.middleName, this.patient?.lastName]
@@ -46,7 +47,7 @@ export class PatientProfileComponent implements OnInit {
   }
 
   getPatient() {
-    this.activatedRoute.queryParams.subscribe((params) => {
+    this.activatedRoute.queryParams.subscribe((params: any) => {
       if (params.profile) {
         const bytes = CryptoJS.AES.decrypt(params.profile, environment.secretKey);
         const patient = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
@@ -55,15 +56,16 @@ export class PatientProfileComponent implements OnInit {
           patientId: this.patient.id,
         };
       }
+      this.selectedTabIndex = params.tab === 'sessions' ? 2 : 0;
     });
   }
 
   getPatientStatuses() {
     this.patientStatusesService.patientStatuses().subscribe(
-      (result) => {
+      (result: any) => {
         this.patientStatuses = result.data.patientStatuses.edges.map((e: any) => e.node);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load patient statuses' })
+      (error: any) => this.errorService.handleError(error, { prefix: 'Unable to load patient statuses' })
     );
   }
 
@@ -78,7 +80,7 @@ export class PatientProfileComponent implements OnInit {
           this.patient = PatientModel.fromJson(data.updateOnePatient);
           this.message.success('Patient status updated successfully');
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to update patient status' })
+        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to update patient status' })
       );
   }
 

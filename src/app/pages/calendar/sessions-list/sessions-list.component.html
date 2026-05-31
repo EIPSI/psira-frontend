@@ -1,0 +1,91 @@
+<div class="sessions-toolbar">
+  <button nz-button (click)="toggleCancelled()">
+    {{ includeCancelled ? 'Ocultar canceladas' : 'Mostrar canceladas' }}
+  </button>
+</div>
+
+<nz-spin [nzSpinning]="loading">
+  <nz-table [nzData]="sessions" [nzFrontPagination]="false" nzSize="small">
+    <thead>
+      <tr>
+        <th>Número</th>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Estado</th>
+        <th>Paciente</th>
+        <th>Terapeuta</th>
+        <th>Supervisor</th>
+        <th>Evaluaciones</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let session of sessions"
+        class="session-row"
+        (click)="openEdit(session)"
+        (contextmenu)="openContextMenu($event, sessionContextMenu, session)"
+      >
+        <td>{{ session.sessionNumber || '-' }}</td>
+        <td>{{ session.calendarOccurrence?.startAt | date:'short' }}</td>
+        <td>{{ session.calendarOccurrence?.endAt | date:'short' }}</td>
+        <td><nz-tag>{{ session.clinicalStatus }}</nz-tag></td>
+        <td>{{ session.patient?.medicalRecordNo }} {{ personName(session.patient) }}</td>
+        <td>{{ personName(session.therapist) }}</td>
+        <td>{{ personName(session.supervisor) }}</td>
+        <td>{{ session.resources?.length || 0 }}</td>
+        <td class="row-hint">Click para abrir</td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-spin>
+
+<nz-dropdown-menu #sessionContextMenu="nzDropdownMenu">
+  <ul nz-menu>
+    <li nz-menu-item (click)="discardContextSession()">Descartar sesión</li>
+  </ul>
+</nz-dropdown-menu>
+
+<nz-modal
+  [(nzVisible)]="editModalVisible"
+  [nzTitle]="editingSession?.historyLabel || 'Historial'"
+  [nzOkLoading]="saving"
+  (nzOnCancel)="editModalVisible = false"
+  (nzOnOk)="saveEdit()"
+>
+  <div class="session-editor" *ngIf="editingSession">
+    <label>
+      <span>Inicio</span>
+      <nz-date-picker [(ngModel)]="editStartAt" nzShowTime></nz-date-picker>
+    </label>
+    <label>
+      <span>Fin</span>
+      <nz-date-picker [(ngModel)]="editEndAt" nzShowTime></nz-date-picker>
+    </label>
+    <label class="history-field">
+      <span>{{ editingSession.historyLabel }}</span>
+      <textarea nz-input rows="5" [(ngModel)]="editHistory"></textarea>
+    </label>
+
+    <nz-table [nzData]="editingSession.resources || []" [nzFrontPagination]="false" nzSize="small">
+      <thead>
+        <tr>
+          <th>Recurso</th>
+          <th>Evaluación</th>
+          <th>Habilita</th>
+          <th>Expira</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let resource of editingSession.resources || []">
+          <td>{{ resource.resourceKind }}</td>
+          <td>{{ resource.assessment?.assessmentType?.name || '-' }}</td>
+          <td>{{ resource.activationAt | date:'short' }}</td>
+          <td>{{ resource.expirationAt | date:'short' }}</td>
+          <td><nz-tag>{{ resource.status }}</nz-tag></td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </div>
+</nz-modal>

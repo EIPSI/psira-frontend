@@ -8,6 +8,12 @@ section.actions {
   align-items: center;
 }
 
+section.actions > div:last-child {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
 section.list {
   overflow-x: auto;
 }

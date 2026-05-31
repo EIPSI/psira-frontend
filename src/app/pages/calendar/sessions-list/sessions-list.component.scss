@@ -1,0 +1,33 @@
+.sessions-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.session-row {
+  cursor: pointer;
+}
+
+.session-row:hover td {
+  background: #f3fbfb;
+}
+
+.row-hint {
+  color: #8c8c8c;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.session-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.session-editor label {
+  display: grid;
+  gap: 6px;
+}
+
+.history-field {
+  margin-top: 4px;
+}

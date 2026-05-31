@@ -209,6 +209,7 @@ export class PlanAssessmentComponent implements OnInit {
       this.formBuilder.group({
         expirationDate: [null],
         deliveryDate: [null],
+        reminderMinutes: [''],
       })
     );
   }
@@ -235,12 +236,19 @@ export class PlanAssessmentComponent implements OnInit {
   public onSubmitAssessment() {
     if (this.assessmentForm.invalid) return;
     const questionnaires = this.selectedQuestionnaires.map((q) => q._id);
+    const questionnaireBundles = this.selectedBundleIds();
     const { informant, informantPatient, ...rest } = this.assessmentForm.value;
     this.applySelectedResponder();
     const newAssessmentData = {
       ...rest,
       questionnaires,
+      questionnaireBundles,
     };
+    newAssessmentData.dates = (newAssessmentData.dates || []).map((date: any) => ({
+      ...date,
+      reminderMinutes: this.parseReminderMinutes(date.reminderMinutes),
+    }));
+    newAssessmentData.reminderMinutes = this.parseReminderMinutes(newAssessmentData.reminderMinutes);
 
     if (this.responderRoleCode !== `CAREGIVER`) {
       newAssessmentData.informantCaregiverRelation = null;
@@ -456,11 +464,13 @@ export class PlanAssessmentComponent implements OnInit {
   }
 
   onBundleSelection() {
-    this.selectedQuestionnaires = this.selectedQuestionnaires.concat(
-      this.listOfSelectedBundles.map((bundle: any) => bundle.node.questionnaires).flat()
-    );
-    this.selectedQuestionnaires = this.filterUniqueQuestionnaires(this.selectedQuestionnaires);
-    this.assessmentForm.patchValue({ questionnaires: this.selectedQuestionnaires });
+    this.assessmentForm.patchValue({ questionnaireBundles: this.selectedBundleIds() });
+  }
+
+  selectedBundleIds(): string[] {
+    return (this.listOfSelectedBundles || [])
+      .map((bundle: any) => bundle?.node?._id || bundle?._id || bundle)
+      .filter((id: string) => !!id);
   }
 
   filterUniqueQuestionnaires(questionnaires: any) {
@@ -517,7 +527,8 @@ export class PlanAssessmentComponent implements OnInit {
         targetUserId: [null],
         responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
-        questionnaires: [null, Validators.required],
+        questionnaires: [[]],
+        questionnaireBundles: [[]],
         informantType: [null],
         informantPatient: [null],
         informantClinicianId: [null],
@@ -525,6 +536,7 @@ export class PlanAssessmentComponent implements OnInit {
         emailReminder: [null],
         receiverEmail: [null],
         mailTemplateId: [null],
+        reminderMinutes: [''],
         deliveryDate: [null],
         expirationDate: [null],
         dates: this.formBuilder.array([]),
@@ -537,7 +549,8 @@ export class PlanAssessmentComponent implements OnInit {
         targetUserId: [null],
         responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
-        questionnaires: [null, Validators.required],
+        questionnaires: [[]],
+        questionnaireBundles: [[]],
         informantType: [null],
         informantPatient: [null],
         informantClinicianId: [null],
@@ -545,10 +558,12 @@ export class PlanAssessmentComponent implements OnInit {
         emailReminder: [null],
         receiverEmail: [null],
         mailTemplateId: [null],
+        reminderMinutes: [''],
         dates: this.formBuilder.array([
           this.formBuilder.group({
             expirationDate: [null],
             deliveryDate: [null],
+            reminderMinutes: [''],
           }),
         ]),
         note: [null],
@@ -587,18 +602,26 @@ export class PlanAssessmentComponent implements OnInit {
           expirationDate: this.fullAssessment.expirationDate,
           receiverEmail: this.fullAssessment.receiverEmail,
           mailTemplateId: this.fullAssessment.mailTemplateId,
+          reminderMinutes: (this.fullAssessment.reminderMinutes || []).join(', '),
           note: this.fullAssessment.note,
           questionnaires: this.fullAssessment.questionnaireAssessment?.questionnaires,
+          questionnaireBundles: (this.fullAssessment.questionnaireAssessment as any)?.questionnaireBundles?.map(
+            (bundle: any) => bundle._id
+          ) || [],
         });
         // @ts-ignore
         this.dates.push(
           this.formBuilder.group({
             deliveryDate: this.fullAssessment.deliveryDate,
             expirationDate: this.fullAssessment.expirationDate,
+            reminderMinutes: (this.fullAssessment.reminderMinutes || []).join(', '),
           })
         );
 
         this.selectedQuestionnaires = this.fullAssessment.questionnaireAssessment?.questionnaires;
+        this.listOfSelectedBundles = (this.fullAssessment.questionnaireAssessment as any)?.questionnaireBundles?.map(
+          (bundle: any) => bundle._id
+        ) || [];
         this.selectedPatient = this.fullAssessment.patient;
         this.selectedClinician = this.fullAssessment.clinician;
         this.fullAssessment = this.fullAssessment;
@@ -816,5 +839,15 @@ export class PlanAssessmentComponent implements OnInit {
         },
         (err) => this.errorService.handleError(err, { prefix: 'Unable to load assessment type' })
       );
+  }
+
+  private parseReminderMinutes(value: string | number[]): number[] {
+    if (Array.isArray(value)) {
+      return value.filter((part) => Number.isFinite(part) && part >= 0);
+    }
+    return (value || '')
+      .split(',')
+      .map((part) => Number(part.trim()))
+      .filter((part) => Number.isFinite(part) && part >= 0);
   }
 }

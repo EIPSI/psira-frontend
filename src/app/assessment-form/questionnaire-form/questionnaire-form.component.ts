@@ -55,8 +55,9 @@ export class QuestionnaireFormComponent {
       .pipe(untilDestroyed(this))
       .subscribe(([idx, newAssessment]) => {
         this.questionnaire = newAssessment?.questionnaireAssessment?.questionnaires?.[idx];
-        this.answers = newAssessment?.questionnaireAssessment?.answers;
-        this.answers.forEach(item => {
+        this.answers = this.currentOccurrenceAnswers(newAssessment?.questionnaireAssessment?.answers || []);
+        this.mapped = {};
+        this.answers.forEach((item: any) => {
           const questionKey = item.question;
           this.mapped[questionKey] = item.textValue;
         });
@@ -170,7 +171,7 @@ export class QuestionnaireFormComponent {
     const assessment = this.assessmentFormService.assessmentSnapshot;
     const currentQuestions = this.questionnaire.questionGroups[this.currentGroupIdx]?.questions;
     const questions = assessment.questionnaireAssessment.questionnaires
-      .map((q) => q.questionGroups.map((g) => g.questions).flat())
+      .map((q: any) => q.questionGroups.map((g: any) => g.questions).flat())
       .flat();
 
     this.skipLogic = currentQuestions
@@ -186,5 +187,10 @@ export class QuestionnaireFormComponent {
         }
         return { questionId: q._id, visible };
       });
+  }
+
+  private currentOccurrenceAnswers(answers: Answer[]): Answer[] {
+    const occurrenceId = this.questionnaire?.occurrenceId || null;
+    return (answers || []).filter((answer: any) => (answer.occurrenceId || null) === occurrenceId);
   }
 }

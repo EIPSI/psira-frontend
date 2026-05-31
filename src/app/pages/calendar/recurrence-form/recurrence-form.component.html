@@ -1,0 +1,54 @@
+<div class="repeat-panel">
+  <label class="inline-check">
+    <input type="checkbox" [ngModel]="enabled" (ngModelChange)="setEnabled($event)" />
+    <span>Repetir</span>
+  </label>
+
+  <ng-container *ngIf="enabled">
+    <div class="repeat-grid">
+      <label>
+        <span>Repeat every</span>
+        <input nz-input type="number" min="1" [ngModel]="every" (ngModelChange)="setEvery($event)" />
+      </label>
+      <label>
+        <span>Unidad</span>
+        <nz-select [ngModel]="unit" (ngModelChange)="setUnit($event)">
+          <nz-option *ngFor="let option of repeatUnits" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+        </nz-select>
+      </label>
+    </div>
+
+    <div class="repeat-days" *ngIf="unit === RU.WEEK">
+      <span>Repeat on</span>
+      <button
+        type="button"
+        nz-button
+        nzSize="small"
+        *ngFor="let day of weekDayOptions"
+        [nzType]="isRepeatDaySelected(day.value) ? 'primary' : 'default'"
+        (click)="toggleRepeatDay(day.value)"
+      >
+        {{ day.label }}
+      </button>
+    </div>
+
+    <label>
+      <span>Ends</span>
+      <nz-select [ngModel]="endMode" (ngModelChange)="setEndMode($event)">
+        <nz-option [nzValue]="RE.NEVER" nzLabel="Never"></nz-option>
+        <nz-option [nzValue]="RE.ON_DATE" nzLabel="On"></nz-option>
+        <nz-option [nzValue]="RE.AFTER_COUNT" nzLabel="After"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="endMode === RE.ON_DATE">
+      <span>Fecha final</span>
+      <nz-date-picker [ngModel]="endDate" (ngModelChange)="setEndDate($event)"></nz-date-picker>
+    </label>
+
+    <label *ngIf="endMode === RE.AFTER_COUNT">
+      <span>Cantidad</span>
+      <input nz-input type="number" min="1" [ngModel]="count" (ngModelChange)="setCount($event)" />
+    </label>
+  </ng-container>
+</div>

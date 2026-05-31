@@ -9,10 +9,15 @@ import { SystemConfigurationComponent } from './system-configuration/system-conf
 import { PatientStatusesService } from '../../patients-management/@services/patient-statuses.service';
 import { SettingsRoutingModule } from './settings-routing.module';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzTagModule } from 'ng-zorro-antd/tag';
 import { AutomaticEmailSettingsComponent } from './automatic-email-settings/automatic-email-settings.component';
 
-const antModules = [NzAlertModule, NzDrawerModule];
+const antModules = [NzAlertModule, NzButtonModule, NzCardModule, NzDrawerModule, NzInputModule, NzSwitchModule, NzTagModule];
 
 @NgModule({
   imports: [

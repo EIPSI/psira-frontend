@@ -1,0 +1,1507 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { EmailTemplatesService } from '@app/pages/administration/@services/email-templates.service';
+import { AssessmentAdministrationService } from '@app/pages/administration/@services/assessment-administration.service';
+import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
+import { Department } from '@app/pages/patients-management/@types/department';
+import { QuestionnaireManagementService } from '@app/pages/questionnaire-management/@services/questionnaire-management.service';
+import { QuestionnaireBundlesService } from '@app/pages/questionnaire-management/@services/questionnaire-bundles.service';
+import {
+  QuestionnaireStatus,
+  QuestionnaireVersion,
+} from '@app/pages/questionnaire-management/@types/questionnaire';
+import { ErrorHandlerService } from '@shared/services/error-handler.service';
+import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { finalize } from 'rxjs/operators';
+import {
+  ClinicalSessionKind,
+  ClinicalSessionResourceKind,
+  EvaluationScheme,
+  EvaluationSchemeType,
+  EvaluationSchemeTypeLabel,
+  ResourceActivationAnchor,
+} from '../@types/evaluation-scheme';
+import { EvaluationSchemesService } from '../@services/evaluation-schemes.service';
+
+enum SessionTargetMode {
+  SPECIFIC = 'SPECIFIC',
+  FREQUENCY = 'FREQUENCY',
+}
+
+enum FixedTriggerMode {
+  BLOCK_START = 'BLOCK_START',
+  RANDOM_WITHIN_WINDOW = 'RANDOM_WITHIN_WINDOW',
+}
+
+enum FixedRepeatRuleMode {
+  ADD_FROM_INTERACTION = 'ADD_FROM_INTERACTION',
+  EXTEND_LAST_DAY = 'EXTEND_LAST_DAY',
+  EXTEND_LAST_WEEK = 'EXTEND_LAST_WEEK',
+}
+
+@Component({
+  selector: 'app-scheme-editor',
+  templateUrl: './scheme-editor.component.html',
+  styleUrls: ['./scheme-editor.component.scss'],
+})
+export class SchemeEditorComponent implements OnInit {
+  private readonly maxFixedWeeks = 100;
+  public schemeTypes = Object.values(EvaluationSchemeType);
+  public schemeTypeLabel = EvaluationSchemeTypeLabel;
+  public resourceKinds = [
+    ClinicalSessionResourceKind.PRE_ASSESSMENT,
+    ClinicalSessionResourceKind.POST_ASSESSMENT,
+  ];
+  public sessionTargetModes = Object.values(SessionTargetMode);
+  public STM = SessionTargetMode;
+  public scheme?: EvaluationScheme;
+  public loading = false;
+  public saving = false;
+  public editingResourceId?: number;
+  public editingFixedSlotId?: number;
+  public contextResource?: any;
+  public contextFixedSlot?: any;
+  public fixedSlotModalVisible = false;
+  public repeatRuleModalVisible = false;
+  public draggedFixedSlot?: any;
+  public draftSessionResources: any[] = [];
+  public draftFixedSlots: any[] = [];
+  private currentSchemeId?: number;
+  private nextDraftResourceId = -1;
+  private nextDraftFixedSlotId = -1;
+  public selectedResourceKind = ClinicalSessionResourceKind.PRE_ASSESSMENT;
+  public FTM = FixedTriggerMode;
+  public FRM = FixedRepeatRuleMode;
+  public assessmentTypes: any[] = [];
+  public foundQuestionnaires: QuestionnaireVersion[] = [];
+  public questionnaireBundles: any[] = [];
+  public departments: Department[] = [];
+  public emailTemplates: any[] = [];
+  public responderRoleOptions = [
+    { label: 'Paciente', value: 'PATIENT' },
+    { label: 'Cuidador', value: 'CAREGIVER' },
+    { label: 'Terapeuta', value: 'THERAPIST' },
+    { label: 'Supervisor', value: 'SUPERVISOR' },
+  ];
+  public weekStartDay = 0;
+  public fixedBlockSize = 7;
+  public hours = Array.from({ length: 24 }, (_, index) => index);
+  public quarterMinutes = [0, 15, 30, 45];
+  public repeatPresets = [
+    { label: '5 por día', value: 'FIVE_PER_DAY' },
+    { label: '7 por día', value: 'SEVEN_PER_DAY' },
+    { label: '10 por día', value: 'TEN_PER_DAY' },
+    { label: 'Notificación de mañana', value: 'MORNING_NOTIFICATION' },
+    { label: 'Notificación de noche', value: 'NIGHT_NOTIFICATION' },
+  ];
+
+  public baseForm: FormGroup = this.fb.group({
+    name: ['', Validators.required],
+    description: [''],
+    active: [true],
+    emailNotificationsEnabled: [true],
+    mailTemplateId: [null],
+    departmentIds: [[]],
+    durationDays: [7],
+    schemeType: [EvaluationSchemeType.SESSION_BASED, Validators.required],
+  });
+
+  public sessionResourceForm: FormGroup = this.fb.group({
+    resourceKind: [ClinicalSessionResourceKind.PRE_ASSESSMENT, Validators.required],
+    assessmentTypeId: [null, Validators.required],
+    questionnaireId: [null],
+    questionnaireBundleId: [null],
+    sessionTargetMode: [SessionTargetMode.SPECIFIC, Validators.required],
+    sessionSelector: ['1'],
+    everyNSessions: [null],
+    startSessionNumber: [1],
+    endSessionNumber: [null],
+    activationOffsetMinutes: [-15],
+    availabilityDurationMinutes: [30],
+    reminderMinutes: [''],
+    responderRoles: [[]],
+  });
+
+  public fixedSlotForm: FormGroup = this.fb.group({
+    assessmentTypeId: [null, Validators.required],
+    questionnaireId: [null],
+    questionnaireBundleId: [null],
+    relativeDay: [0, Validators.required],
+    relativeMinuteOfDay: [9 * 60, Validators.required],
+    startTime: ['09:00', Validators.required],
+    endTime: ['10:00', Validators.required],
+    durationMinutes: [60, Validators.required],
+    endMinuteOfDay: [10 * 60],
+    triggerMode: [FixedTriggerMode.BLOCK_START, Validators.required],
+    availabilityDurationMinutes: [60, Validators.required],
+    reminderMinutes: [''],
+    required: [false],
+    singleResponse: [true],
+    seedOrder: [0],
+    informantType: [''],
+    responderRoles: [[]],
+  });
+
+  public repeatRuleForm: FormGroup = this.fb.group({
+    mode: [FixedRepeatRuleMode.ADD_FROM_INTERACTION],
+    assessmentTypeId: [null],
+    questionnaireId: [null],
+    questionnaireBundleId: [null],
+    preset: ['FIVE_PER_DAY'],
+    startingDay: [1],
+    numberOfDays: [7],
+    numberOfWeeks: [1],
+    triggerMode: [FixedTriggerMode.BLOCK_START],
+    availabilityDurationMinutes: [60],
+    reminderMinutes: [''],
+    required: [false],
+    singleResponse: [true],
+    responderRoles: [[]],
+  });
+
+  get isNew(): boolean {
+    return !this.currentSchemeId;
+  }
+
+  get isSessionBased(): boolean {
+    return this.baseForm.get('schemeType').value === EvaluationSchemeType.SESSION_BASED;
+  }
+
+  get isFixedScheme(): boolean {
+    return this.baseForm.get('schemeType').value === EvaluationSchemeType.INDEPENDENT_EVALUATION;
+  }
+
+  get sessionTargetMode(): SessionTargetMode {
+    return this.sessionResourceForm.get('sessionTargetMode')?.value || SessionTargetMode.SPECIFIC;
+  }
+
+  get hasSelectedQuestionnaire(): boolean {
+    return !!this.sessionResourceForm.get('questionnaireId')?.value;
+  }
+
+  get hasSelectedQuestionnaireBundle(): boolean {
+    return !!this.sessionResourceForm.get('questionnaireBundleId')?.value;
+  }
+
+  get hasSelectedFixedQuestionnaire(): boolean {
+    return !!this.fixedSlotForm.get('questionnaireId')?.value;
+  }
+
+  get hasSelectedFixedQuestionnaireBundle(): boolean {
+    return !!this.fixedSlotForm.get('questionnaireBundleId')?.value;
+  }
+
+  get hasSelectedRepeatQuestionnaire(): boolean {
+    return !!this.repeatRuleForm.get('questionnaireId')?.value;
+  }
+
+  get hasSelectedRepeatQuestionnaireBundle(): boolean {
+    return !!this.repeatRuleForm.get('questionnaireBundleId')?.value;
+  }
+
+  get schemeDurationDays(): number {
+    return Math.max(Number(this.baseForm.get('durationDays')?.value || this.scheme?.durationDays || 7), 7);
+  }
+
+  get visibleFixedDays(): number[] {
+    return Array.from({ length: 7 }, (_, index) => this.weekStartDay + index);
+  }
+
+  get fixedCalendarGridTemplate(): string {
+    return `72px repeat(${this.visibleFixedDays.length}, minmax(132px, 1fr))`;
+  }
+
+  constructor(
+    private fb: FormBuilder,
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+    private schemesService: EvaluationSchemesService,
+    private emailTemplatesService: EmailTemplatesService,
+    private assessmentAdministrationService: AssessmentAdministrationService,
+    private departmentsService: DepartmentsService,
+    private questionnaireService: QuestionnaireManagementService,
+    private bundlesService: QuestionnaireBundlesService,
+    private errorService: ErrorHandlerService,
+    private contextMenuService: NzContextMenuService,
+    private modalService: NzModalService
+  ) {}
+
+  ngOnInit(): void {
+    this.baseForm.get('schemeType').valueChanges.subscribe(() => this.onSchemeTypeChange());
+    this.loadAssessmentTypes();
+    this.loadBundles();
+    this.loadDepartments();
+    this.loadEmailTemplates();
+    this.activatedRoute.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      if (id) {
+        this.currentSchemeId = id;
+        this.loadSchemeById(id);
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.scrollFixedCalendarToMorning());
+  }
+
+  public saveBase(): void {
+    if (!this.canPersistBaseScheme()) return;
+
+    const wasNew = !this.currentSchemeId && !this.scheme?.id;
+    this.saving = true;
+    this.persistBaseScheme().then(
+      (scheme: EvaluationScheme) => {
+        this.scheme = scheme;
+        this.currentSchemeId = scheme.id;
+        if (wasNew) {
+          this.router.navigate(['/psira/evaluation-schemes', scheme.id], { replaceUrl: true });
+          return;
+        }
+        this.loadSchemeById(scheme.id);
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to save scheme' })
+    ).finally(() => (this.saving = false));
+  }
+
+  public onResourceKindChange(kind: ClinicalSessionResourceKind): void {
+    this.selectedResourceKind = kind;
+    if (kind === ClinicalSessionResourceKind.POST_ASSESSMENT) {
+      this.sessionResourceForm.patchValue({
+        activationOffsetMinutes: -5,
+        availabilityDurationMinutes: 60,
+      });
+      return;
+    }
+
+    this.sessionResourceForm.patchValue({
+      activationOffsetMinutes: -15,
+      availabilityDurationMinutes: 30,
+    });
+  }
+
+  public addSessionResource(): void {
+    if (!this.canSubmitSessionResource()) return;
+
+    if (!this.scheme?.id) {
+      this.upsertDraftSessionResource();
+      this.resetSessionResourceForm();
+      return;
+    }
+
+    this.saving = true;
+    this.ensureSessionRuleTemplate()
+      .then((sessionTemplate) => {
+        this.attachSessionTemplateToCurrentScheme(sessionTemplate);
+        return this.editingResourceId
+          ? this.schemesService
+              .updateResourceTemplate({
+                id: this.editingResourceId,
+                ...this.buildResourceTemplatePayload(),
+              })
+              .toPromise()
+          : this.schemesService
+              .addResourceTemplate({
+                sessionTemplateId: sessionTemplate.id,
+                ...this.buildResourceTemplatePayload(),
+              })
+              .toPromise();
+      })
+      .then((resource) => {
+        this.attachResourceToCurrentScheme(resource);
+        this.resetSessionResourceForm();
+      })
+      .catch((error) => this.errorService.handleError(error, { prefix: 'Unable to add session rule' }))
+      .finally(() => (this.saving = false));
+  }
+
+  public editSessionResource(resource: any): void {
+    this.editingResourceId = resource.id;
+    this.selectedResourceKind = resource.resourceKind;
+    this.sessionResourceForm.patchValue({
+      resourceKind: resource.resourceKind,
+      assessmentTypeId: resource.assessmentTypeId,
+      questionnaireId: resource.questionnaireIds?.[0] || null,
+      questionnaireBundleId: resource.questionnaireBundleIds?.[0] || null,
+      sessionTargetMode: resource.sessionSelector ? SessionTargetMode.SPECIFIC : SessionTargetMode.FREQUENCY,
+      sessionSelector: resource.sessionSelector || '',
+      everyNSessions: resource.everyNSessions || null,
+      startSessionNumber: resource.startSessionNumber || 1,
+      endSessionNumber: resource.endSessionNumber || null,
+      activationOffsetMinutes: resource.activationOffsetMinutes,
+      availabilityDurationMinutes: resource.availabilityDurationMinutes,
+      reminderMinutes: (resource.reminderMinutes || []).join(', '),
+      responderRoles: this.parseResponderRoles(resource.defaultResponderRole),
+    });
+  }
+
+  public openResourceContextMenu(event: MouseEvent, resource: any, menu: NzDropdownMenuComponent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextResource = resource;
+    this.contextMenuService.create(event, menu);
+  }
+
+  public deleteContextResource(): void {
+    if (!this.contextResource) return;
+    this.deleteSessionResource(this.contextResource);
+  }
+
+  public deleteSessionResource(resource: any): void {
+    if (resource.id < 0) {
+      this.draftSessionResources = this.draftSessionResources.filter((draftResource) => draftResource.id !== resource.id);
+      if (this.editingResourceId === resource.id) this.resetSessionResourceForm();
+      return;
+    }
+
+    if (!this.scheme?.id) return;
+    const schemeId = this.scheme.id;
+    this.modalService.confirm({
+      nzTitle: 'Eliminar evaluación del esquema',
+      nzContent: 'Esta regla dejará de generar evaluaciones nuevas.',
+      nzOkText: 'Eliminar',
+      nzOkDanger: true,
+      nzOnOk: () => {
+        this.schemesService.deleteResourceTemplate(resource.id).subscribe(
+          () => {
+            if (this.editingResourceId === resource.id) this.resetSessionResourceForm();
+            this.loadSchemeById(schemeId);
+          },
+          (error) => this.errorService.handleError(error, { prefix: 'Unable to delete session rule' })
+        );
+      },
+    });
+  }
+
+  public onQuestionnaireChange(questionnaireId: string): void {
+    if (questionnaireId) this.sessionResourceForm.patchValue({ questionnaireBundleId: null });
+  }
+
+  public onQuestionnaireBundleChange(bundleId: string): void {
+    if (bundleId) this.sessionResourceForm.patchValue({ questionnaireId: null });
+  }
+
+  public onFixedQuestionnaireChange(questionnaireId: string): void {
+    if (questionnaireId) this.fixedSlotForm.patchValue({ questionnaireBundleId: null });
+  }
+
+  public onFixedQuestionnaireBundleChange(bundleId: string): void {
+    if (bundleId) this.fixedSlotForm.patchValue({ questionnaireId: null });
+  }
+
+  public onRepeatQuestionnaireChange(questionnaireId: string): void {
+    if (questionnaireId) this.repeatRuleForm.patchValue({ questionnaireBundleId: null });
+  }
+
+  public onRepeatQuestionnaireBundleChange(bundleId: string): void {
+    if (bundleId) this.repeatRuleForm.patchValue({ questionnaireId: null });
+  }
+
+  public onSessionTargetModeChange(mode: SessionTargetMode): void {
+    if (mode === SessionTargetMode.SPECIFIC) {
+      this.sessionResourceForm.patchValue({
+        sessionSelector: '1',
+        everyNSessions: null,
+        startSessionNumber: 1,
+        endSessionNumber: null,
+      });
+      return;
+    }
+
+    this.sessionResourceForm.patchValue({
+      sessionSelector: '',
+      everyNSessions: 4,
+      startSessionNumber: 1,
+      endSessionNumber: null,
+    });
+  }
+
+  public sessionResources(): any[] {
+    if (!this.scheme?.id) return this.draftSessionResources;
+
+    return (this.scheme?.sessionTemplates || []).reduce(
+      (resources: any[], sessionTemplate: any) => resources.concat(sessionTemplate.resourceTemplates || []),
+      []
+    );
+  }
+
+  private attachResourceToCurrentScheme(resource: any): void {
+    if (!this.scheme || !resource) return;
+
+    const sessionTemplates = this.scheme.sessionTemplates || [];
+    const targetTemplate =
+      sessionTemplates.find((sessionTemplate: any) => sessionTemplate.id === resource.sessionTemplateId) ||
+      sessionTemplates[0];
+
+    if (!targetTemplate) return;
+
+    const resources = targetTemplate.resourceTemplates || [];
+    targetTemplate.resourceTemplates = this.editingResourceId
+      ? resources.map((existingResource: any) =>
+          existingResource.id === resource.id ? resource : existingResource
+        )
+      : [...resources, resource];
+
+    this.scheme = {
+      ...this.scheme,
+      sessionTemplates: [...sessionTemplates],
+    };
+  }
+
+  private attachSessionTemplateToCurrentScheme(sessionTemplate: any): void {
+    if (!this.scheme || !sessionTemplate) return;
+    const sessionTemplates = this.scheme.sessionTemplates || [];
+    if (sessionTemplates.some((existingTemplate: any) => existingTemplate.id === sessionTemplate.id)) return;
+
+    this.scheme = {
+      ...this.scheme,
+      sessionTemplates: [
+        ...sessionTemplates,
+        {
+          ...sessionTemplate,
+          resourceTemplates: sessionTemplate.resourceTemplates || [],
+        },
+      ],
+    };
+  }
+
+  public resourceTargetLabel(resource: any): string {
+    if (resource.sessionSelector) return resource.sessionSelector;
+    const start = resource.startSessionNumber || 1;
+    const end = resource.endSessionNumber ? ` hasta ${resource.endSessionNumber}` : '';
+    return `Cada ${resource.everyNSessions} sesiones desde ${start}${end}`;
+  }
+
+  public resourceContentLabel(resource: any): string {
+    if (resource.questionnaireIds?.length) return `Cuestionario: ${resource.questionnaireIds[0]}`;
+    if (resource.questionnaireBundleIds?.length) return `Paquete: ${resource.questionnaireBundleIds[0]}`;
+    return '-';
+  }
+
+  public resourceResponderLabel(resource: any): string {
+    const roles = this.parseResponderRoles(resource.defaultResponderRole);
+    if (!roles.length) return '-';
+    return roles
+      .map((role) => this.responderRoleOptions.find((option) => option.value === role)?.label || role)
+      .join(', ');
+  }
+
+  public openFixedSlotModal(day: number, minute: number, slot?: any): void {
+    this.editingFixedSlotId = slot?.id;
+    const endMinute = slot?.endMinuteOfDay || (minute + (slot?.durationMinutes || 60));
+    this.fixedSlotForm.reset({
+      assessmentTypeId: slot?.assessmentTypeId || null,
+      questionnaireId: slot?.questionnaireIds?.[0] || null,
+      questionnaireBundleId: slot?.questionnaireBundleIds?.[0] || null,
+      relativeDay: slot?.relativeDay === undefined ? day : slot.relativeDay,
+      relativeMinuteOfDay: this.fixedSlotStartMinute(slot, minute),
+      startTime: this.minuteToTimeValue(this.fixedSlotStartMinute(slot, minute)),
+      endTime: this.minuteToTimeValue(endMinute),
+      durationMinutes: slot?.durationMinutes || Math.max(15, endMinute - minute),
+      endMinuteOfDay: endMinute,
+      triggerMode: slot?.triggerMode || FixedTriggerMode.BLOCK_START,
+      availabilityDurationMinutes: slot?.availabilityDurationMinutes || 60,
+      reminderMinutes: (slot?.reminderMinutes || []).join(', '),
+      required: !!slot?.required,
+      singleResponse: slot?.singleResponse === undefined ? true : slot.singleResponse,
+      seedOrder: slot?.seedOrder || 0,
+      informantType: slot?.informantType || '',
+      responderRoles: this.parseResponderRoles(slot?.defaultResponderRole),
+    });
+    this.fixedSlotModalVisible = true;
+  }
+
+  public closeFixedSlotModal(): void {
+    this.fixedSlotModalVisible = false;
+    this.editingFixedSlotId = undefined;
+    this.resetFixedSlotForm();
+  }
+
+  public saveFixedSlot(): void {
+    if (!this.canSubmitFixedSlot()) return;
+    const payload = this.buildFixedSlotPayload();
+
+    if (!this.scheme?.id) {
+      const slot = {
+        id: this.editingFixedSlotId || this.nextDraftFixedSlotId--,
+        ...payload,
+      };
+      this.draftFixedSlots = this.editingFixedSlotId
+        ? this.draftFixedSlots.map((draftSlot) => draftSlot.id === this.editingFixedSlotId ? slot : draftSlot)
+        : [...this.draftFixedSlots, slot];
+      this.closeFixedSlotModal();
+      return;
+    }
+
+    const schemeId = this.scheme?.id;
+    if (!schemeId) return;
+    this.saving = true;
+    const request = this.editingFixedSlotId
+      ? this.schemesService.updateIndependentEvaluationTemplate({
+          id: this.editingFixedSlotId,
+          ...payload,
+        })
+      : this.schemesService.addIndependentEvaluationTemplate({
+          schemeId,
+          ...payload,
+        });
+    request
+      .toPromise()
+      .then(
+        (slot) => {
+          this.attachFixedSlotToCurrentScheme(slot);
+          this.closeFixedSlotModal();
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to add fixed evaluation slot' })
+      )
+      .finally(() => (this.saving = false));
+  }
+
+  public selectQuarterSlot(day: number, hour: number, quarter: number): void {
+    this.openFixedSlotModal(day, hour * 60 + quarter);
+  }
+
+  public fixedSlots(): any[] {
+    return this.scheme?.id ? (this.scheme.independentEvaluationTemplates || []) : this.draftFixedSlots;
+  }
+
+  public slotStartsAt(day: number, minute: number): any[] {
+    return this.fixedSlots().filter(
+      (slot: any) => Number(slot.relativeDay) === day && this.fixedSlotStartMinute(slot) === minute
+    );
+  }
+
+  public formatRelativeTime(slot: any): string {
+    return `${this.formatAmPm(this.fixedSlotStartMinute(slot))} - ${this.formatAmPm(this.fixedSlotEndMinute(slot))}`;
+  }
+
+  public fixedSlotContentLabel(slot: any): string {
+    if (slot.questionnaireIds?.length) return `Cuestionario ${slot.questionnaireIds[0]}`;
+    if (slot.questionnaireBundleIds?.length) return `Paquete ${slot.questionnaireBundleIds[0]}`;
+    return 'Evaluacion';
+  }
+
+  public fixedSlotBlockHeight(slot: any): number {
+    const duration = Math.max(15, Number(slot.durationMinutes || 60));
+    return Math.max(10, Math.ceil(duration / 15) * 11 - 3);
+  }
+
+  public isNightHour(hour: number): boolean {
+    return hour >= 22 || hour < 8;
+  }
+
+  public formatHourLabel(hour: number): string {
+    return `${hour.toString().padStart(2, '0')}:00`;
+  }
+
+  public fixedSlotDayTitle(): string {
+    return `Día ${Number(this.fixedSlotForm.get('relativeDay')?.value || 0) + 1}`;
+  }
+
+  public openFixedSlotContextMenu(event: MouseEvent, slot: any, menu: NzDropdownMenuComponent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextFixedSlot = slot;
+    this.contextMenuService.create(event, menu);
+  }
+
+  public deleteContextFixedSlot(): void {
+    if (!this.contextFixedSlot) return;
+    this.deleteFixedSlot(this.contextFixedSlot);
+  }
+
+  public duplicateContextFixedSlot(): void {
+    if (!this.contextFixedSlot) return;
+    this.duplicateFixedSlot(this.contextFixedSlot);
+  }
+
+  public duplicateFixedSlot(slot: any): void {
+    const startMinute = this.fixedSlotStartMinute(slot);
+    const duration = Number(slot.durationMinutes || 60);
+    const duplicatedStartMinute = startMinute + 15 + duration <= 24 * 60 ? startMinute + 15 : startMinute;
+    const duplicate = {
+      ...this.copyFixedSlotPayload(slot),
+      relativeMinuteOfDay: duplicatedStartMinute,
+      startMinuteOfDay: duplicatedStartMinute,
+      endMinuteOfDay: Math.min(24 * 60, duplicatedStartMinute + duration),
+    };
+    this.persistFixedSlots([duplicate]);
+  }
+
+  public deleteFixedSlot(slot: any): void {
+    if (slot.id < 0) {
+      this.draftFixedSlots = this.draftFixedSlots.filter((draftSlot) => draftSlot.id !== slot.id);
+      if (this.editingFixedSlotId === slot.id) this.closeFixedSlotModal();
+      return;
+    }
+
+    if (!this.scheme?.id) return;
+    this.schemesService.deleteIndependentEvaluationTemplate(slot.id).subscribe(
+      () => {
+        this.scheme = {
+          ...this.scheme,
+          independentEvaluationTemplates: (this.scheme?.independentEvaluationTemplates || []).filter(
+            (existingSlot: any) => existingSlot.id !== slot.id
+          ),
+        };
+        if (this.editingFixedSlotId === slot.id) this.closeFixedSlotModal();
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to delete fixed evaluation slot' })
+    );
+  }
+
+  public clearFixedSlots(): void {
+    if (!this.fixedSlots().length) return;
+    this.modalService.confirm({
+      nzTitle: 'Borrar todas las interacciones',
+      nzContent: 'Se eliminará toda la programación del esquema fijo.',
+      nzOkText: 'Borrar todo',
+      nzOkDanger: true,
+      nzOnOk: () => this.clearFixedSlotsNow(),
+    });
+  }
+
+  public startFixedSlotDrag(event: DragEvent, slot: any): void {
+    this.draggedFixedSlot = slot;
+    if (event.dataTransfer) {
+      event.dataTransfer.setData('text/plain', String(slot.id));
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  public allowFixedSlotDrop(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+  }
+
+  public dropFixedSlot(event: DragEvent, day: number, hour: number, quarter: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const slot = this.draggedFixedSlot;
+    this.draggedFixedSlot = undefined;
+    if (!slot) return;
+    this.moveFixedSlot(slot, day, hour * 60 + quarter);
+  }
+
+  public resizeContextFixedSlot(deltaMinutes: number): void {
+    if (!this.contextFixedSlot) return;
+    this.resizeFixedSlot(this.contextFixedSlot, deltaMinutes);
+  }
+
+  public resizeFixedSlot(slot: any, deltaMinutes: number): void {
+    const startMinute = this.fixedSlotStartMinute(slot);
+    const requestedDuration = Math.max(15, Number(slot.durationMinutes || 60) + deltaMinutes);
+    const endMinute = Math.min(24 * 60, startMinute + requestedDuration);
+    const updated = {
+      ...this.copyFixedSlotPayload(slot),
+      durationMinutes: Math.max(15, endMinute - startMinute),
+      endMinuteOfDay: endMinute,
+    };
+    this.updateFixedSlot(slot, updated);
+  }
+
+  public openRepeatRuleModal(): void {
+    this.repeatRuleForm.reset({
+      mode: FixedRepeatRuleMode.ADD_FROM_INTERACTION,
+      assessmentTypeId: null,
+      questionnaireId: null,
+      questionnaireBundleId: null,
+      preset: 'FIVE_PER_DAY',
+      startingDay: 1,
+      numberOfDays: 7,
+      numberOfWeeks: 1,
+      triggerMode: FixedTriggerMode.BLOCK_START,
+      availabilityDurationMinutes: 60,
+      reminderMinutes: '',
+      required: false,
+      singleResponse: true,
+      responderRoles: [],
+    });
+    this.repeatRuleModalVisible = true;
+  }
+
+  public closeRepeatRuleModal(): void {
+    this.repeatRuleModalVisible = false;
+  }
+
+  public applyRepeatRule(): void {
+    const mode = this.repeatRuleForm.get('mode')?.value;
+    let slots: any[] = [];
+
+    if (mode === FixedRepeatRuleMode.ADD_FROM_INTERACTION) {
+      if (!this.canApplyAddFromInteractionRule()) return;
+      slots = this.buildAddFromInteractionSlots();
+    }
+
+    if (mode === FixedRepeatRuleMode.EXTEND_LAST_DAY) {
+      slots = this.buildExtendLastDaySlots();
+    }
+
+    if (mode === FixedRepeatRuleMode.EXTEND_LAST_WEEK) {
+      slots = this.buildExtendLastWeekSlots();
+    }
+
+    if (!slots.length) {
+      this.modalService.warning({
+        nzTitle: 'No hay interacciones para crear',
+        nzContent: 'Revisá la regla o la duración del esquema.',
+        nzOkText: 'Entendido',
+      });
+      return;
+    }
+
+    this.persistFixedSlots(slots, () => this.closeRepeatRuleModal());
+  }
+
+  public goToPreviousFixedWeek(): void {
+    this.weekStartDay = Math.max(0, this.weekStartDay - this.fixedBlockSize);
+  }
+
+  public goToNextFixedWeek(): void {
+    this.weekStartDay = Math.min((this.maxFixedWeeks - 1) * 7, this.weekStartDay + this.fixedBlockSize);
+    if (this.weekStartDay + 7 > this.schemeDurationDays) {
+      this.baseForm.patchValue({ durationDays: this.weekStartDay + 7 });
+    }
+  }
+
+  public onDurationDaysChange(): void {
+    this.weekStartDay = Math.min(this.weekStartDay, (this.maxFixedWeeks - 1) * 7);
+  }
+
+  public searchQuestionnaires(search: string): void {
+    const filter = search ? { or: this.createQuestionnaireSearchFilter(search) } : undefined;
+    this.questionnaireService.getQuestionnaires({ filter }).subscribe(
+      ({ edges }) => {
+        this.foundQuestionnaires = edges
+          .map((edge: any) => edge.node)
+          .filter(
+            (questionnaire: QuestionnaireVersion) =>
+              questionnaire.zombie === false &&
+              [QuestionnaireStatus.PRIVATE, QuestionnaireStatus.PUBLISHED].includes(questionnaire.status)
+          );
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaires' })
+    );
+  }
+
+  private loadSchemeById(id: number): void {
+    this.currentSchemeId = id;
+    const previousSessionResources = this.sessionResources();
+    const previousFixedSlots = this.scheme?.independentEvaluationTemplates || this.draftFixedSlots;
+    this.loading = true;
+    this.schemesService
+      .getSchemes({ filter: { id: { eq: id } } })
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe(
+        ({ edges }) => {
+          const loadedScheme = edges[0]?.node;
+          if (
+            loadedScheme &&
+            !this.sessionResourcesFromScheme(loadedScheme).length &&
+            previousSessionResources.length
+          ) {
+            loadedScheme.sessionTemplates = [
+              {
+                id: loadedScheme.sessionTemplates?.[0]?.id || null,
+                resourceTemplates: previousSessionResources,
+              },
+            ];
+          }
+          if (
+            loadedScheme &&
+            !loadedScheme.independentEvaluationTemplates?.length &&
+            previousFixedSlots.length
+          ) {
+            loadedScheme.independentEvaluationTemplates = previousFixedSlots;
+          }
+          this.scheme = loadedScheme;
+          if (!this.scheme) return;
+          this.baseForm.patchValue({
+            name: this.scheme.name,
+            description: this.scheme.description,
+            active: this.scheme.active,
+            emailNotificationsEnabled: this.scheme.emailNotificationsEnabled === undefined
+              ? true
+              : this.scheme.emailNotificationsEnabled,
+            mailTemplateId: this.scheme.mailTemplateId || null,
+            departmentIds: (this.scheme.departments || []).map((department: any) => department.id),
+            durationDays: this.scheme.durationDays || 7,
+            schemeType: this.scheme.schemeType,
+          }, { emitEvent: false });
+          this.baseForm.get('schemeType').disable();
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load scheme' })
+      );
+  }
+
+  private ensureSessionRuleTemplate(): Promise<any> {
+    const existing = this.scheme?.sessionTemplates?.[0];
+    if (existing) return Promise.resolve(existing);
+    if (!this.scheme?.id) return Promise.reject(new Error('Scheme must be saved first'));
+
+    return this.schemesService
+      .addSessionTemplate({
+        schemeId: this.scheme.id,
+        sessionKind: ClinicalSessionKind.CLINICAL,
+        sessionIndex: 0,
+        title: 'Session resources',
+        relativeOffsetDays: 0,
+        durationMinutes: 60,
+      })
+      .toPromise();
+  }
+
+  public resetSessionResourceForm(): void {
+    this.editingResourceId = undefined;
+    this.sessionResourceForm.reset({
+      resourceKind: ClinicalSessionResourceKind.PRE_ASSESSMENT,
+      assessmentTypeId: null,
+      questionnaireId: null,
+      questionnaireBundleId: null,
+      sessionTargetMode: SessionTargetMode.SPECIFIC,
+      sessionSelector: '1',
+      everyNSessions: null,
+      startSessionNumber: 1,
+      endSessionNumber: null,
+      activationOffsetMinutes: -15,
+      availabilityDurationMinutes: 30,
+      reminderMinutes: '',
+      responderRoles: [],
+    });
+  }
+
+  private hasSessionTargetRule(): boolean {
+    const value = this.sessionResourceForm.value;
+    return value.sessionTargetMode === SessionTargetMode.SPECIFIC
+      ? !!value.sessionSelector
+      : !!value.everyNSessions;
+  }
+
+  private hasAssessmentContent(): boolean {
+    const value = this.sessionResourceForm.value;
+    return !!value.questionnaireId || !!value.questionnaireBundleId;
+  }
+
+  private canSubmitSessionResource(): boolean {
+    if (this.sessionResourceForm.invalid) {
+      this.sessionResourceForm.markAllAsTouched();
+      this.modalService.warning({
+        nzTitle: 'Faltan datos de la evaluación',
+        nzContent: 'Completá el tipo de recurso y el tipo de evaluación antes de agregar el recurso.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+
+    if (!this.hasAssessmentContent()) {
+      this.modalService.warning({
+        nzTitle: 'Falta cuestionario o paquete',
+        nzContent: 'Elegí un cuestionario o un paquete de cuestionarios para esta evaluación.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+
+    if (!this.hasSessionTargetRule()) {
+      this.modalService.warning({
+        nzTitle: 'Falta programación de sesiones',
+        nzContent: 'Indicá sesiones específicas o una frecuencia de sesiones.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  private buildResourceTemplatePayload(): any {
+    const value = this.sessionResourceForm.value;
+    const isSpecific = value.sessionTargetMode === SessionTargetMode.SPECIFIC;
+    return {
+      resourceKind: value.resourceKind,
+      assessmentTypeId: value.assessmentTypeId,
+      questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
+      questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
+      sessionSelector: isSpecific ? value.sessionSelector : null,
+      everyNSessions: isSpecific ? null : Number(value.everyNSessions),
+      startSessionNumber: isSpecific ? null : Number(value.startSessionNumber || 1),
+      endSessionNumber: isSpecific || !value.endSessionNumber ? null : Number(value.endSessionNumber),
+      activationAnchor: this.activationAnchorForKind(value.resourceKind),
+      activationOffsetMinutes: Number(value.activationOffsetMinutes || 0),
+      availabilityDurationMinutes: Number(value.availabilityDurationMinutes || 0),
+      reminderMinutes: this.parseReminderMinutes(value.reminderMinutes),
+      defaultResponderRole: (value.responderRoles || []).join(','),
+    };
+  }
+
+  private upsertDraftSessionResource(): void {
+    const payload = this.buildResourceTemplatePayload();
+    const resource = {
+      ...payload,
+      id: this.editingResourceId || this.nextDraftResourceId--,
+      sessionTemplateId: null,
+    };
+
+    this.draftSessionResources = this.editingResourceId
+      ? this.draftSessionResources.map((draftResource) =>
+          draftResource.id === this.editingResourceId ? resource : draftResource
+        )
+      : [...this.draftSessionResources, resource];
+  }
+
+  private activationAnchorForKind(kind: ClinicalSessionResourceKind): ResourceActivationAnchor {
+    return kind === ClinicalSessionResourceKind.POST_ASSESSMENT
+      ? ResourceActivationAnchor.SESSION_END
+      : ResourceActivationAnchor.SESSION_START;
+  }
+
+  private parseReminderMinutes(value: string): number[] {
+    return (value || '')
+      .split(',')
+      .map((part) => Number(part.trim()))
+      .filter((part) => Number.isFinite(part) && part >= 0);
+  }
+
+  private parseResponderRoles(value?: string): string[] {
+    return (value || '')
+      .split(',')
+      .map((role) => role.trim())
+      .filter((role) => !!role);
+  }
+
+  private persistBaseScheme(): Promise<EvaluationScheme> {
+    const value = this.baseForm.getRawValue();
+    const { schemeType: _schemeType, ...updateValue } = value;
+    const existingId = this.scheme?.id || this.currentSchemeId;
+    if (existingId) {
+      return this.schemesService.updateScheme({ id: existingId, ...updateValue }).toPromise();
+    }
+
+    return this.schemesService
+      .createScheme({
+        ...value,
+        defaultDurationMinutes: 60,
+        defaultRecurrenceRule: undefined,
+        sessionTemplates: this.isSessionBased && this.draftSessionResources.length
+          ? [
+              {
+                sessionKind: ClinicalSessionKind.CLINICAL,
+                sessionIndex: 0,
+                title: 'Session resources',
+                relativeOffsetDays: 0,
+                durationMinutes: 60,
+                resourceTemplates: this.draftSessionResources.map(({ id, sessionTemplateId, ...resource }) => resource),
+              },
+            ]
+          : [],
+        independentEvaluationTemplates: this.isFixedScheme
+          ? this.draftFixedSlots.map(({ id, ...slot }) => slot)
+          : [],
+      })
+      .toPromise()
+      .then((scheme: EvaluationScheme) => {
+        this.currentSchemeId = scheme.id;
+        if (this.sessionResourcesFromScheme(scheme).length || !this.draftSessionResources.length) {
+          this.draftSessionResources = [];
+        }
+        if (scheme.independentEvaluationTemplates?.length || !this.draftFixedSlots.length) {
+          this.draftFixedSlots = [];
+        }
+        return scheme;
+      });
+  }
+
+  private onSchemeTypeChange(): void {
+    if (this.currentSchemeId || this.scheme?.id) return;
+    this.scheme = undefined;
+    this.draftSessionResources = [];
+    this.draftFixedSlots = [];
+    this.nextDraftResourceId = -1;
+    this.nextDraftFixedSlotId = -1;
+    this.resetSessionResourceForm();
+    this.resetFixedSlotForm();
+  }
+
+  private sessionResourcesFromScheme(scheme: EvaluationScheme): any[] {
+    return (scheme.sessionTemplates || []).reduce(
+      (resources: any[], sessionTemplate: any) => resources.concat(sessionTemplate.resourceTemplates || []),
+      []
+    );
+  }
+
+  private canPersistBaseScheme(): boolean {
+    if (this.baseForm.valid && this.hasRequiredEmailTemplate()) return true;
+
+    this.baseForm.markAllAsTouched();
+    this.modalService.warning({
+      nzTitle: 'Faltan datos del esquema',
+      nzContent: 'Completá el nombre, el tipo y el template de email si las notificaciones están activadas.',
+      nzOkText: 'Entendido',
+    });
+    return false;
+  }
+
+  private hasRequiredEmailTemplate(): boolean {
+    return !this.baseForm.get('emailNotificationsEnabled')?.value || !!this.baseForm.get('mailTemplateId')?.value;
+  }
+
+  private resetFixedSlotForm(): void {
+    this.fixedSlotForm.reset({
+      assessmentTypeId: null,
+      questionnaireId: null,
+      questionnaireBundleId: null,
+      relativeDay: 0,
+      relativeMinuteOfDay: 9 * 60,
+      startTime: '09:00',
+      endTime: '10:00',
+      durationMinutes: 60,
+      endMinuteOfDay: 10 * 60,
+      triggerMode: FixedTriggerMode.BLOCK_START,
+      availabilityDurationMinutes: 60,
+      reminderMinutes: '',
+      required: false,
+      singleResponse: true,
+      seedOrder: 0,
+      informantType: '',
+      responderRoles: [],
+    });
+  }
+
+  private clearFixedSlotsNow(): void {
+    if (!this.scheme?.id) {
+      this.draftFixedSlots = [];
+      return;
+    }
+
+    this.saving = true;
+    this.schemesService.clearIndependentEvaluationTemplates(this.scheme.id)
+      .toPromise()
+      .then(() => {
+        this.scheme = {
+          ...this.scheme,
+          independentEvaluationTemplates: [],
+        };
+      })
+      .catch((error) => this.errorService.handleError(error, { prefix: 'Unable to clear fixed scheme slots' }))
+      .finally(() => (this.saving = false));
+  }
+
+  private moveFixedSlot(slot: any, relativeDay: number, relativeMinuteOfDay: number): void {
+    const duration = Number(slot.durationMinutes || 60);
+    const payload = {
+      ...this.copyFixedSlotPayload(slot),
+      relativeDay,
+      relativeMinuteOfDay,
+      startMinuteOfDay: relativeMinuteOfDay,
+      endMinuteOfDay: Math.min(24 * 60, relativeMinuteOfDay + duration),
+      durationMinutes: Math.min(duration, 24 * 60 - relativeMinuteOfDay),
+    };
+    this.updateFixedSlot(slot, payload);
+  }
+
+  private updateFixedSlot(slot: any, payload: any): void {
+    if (slot.id < 0 || !this.scheme?.id) {
+      const updated = { ...payload, id: slot.id };
+      this.draftFixedSlots = this.draftFixedSlots.map((draftSlot) => draftSlot.id === slot.id ? updated : draftSlot);
+      return;
+    }
+
+    this.saving = true;
+    this.schemesService.updateIndependentEvaluationTemplate({ id: slot.id, ...payload }).subscribe(
+      (updatedSlot) => {
+        this.attachUpdatedFixedSlot(updatedSlot);
+        this.saving = false;
+      },
+      (error) => {
+        this.saving = false;
+        this.errorService.handleError(error, { prefix: 'Unable to update fixed evaluation slot' });
+      }
+    );
+  }
+
+  private ensureDurationCoversSlots(slots: any[]): void {
+    if (!slots.length) return;
+    const neededDuration = Math.max(this.schemeDurationDays, ...slots.map((slot) => Number(slot.relativeDay || 0) + 1));
+    if (neededDuration > this.schemeDurationDays) {
+      this.baseForm.patchValue({ durationDays: neededDuration });
+      this.onDurationDaysChange();
+    }
+  }
+
+  private scrollFixedCalendarToMorning(): void {
+    const calendar = document.querySelector('.relative-calendar') as HTMLElement;
+    if (!calendar) return;
+    const hourLabel = calendar.querySelector('.hour-label') as HTMLElement;
+    const hourHeight = hourLabel?.offsetHeight || 44;
+    calendar.scrollTop = 6 * hourHeight;
+  }
+
+  private persistDurationIfSaved(): Promise<void> {
+    if (!this.scheme?.id) return Promise.resolve();
+    return this.schemesService
+      .updateScheme({
+        id: this.scheme.id,
+        durationDays: this.schemeDurationDays,
+      })
+      .toPromise()
+      .then((scheme) => {
+        this.scheme = {
+          ...this.scheme,
+          durationDays: scheme.durationDays,
+        };
+      });
+  }
+
+  private persistFixedSlots(slots: any[], onDone?: () => void): void {
+    if (!slots.length) {
+      if (onDone) onDone();
+      return;
+    }
+
+    this.ensureDurationCoversSlots(slots);
+
+    if (!this.scheme?.id) {
+      const createdSlots = slots.map((slot) => ({
+        ...slot,
+        id: this.nextDraftFixedSlotId--,
+      }));
+      this.draftFixedSlots = [...this.draftFixedSlots, ...createdSlots];
+      if (onDone) onDone();
+      return;
+    }
+
+    this.saving = true;
+    const schemeId = this.scheme.id;
+    this.persistDurationIfSaved()
+      .then(() => Promise.all(
+        slots.map((slot) =>
+          this.schemesService.addIndependentEvaluationTemplate({
+            schemeId,
+            ...slot,
+          }).toPromise()
+        )
+      ))
+      .then((createdSlots) => {
+        this.scheme = {
+          ...this.scheme,
+          independentEvaluationTemplates: [
+            ...(this.scheme?.independentEvaluationTemplates || []),
+            ...createdSlots,
+          ],
+        };
+        if (onDone) onDone();
+      })
+      .catch((error) => this.errorService.handleError(error, { prefix: 'Unable to apply fixed scheme rule' }))
+      .finally(() => (this.saving = false));
+  }
+
+  private attachUpdatedFixedSlot(slot: any): void {
+    if (!this.scheme || !slot) return;
+    this.scheme = {
+      ...this.scheme,
+      independentEvaluationTemplates: (this.scheme.independentEvaluationTemplates || []).map((existingSlot: any) =>
+        existingSlot.id === slot.id ? slot : existingSlot
+      ),
+    };
+  }
+
+  private copyFixedSlotPayload(slot: any): any {
+    return {
+      assessmentTypeId: slot.assessmentTypeId,
+      questionnaireIds: slot.questionnaireIds || [],
+      questionnaireBundleIds: slot.questionnaireBundleIds || [],
+      relativeDay: Number(slot.relativeDay || 0),
+      relativeMinuteOfDay: this.fixedSlotStartMinute(slot),
+      startMinuteOfDay: this.fixedSlotStartMinute(slot),
+      durationMinutes: Number(slot.durationMinutes || 60),
+      endMinuteOfDay: this.fixedSlotEndMinute(slot),
+      triggerMode: slot.triggerMode || FixedTriggerMode.BLOCK_START,
+      availabilityDurationMinutes: Number(slot.availabilityDurationMinutes || 60),
+      reminderMinutes: slot.reminderMinutes || [],
+      required: !!slot.required,
+      singleResponse: slot.singleResponse === undefined ? true : !!slot.singleResponse,
+      seedOrder: Number(slot.seedOrder || 0),
+      informantType: slot.informantType || '',
+      defaultResponderRole: slot.defaultResponderRole,
+    };
+  }
+
+  private canApplyAddFromInteractionRule(): boolean {
+    const value = this.repeatRuleForm.value;
+    if (!value.assessmentTypeId || (!value.questionnaireId && !value.questionnaireBundleId)) {
+      this.modalService.warning({
+        nzTitle: 'Faltan datos para la regla',
+        nzContent: 'Elegí el tipo de evaluación y un cuestionario o paquete.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+    return true;
+  }
+
+  private buildAddFromInteractionSlots(): any[] {
+    const value = this.repeatRuleForm.value;
+    const startingDay = Math.max(0, Number(value.startingDay || 1) - 1);
+    const numberOfDays = Math.max(1, Number(value.numberOfDays || 1));
+    const slots: any[] = [];
+
+    for (let day = startingDay; day < startingDay + numberOfDays; day++) {
+      this.presetMinutes(value.preset).forEach((minute, index) => {
+        slots.push({
+          assessmentTypeId: value.assessmentTypeId,
+          questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
+          questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
+          relativeDay: day,
+          relativeMinuteOfDay: minute,
+          startMinuteOfDay: minute,
+          durationMinutes: 60,
+          endMinuteOfDay: Math.min(24 * 60, minute + 60),
+          triggerMode: value.triggerMode || FixedTriggerMode.BLOCK_START,
+          availabilityDurationMinutes: Number(value.availabilityDurationMinutes || 60),
+          reminderMinutes: this.parseReminderMinutes(value.reminderMinutes),
+          required: !!value.required,
+          singleResponse: value.singleResponse === undefined ? true : !!value.singleResponse,
+          seedOrder: index,
+          informantType: '',
+          defaultResponderRole: (value.responderRoles || []).join(','),
+        });
+      });
+    }
+
+    return slots;
+  }
+
+  private buildExtendLastDaySlots(): any[] {
+    const lastDay = this.lastProgrammedDay();
+    if (lastDay === null) return [];
+    const daysToExtend = Math.max(1, Number(this.repeatRuleForm.get('numberOfDays')?.value || 1));
+    const sourceSlots = this.fixedSlots().filter((slot) => Number(slot.relativeDay) === lastDay);
+    const slots: any[] = [];
+
+    for (let offset = 1; offset <= daysToExtend; offset++) {
+      const targetDay = lastDay + offset;
+      sourceSlots.forEach((slot) => {
+        slots.push({
+          ...this.copyFixedSlotPayload(slot),
+          relativeDay: targetDay,
+        });
+      });
+    }
+
+    return slots;
+  }
+
+  private buildExtendLastWeekSlots(): any[] {
+    const lastDay = this.lastProgrammedDay();
+    if (lastDay === null) return [];
+    const weeksToExtend = Math.max(1, Number(this.repeatRuleForm.get('numberOfWeeks')?.value || 1));
+    const weekStart = Math.max(0, lastDay - 6);
+    const sourceSlots = this.fixedSlots().filter((slot) => {
+      const day = Number(slot.relativeDay);
+      return day >= weekStart && day <= lastDay;
+    });
+    const slots: any[] = [];
+
+    for (let week = 1; week <= weeksToExtend; week++) {
+      sourceSlots.forEach((slot) => {
+        const targetDay = Number(slot.relativeDay) + week * 7;
+        slots.push({
+          ...this.copyFixedSlotPayload(slot),
+          relativeDay: targetDay,
+        });
+      });
+    }
+
+    return slots;
+  }
+
+  private lastProgrammedDay(): number | null {
+    if (!this.fixedSlots().length) return null;
+    return Math.max(...this.fixedSlots().map((slot) => Number(slot.relativeDay || 0)));
+  }
+
+  private presetMinutes(preset: string): number[] {
+    const hour = (value: number) => value * 60;
+    const presets: Record<string, number[]> = {
+      FIVE_PER_DAY: [hour(9), hour(12), hour(15), hour(18), hour(21)],
+      SEVEN_PER_DAY: [hour(8), hour(10), hour(12), hour(14), hour(16), hour(18), hour(20)],
+      TEN_PER_DAY: [hour(8), hour(9), hour(10), hour(11), hour(12), hour(13), hour(14), hour(15), hour(16), hour(17)],
+      MORNING_NOTIFICATION: [hour(9)],
+      NIGHT_NOTIFICATION: [hour(21)],
+    };
+    return presets[preset] || presets.FIVE_PER_DAY;
+  }
+
+  private canSubmitFixedSlot(): boolean {
+    this.syncFixedSlotTimes();
+    if (this.fixedSlotForm.invalid) {
+      this.fixedSlotForm.markAllAsTouched();
+      this.modalService.warning({
+        nzTitle: 'Faltan datos de la interacción',
+        nzContent: 'Completá el tipo de evaluación y el bloque horario.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+
+    const value = this.fixedSlotForm.value;
+    if (!value.questionnaireId && !value.questionnaireBundleId) {
+      this.modalService.warning({
+        nzTitle: 'Falta cuestionario o paquete',
+        nzContent: 'Elegí un cuestionario o un paquete para esta interacción.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+
+    if (Number(value.endMinuteOfDay) <= Number(value.relativeMinuteOfDay)) {
+      this.modalService.warning({
+        nzTitle: 'Bloque horario inválido',
+        nzContent: 'La hora de fin debe ser posterior a la hora de inicio.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+
+    if (Number(value.relativeDay) < 0 || Number(value.relativeDay) >= this.schemeDurationDays) {
+      this.modalService.warning({
+        nzTitle: 'Día fuera del esquema',
+        nzContent: 'El día relativo debe estar dentro de la duración configurada para el esquema.',
+        nzOkText: 'Entendido',
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  private buildFixedSlotPayload(): any {
+    this.syncFixedSlotTimes();
+    const value = this.fixedSlotForm.value;
+    return {
+      assessmentTypeId: value.assessmentTypeId,
+      questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
+      questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
+      relativeDay: Number(value.relativeDay || 0),
+      relativeMinuteOfDay: Number(value.relativeMinuteOfDay || 0),
+      startMinuteOfDay: Number(value.relativeMinuteOfDay || 0),
+      durationMinutes: Number(value.durationMinutes || 60),
+      endMinuteOfDay: Number(value.endMinuteOfDay || 0),
+      triggerMode: value.triggerMode || FixedTriggerMode.BLOCK_START,
+      availabilityDurationMinutes: Number(value.availabilityDurationMinutes || 60),
+      reminderMinutes: this.parseReminderMinutes(value.reminderMinutes),
+      required: !!value.required,
+      singleResponse: value.singleResponse === undefined ? true : !!value.singleResponse,
+      seedOrder: Number(value.seedOrder || 0),
+      informantType: value.informantType || '',
+      defaultResponderRole: (value.responderRoles || []).join(','),
+    };
+  }
+
+  private syncFixedSlotTimes(): void {
+    const startMinute = this.timeValueToMinute(this.fixedSlotForm.get('startTime')?.value);
+    const endMinute = this.timeValueToMinute(this.fixedSlotForm.get('endTime')?.value);
+    this.fixedSlotForm.patchValue({
+      relativeMinuteOfDay: startMinute,
+      startMinuteOfDay: startMinute,
+      endMinuteOfDay: endMinute,
+      durationMinutes: Math.max(15, endMinute - startMinute),
+    }, { emitEvent: false });
+  }
+
+  private attachFixedSlotToCurrentScheme(slot: any): void {
+    if (!this.scheme || !slot) return;
+    const slots = this.scheme.independentEvaluationTemplates || [];
+    this.scheme = {
+      ...this.scheme,
+      independentEvaluationTemplates: this.editingFixedSlotId
+        ? slots.map((existingSlot: any) => existingSlot.id === slot.id ? slot : existingSlot)
+        : [...slots, slot],
+    };
+  }
+
+  private fixedSlotEndMinute(slot: any): number {
+    return slot.endMinuteOfDay || (this.fixedSlotStartMinute(slot) + Number(slot.durationMinutes || 60));
+  }
+
+  private fixedSlotStartMinute(slot: any, fallback = 0): number {
+    if (!slot) return fallback;
+    return slot.startMinuteOfDay === undefined || slot.startMinuteOfDay === null
+      ? Number(slot.relativeMinuteOfDay === undefined ? fallback : slot.relativeMinuteOfDay)
+      : Number(slot.startMinuteOfDay);
+  }
+
+  private minuteToTimeValue(totalMinutes: number): string {
+    const bounded = Math.max(0, Math.min(23 * 60 + 59, Number(totalMinutes || 0)));
+    const hour = Math.floor(bounded / 60);
+    const minute = bounded % 60;
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  }
+
+  private timeValueToMinute(value: string): number {
+    const [hour, minute] = (value || '00:00').split(':').map((part) => Number(part));
+    return (Number.isFinite(hour) ? hour : 0) * 60 + (Number.isFinite(minute) ? minute : 0);
+  }
+
+  private formatAmPm(totalMinutes: number): string {
+    const hour24 = Math.floor(Number(totalMinutes || 0) / 60);
+    const minute = Number(totalMinutes || 0) % 60;
+    const suffix = hour24 >= 12 ? 'P.M.' : 'A.M.';
+    const hour12 = hour24 % 12 || 12;
+    return `${hour12}:${minute.toString().padStart(2, '0')} ${suffix}`;
+  }
+
+  private loadAssessmentTypes(): void {
+    this.assessmentAdministrationService.assessmentActive().subscribe(
+      ({ data }: any) => (this.assessmentTypes = data.activeAssessmentTypes || []),
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessment types' })
+    );
+  }
+
+  private loadBundles(): void {
+    this.bundlesService.getQuestionnairesBundles({ departmentIds: [] } as any).subscribe(
+      ({ data }: any) => {
+        this.questionnaireBundles = data.getQuestionnaireBundles.edges.map((edge: any) => edge.node);
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaire bundles' })
+    );
+  }
+
+  private loadDepartments(): void {
+    this.departmentsService.departments({ paging: { first: 50 }, filter: {}, sorting: [] }).subscribe(
+      ({ data }: any) => {
+        this.departments = data.departments.edges.map((edge: any) => edge.node);
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
+    );
+  }
+
+  private loadEmailTemplates(): void {
+    this.emailTemplatesService.getAllEmailTemplates({
+      paging: { first: 50 },
+      filter: {
+        status: { eq: 'ACTIVE' },
+        module: { eq: 'ASSESSMENT' },
+      } as any,
+      sorting: [],
+    }).subscribe(
+      ({ data }: any) => {
+        this.emailTemplates = data.getAllEmailTemplates.edges.map((edge: any) => edge.node);
+        if (this.baseForm.get('emailNotificationsEnabled')?.value && !this.baseForm.get('mailTemplateId')?.value) {
+          this.baseForm.patchValue({ mailTemplateId: this.emailTemplates[0]?.id || null });
+        }
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load email templates' })
+    );
+  }
+
+  private createQuestionnaireSearchFilter(searchString: string): any[] {
+    return [
+      { name: { iLike: `%${searchString}%` } },
+      { abbreviation: { iLike: `%${searchString}%` } },
+      { keywords: { iLike: `%${searchString}%` } },
+    ];
+  }
+}

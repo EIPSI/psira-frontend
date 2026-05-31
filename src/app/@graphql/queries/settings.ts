@@ -13,6 +13,9 @@ const settings = gql`
       passwordReUseCutoffInDays
       sendWelcomeEmails
       welcomeEmailTemplateId
+      googleCalendarEnabled
+      googleCalendarClientId
+      googleCalendarRedirectUri
     }
   }
 `;

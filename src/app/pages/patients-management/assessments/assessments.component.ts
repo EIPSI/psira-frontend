@@ -133,6 +133,11 @@ export class AssessmentsComponent implements OnInit {
   }
 
   public onAction({ action, context: assessment }: ActionArgs<FormattedAssessment, ActionKey>): void {
+    if (!assessment.editableFromAssessmentList && ![ActionKey.SHOW_ASSESSMENT, ActionKey.SCAN_QR_CODE].includes(action.key)) {
+      this.openLinkedSession();
+      return;
+    }
+
     switch (action.key) {
       case ActionKey.SHOW_ASSESSMENT:
         this.showAssessment(assessment);
@@ -197,7 +202,6 @@ export class AssessmentsComponent implements OnInit {
   }
 
   public onPatientSelect(): void {
-    console.log(this.patient);
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
     this.router.navigate(['/psira/case-management/create-assessment'], {
       queryParams: {
@@ -207,6 +211,10 @@ export class AssessmentsComponent implements OnInit {
   }
 
   public onAssessmentSelect(assessment: FormattedAssessment): void {
+    if (!assessment.editableFromAssessmentList) {
+      this.openLinkedSession();
+      return;
+    }
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(assessment), environment.secretKey).toString();
     this.router.navigate(['/psira/case-management/create-assessment'], {
       queryParams: {
@@ -217,6 +225,16 @@ export class AssessmentsComponent implements OnInit {
 
   private showAssessment({ uuid }: FormattedAssessment): void {
     window.open(this.generateAssessmentURL(uuid));
+  }
+
+  private openLinkedSession(): void {
+    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
+    this.router.navigate(['/psira/case-management/profile'], {
+      queryParams: {
+        profile: dataString,
+        tab: 'sessions',
+      },
+    });
   }
 
   private generateAssessmentURL(assesmentUuid: string): string {

@@ -39,6 +39,7 @@ export class AssessmentFormComponent implements OnInit {
       )
       .subscribe((oldAssessment: FullAssessment) => {
       const assessment = structuredClone(oldAssessment);
+      this.applyResolvedQuestionnaireSequence(assessment);
       for (const questionnaire of assessment.questionnaireAssessment.questionnaires) {
         questionnaire.questionGroups.map((group: any) => {
           const questions: any[] = []
@@ -73,7 +74,7 @@ export class AssessmentFormComponent implements OnInit {
       })
     }
         this.assessmentFormService.setAssessment(assessment);
-        const [lang] = assessment.questionnaireAssessment.questionnaires.map((q) => q.questionnaire?.language) ?? [
+        const [lang] = assessment.questionnaireAssessment.questionnaires.map((q: any) => q.questionnaire?.language) ?? [
           TranslationCode.EN,
         ];
         if (translationList.some((t) => t.code === lang)) this.translateService.use(lang);
@@ -95,5 +96,30 @@ export class AssessmentFormComponent implements OnInit {
         },
         (err) => this.errorService.handleError(err, { prefix: 'Unable to load disclaimers' })
       );
+  }
+
+  private applyResolvedQuestionnaireSequence(assessment: FullAssessment): void {
+    const resolvedQuestionnaires = assessment.questionnaireAssessment?.resolvedQuestionnaires || [];
+    if (!resolvedQuestionnaires.length) return;
+
+    const questionnairesById = new Map(
+      (assessment.questionnaireAssessment.questionnaires || []).map((questionnaire: any) => [questionnaire._id, questionnaire])
+    );
+
+    assessment.questionnaireAssessment.questionnaires = resolvedQuestionnaires
+      .slice()
+      .sort((a: any, b: any) => a.orderIndex - b.orderIndex)
+      .map((resolved: any) => {
+        const questionnaire = questionnairesById.get(resolved.questionnaireId);
+        if (!questionnaire) return null;
+
+        return {
+          ...structuredClone(questionnaire),
+          occurrenceId: resolved.occurrenceId,
+          resolvedPath: resolved.path,
+          sourceBundleId: resolved.sourceBundleId,
+        };
+      })
+      .filter((questionnaire: any) => !!questionnaire) as any;
   }
 }

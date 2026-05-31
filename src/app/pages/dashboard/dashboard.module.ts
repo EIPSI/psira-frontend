@@ -12,6 +12,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
 
 @NgModule({
   declarations: [DashboardComponent, ReportsComponent],
@@ -27,6 +28,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
     NzEmptyModule,
     NzTagModule,
     NzButtonModule,
+    CalendarWidgetModule,
   ],
 })
 export class DashboardModule {}

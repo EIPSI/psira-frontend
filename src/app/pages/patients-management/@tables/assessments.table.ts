@@ -45,6 +45,16 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
         }
       : {},
   },
+  {
+    title: 'Origen',
+    name: 'formattedOrigin',
+    altName: 'origin',
+    render: 'tag',
+  },
+  {
+    title: 'Sesión vinculada',
+    name: 'linkedSessionLabel',
+  },
   // {
   //   title: 'Informants',
   //   name: 'informantType',

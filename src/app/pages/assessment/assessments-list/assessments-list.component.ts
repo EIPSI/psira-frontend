@@ -160,6 +160,14 @@ export class AssessmentsListComponent {
     }
 
     public onAction({action, context: assessment} : ActionArgs < FormattedAssessment, ActionKey >): void {
+        if (!assessment.editableFromAssessmentList && ![
+            ActionKey.SHOW_ASSESSMENT,
+            ActionKey.SCAN_QR_CODE,
+        ].includes(action.key)) {
+            this.openLinkedSession(assessment);
+            return;
+        }
+
         switch (action.key) {
             case ActionKey.SHOW_ASSESSMENT:
                 this.showAssessment(assessment);
@@ -191,6 +199,10 @@ export class AssessmentsListComponent {
     }
 
     public onAssessmentSelect(assessment : FormattedAssessment): void {
+        if (!assessment.editableFromAssessmentList) {
+            this.openLinkedSession(assessment);
+            return;
+        }
         const dataString = CryptoJS.AES.encrypt(JSON.stringify(assessment), environment.secretKey).toString();
         this.router.navigate(['/psira/assessments/plan-assessments'], {
             queryParams: {
@@ -451,6 +463,30 @@ export class AssessmentsListComponent {
 
     private showAssessment({uuid} : FormattedAssessment): void {
         window.open(this.generateAssessmentURL(uuid));
+    }
+
+    private showLinkedSessionNotice(assessment: FormattedAssessment): void {
+        this.modalService.info({
+            nzTitle: 'Evaluación vinculada a sesión',
+            nzContent: `Esta evaluación se edita desde la sesión vinculada: ${
+                assessment.linkedSessionLabel || assessment.clinicalSessionId || ''
+            }`,
+        });
+    }
+
+    private openLinkedSession(assessment: FormattedAssessment): void {
+        if (!assessment.patient) {
+            this.showLinkedSessionNotice(assessment);
+            return;
+        }
+
+        const dataString = CryptoJS.AES.encrypt(JSON.stringify(assessment.patient), environment.secretKey).toString();
+        this.router.navigate(['/psira/case-management/profile'], {
+            queryParams: {
+                profile: dataString,
+                tab: 'sessions',
+            },
+        });
     }
 
     private copyAssessmentLink({uuid} : FormattedAssessment): void {

@@ -13,6 +13,21 @@ import { Filter } from '@app/@shared/@types/filter';
 import { Paging } from '@app/@shared/@types/paging';
 import { Sorting } from '@app/@shared/@types/sorting';
 import { ErrorHandlerService } from '@app/@shared/services/error-handler.service';
+import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+
+type BundleNodeType = 'QUESTIONNAIRE' | 'FIXED_GROUP' | 'RANDOM_GROUP';
+type RandomizationMode = 'RANDOM_ORDER' | 'REPLACEMENT';
+
+interface BundleNode {
+  id: string;
+  type: BundleNodeType;
+  label?: string | null;
+  questionnaireId?: string | null;
+  randomizationMode?: RandomizationMode | null;
+  selectionCount?: number | null;
+  weight?: number | null;
+  children?: BundleNode[];
+}
 
 @Component({
   selector: 'app-create-questionnaire-bundle',
@@ -20,26 +35,28 @@ import { ErrorHandlerService } from '@app/@shared/services/error-handler.service
   styleUrls: ['./create-questionnaire-bundle.component.scss'],
 })
 export class CreateQuestionnaireBundleComponent implements OnInit {
-  selectedQuestionnaires: QuestionnaireVersion[] = [];
+  public structure: BundleNode[] = [];
+  public questionnaires: QuestionnaireVersion[] = [];
   public departmentsRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
     paging: { first: 50 },
     filter: {},
     sorting: [],
   };
   isUpdateMode = false;
-  selectedDepartments: [] = [];
+  selectedDepartments: number[] = [];
   selectedId: string;
   bundle: any;
   bundleForm = this.fb.group({
     name: ['', Validators.required],
-    questionnaireIds: [],
+    active: [true],
     departmentIds: [],
   });
-  listOfDepartments: [] = [];
+  listOfDepartments: any[] = [];
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
+    private questionnaireService: QuestionnaireManagementService,
     private bundlesService: QuestionnaireBundlesService,
     private router: Router,
     private nzMessage: NzMessageService,
@@ -49,7 +66,9 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.structure = [this.createGroupNode('FIXED_GROUP', 'Evaluation sequence')];
     this.getDepartments();
+    this.getQuestionnaires();
     this.route.params.subscribe((data) => {
       if (data._id) {
         this.isUpdateMode = true;
@@ -65,8 +84,9 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
           .subscribe((data: any) => {
             this.bundle = data.data.getQuestionnaireBundle;
             this.bundleForm.controls['name'].setValue(this.bundle?.name);
-            this.selectedQuestionnaires = this.bundle?.questionnaires;
-            this.bundleForm.patchValue({ questionnaireIds: this.bundle?.questionnaires.map((q: any) => q._id) });
+            this.bundleForm.controls['active'].setValue(this.bundle?.active !== false);
+            this.selectedDepartments = this.bundle?.departmentIds || [];
+            this.structure = this.normalizeRootStructure(this.parseStructure(this.bundle?.structureJson));
           });
       }
     });
@@ -74,7 +94,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
 
   onFormSubmit() {
     this.bundleForm.controls['departmentIds'].setValue(this.selectedDepartments);
-    this.bundlesService.createQuestionnaireBundle(this.bundleForm.value).subscribe(
+    this.bundlesService.createQuestionnaireBundle(this.buildPayload()).subscribe(
       () => {
         this.bundleForm.reset();
         const message$ = this.translate.get('bundles.created').subscribe((message) => {
@@ -84,14 +104,14 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
         this.router.navigate(['/psira/questionnaire-management/questionnaire-bundles-list']);
       },
       (err) => {
-        this.nzMessage.error(`${err}`, { nzDuration: 3000 });
+        this.nzMessage.error(this.formatGraphQLError(err), { nzDuration: 5000 });
       }
     );
   }
 
   onFormUpdateSubmit() {
     this.bundleForm.controls['departmentIds'].setValue(this.selectedDepartments);
-    this.bundlesService.updateQuestionnaireBundle(this.bundleForm.value).subscribe(
+    this.bundlesService.updateQuestionnaireBundle({ _id: this.selectedId, ...this.buildPayload() }).subscribe(
       () => {
         this.bundleForm.reset();
         const message$ = this.translate.get('bundles.updated').subscribe((message) => {
@@ -101,25 +121,33 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
         this.router.navigate(['/psira/questionnaire-management/questionnaire-bundles-list']);
       },
       (err) => {
-        this.nzMessage.error(`${err}`, { nzDuration: 3000 });
+        this.nzMessage.error(this.formatGraphQLError(err), { nzDuration: 5000 });
       }
     );
   }
 
-  public onQuestionnaireSelected(questionnaires: QuestionnaireVersion[]): void {
-    this.selectedQuestionnaires = questionnaires;
-    this.bundleForm.patchValue({ questionnaireIds: questionnaires.map((q) => q._id) });
+  getDepartments(): void {
+    this.loadDepartmentsPage();
   }
 
-  getDepartments(): void {
+  private loadDepartmentsPage(after?: string, accumulatedDepartments: any[] = []): void {
     this.departmentsService
-      .departments(this.departmentsRequestOptions)
+      .departments({
+        ...this.departmentsRequestOptions,
+        paging: { first: 50, after },
+      })
       .pipe()
       .subscribe(
         ({ data }: any) => {
-          this.listOfDepartments = data.departments.edges.map((department: any) =>
+          const departments = data.departments.edges.map((department: any) =>
             Convert.toDepartment(department.node)
           );
+          const allDepartments = [...accumulatedDepartments, ...departments];
+          this.listOfDepartments = allDepartments;
+
+          if (data.departments.pageInfo?.hasNextPage) {
+            this.loadDepartmentsPage(data.departments.pageInfo.endCursor, allDepartments);
+          }
         },
         (err) => this.errorService.handleError(err, { prefix: 'Unable to load departments' })
       );
@@ -127,6 +155,148 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
 
   selectDepartments(event: any) {
     this.selectedDepartments = event;
+  }
+
+  departmentIsSelected(departmentId: number): boolean {
+    return this.selectedDepartments.some((selectedDepartmentId) => Number(selectedDepartmentId) === Number(departmentId));
+  }
+
+  toggleDepartment(departmentId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.departmentIsSelected(departmentId)) {
+        this.selectedDepartments = [...this.selectedDepartments, departmentId];
+      }
+      return;
+    }
+
+    this.selectedDepartments = this.selectedDepartments.filter(
+      (selectedDepartmentId) => Number(selectedDepartmentId) !== Number(departmentId)
+    );
+  }
+
+  selectAllDepartments(): void {
+    this.selectedDepartments = this.listOfDepartments.map((department: any) => department.id);
+  }
+
+  removeAllDepartments(): void {
+    this.selectedDepartments = [];
+  }
+
+  getQuestionnaires(): void {
+    this.questionnaireService.getQuestionnaires({ paging: { first: 200 } }).subscribe(
+      (data) => {
+        this.questionnaires = data.edges
+          .map((edge: any) => edge.node)
+          .filter((questionnaire: any) =>
+            questionnaire.status !== 'ARCHIVED' &&
+            questionnaire.status !== 'DRAFT' &&
+            questionnaire.zombie !== true
+          );
+      },
+      (err) => this.errorService.handleError(err, { prefix: 'Unable to load questionnaires' })
+    );
+  }
+
+  get rootNode(): BundleNode {
+    this.structure = this.normalizeRootStructure(this.structure);
+    return this.structure[0];
+  }
+
+  get rootChildren(): BundleNode[] {
+    const root = this.rootNode;
+    this.ensureChildren(root);
+    return root.children as BundleNode[];
+  }
+
+  addQuestionnaire(nodes: BundleNode[] = this.rootChildren): void {
+    nodes.push({
+      id: this.createNodeId(),
+      type: 'QUESTIONNAIRE',
+      questionnaireId: this.questionnaires[0]?._id,
+      weight: 1,
+    });
+  }
+
+  addFixedGroup(nodes: BundleNode[] = this.rootChildren): void {
+    nodes.push(this.createGroupNode('FIXED_GROUP', 'Fixed group'));
+  }
+
+  addRandomGroup(nodes: BundleNode[] = this.rootChildren): void {
+    nodes.push(this.createGroupNode('RANDOM_GROUP', 'Randomized group'));
+  }
+
+  addChildQuestionnaire(node: BundleNode): void {
+    this.ensureChildren(node);
+    this.addQuestionnaire(node.children);
+  }
+
+  addChildFixedGroup(node: BundleNode): void {
+    this.ensureChildren(node);
+    this.addFixedGroup(node.children);
+  }
+
+  addChildRandomGroup(node: BundleNode): void {
+    this.ensureChildren(node);
+    this.addRandomGroup(node.children);
+  }
+
+  removeNode(nodes: BundleNode[], index: number): void {
+    nodes.splice(index, 1);
+  }
+
+  moveNode(nodes: BundleNode[], index: number, direction: -1 | 1): void {
+    const target = index + direction;
+    if (target < 0 || target >= nodes.length) return;
+    const [node] = nodes.splice(index, 1);
+    nodes.splice(target, 0, node);
+  }
+
+  dropNode(event: CdkDragDrop<BundleNode[]>): void {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      return;
+    }
+
+    transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
+  }
+
+  setRootType(type: Exclude<BundleNodeType, 'QUESTIONNAIRE'>): void {
+    this.rootNode.type = type;
+    if (type === 'RANDOM_GROUP') {
+      this.rootNode.randomizationMode = this.rootNode.randomizationMode || 'RANDOM_ORDER';
+      this.rootNode.selectionCount = this.rootNode.selectionCount || 1;
+    } else {
+      this.rootNode.randomizationMode = null;
+      this.rootNode.selectionCount = null;
+    }
+  }
+
+  dropListId(node: BundleNode): string {
+    return `bundle-drop-${node.id}`;
+  }
+
+  dropListIds(): string[] {
+    const ids: string[] = [];
+    this.collectDropListIds(this.structure, ids);
+    return ids;
+  }
+
+  questionnaireName(questionnaireId: string): string {
+    return this.questionnaires.find((questionnaire) => questionnaire._id === questionnaireId)?.name || 'Questionnaire';
+  }
+
+  countQuestionnaires(nodes: BundleNode[] = this.structure): number {
+    return nodes.reduce(
+      (count, node) => count + (node.type === 'QUESTIONNAIRE' ? 1 : this.countQuestionnaires(node.children || [])),
+      0
+    );
+  }
+
+  countGroups(nodes: BundleNode[] = this.structure): number {
+    return nodes.reduce(
+      (count, node) => count + (node.type === 'QUESTIONNAIRE' ? 0 : 1 + this.countGroups(node.children || [])),
+      0
+    );
   }
 
   bundleHasDepartment(currentDepartmentId: number): boolean {
@@ -137,5 +307,108 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
       return department.length > 0;
     }
     return false;
+  }
+
+  private buildPayload(): any {
+    this.structure = this.normalizeRootStructure(this.structure);
+    const structure = this.sanitizeNodes(this.structure);
+    return {
+      name: this.bundleForm.value.name,
+      active: this.bundleForm.value.active !== false,
+      departmentIds: this.selectedDepartments || [],
+      structure,
+      structureJson: JSON.stringify(structure),
+    };
+  }
+
+  private parseStructure(value: string): BundleNode[] {
+    try {
+      return JSON.parse(value || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  private normalizeRootStructure(nodes: BundleNode[]): BundleNode[] {
+    const currentNodes = nodes || [];
+
+    if (!currentNodes.length) {
+      return [this.createGroupNode('FIXED_GROUP', 'Evaluation sequence')];
+    }
+
+    if (currentNodes.length === 1 && currentNodes[0].type !== 'QUESTIONNAIRE') {
+      currentNodes[0].children = currentNodes[0].children || [];
+      return currentNodes;
+    }
+
+    return [
+      {
+        ...this.createGroupNode('FIXED_GROUP', 'Evaluation sequence'),
+        children: currentNodes,
+      },
+    ];
+  }
+
+  private sanitizeNodes(nodes: BundleNode[]): BundleNode[] {
+    return (nodes || []).map((node) => {
+      const sanitized: BundleNode = {
+        id: node.id || this.createNodeId(),
+        type: node.type,
+      };
+      const weight = Number(node.weight);
+      if (Number.isFinite(weight) && weight > 0) sanitized.weight = weight;
+
+      if (node.type === 'QUESTIONNAIRE') {
+        sanitized.questionnaireId = node.questionnaireId;
+        return sanitized;
+      }
+
+      sanitized.label = node.label || null;
+      sanitized.children = this.sanitizeNodes(node.children || []);
+
+      if (node.type === 'RANDOM_GROUP') {
+        sanitized.randomizationMode = node.randomizationMode || 'RANDOM_ORDER';
+        sanitized.selectionCount = Number(node.selectionCount) || 1;
+      }
+
+      return sanitized;
+    });
+  }
+
+  private ensureChildren(node: BundleNode): void {
+    if (!node.children) node.children = [];
+  }
+
+  private createGroupNode(type: Exclude<BundleNodeType, 'QUESTIONNAIRE'>, label: string): BundleNode {
+    return {
+      id: this.createNodeId(),
+      type,
+      label,
+      randomizationMode: type === 'RANDOM_GROUP' ? 'RANDOM_ORDER' : null,
+      selectionCount: type === 'RANDOM_GROUP' ? 1 : null,
+      weight: 1,
+      children: [],
+    };
+  }
+
+  private collectDropListIds(nodes: BundleNode[], ids: string[]): void {
+    (nodes || []).forEach((node: BundleNode) => {
+      if (node.type === 'QUESTIONNAIRE') return;
+      ids.push(this.dropListId(node));
+      this.collectDropListIds(node.children || [], ids);
+    });
+  }
+
+  private createNodeId(): string {
+    return `node-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  private formatGraphQLError(error: any): string {
+    const graphQLErrors = error?.graphQLErrors || error?.networkError?.result?.errors || [];
+    if (graphQLErrors.length) {
+      return graphQLErrors.map((graphQLError: any) => graphQLError.message).join(' ');
+    }
+
+    return error?.message || 'Unable to save questionnaire bundle';
   }
 }

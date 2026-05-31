@@ -62,9 +62,7 @@ export class LoginComponent implements OnInit {
       },
       (error) => {
         this.hasErrors = true;
-        for (const gqlError of error.graphQLErrors) {
-          this.errors.push(gqlError.message);
-        }
+        this.errors = this.formatLoginErrors(error);
         this.isLoading = false;
       }
     );
@@ -107,5 +105,18 @@ export class LoginComponent implements OnInit {
       };
       this.signIn(credentials);
     }
+  }
+
+  private formatLoginErrors(error: any): string[] {
+    const graphQLErrors = error?.graphQLErrors || [];
+    if (graphQLErrors.length) {
+      return graphQLErrors.map((gqlError: any) => gqlError.message);
+    }
+
+    if (error?.networkError) {
+      return ['Unable to connect to the server. Please check that the backend is running.'];
+    }
+
+    return [error?.message || 'Unable to log in. Please try again.'];
   }
 }

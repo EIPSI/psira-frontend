@@ -40,6 +40,20 @@ const routes: Routes = [
     loadChildren: () => import('./assessment/assessment.module').then((m) => m.AssessmentModule),
   },
   {
+    path: 'calendar',
+    data: {
+      breadcrumbI18nKey: 'menu.calendar',
+    },
+    loadChildren: () => import('./calendar/calendar.module').then((m) => m.CalendarModule),
+  },
+  {
+    path: 'evaluation-schemes',
+    data: {
+      breadcrumbI18nKey: 'menu.evaluationSchemes',
+    },
+    loadChildren: () => import('./evaluation-schemes/evaluation-schemes.module').then((m) => m.EvaluationSchemesModule),
+  },
+  {
     path: 'user-management',
     data: {},
     loadChildren: () => import('./user-management/user-management.module').then((m) => m.UserManagementModule),
@@ -50,6 +64,13 @@ const routes: Routes = [
       breadcrumbI18nKey: 'menu.administration',
     },
     loadChildren: () => import('./administration/administration.module').then((m) => m.AdministrationModule),
+  },
+  {
+    path: 'reports',
+    data: {
+      breadcrumbI18nKey: 'menu.reports',
+    },
+    loadChildren: () => import('./reports/reports.module').then((m) => m.ReportsModule),
   },
   {
     path: 'feedback',

@@ -128,11 +128,14 @@ export class CreateAssessmentComponent implements OnInit {
       emailReminder: [null],
       receiverEmail: [this.patient?.email],
       mailTemplateId: [null],
+      reminderMinutes: [''],
+      questionnaireBundles: [[]],
       note: [null],
       dates: this.formBuilder.array([
         this.formBuilder.group({
           expirationDate: [null],
           deliveryDate: [null],
+          reminderMinutes: [''],
         }),
       ]),
     });
@@ -160,6 +163,7 @@ export class CreateAssessmentComponent implements OnInit {
       this.formBuilder.group({
         expirationDate: [null],
         deliveryDate: [null],
+        reminderMinutes: [''],
       })
     );
   }
@@ -312,14 +316,21 @@ export class CreateAssessmentComponent implements OnInit {
     if (this.formGroup.invalid) return;
 
     const questionnaires = this.selectedQuestionnaires.map((q) => q._id);
+    const questionnaireBundles = this.selectedBundleIds();
     const { informant, informantPatient, ...rest } = this.formGroup.value;
     this.applySelectedResponder();
     const newAssessmentData = {
       ...rest,
       questionnaires,
+      questionnaireBundles,
       patientId: this.fullAssessment?.patientId ?? this.patient.id,
       targetUserId: this.patient?.userId,
     };
+    newAssessmentData.dates = (newAssessmentData.dates || []).map((date: any) => ({
+      ...date,
+      reminderMinutes: this.parseReminderMinutes(date.reminderMinutes),
+    }));
+    newAssessmentData.reminderMinutes = this.parseReminderMinutes(newAssessmentData.reminderMinutes);
 
     if (this.typeSelected === `OTHER_USER` || this.typeSelected === `CASE_MANAGER`) {
       newAssessmentData.informantCaregiverRelation = null;
@@ -383,6 +394,7 @@ export class CreateAssessmentComponent implements OnInit {
       targetUserId: this.fullAssessment.targetUserId,
       responderUserId: this.fullAssessment.responderUserId,
       mailTemplateId: this.fullAssessment.mailTemplateId,
+      reminderMinutes: (this.fullAssessment.reminderMinutes || []).join(', '),
       informantPatient: this.fullAssessment.patient,
       emailReminder: this.fullAssessment.emailReminder,
       receiverEmail: this.fullAssessment.receiverEmail,
@@ -395,12 +407,17 @@ export class CreateAssessmentComponent implements OnInit {
       this.formBuilder.group({
         deliveryDate: this.fullAssessment.deliveryDate,
         expirationDate: this.fullAssessment.expirationDate,
+        reminderMinutes: (this.fullAssessment.reminderMinutes || []).join(', '),
       })
     );
     this.selectedClinician = this.fullAssessment.clinician;
     this.expireDate = this.fullAssessment.expirationDate;
     this.deliveryDate = this.fullAssessment.deliveryDate;
     this.selectedQuestionnaires = this.fullAssessment.questionnaireAssessment.questionnaires;
+    this.listOfSelectedBundles = (this.fullAssessment.questionnaireAssessment as any)?.questionnaireBundles?.map(
+      (bundle: any) => bundle._id
+    ) || [];
+    this.formGroup.patchValue({ questionnaireBundles: this.selectedBundleIds() });
     this.noteValue = this.fullAssessment.note;
     this.patientEmail = this.patient.email;
     this.selectedAssessment = this.fullAssessment.assessmentType?.id;
@@ -459,11 +476,13 @@ export class CreateAssessmentComponent implements OnInit {
   }
 
   onBundleSelection() {
-    this.selectedQuestionnaires = this.selectedQuestionnaires.concat(
-      this.listOfSelectedBundles.map((bundle: any) => bundle.node.questionnaires).flat()
-    );
-    this.selectedQuestionnaires = this.filterUniqueQuestionnaires(this.selectedQuestionnaires);
-    this.formGroup.patchValue({ questionnaires: this.selectedQuestionnaires });
+    this.formGroup.patchValue({ questionnaireBundles: this.selectedBundleIds() });
+  }
+
+  selectedBundleIds(): string[] {
+    return (this.listOfSelectedBundles || [])
+      .map((bundle: any) => bundle?.node?._id || bundle?._id || bundle)
+      .filter((id: string) => !!id);
   }
 
   filterUniqueQuestionnaires(questionnaires: any) {
@@ -532,5 +551,15 @@ export class CreateAssessmentComponent implements OnInit {
       receiverEmail: responder?.email ?? null,
     });
     this.patientEmail = responder?.email ?? '';
+  }
+
+  private parseReminderMinutes(value: string | number[]): number[] {
+    if (Array.isArray(value)) {
+      return value.filter((part) => Number.isFinite(part) && part >= 0);
+    }
+    return (value || '')
+      .split(',')
+      .map((part) => Number(part.trim()))
+      .filter((part) => Number.isFinite(part) && part >= 0);
   }
 }

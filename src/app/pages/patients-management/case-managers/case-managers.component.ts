@@ -61,6 +61,7 @@ export class CaseManagersComponent implements OnInit {
   public pageInfo: PageInfo;
 
   public actions: Action<ActionKey>[] = [];
+  public currentUserId?: number;
 
   @Input() managerType = 'caseManager';
   @Input() filter: CaseManagerFilter = {};
@@ -115,6 +116,7 @@ export class CaseManagersComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.currentUserId = (JSON.parse(localStorage.getItem('user')) || {}).id;
     this.caseManagersRequestOptions.filter = this.filter;
     this.getCaseManagers();
     this.drawerTitle = this.managerType === 'caseManager' ? 'Filter Case Managers' : 'Filter Informants';
@@ -149,6 +151,11 @@ export class CaseManagersComponent implements OnInit {
 
   public checkIfManagerHasPermission(permissions: Permission[]): boolean {
     return permissions.some((p: Permission) => p.name === this.PK.MANAGE_PATIENTS);
+  }
+
+  public canRemoveCaseManager(manager: CaseManager): boolean {
+    if (manager?.id !== this.currentUserId) return true;
+    return this.perms.permissionsOnly(PermissionKey.REMOVE_SELF_CASE_MANAGER);
   }
 
   public getCaseManagerServiceProperty(property: any, params?: any) {
@@ -351,6 +358,13 @@ export class CaseManagersComponent implements OnInit {
   }
 
   private async unAssignCaseManager(manager: CaseManager) {
+    if (!this.canRemoveCaseManager(manager)) {
+      this.errorService.handleError(
+        new Error('You need special permission to remove yourself as case manager')
+      );
+      return;
+    }
+
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
       nzTitle: 'Unassign Case manager',

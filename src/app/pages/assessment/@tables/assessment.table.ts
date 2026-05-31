@@ -30,6 +30,16 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
     translationPath: 'plannedAssessments.patientMedicalRecordNo',
   },
   {
+    name: 'formattedOrigin',
+    altName: 'origin',
+    title: 'Origen',
+    render: 'tag',
+  },
+  {
+    name: 'linkedSessionLabel',
+    title: 'Sesión vinculada',
+  },
+  {
     name: 'formattedPatient',
     altName: 'patient',
     title: 'Patient',

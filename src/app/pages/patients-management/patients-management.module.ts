@@ -46,6 +46,11 @@ import { QRCodeModule } from 'angularx-qrcode';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { CustomDirectivesModule } from '@app/@shared/directives/custom-directives.module';
+import { NzCalendarModule } from 'ng-zorro-antd/calendar';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { PatientCalendarComponent } from './calendar/patient-calendar.component';
+import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
 
 const antModules = [
   NzGridModule,
@@ -63,7 +68,10 @@ const antModules = [
   NzAvatarModule,
   NzSelectModule,
   NzToolTipModule,
-  NzCheckboxModule
+  NzCheckboxModule,
+  NzCalendarModule,
+  NzEmptyModule,
+  NzSpinModule
 ];
 
 @NgModule({
@@ -83,6 +91,7 @@ const antModules = [
     NzRadioModule,
     NzDatePickerModule,
     AssessmentModule,
+    CalendarWidgetModule,
     QRCodeModule,
     CustomDirectivesModule
   ],
@@ -98,6 +107,7 @@ const antModules = [
     ReportsComponent,
     AssessmentsComponent,
     CreateAssessmentComponent,
+    PatientCalendarComponent,
   ],
   providers: [
     PatientsService,

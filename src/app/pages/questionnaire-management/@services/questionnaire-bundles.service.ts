@@ -18,7 +18,7 @@ export class QuestionnaireBundlesService {
     paging?: Paging;
     filter?: Filter;
     sorting?: Sorting[];
-    departmentIds: any[];
+    departmentIds?: any[];
   }): Observable<FetchResult<any>> {
     return this.apollo.query({
       query: BundleQueries.getQuestionnaireBundles,
@@ -61,7 +61,9 @@ export class QuestionnaireBundlesService {
         input: {
           _id: bundle._id,
           name: bundle.name,
-          questionnaireIds: bundle.questionnaireIds,
+          active: bundle.active,
+          structure: bundle.structure,
+          structureJson: bundle.structureJson,
           departmentIds: bundle.departmentIds,
         },
       },

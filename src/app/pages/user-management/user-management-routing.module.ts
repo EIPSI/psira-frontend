@@ -57,6 +57,30 @@ const routes: Routes = [
         canActivate: [PermissionGuard],
       },
       {
+        path: 'therapist-form',
+        component: UserFormComponent,
+        data: {
+          breadcrumbI18nKey: 'menu.newTherapist',
+          roleCode: 'THERAPIST',
+          permissions: {
+            only: [PermissionKey.MANAGE_USERS],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'supervisor-form',
+        component: UserFormComponent,
+        data: {
+          breadcrumbI18nKey: 'menu.newSupervisor',
+          roleCode: 'SUPERVISOR',
+          permissions: {
+            only: [PermissionKey.MANAGE_USERS],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
         path: 'profile',
         component: UserProfileTabsComponent,
         data: {

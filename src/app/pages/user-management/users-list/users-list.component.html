@@ -18,7 +18,11 @@
       nz-button
       nzType="primary"
       nzShape="circle"
-      routerLink="/psira/user-management/user-form"
+      [routerLink]="roleCodeFilter === 'THERAPIST'
+        ? '/psira/user-management/therapist-form'
+        : roleCodeFilter === 'SUPERVISOR'
+          ? '/psira/user-management/supervisor-form'
+          : '/psira/user-management/user-form'"
       [queryParams]="roleCodeFilter ? { roleCode: roleCodeFilter } : null"
       *ngIf="perms.permissionsOnly([PK.MANAGE_USERS])"
     >

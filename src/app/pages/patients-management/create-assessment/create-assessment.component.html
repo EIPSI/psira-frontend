@@ -69,6 +69,7 @@
             </nz-form-item>
             <!-- Start Update -->
             <div *ngIf="isUpdate === true" class="date-picker">
+            <h5 class="evaluation-title">Evaluation</h5>
             <nz-form-item>
                 <nz-input-group class="date-picker1">
                 <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
@@ -97,6 +98,17 @@
                 ></nz-date-picker>
                 </nz-input-group>
             </nz-form-item>
+            <nz-form-item>
+                <nz-input-group class="date-picker1">
+                <h5>Reminders after activation (minutes)</h5>
+                <input
+                    [disableControl]="!editMode || formGroup.controls.emailReminder.value !== true"
+                    formControlName="reminderMinutes"
+                    nz-input
+                    placeholder="10, 15, 20"
+                />
+                </nz-input-group>
+            </nz-form-item>
             </div>
             <!-- End Update -->
 
@@ -105,6 +117,7 @@
                 <div *ngFor="let control of  datesFieldAsFormArray.controls ;let i = index;" formArrayName='dates' >
                     <div [formGroupName]="i" >
                         <div class="date-picker">
+                            <h5 class="evaluation-title">Evaluation {{ i + 1 }}</h5>
                             <nz-form-item>
                             <nz-input-group class="date-picker1">
                                 <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
@@ -130,11 +143,25 @@
                                 ></nz-date-picker>
                             </nz-input-group>
                             </nz-form-item>
+                            <nz-form-item>
+                            <nz-input-group class="date-picker1">
+                                <h5>Reminders after activation (minutes)</h5>
+                                <input
+                                [disableControl]="!editMode || formGroup.controls.emailReminder.value !== true"
+                                formControlName="reminderMinutes"
+                                nz-input
+                                placeholder="10, 15, 20"
+                                />
+                            </nz-input-group>
+                            </nz-form-item>
                         <button *ngIf="i !== 0" type="button" (click)="remove(i)" nz-button nzShape="circle"><span nz-icon nzType="delete"></span></button>
                         </div>
                     </div>
                     </div>
-                    <button (click)="addControl()" [disabled]="!editMode" type="button" nz-button nzShape="circle"><span nz-icon nzType="plus"></span></button>
+                    <button (click)="addControl()" [disabled]="!editMode" type="button" nz-button>
+                        <span nz-icon nzType="plus"></span>
+                        Add another evaluation
+                    </button>
                 </div>
             <!-- End -->
             <div *ngIf="hasEmail">
@@ -176,7 +203,7 @@
         <hr>
         <h4>Select Bundles</h4>
         <nz-select style="width: 100%;" nzMode="multiple" nzPlaceHolder="Select your bundle..." [(ngModel)]="listOfSelectedBundles" (ngModelChange)="onBundleSelection()">
-        <nz-option *ngFor="let option of listOfBundles" [nzLabel]="option?.node?.name" [nzValue]="option"></nz-option>
+        <nz-option *ngFor="let option of listOfBundles" [nzLabel]="option?.node?.name" [nzValue]="option?.node?._id"></nz-option>
         </nz-select>
         <br />
         <br />

@@ -20,12 +20,18 @@ const assessments = gql`
           targetUserId
           responderUserId
           mailTemplateId
+          reminderMinutes
           clinicianId
           submissionDate
           status
           deliveryDate
           expirationDate
           note
+          origin
+          editableFromAssessmentList
+          clinicalSessionId
+          schemeId
+          schemeAssignmentId
           createdAt
           updatedAt
           deletedAt
@@ -106,6 +112,19 @@ const assessments = gql`
             deletedAt
           }
           informantCaregiverRelation
+          clinicalSession {
+            id
+            sessionKind
+            sessionNumber
+            clinicalStatus
+            historyLabel
+            calendarOccurrence {
+              id
+              title
+              startAt
+              endAt
+            }
+          }
           patient {
             id
             active
@@ -128,6 +147,13 @@ const assessments = gql`
             questionnaireBundles{
               _id
               name
+            }
+            resolvedQuestionnaires {
+              occurrenceId
+              questionnaireId
+              sourceBundleId
+              path
+              orderIndex
             }
             questionnaires(populate: true) {
               _id
@@ -245,6 +271,7 @@ const getFullAssessment = gql`
       emailStatus
       receiverEmail
       mailTemplateId
+      reminderMinutes
       status
       deliveryDate
       expirationDate
@@ -326,12 +353,20 @@ const getFullAssessment = gql`
         status
         answers {
           question
+          occurrenceId
           valid
           textValue
           multipleChoiceValue
           numberValue
           dateValue
           booleanValue
+        }
+        resolvedQuestionnaires {
+          occurrenceId
+          questionnaireId
+          sourceBundleId
+          path
+          orderIndex
         }
         questionnaires(populate: true) {
           _id
@@ -433,12 +468,20 @@ const getFullPublicAssessment = gql`
         status
         answers {
           question
+          occurrenceId
           valid
           textValue
           multipleChoiceValue
           numberValue
           dateValue
           booleanValue
+        }
+        resolvedQuestionnaires {
+          occurrenceId
+          questionnaireId
+          sourceBundleId
+          path
+          orderIndex
         }
         questionnaires(populate: true) {
           _id

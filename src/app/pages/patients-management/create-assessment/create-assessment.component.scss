@@ -8,12 +8,18 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .date-picker1 {
   // width: 233px;
   width: 100%;
   margin-right: 15px;
+}
+
+.evaluation-title {
+  width: 100%;
+  margin: 10px 0;
 }
 
 
@@ -74,4 +80,3 @@ nz-date-picker [nzInputReadOnly] {
   display: flex;
   align-items: center;
 }
-

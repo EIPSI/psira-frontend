@@ -63,7 +63,15 @@ export class UserFormComponent implements OnInit {
   selectedDepartments: number[] = [];
   unselectedDepartments: number[];
   currentUser: User;
-  private defaultRoleCode: string;
+  assignmentLoading = false;
+  selectedSupervisorId: number;
+  selectedTherapistId: number;
+  availableSupervisors: User[] = [];
+  availableTherapists: User[] = [];
+  assignedSupervisors: User[] = [];
+  assignedTherapists: User[] = [];
+  public defaultRoleCode: string;
+  private particularDepartment?: Department;
 
   get userTitle(): string {
     const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
@@ -87,6 +95,7 @@ export class UserFormComponent implements OnInit {
     this.getUser();
     this.getRoles({ paging: { first: 50 } });
     this.getDepartments({paging: {first: 50}});
+    this.getParticularDepartment();
   }
 
   getDepartments(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[] }) {
@@ -97,9 +106,9 @@ export class UserFormComponent implements OnInit {
       .subscribe(
         ({ data }: any) => {
           const page = data.departments;
-          this.departments = page.edges
-            .map((departmentData: any) => Convert.toDepartment(departmentData.node))
-            .filter((department: Department) => department.name !== 'Particular');
+          const departments = page.edges.map((departmentData: any) => Convert.toDepartment(departmentData.node));
+          this.particularDepartment = departments.find((department: Department) => department.name === 'Particular');
+          this.departments = departments.filter((department: Department) => department.name !== 'Particular');
 
           this.profileFields.groups.map((group) => {
             group.fields.map((field) => {
@@ -117,6 +126,23 @@ export class UserFormComponent implements OnInit {
         (error) =>
           this.errorService.handleError(error, {
             prefix: 'Unable to load departments',
+          })
+      );
+  }
+
+  getParticularDepartment(): void {
+    this.departmentsService
+      .departments({
+        paging: { first: 1 },
+        filter: { name: { eq: 'Particular' } } as any,
+      })
+      .subscribe(
+        ({ data }: any) => {
+          this.particularDepartment = data.departments.edges.map((edge: any) => Convert.toDepartment(edge.node))[0];
+        },
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: 'Unable to load default Particular department',
           })
       );
   }
@@ -152,6 +178,7 @@ export class UserFormComponent implements OnInit {
           })
         );
         this.applyDefaultRole();
+        this.loadAssignmentOptions();
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
     );
@@ -191,6 +218,10 @@ export class UserFormComponent implements OnInit {
     this.showModal = false;
   }
 
+  closeSupervisorCreatePanel(): void {
+    this.router.navigate(['/psira/user-management/supervisors']);
+  }
+
   userHasDepartment(departmentId: number): boolean {
     return this.user && this.user.departments && this.user.departments.map((dept) => dept.id).includes(departmentId);
   }
@@ -227,8 +258,9 @@ export class UserFormComponent implements OnInit {
         if (this.user.birthDate) this.user.birthDate = decryptedData.birthDate.slice(0, 10);
         this.profileFields = userForms.userProfileEdit;
         this.populateForm = true;
+        this.loadAssignmentOptions();
       } else {
-        this.defaultRoleCode = params.roleCode;
+        this.defaultRoleCode = params.roleCode || this.activatedRoute.snapshot.data?.roleCode;
         this.user = { password: this.generateTemporaryPassword() } as User & { password: string };
         this.resetForm = false;
         this.newMode = true;
@@ -237,6 +269,7 @@ export class UserFormComponent implements OnInit {
         this.applyDefaultRole();
         this.populateForm = true;
         this.showCancelButton = false;
+        this.loadAssignmentOptions();
       }
     });
   }
@@ -247,7 +280,7 @@ export class UserFormComponent implements OnInit {
     this.resetForm = false;
     formData.username = formData.email.toLowerCase();
     formData.roleCodes = this.getRoleCodes(formData.roleId ?? []);
-    formData.departmentIds = formData.departmentId ?? [];
+    formData.departmentIds = this.withRequiredSupervisorDepartment(formData.departmentId ?? [], formData.roleCodes);
     delete formData.roleId;
     delete formData.departmentId;
     const inputData: CreateUserInput = Object.assign({}, formData);
@@ -270,6 +303,7 @@ export class UserFormComponent implements OnInit {
 
           this.user = UserModel.fromJson(data.createOneUser);
           this.user = this.withProfileRelations(this.user);
+          this.assignInitialRelationship();
           this.afterCreate();
         },
         (error) =>
@@ -281,8 +315,14 @@ export class UserFormComponent implements OnInit {
 
   updateUser(userUpdates: CreateUserInput) {
     userUpdates.username = userUpdates.email?.toLowerCase();
-    userUpdates.roleCodes = this.getRoleCodes((userUpdates as any).roleId ?? []);
-    userUpdates.departmentIds = (userUpdates as any).departmentId ?? [];
+    const roleIds = (userUpdates as any).roleId;
+    const departmentIds = (userUpdates as any).departmentId;
+    if (roleIds !== undefined) {
+      userUpdates.roleCodes = this.getRoleCodes(roleIds ?? []);
+    }
+    if (departmentIds !== undefined) {
+      userUpdates.departmentIds = this.withRequiredSupervisorDepartment(departmentIds ?? [], userUpdates.roleCodes);
+    }
     delete (userUpdates as any).roleId;
     delete (userUpdates as any).departmentId;
 
@@ -354,15 +394,55 @@ export class UserFormComponent implements OnInit {
     this.newMode = false;
   }
 
+  assignSupervisor(): void {
+    if (!this.user?.id || !this.selectedSupervisorId) return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .assignTherapistSupervisor({ therapistId: this.user.id, supervisorId: this.selectedSupervisorId })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        () => {
+          this.selectedSupervisorId = null;
+          this.loadAssignedSupervisors();
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to assign supervisor' })
+      );
+  }
+
+  assignTherapist(): void {
+    if (!this.user?.id || !this.selectedTherapistId) return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .assignTherapistSupervisor({ therapistId: this.selectedTherapistId, supervisorId: this.user.id })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        () => {
+          this.selectedTherapistId = null;
+          this.loadAssignedTherapists();
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to assign therapist' })
+      );
+  }
+
   assignRoles(role?: Role) {
     this.isLoading = true;
     const rolesIds: number[] = role ? [role.id] : this.selectedRoles;
     const currentRoleIds = this.user.roles?.map((userRole) => userRole.id) ?? [];
     const nextRoleIds = [...new Set([...currentRoleIds, ...rolesIds])];
+    const roleCodes = this.getRoleCodes(nextRoleIds);
+    const update: any = { roleCodes };
+    if (roleCodes.includes('SUPERVISOR')) {
+      update.departmentIds = this.withRequiredSupervisorDepartment(
+        this.user.departments?.map((department) => department.id) ?? [],
+        roleCodes
+      );
+    }
     this.usersService
       .updateUser({
         id: this.user.id,
-        update: { roleCodes: this.getRoleCodes(nextRoleIds) },
+        update,
       })
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
@@ -521,6 +601,17 @@ export class UserFormComponent implements OnInit {
       .map((role) => role.code);
   }
 
+  private withRequiredSupervisorDepartment(departmentIds: number[], roleCodes?: string[]): number[] {
+    const shouldAddParticular =
+      this.defaultRoleCode === 'SUPERVISOR' ||
+      (roleCodes ?? []).includes('SUPERVISOR') ||
+      this.user?.roles?.some((role) => role.code === 'SUPERVISOR');
+
+    if (!shouldAddParticular || !this.particularDepartment?.id) return departmentIds;
+
+    return [...new Set([...(departmentIds ?? []), this.particularDepartment.id])];
+  }
+
   private withProfileRelations(user: User): User {
     (user as any).roleId = user.roles?.map((role) => role.id) ?? [];
     (user as any).departmentId = user.departments?.map((department) => department.id) ?? [];
@@ -536,5 +627,77 @@ export class UserFormComponent implements OnInit {
     (this.user as any).roleId = [defaultRole.id];
     this.populateForm = false;
     setTimeout(() => (this.populateForm = true));
+  }
+
+  private assignInitialRelationship(): void {
+    if (this.defaultRoleCode === 'THERAPIST' && this.selectedSupervisorId) {
+      this.usersService
+        .assignTherapistSupervisor({ therapistId: this.user.id, supervisorId: this.selectedSupervisorId })
+        .subscribe(
+          () => undefined,
+          (error) => this.errorService.handleError(error, { prefix: 'Unable to assign supervisor' })
+        );
+    }
+
+    if (this.defaultRoleCode === 'SUPERVISOR' && this.selectedTherapistId) {
+      this.usersService
+        .assignTherapistSupervisor({ therapistId: this.selectedTherapistId, supervisorId: this.user.id })
+        .subscribe(
+          () => undefined,
+          (error) => this.errorService.handleError(error, { prefix: 'Unable to assign therapist' })
+        );
+    }
+  }
+
+  private loadAssignmentOptions(): void {
+    if (this.defaultRoleCode === 'THERAPIST') {
+      this.usersService.getSupervisors({ first: 50 }).subscribe(
+        ({ data }: any) => {
+          this.availableSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
+      );
+      this.loadAssignedSupervisors();
+    }
+
+    if (this.defaultRoleCode === 'SUPERVISOR') {
+      this.usersService.getTherapists({ first: 50 }).subscribe(
+        ({ data }: any) => {
+          this.availableTherapists = data.therapists.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load therapists' })
+      );
+      this.loadAssignedTherapists();
+    }
+  }
+
+  private loadAssignedSupervisors(): void {
+    if (!this.user?.id || this.defaultRoleCode !== 'THERAPIST') return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .getSupervisors({ first: 50, therapistId: this.user.id })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.assignedSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assigned supervisors' })
+      );
+  }
+
+  private loadAssignedTherapists(): void {
+    if (!this.user?.id || this.defaultRoleCode !== 'SUPERVISOR') return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .getTherapists({ first: 50, supervisorId: this.user.id })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.assignedTherapists = data.therapists.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assigned therapists' })
+      );
   }
 }

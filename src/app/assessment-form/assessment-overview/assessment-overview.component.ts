@@ -62,7 +62,7 @@ export class AssessmentOverviewComponent implements OnInit {
           }
         }
         // *************
-        this.questionnaireQuestions[questionnaire._id] = questionnaireQuestions;
+        this.questionnaireQuestions[this.questionnaireKey(questionnaire)] = questionnaireQuestions;
         return [...questions, ...questionnaireQuestions];
       }, []);
 
@@ -72,35 +72,35 @@ export class AssessmentOverviewComponent implements OnInit {
     console.log(this.completedDisclaimer);
   }
 
-  public getMaxRequiredQuestions(questionnaireId: string): number {
-    return this.questionnaireQuestions[questionnaireId]?.filter((q) => q.required && q.type !== 'note').length;
+  public getMaxRequiredQuestions(questionnaire: any): number {
+    return this.questionnaireQuestions[this.questionnaireKey(questionnaire)]?.filter((q: any) => q.required && q.type !== 'note').length;
   }
 
-  public getMaxNotRequiredQuestions(questionnaireId: string): number {
-    return this.questionnaireQuestions[questionnaireId]?.filter((q) => !q.required && q.type !== 'note').length;
+  public getMaxNotRequiredQuestions(questionnaire: any): number {
+    return this.questionnaireQuestions[this.questionnaireKey(questionnaire)]?.filter((q: any) => !q.required && q.type !== 'note').length;
   }
 
-  public getAnsweredQuestions(questionnaireId: string): number {
-    return this.questionnaireQuestions[questionnaireId]?.reduce(
-      (sum, q) => (this.answers.find((a) => a.question === q._id)?.valid ? (sum += 1) : sum),
+  public getAnsweredQuestions(questionnaire: any): number {
+    return this.questionnaireQuestions[this.questionnaireKey(questionnaire)]?.reduce(
+      (sum, q) => (this.findAnswer(questionnaire, q._id)?.valid ? (sum += 1) : sum),
       0
     );
   }
 
-  public getAnsweredRequiredQuestions(questionnaireId: string): number {
-    return this.questionnaireQuestions[questionnaireId]?.reduce(
-      (sum, q) => (q.required && this.answers.find((a) => a.question === q._id)?.valid ? (sum += 1) : sum),
+  public getAnsweredRequiredQuestions(questionnaire: any): number {
+    return this.questionnaireQuestions[this.questionnaireKey(questionnaire)]?.reduce(
+      (sum, q) => (q.required && this.findAnswer(questionnaire, q._id)?.valid ? (sum += 1) : sum),
       0
     );
   }
 
-  public getAnsweredOptionalQuestions(questionnaireId: string): number {
-    return this.getAnsweredQuestions(questionnaireId) - this.getAnsweredRequiredQuestions(questionnaireId);
+  public getAnsweredOptionalQuestions(questionnaire: any): number {
+    return this.getAnsweredQuestions(questionnaire) - this.getAnsweredRequiredQuestions(questionnaire);
   }
 
-  public isQuestionnaireDone(questionnaireId: string): boolean {
-    const requiredQuestions = this.questionnaireQuestions[questionnaireId]?.filter((q) => q.required);
-    return requiredQuestions?.every((q) => this.answers?.find((a) => a.question === q._id)?.valid);
+  public isQuestionnaireDone(questionnaire: any): boolean {
+    const requiredQuestions = this.questionnaireQuestions[this.questionnaireKey(questionnaire)]?.filter((q: any) => q.required);
+    return requiredQuestions?.every((q) => this.findAnswer(questionnaire, q._id)?.valid);
   }
 
   public canAccessQuestionnaire(questionnaireIdx: number): boolean {
@@ -108,8 +108,19 @@ export class AssessmentOverviewComponent implements OnInit {
       return false;
     }
     if (questionnaireIdx === 0) return true;
-    const previousQuestionnaireId = this.assessment.questionnaireAssessment.questionnaires[questionnaireIdx - 1]?._id;
-    return this.isQuestionnaireDone(previousQuestionnaireId);
+    const previousQuestionnaire = this.assessment.questionnaireAssessment.questionnaires[questionnaireIdx - 1];
+    return this.isQuestionnaireDone(previousQuestionnaire);
+  }
+
+  private questionnaireKey(questionnaire: any): string {
+    return questionnaire?.occurrenceId || questionnaire?._id;
+  }
+
+  private findAnswer(questionnaire: any, questionId: string): any {
+    const occurrenceId = questionnaire?.occurrenceId || null;
+    return this.answers?.find(
+      (answer) => answer.question === questionId && (answer.occurrenceId || null) === occurrenceId
+    );
   }
 
   public completeAssessment(): void {

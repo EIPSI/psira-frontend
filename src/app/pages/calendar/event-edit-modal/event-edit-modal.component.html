@@ -1,0 +1,30 @@
+<nz-modal
+  [nzVisible]="visible"
+  [nzTitle]="event?.title || 'Evento'"
+  [nzOkLoading]="saving"
+  (nzOnCancel)="close()"
+  (nzOnOk)="save.emit()"
+>
+  <div class="edit-form" *ngIf="event">
+    <div class="event-summary">
+      <nz-tag [nzColor]="event.type === 'SESSION' ? 'cyan' : 'blue'">{{ event.type }}</nz-tag>
+      <nz-tag *ngIf="event.sessionNumber">Sesión {{ event.sessionNumber }}</nz-tag>
+      <nz-tag>{{ event.status }}</nz-tag>
+    </div>
+    <label>
+      <span>Inicio</span>
+      <nz-date-picker [ngModel]="startAt" (ngModelChange)="startAtChange.emit($event)" nzShowTime></nz-date-picker>
+    </label>
+    <label>
+      <span>Finalización</span>
+      <nz-date-picker [ngModel]="endAt" (ngModelChange)="endAtChange.emit($event)" nzShowTime></nz-date-picker>
+    </label>
+    <div class="duration-actions">
+      <span>Duración</span>
+      <button nz-button nzSize="small" (click)="durationChange.emit(30)">30 min</button>
+      <button nz-button nzSize="small" (click)="durationChange.emit(60)">60 min</button>
+      <button nz-button nzSize="small" (click)="durationChange.emit(90)">90 min</button>
+    </div>
+    <button nz-button nzDanger *ngIf="event.deletable" (click)="discardEvent()">Descartar</button>
+  </div>
+</nz-modal>

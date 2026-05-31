@@ -5,55 +5,9 @@ const createQuestionnaireBundle = gql`
     createQuestionnaireBundle(input: $input) {
       _id
       name
+      active
       departmentIds
-      questionnaires {
-        _id
-        name
-        status
-        xForm
-        keywords
-        copyright
-        website
-        license
-        timeToComplete
-        questionGroups {
-          _id
-          label
-          appearance
-          questions {
-            _id
-            name
-            label
-            type
-            hint
-            relevant
-            calculation
-            constraint
-            constraintMessage
-            min
-            max
-            required
-            requiredMessage
-            image
-            appearance
-            default
-            choices {
-              _id
-              name
-              label
-              image
-            }
-          }
-        }
-        language
-        abbreviation
-        description
-        zombie
-        createdAt
-        updatedAt
-      }
-      createdAt
-      updatedAt
+      structureJson
       createdAt
       updatedAt
     }
@@ -65,53 +19,9 @@ const updateQuestionnaireBundle = gql`
     updateQuestionnaireBundle(input: $input) {
       _id
       name
+      active
       departmentIds
-      questionnaires {
-        _id
-        name
-        status
-        xForm
-        keywords
-        copyright
-        website
-        license
-        timeToComplete
-        questionGroups {
-          _id
-          label
-          appearance
-          questions {
-            _id
-            name
-            label
-            type
-            hint
-            relevant
-            calculation
-            constraint
-            constraintMessage
-            min
-            max
-            required
-            requiredMessage
-            image
-            appearance
-            default
-            choices {
-              _id
-              name
-              label
-              image
-            }
-          }
-        }
-        language
-        abbreviation
-        description
-        zombie
-        createdAt
-        updatedAt
-      }
+      structureJson
       createdAt
       updatedAt
     }
@@ -123,6 +33,7 @@ const deleteQuestionnaireBundle = gql`
     deleteQuestionnaireBundle(_id: $_id) {
       _id
       name
+      active
       departmentIds
       createdAt
       updatedAt

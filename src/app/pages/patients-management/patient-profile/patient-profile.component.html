@@ -18,9 +18,15 @@
     </nz-tag>
   </div>
 </div>
-<nz-tabset nzSize="large">
+<nz-tabset nzSize="large" [(nzSelectedIndex)]="selectedTabIndex">
+  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.calendar' | translate">
+    <app-patient-calendar [patient]="patient"></app-patient-calendar>
+  </nz-tab>
   <nz-tab *ngIf="patientTitle" [nzTitle]="'core.assessments' | translate">
     <app-assessments [patient]="patient"></app-assessments>
+  </nz-tab>
+  <nz-tab *ngIf="patientTitle" nzTitle="Sesiones">
+    <app-sessions-list [patientId]="patient?.id"></app-sessions-list>
   </nz-tab>
   <nz-tab [nzTitle]="'core.profile' | translate">
     <app-create-patient></app-create-patient>

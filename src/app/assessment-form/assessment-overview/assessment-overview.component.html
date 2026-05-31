@@ -14,7 +14,7 @@
     <ng-template #questionnaireInfo>
       <button
         nz-button
-        [nzType]="isQuestionnaireDone(questionnaire._id) ? 'default' : 'primary'"
+        [nzType]="isQuestionnaireDone(questionnaire) ? 'default' : 'primary'"
         nzShape="circle"
         class="header-icon"
         nzSize="small"
@@ -22,7 +22,7 @@
         routerLink="../questionnaire/{{ idx }}"
         queryParamsHandling="merge"
       >
-        <i nz-icon [nzType]="isQuestionnaireDone(questionnaire._id) ? 'check' : 'caret-right'"></i>
+          <i nz-icon [nzType]="isQuestionnaireDone(questionnaire) ? 'check' : 'caret-right'"></i>
       </button>
       <app-questionnaire-info [website]="questionnaire.website">
         <button
@@ -46,19 +46,19 @@
       </ng-template>
     </ng-template>
 
-    <span class="progress" [class.done]="isQuestionnaireDone(questionnaire._id)">
+    <span class="progress" [class.done]="isQuestionnaireDone(questionnaire)">
       {{
         translations.assessmentForm.questionsAnswered
           | translate
             : {
-                actual: getAnsweredRequiredQuestions(questionnaire._id),
-                total: getMaxRequiredQuestions(questionnaire._id)
+                actual: getAnsweredRequiredQuestions(questionnaire),
+                total: getMaxRequiredQuestions(questionnaire)
               }
       }}
     </span>
     <span class="progress-optional">
       {{
-        getAnsweredOptionalQuestions(questionnaire._id) + '/' + getMaxNotRequiredQuestions(questionnaire._id) + ' optional questions'
+        getAnsweredOptionalQuestions(questionnaire) + '/' + getMaxNotRequiredQuestions(questionnaire) + ' optional questions'
       }}
     </span>
     <span *ngIf="questionnaire.timeToComplete">

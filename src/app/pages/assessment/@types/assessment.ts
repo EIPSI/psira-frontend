@@ -23,6 +23,12 @@ export enum AssessmentInformant {
   OTHER_USER = 'OTHER_USER',
 }
 
+export enum AssessmentOrigin {
+  INDIVIDUAL = 'INDIVIDUAL',
+  FIXED_SCHEME = 'FIXED_SCHEME',
+  SESSION_BASED = 'SESSION_BASED',
+}
+
 export interface Assessment {
   id?: number;
   uuid?: string;
@@ -46,15 +52,32 @@ export interface Assessment {
   informantClinician?: User;
   emailStatus: string;
   receiverEmail?: string;
+  reminderMinutes?: number[];
   questionnaireAssessment:any;
   questionnaires: []
+  origin?: AssessmentOrigin;
+  editableFromAssessmentList?: boolean;
+  clinicalSessionId?: number;
+  schemeId?: number;
+  schemeAssignmentId?: number;
+  clinicalSession?: any;
 }
 
 export interface QuestionnaireAssessment {
   _id: string;
   questionnaires: QuestionnaireVersion[];
+  questionnaireBundles?: Array<{ _id: string; name: string }>;
+  resolvedQuestionnaires?: ResolvedQuestionnaire[];
   answers: Answer[];
   status: AssessmentStatus;
+}
+
+export interface ResolvedQuestionnaire {
+  occurrenceId: string;
+  questionnaireId: string;
+  sourceBundleId?: string;
+  path: string[];
+  orderIndex: number;
 }
 
 export interface FullAssessment extends Assessment {
@@ -66,6 +89,7 @@ export interface FullAssessment extends Assessment {
   receiverEmail: string;
   emailStatus: string;
   mailTemplateId: number;
+  reminderMinutes?: number[];
 }
 
 export interface FormattedAssessment extends Assessment {
@@ -85,4 +109,6 @@ export interface FormattedAssessment extends Assessment {
   formatedQuestionnaireNames: []
   formatedQuestionnaires: []
   questionnaires: []
+  formattedOrigin?: TagInfo;
+  linkedSessionLabel?: string;
 }

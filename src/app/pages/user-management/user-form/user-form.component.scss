@@ -26,3 +26,30 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
+.assignment-panel {
+  display: grid;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.profile-assignment {
+  border-top: 1px solid #eef0f3;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+
+.supervisor-create-assignment {
+  margin-top: 24px;
+}
+
+.assignment-row {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.assignment-select {
+  min-width: 320px;
+}

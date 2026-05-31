@@ -1,0 +1,22 @@
+.integration-card {
+  margin-top: 24px;
+}
+
+.integration-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.integration-field {
+  display: grid;
+  grid-template-columns: 180px minmax(260px, 560px);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.integration-field span {
+  font-weight: 600;
+}

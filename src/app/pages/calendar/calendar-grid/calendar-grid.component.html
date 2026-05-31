@@ -1,0 +1,112 @@
+<div class="calendar-shell">
+  <div class="calendar-toolbar">
+    <div class="calendar-nav">
+      <button nz-button nzShape="circle" (click)="previousPeriod()"><i nz-icon nzType="left"></i></button>
+      <button nz-button (click)="goToday()">Hoy</button>
+      <button nz-button nzShape="circle" (click)="nextPeriod()"><i nz-icon nzType="right"></i></button>
+      <h2>{{ title }}</h2>
+    </div>
+
+    <div class="calendar-actions">
+      <nz-button-group>
+        <button nz-button [nzType]="view === CV.MONTH ? 'primary' : 'default'" (click)="setView(CV.MONTH)">Mes</button>
+        <button nz-button [nzType]="view === CV.WEEK ? 'primary' : 'default'" (click)="setView(CV.WEEK)">Semana</button>
+        <button nz-button [nzType]="view === CV.DAY ? 'primary' : 'default'" (click)="setView(CV.DAY)">Día</button>
+      </nz-button-group>
+      <button nz-button nzType="primary" (click)="openCreateEvent()">
+        <i nz-icon nzType="plus"></i>
+        Crear
+      </button>
+    </div>
+  </div>
+
+  <nz-spin [nzSpinning]="loading">
+    <section *ngIf="view === CV.MONTH" class="month-view">
+      <div class="weekday" *ngFor="let day of weekDays">{{ day | date:'EEE' }}</div>
+      <button
+        type="button"
+        class="month-day"
+        *ngFor="let day of monthDays"
+        [class.month-day--muted]="isMutedMonthDay(day)"
+        [class.month-day--today]="(day | date:'yyyyMMdd') === (today | date:'yyyyMMdd')"
+        (click)="openCreateEvent(day)"
+        (dragover)="eventDragOver.emit($event)"
+        (drop)="eventDrop.emit({ event: $event, date: day })"
+      >
+        <span class="day-number">{{ day | date:'d' }}</span>
+        <span
+          class="calendar-event"
+          *ngFor="let event of eventsForDate(day) | slice:0:4"
+          [ngClass]="eventClass(event)"
+          draggable="true"
+          (dragstart)="eventDragStart.emit({ event: $event, calendarEvent: event })"
+          (click)="onEventClick($event, event)"
+        >
+          <span>{{ formatTime(event.startAt) }}</span>
+          {{ event.title }}
+        </span>
+      </button>
+    </section>
+
+    <section *ngIf="view === CV.WEEK" class="time-grid">
+      <div class="time-corner"></div>
+      <div class="time-day-header" *ngFor="let day of weekDays">
+        <strong>{{ day | date:'EEE' }}</strong>
+        <span>{{ day | date:'d' }}</span>
+      </div>
+
+      <ng-container *ngFor="let hour of hourSlots">
+        <div class="time-label">{{ hour }}:00</div>
+        <button
+          type="button"
+          class="time-cell"
+          *ngFor="let day of weekDays"
+          (click)="openCreateEvent(day, hour)"
+          (dragover)="eventDragOver.emit($event)"
+          (drop)="eventDrop.emit({ event: $event, date: day, hour: hour })"
+        >
+          <span
+            class="calendar-event calendar-event--timed"
+            *ngFor="let event of eventsForHour(day, hour)"
+            [ngClass]="eventClass(event)"
+            draggable="true"
+            (dragstart)="eventDragStart.emit({ event: $event, calendarEvent: event })"
+            (click)="onEventClick($event, event)"
+          >
+            {{ formatTime(event.startAt) }} {{ event.title }}
+          </span>
+        </button>
+      </ng-container>
+    </section>
+
+    <section *ngIf="view === CV.DAY" class="time-grid time-grid--day">
+      <div class="time-corner"></div>
+      <div class="time-day-header">
+        <strong>{{ selectedDate | date:'EEEE' }}</strong>
+        <span>{{ selectedDate | date:'d' }}</span>
+      </div>
+
+      <ng-container *ngFor="let hour of hourSlots">
+        <div class="time-label">{{ hour }}:00</div>
+        <button
+          type="button"
+          class="time-cell"
+          (click)="openCreateEvent(selectedDate, hour)"
+          (dragover)="eventDragOver.emit($event)"
+          (drop)="eventDrop.emit({ event: $event, date: selectedDate, hour: hour })"
+        >
+          <span
+            class="calendar-event calendar-event--timed"
+            *ngFor="let event of eventsForHour(selectedDate, hour)"
+            [ngClass]="eventClass(event)"
+            draggable="true"
+            (dragstart)="eventDragStart.emit({ event: $event, calendarEvent: event })"
+            (click)="onEventClick($event, event)"
+          >
+            {{ formatTime(event.startAt) }} {{ event.title }}
+          </span>
+        </button>
+      </ng-container>
+    </section>
+  </nz-spin>
+</div>

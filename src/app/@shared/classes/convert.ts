@@ -193,6 +193,31 @@ export class Convert {
     }
 
     assessment.formattedAssessmentType = assessment.assessmentType?.name;
+    assessment.formattedOrigin = {
+      color:
+        assessment.origin === 'SESSION_BASED'
+          ? 'purple'
+          : assessment.origin === 'FIXED_SCHEME'
+          ? 'cyan'
+          : 'blue',
+      title:
+        assessment.origin === 'SESSION_BASED'
+          ? 'Sesión'
+          : assessment.origin === 'FIXED_SCHEME'
+          ? 'Esquema fijo'
+          : 'Individual',
+    };
+    assessment.linkedSessionLabel = assessment.clinicalSession
+      ? [
+          assessment.clinicalSession.sessionKind === 'SUPERVISION' ? 'Supervisión' : 'Sesión',
+          assessment.clinicalSession.sessionNumber ? `#${assessment.clinicalSession.sessionNumber}` : '',
+          assessment.clinicalSession.calendarOccurrence?.startAt
+            ? moment(assessment.clinicalSession.calendarOccurrence.startAt).format('YYYY-MM-DD HH:mm')
+            : '',
+        ]
+          .filter((s) => !!s)
+          .join(' ')
+      : '';
 
     return assessment;
   }

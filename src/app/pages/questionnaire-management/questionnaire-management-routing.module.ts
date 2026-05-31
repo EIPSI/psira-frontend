@@ -47,6 +47,8 @@ const routes: Routes = [
     path: 'create-questionnaire-bundle',
     component: CreateQuestionnaireBundleComponent,
     data: {
+      parentBreadcrumbI18nKey: 'menu.questionnaireBundle',
+      parentBreadcrumbUrl: '/psira/questionnaire-management/questionnaire-bundles-list',
       breadcrumbI18nKey: 'menu.createQuestionnaireBundle',
       permissions: {
         only: [PermissionKey.MANAGE_QUESTIONNAIRES],
@@ -58,6 +60,8 @@ const routes: Routes = [
     path: 'create-questionnaire-bundle/:_id',
     component: CreateQuestionnaireBundleComponent,
     data: {
+      parentBreadcrumbI18nKey: 'menu.questionnaireBundle',
+      parentBreadcrumbUrl: '/psira/questionnaire-management/questionnaire-bundles-list',
       breadcrumbI18nKey: 'menu.createQuestionnaireBundle',
       permissions: {
         only: [PermissionKey.MANAGE_QUESTIONNAIRES],

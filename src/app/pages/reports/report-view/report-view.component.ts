@@ -19,6 +19,7 @@ export class ReportViewComponent implements OnInit, OnDestroy {
   private reportSessionId: number;
   private heartbeatTimer: any;
   private patientId: number;
+  private readonly contextParamNames = ['patient_id', 'therapist_id', 'supervisor_id', 'user_id'];
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -73,7 +74,7 @@ export class ReportViewComponent implements OnInit, OnDestroy {
             this.notFound = true;
             return;
           }
-          this.reportUrl = this.sanitizer.bypassSecurityTrustResourceUrl(reportEmbed.embedUrl);
+          this.reportUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.appendContextParams(reportEmbed.embedUrl));
           this.startReportSession(this.report.id);
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load report' })
@@ -116,5 +117,20 @@ export class ReportViewComponent implements OnInit, OnDestroy {
     if (!this.reportSessionId) return;
 
     this.reportsService.heartbeatReportSession(this.reportSessionId).subscribe();
+  }
+
+  private appendContextParams(url: string): string {
+    const params = new URLSearchParams();
+    for (const paramName of this.contextParamNames) {
+      const value = this.activatedRoute.snapshot.queryParamMap.get(paramName);
+      if (value && !url.includes(`${paramName}=`)) {
+        params.set(paramName, value);
+      }
+    }
+
+    const serializedParams = params.toString();
+    if (!serializedParams) return url;
+
+    return `${url}${url.includes('?') ? '&' : '?'}${serializedParams}`;
   }
 }

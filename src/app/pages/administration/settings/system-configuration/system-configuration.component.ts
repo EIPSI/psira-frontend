@@ -15,7 +15,14 @@ export class SystemConfigurationComponent implements OnInit {
   PK = PermissionKey;
   settingsForm: Form = settingsForms.general;
   isLoading = false;
+  googleCalendarSaving = false;
   settings: Setting;
+  googleCalendarSettings: Partial<Setting> = {
+    googleCalendarEnabled: false,
+    googleCalendarClientId: '',
+    googleCalendarClientSecret: '',
+    googleCalendarRedirectUri: '',
+  };
   loadingMessage = '';
 
   constructor(private settingsService: SettingsService, public perms: AppPermissionsService) {}
@@ -33,6 +40,12 @@ export class SystemConfigurationComponent implements OnInit {
     this.settingsService.settings().subscribe(
       async ({ data }) => {
         this.settings = Object.assign({}, data.settings);
+        this.googleCalendarSettings = {
+          googleCalendarEnabled: !!this.settings.googleCalendarEnabled,
+          googleCalendarClientId: this.settings.googleCalendarClientId || '',
+          googleCalendarClientSecret: '',
+          googleCalendarRedirectUri: this.settings.googleCalendarRedirectUri || '',
+        };
 
         this.settingsForm.groups.map((group) => {
           group.fields.map((field) => {
@@ -60,6 +73,29 @@ export class SystemConfigurationComponent implements OnInit {
       },
       (error) => {
         this.isLoading = false;
+      }
+    );
+  }
+
+  saveGoogleCalendarSettings(): void {
+    this.googleCalendarSaving = true;
+    const input: Partial<Setting> = {
+      googleCalendarEnabled: !!this.googleCalendarSettings.googleCalendarEnabled,
+      googleCalendarClientId: this.googleCalendarSettings.googleCalendarClientId || '',
+      googleCalendarRedirectUri: this.googleCalendarSettings.googleCalendarRedirectUri || '',
+    };
+
+    if (this.googleCalendarSettings.googleCalendarClientSecret) {
+      input.googleCalendarClientSecret = this.googleCalendarSettings.googleCalendarClientSecret;
+    }
+
+    this.settingsService.updateSetting(input as Setting).subscribe(
+      () => {
+        this.googleCalendarSaving = false;
+        this.getSettings();
+      },
+      () => {
+        this.googleCalendarSaving = false;
       }
     );
   }

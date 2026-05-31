@@ -1,6 +1,4 @@
 import { CaseManager } from '../@types/case-manager';
-import { AppDate } from '@shared/classes/app-date';
-import { FormattedUser } from '@app/pages/user-management/@types/formatted-user';
 
 export class CaseManagerModel {
   public static fromJson(json: any): CaseManager {
@@ -9,7 +7,10 @@ export class CaseManagerModel {
       title: json.active ? 'ACTIVE' : 'INACTIVE',
     };
 
-    json.formattedRoles = json.roles.map((role: { name: any }) => ({ color: 'blue', title: role.name }));
+    json.formattedRoles = json.roles.map((role: { code: string; name: any }) => ({
+      color: CaseManagerModel.roleColor(role.code),
+      title: role.name,
+    }));
     json.formattedDepartments = json.departments.map((dep: { name: any }) => ({ color: 'cyan', title: dep.name }));
     return json;
   }
@@ -42,5 +43,16 @@ export class CaseManagerModel {
       }
     }
     return user;
+  }
+
+  private static roleColor(roleCode: string): string {
+    const colors: { [key: string]: string } = {
+      THERAPIST: 'geekblue',
+      SUPERVISOR: 'purple',
+      CASE_MANAGER: 'green',
+      ADMIN: 'red',
+      PATIENT: 'cyan',
+    };
+    return colors[roleCode] || 'blue';
   }
 }

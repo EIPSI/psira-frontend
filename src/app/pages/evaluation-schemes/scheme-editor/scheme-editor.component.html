@@ -1,0 +1,616 @@
+<nz-spin [nzSpinning]="loading">
+  <div class="editor-shell">
+    <div class="editor-header">
+      <div>
+        <h1>{{ scheme?.id ? ('evaluationSchemes.edit' | translate) : ('evaluationSchemes.create' | translate) }}</h1>
+        <p>{{ 'menu.evaluationSchemes' | translate }}</p>
+      </div>
+      <button nz-button routerLink="/psira/evaluation-schemes">{{ 'core.cancel' | translate }}</button>
+    </div>
+
+    <section class="editor-section">
+      <form nz-form [formGroup]="baseForm" class="base-grid">
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.name' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="name" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.type' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="schemeType">
+              <nz-option
+                *ngFor="let type of schemeTypes"
+                [nzValue]="type"
+                [nzLabel]="schemeTypeLabel[type]"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item class="description-field">
+          <nz-form-label>{{ 'evaluationSchemes.description' | translate }}</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input rows="3" formControlName="description"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.active' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-switch formControlName="active"></nz-switch>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Notificaciones por email</nz-form-label>
+          <nz-form-control>
+            <nz-switch formControlName="emailNotificationsEnabled"></nz-switch>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="baseForm.get('emailNotificationsEnabled')?.value">
+          <nz-form-label nzRequired>Template de email</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="mailTemplateId" nzShowSearch nzAllowClear>
+              <nz-option
+                *ngFor="let template of emailTemplates"
+                [nzValue]="template.id"
+                [nzLabel]="template.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item class="description-field">
+          <nz-form-label>Departamentos</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="departmentIds" nzMode="multiple" nzShowSearch nzAllowClear>
+              <nz-option
+                *ngFor="let department of departments"
+                [nzValue]="department.id"
+                [nzLabel]="department.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+      </form>
+
+    </section>
+
+    <section class="editor-section" *ngIf="isSessionBased">
+      <div class="section-title">
+        <h2>Session-based</h2>
+        <p>Configuracion de evaluaciones pre/post por numero de sesion.</p>
+      </div>
+
+      <form nz-form [formGroup]="sessionResourceForm" class="rule-grid">
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.resourceKind' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="resourceKind" (ngModelChange)="onResourceKindChange($event)">
+              <nz-option *ngFor="let kind of resourceKinds" [nzValue]="kind" [nzLabel]="kind"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.assessmentTypeId' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="assessmentTypeId" nzShowSearch>
+              <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.questionnaires' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="questionnaireId"
+              nzShowSearch
+              nzServerSearch
+              nzAllowClear
+              [nzDisabled]="hasSelectedQuestionnaireBundle"
+              (nzOnSearch)="searchQuestionnaires($event)"
+              (ngModelChange)="onQuestionnaireChange($event)"
+            >
+              <nz-option
+                *ngFor="let questionnaire of foundQuestionnaires"
+                [nzValue]="questionnaire._id"
+                [nzLabel]="questionnaire.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Paquetes</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="questionnaireBundleId"
+              nzShowSearch
+              nzAllowClear
+              [nzDisabled]="hasSelectedQuestionnaire"
+              (ngModelChange)="onQuestionnaireBundleChange($event)"
+            >
+              <nz-option
+                *ngFor="let bundle of questionnaireBundles"
+                [nzValue]="bundle._id"
+                [nzLabel]="bundle.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>Programacion</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="sessionTargetMode" (ngModelChange)="onSessionTargetModeChange($event)">
+              <nz-option [nzValue]="STM.SPECIFIC" nzLabel="Sesiones especificas"></nz-option>
+              <nz-option [nzValue]="STM.FREQUENCY" nzLabel="Frecuencia de sesiones"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.SPECIFIC">
+          <nz-form-label nzRequired>Sesiones especificas</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="sessionSelector" placeholder="2, 5, 7-10" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.FREQUENCY">
+          <nz-form-label>Cada N sesiones</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="everyNSessions" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.FREQUENCY">
+          <nz-form-label>Desde sesion</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="startSessionNumber" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.FREQUENCY">
+          <nz-form-label>Hasta sesion</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="endSessionNumber" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Activacion (Minutos)</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="activationOffsetMinutes" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Vencimiento (Minutos)</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Recordatorios (Minutos)</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Quién responde</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="responderRoles" nzMode="multiple" nzAllowClear>
+              <nz-option
+                *ngFor="let role of responderRoleOptions"
+                [nzValue]="role.value"
+                [nzLabel]="role.label"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+
+      <div class="section-actions">
+        <button nz-button *ngIf="editingResourceId" (click)="resetSessionResourceForm()">Cancelar edicion</button>
+        <button nz-button nzType="primary" [nzLoading]="saving" (click)="addSessionResource()">
+          {{ editingResourceId ? 'Actualizar evaluacion' : ('evaluationSchemes.addResource' | translate) }}
+        </button>
+      </div>
+
+      <nz-table
+        class="resource-table"
+        [nzData]="sessionResources()"
+        [nzFrontPagination]="false"
+        [nzShowPagination]="false"
+      >
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Evaluacion</th>
+            <th>Sesiones</th>
+            <th>Activacion</th>
+            <th>Vencimiento</th>
+            <th>Responde</th>
+            <th>Recordatorios</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let resource of sessionResources()"
+            (click)="editSessionResource(resource)"
+            (contextmenu)="openResourceContextMenu($event, resource, resourceMenu)"
+          >
+            <td>{{ resource.resourceKind }}</td>
+            <td>{{ resourceContentLabel(resource) }}</td>
+            <td>{{ resourceTargetLabel(resource) }}</td>
+            <td>{{ resource.activationOffsetMinutes }} min</td>
+            <td>{{ resource.availabilityDurationMinutes }} min</td>
+            <td>{{ resourceResponderLabel(resource) }}</td>
+            <td>{{ (resource.reminderMinutes || []).join(', ') }}</td>
+          </tr>
+        </tbody>
+      </nz-table>
+
+      <nz-dropdown-menu #resourceMenu="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-item (click)="deleteContextResource()">Eliminar</li>
+        </ul>
+      </nz-dropdown-menu>
+    </section>
+
+    <section class="editor-section" *ngIf="isFixedScheme">
+      <div class="section-title">
+        <h2>Esquema fijo</h2>
+        <p>Calendario relativo: el dia 1 comienza cuando se aplica el esquema.</p>
+      </div>
+
+      <div class="fixed-builder-toolbar">
+        <div>
+          <strong>Días {{ weekStartDay + 1 }} - {{ weekStartDay + visibleFixedDays.length }}</strong>
+          <span>{{ fixedSlots().length }} interacciones programadas</span>
+        </div>
+        <div class="fixed-nav">
+          <button nz-button nzType="primary" (click)="openRepeatRuleModal()">Reglas de repetición</button>
+          <button nz-button nzDanger [disabled]="!fixedSlots().length" (click)="clearFixedSlots()">Borrar todo</button>
+          <button nz-button (click)="goToPreviousFixedWeek()" [disabled]="weekStartDay === 0">Anterior</button>
+          <button nz-button (click)="weekStartDay = 0">Día 1</button>
+          <button
+            nz-button
+            (click)="goToNextFixedWeek()"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+      <div class="fixed-layout">
+        <div class="relative-calendar" [style.grid-template-columns]="fixedCalendarGridTemplate">
+          <div class="corner"></div>
+          <div class="day-header" *ngFor="let day of visibleFixedDays">Dia {{ day + 1 }}</div>
+          <ng-container *ngFor="let hour of hours">
+            <div class="hour-label">{{ formatHourLabel(hour) }}</div>
+            <div class="hour-cell" [class.night-hour]="isNightHour(hour)" *ngFor="let day of visibleFixedDays">
+              <div
+                class="quarter-cell"
+                *ngFor="let quarter of quarterMinutes"
+                (click)="selectQuarterSlot(day, hour, quarter)"
+                (dragover)="allowFixedSlotDrop($event)"
+                (drop)="dropFixedSlot($event, day, hour, quarter)"
+              >
+                <span
+                  class="slot-event"
+                  draggable="true"
+                  *ngFor="let slot of slotStartsAt(day, hour * 60 + quarter)"
+                  [style.height.px]="fixedSlotBlockHeight(slot)"
+                  (dragstart)="startFixedSlotDrag($event, slot)"
+                  (click)="$event.stopPropagation(); openFixedSlotModal(day, hour * 60 + quarter, slot)"
+                  (contextmenu)="openFixedSlotContextMenu($event, slot, fixedSlotMenu)"
+                >
+                  <strong>{{ fixedSlotContentLabel(slot) }}</strong>
+                  <small>{{ formatRelativeTime(slot) }}</small>
+                  <span class="slot-resize-actions" (click)="$event.stopPropagation()">
+                    <button type="button" title="Reducir 15 minutos" (click)="resizeFixedSlot(slot, -15)">-</button>
+                    <button type="button" title="Extender 15 minutos" (click)="resizeFixedSlot(slot, 15)">+</button>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <nz-dropdown-menu #fixedSlotMenu="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-item (click)="duplicateContextFixedSlot()">Duplicar</li>
+          <li nz-menu-item (click)="resizeContextFixedSlot(15)">Extender 15 minutos</li>
+          <li nz-menu-item (click)="resizeContextFixedSlot(-15)">Reducir 15 minutos</li>
+          <li nz-menu-item (click)="deleteContextFixedSlot()">Eliminar</li>
+        </ul>
+      </nz-dropdown-menu>
+    </section>
+
+    <div class="editor-save-actions">
+      <button nz-button routerLink="/psira/evaluation-schemes">{{ 'core.cancel' | translate }}</button>
+      <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveBase()">
+        {{ 'core.save' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <nz-modal
+    [(nzVisible)]="fixedSlotModalVisible"
+    [nzTitle]="editingFixedSlotId ? 'Editar interacción' : 'Crear interacción'"
+    [nzOkLoading]="saving"
+    nzOkText="Guardar interacción"
+    nzCancelText="Cancelar"
+    (nzOnCancel)="closeFixedSlotModal()"
+    (nzOnOk)="saveFixedSlot()"
+  >
+    <form nz-form [formGroup]="fixedSlotForm" class="fixed-modal-form">
+      <div class="modal-grid">
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.assessmentTypeId' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="assessmentTypeId" nzShowSearch>
+              <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Día relativo</nz-form-label>
+          <nz-form-control><input nz-input [value]="fixedSlotDayTitle()" disabled /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Cuestionario</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="questionnaireId"
+              nzShowSearch
+              nzServerSearch
+              nzAllowClear
+              [nzDisabled]="hasSelectedFixedQuestionnaireBundle"
+              (nzOnSearch)="searchQuestionnaires($event)"
+              (ngModelChange)="onFixedQuestionnaireChange($event)"
+            >
+              <nz-option
+                *ngFor="let questionnaire of foundQuestionnaires"
+                [nzValue]="questionnaire._id"
+                [nzLabel]="questionnaire.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Paquete</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="questionnaireBundleId"
+              nzShowSearch
+              nzAllowClear
+              [nzDisabled]="hasSelectedFixedQuestionnaire"
+              (ngModelChange)="onFixedQuestionnaireBundleChange($event)"
+            >
+              <nz-option
+                *ngFor="let bundle of questionnaireBundles"
+                [nzValue]="bundle._id"
+                [nzLabel]="bundle.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Start time block</nz-form-label>
+          <nz-form-control><input nz-input type="time" step="900" formControlName="startTime" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>End time block</nz-form-label>
+          <nz-form-control><input nz-input type="time" step="900" formControlName="endTime" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Modo de disparo</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="triggerMode">
+              <nz-option [nzValue]="FTM.BLOCK_START" nzLabel="Inicio del bloque"></nz-option>
+              <nz-option [nzValue]="FTM.RANDOM_WITHIN_WINDOW" nzLabel="Aleatorio en la ventana"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Tiempo de expiración (min)</nz-form-label>
+          <nz-form-control><input nz-input type="number" formControlName="availabilityDurationMinutes" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Recordatorios (min)</nz-form-label>
+          <nz-form-control><input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Setear semilla</nz-form-label>
+          <nz-form-control><input nz-input type="number" formControlName="seedOrder" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Quién responde</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="responderRoles" nzMode="multiple" nzAllowClear>
+              <nz-option
+                *ngFor="let role of responderRoleOptions"
+                [nzValue]="role.value"
+                [nzLabel]="role.label"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="checkbox-row">
+          <label nz-checkbox formControlName="required">Obligatoria</label>
+          <label nz-checkbox formControlName="singleResponse">Única respuesta</label>
+        </div>
+      </div>
+    </form>
+  </nz-modal>
+
+  <nz-modal
+    [(nzVisible)]="repeatRuleModalVisible"
+    nzTitle="Reglas de repetición"
+    [nzOkLoading]="saving"
+    nzOkText="Aplicar regla"
+    nzCancelText="Cancelar"
+    (nzOnCancel)="closeRepeatRuleModal()"
+    (nzOnOk)="applyRepeatRule()"
+  >
+    <form nz-form [formGroup]="repeatRuleForm" class="fixed-modal-form">
+      <div class="modal-grid">
+        <nz-form-item>
+          <nz-form-label>Tipo de regla</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="mode">
+              <nz-option [nzValue]="FRM.ADD_FROM_INTERACTION" nzLabel="Add from interaction"></nz-option>
+              <nz-option [nzValue]="FRM.EXTEND_LAST_DAY" nzLabel="Extend last day"></nz-option>
+              <nz-option [nzValue]="FRM.EXTEND_LAST_WEEK" nzLabel="Extend last week"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <ng-container *ngIf="repeatRuleForm.get('mode')?.value === FRM.ADD_FROM_INTERACTION">
+          <nz-form-item>
+            <nz-form-label nzRequired>{{ 'evaluationSchemes.assessmentTypeId' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="assessmentTypeId" nzShowSearch>
+                <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Esquema por defecto</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="preset">
+                <nz-option
+                  *ngFor="let preset of repeatPresets"
+                  [nzValue]="preset.value"
+                  [nzLabel]="preset.label"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Cuestionario</nz-form-label>
+            <nz-form-control>
+              <nz-select
+                formControlName="questionnaireId"
+                nzShowSearch
+                nzServerSearch
+                nzAllowClear
+                [nzDisabled]="hasSelectedRepeatQuestionnaireBundle"
+                (nzOnSearch)="searchQuestionnaires($event)"
+                (ngModelChange)="onRepeatQuestionnaireChange($event)"
+              >
+                <nz-option
+                  *ngFor="let questionnaire of foundQuestionnaires"
+                  [nzValue]="questionnaire._id"
+                  [nzLabel]="questionnaire.name"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Paquete</nz-form-label>
+            <nz-form-control>
+              <nz-select
+                formControlName="questionnaireBundleId"
+                nzShowSearch
+                nzAllowClear
+                [nzDisabled]="hasSelectedRepeatQuestionnaire"
+                (ngModelChange)="onRepeatQuestionnaireBundleChange($event)"
+              >
+                <nz-option
+                  *ngFor="let bundle of questionnaireBundles"
+                  [nzValue]="bundle._id"
+                  [nzLabel]="bundle.name"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Starting from</nz-form-label>
+            <nz-form-control><input nz-input type="number" min="1" formControlName="startingDay" /></nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Number of days</nz-form-label>
+            <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfDays" /></nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Modo de disparo</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="triggerMode">
+                <nz-option [nzValue]="FTM.BLOCK_START" nzLabel="Inicio del bloque"></nz-option>
+                <nz-option [nzValue]="FTM.RANDOM_WITHIN_WINDOW" nzLabel="Aleatorio en la ventana"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Tiempo de expiración (min)</nz-form-label>
+            <nz-form-control><input nz-input type="number" formControlName="availabilityDurationMinutes" /></nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Recordatorios (min)</nz-form-label>
+            <nz-form-control><input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" /></nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Quién responde</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="responderRoles" nzMode="multiple" nzAllowClear>
+                <nz-option
+                  *ngFor="let role of responderRoleOptions"
+                  [nzValue]="role.value"
+                  [nzLabel]="role.label"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <div class="checkbox-row">
+            <label nz-checkbox formControlName="required">Obligatoria</label>
+            <label nz-checkbox formControlName="singleResponse">Única respuesta</label>
+          </div>
+        </ng-container>
+
+        <nz-form-item *ngIf="repeatRuleForm.get('mode')?.value === FRM.EXTEND_LAST_DAY">
+          <nz-form-label>Number of days</nz-form-label>
+          <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfDays" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="repeatRuleForm.get('mode')?.value === FRM.EXTEND_LAST_WEEK">
+          <nz-form-label>Number of weeks</nz-form-label>
+          <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfWeeks" /></nz-form-control>
+        </nz-form-item>
+      </div>
+    </form>
+  </nz-modal>
+</nz-spin>

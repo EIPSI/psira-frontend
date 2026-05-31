@@ -1,0 +1,90 @@
+<div class="calendar-toolbar">
+  <div class="calendar-title">
+    <button nz-button nzShape="circle" (click)="previousMonth()"><i nz-icon nzType="left"></i></button>
+    <h1>{{ monthLabel }}</h1>
+    <button nz-button nzShape="circle" (click)="nextMonth()"><i nz-icon nzType="right"></i></button>
+  </div>
+  <nz-select
+    class="type-filter"
+    [(ngModel)]="occurrenceType"
+    (ngModelChange)="onTypeChange($event)"
+    nzAllowClear
+    [nzPlaceHolder]="'calendar.type' | translate"
+  >
+    <nz-option *ngFor="let type of occurrenceTypes" [nzValue]="type" [nzLabel]="type"></nz-option>
+  </nz-select>
+  <label class="calendar-filter">
+    <span>{{ 'calendar.patient' | translate }}</span>
+    <app-patient-picker
+      [selectedPatient]="selectedPatient"
+      (selectPatient)="selectedPatient = $event; onFilterChange()"
+    ></app-patient-picker>
+  </label>
+  <label class="calendar-filter">
+    <span>{{ 'calendar.therapist' | translate }}</span>
+    <app-user-picker
+      [selectedUser]="selectedTherapist"
+      (selectUser)="selectedTherapist = $event; onFilterChange()"
+    ></app-user-picker>
+  </label>
+  <label class="calendar-filter">
+    <span>{{ 'calendar.supervisor' | translate }}</span>
+    <app-user-picker
+      [selectedUser]="selectedSupervisor"
+      (selectUser)="selectedSupervisor = $event; onFilterChange()"
+    ></app-user-picker>
+  </label>
+  <button nz-button nzType="primary" *ngIf="googleCalendarConfigured" (click)="connectGoogleCalendar()">
+    <i nz-icon nzType="google"></i>
+    Conectar Google Calendar
+  </button>
+</div>
+
+<nz-spin [nzSpinning]="loading">
+  <nz-calendar [(ngModel)]="selectedDate" (ngModelChange)="onPanelDateChange($event)">
+    <ul *nzDateCell="let date" class="event-list">
+      <li *ngFor="let event of eventsForDate(date)" class="event-item">
+        <nz-tag [nzColor]="event.isDetachedFromTemplate ? 'orange' : 'blue'">{{ event.occurrenceType }}</nz-tag>
+        <span class="event-time">{{ formatTime(event.startAt) }}</span>
+        <span class="event-title">{{ event.title }}</span>
+      </li>
+    </ul>
+  </nz-calendar>
+</nz-spin>
+
+<div class="event-detail-list" *ngIf="eventsForDate(selectedDate).length; else emptyDay">
+  <div class="event-detail" *ngFor="let event of eventsForDate(selectedDate)">
+    <div>
+      <strong>{{ formatTime(event.startAt) }} - {{ formatTime(event.endAt) }}</strong>
+      <span>{{ event.title }}</span>
+    </div>
+    <div class="event-meta">
+      <nz-tag>{{ event.status }}</nz-tag>
+      <span *ngIf="event.patient">{{ event.patient.medicalRecordNo }} {{ personName(event.patient) }}</span>
+      <span *ngIf="event.therapist">{{ personName(event.therapist) }}</span>
+      <span *ngIf="event.supervisor">{{ personName(event.supervisor) }}</span>
+      <button nz-button nzType="link" (click)="openDetail(event)">{{ 'calendar.details' | translate }}</button>
+    </div>
+  </div>
+</div>
+
+<ng-template #emptyDay>
+  <nz-empty [nzNotFoundContent]="'calendar.emptyDay' | translate"></nz-empty>
+</ng-template>
+
+<nz-modal
+  [(nzVisible)]="detailModalVisible"
+  [nzTitle]="'calendar.details' | translate"
+  (nzOnCancel)="detailModalVisible = false"
+  (nzOnOk)="detailModalVisible = false"
+>
+  <div class="edit-form" *ngIf="detailOccurrence">
+    <strong>{{ detailOccurrence.title }}</strong>
+    <span>{{ detailOccurrence.occurrenceType }}</span>
+    <span>{{ formatTime(detailOccurrence.startAt) }} - {{ formatTime(detailOccurrence.endAt) }}</span>
+    <nz-tag>{{ detailOccurrence.status }}</nz-tag>
+    <span *ngIf="detailOccurrence.patient">{{ detailOccurrence.patient.medicalRecordNo }}</span>
+    <span *ngIf="detailOccurrence.therapist">{{ personName(detailOccurrence.therapist) }}</span>
+    <span *ngIf="detailOccurrence.supervisor">{{ personName(detailOccurrence.supervisor) }}</span>
+  </div>
+</nz-modal>

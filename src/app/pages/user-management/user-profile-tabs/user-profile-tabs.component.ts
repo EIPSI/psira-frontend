@@ -4,12 +4,23 @@ import { Reports } from '@app/pages/administration/@types/reports';
 import { ReportsResourcesService } from '@app/pages/patients-management/@services/reports-resources.service';
 import { User } from '@app/pages/user-management/@types/user';
 import { UsersService } from '@app/pages/user-management/@services/users.service';
+import { AssessmentService } from '@app/pages/assessment/@services/assessment.service';
+import { AssessmentTable } from '@app/pages/assessment/@tables/assessment.table';
+import { FormattedAssessment } from '@app/pages/assessment/@types/assessment';
+import { ClinicalSessionKind } from '@app/pages/calendar/@types/calendar';
 import { environment } from '@env/environment';
-import { TableColumn } from '@shared/@modules/master-data/@types/list';
+import { PermissionKey } from '@shared/@types/permission';
+import { Action, ActionArgs, TableColumn } from '@shared/@modules/master-data/@types/list';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
+import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { finalize } from 'rxjs/operators';
+import { Convert } from '@shared/classes/convert';
 
 const CryptoJS = require('crypto-js');
+
+enum SupervisorActionKey {
+  REMOVE_SUPERVISOR,
+}
 
 @Component({
   selector: 'app-user-profile-tabs',
@@ -17,6 +28,8 @@ const CryptoJS = require('crypto-js');
   styleUrls: ['./user-profile-tabs.component.scss'],
 })
 export class UserProfileTabsComponent implements OnInit {
+  public PK = PermissionKey;
+  public CSK = ClinicalSessionKind;
   public user: User;
   public roleCode: string;
   public reports: Reports[] = [];
@@ -25,6 +38,9 @@ export class UserProfileTabsComponent implements OnInit {
   public selectedSupervisorId: number;
   public reportsLoading = false;
   public supervisorsLoading = false;
+  public assessmentsLoading = false;
+  public showSupervisorAssignDrawer = false;
+  public supervisorActions: Action<SupervisorActionKey>[] = [];
 
   public reportColumns: TableColumn<Partial<Reports>>[] = [
     { title: 'Name', name: 'name', translationPath: 'tables.reports.name', sort: true },
@@ -33,12 +49,16 @@ export class UserProfileTabsComponent implements OnInit {
     { title: 'Shiny App', name: 'appName', translationPath: 'tables.reports.appName', sort: true },
   ];
 
-  public assessmentColumns: TableColumn<any>[] = [
-    { title: 'Name', name: 'name', translationPath: 'tables.assessments.name' },
-    { title: 'Status', name: 'status', translationPath: 'tables.assessments.status' },
+  public assessmentColumns: TableColumn<FormattedAssessment>[] = AssessmentTable;
+
+  public supervisorColumns: TableColumn<Partial<User>>[] = [
+    { title: 'First name', name: 'firstName', translationPath: 'tables.users.firstName', sort: true },
+    { title: 'Last name', name: 'lastName', translationPath: 'tables.users.lastName', sort: true },
+    { title: 'Email', name: 'email', translationPath: 'tables.users.email', sort: true },
+    { title: 'Username', name: 'username', translationPath: 'tables.users.username', sort: true },
   ];
 
-  public assessments: any[] = [];
+  public assessments: FormattedAssessment[] = [];
 
   get userTitle(): string {
     const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
@@ -56,8 +76,10 @@ export class UserProfileTabsComponent implements OnInit {
   constructor(
     private activatedRoute: ActivatedRoute,
     private errorService: ErrorHandlerService,
+    public perms: AppPermissionsService,
     private reportsResourcesService: ReportsResourcesService,
     private router: Router,
+    private assessmentService: AssessmentService,
     private usersService: UsersService
   ) {}
 
@@ -69,7 +91,9 @@ export class UserProfileTabsComponent implements OnInit {
         this.user = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
       }
       this.getReports();
+      this.getAssessments();
       this.getSupervisors();
+      this.setSupervisorActions();
     });
   }
 
@@ -92,10 +116,23 @@ export class UserProfileTabsComponent implements OnInit {
       .subscribe(
         () => {
           this.selectedSupervisorId = null;
+          this.showSupervisorAssignDrawer = false;
           this.getSupervisors();
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to assign supervisor' })
       );
+  }
+
+  public onSupervisorAction({ action, context: supervisor }: ActionArgs<User, SupervisorActionKey>): void {
+    switch (action.key) {
+      case SupervisorActionKey.REMOVE_SUPERVISOR:
+        this.unassignSupervisor(supervisor);
+        return;
+    }
+  }
+
+  public toggleSupervisorAssignDrawer(): void {
+    this.showSupervisorAssignDrawer = !this.showSupervisorAssignDrawer;
   }
 
   public unassignSupervisor(supervisor: User): void {
@@ -124,6 +161,38 @@ export class UserProfileTabsComponent implements OnInit {
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load reports' })
       );
+  }
+
+  private getAssessments(): void {
+    if (!this.user?.id) return;
+
+    this.assessmentsLoading = true;
+    this.assessmentService
+      .getAssessments({
+        paging: { first: 50 },
+        filter: {
+          and: [{ clinician: { id: { eq: this.user.id } } }, { deleted: { is: false } }],
+        },
+        sorting: [{ field: 'createdAt', direction: 'DESC' }],
+      })
+      .pipe(finalize(() => (this.assessmentsLoading = false)))
+      .subscribe(
+        ({ edges }: any) => {
+          this.assessments = edges.map((edge: any) => Convert.toFormattedAssessment(edge.node));
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessments' })
+      );
+  }
+
+  private setSupervisorActions(): void {
+    this.supervisorActions = this.perms.permissionsOnly(PermissionKey.MANAGE_USERS)
+      ? [
+          {
+            key: SupervisorActionKey.REMOVE_SUPERVISOR,
+            title: 'Remove supervisor',
+          },
+        ]
+      : [];
   }
 
   private getSupervisors(): void {

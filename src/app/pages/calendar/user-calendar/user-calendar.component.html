@@ -1,0 +1,127 @@
+<app-calendar-grid
+  [(selectedDate)]="selectedDate"
+  [(view)]="view"
+  [events]="events"
+  [loading]="loading"
+  (rangeChange)="loadEvents()"
+  (createEvent)="openCreateEvent($event.date, $event.hour)"
+  (eventClick)="openEdit($event)"
+  (eventDragStart)="onEventDragStart($event.event, $event.calendarEvent)"
+  (eventDragOver)="allowDrop($event)"
+  (eventDrop)="onDropEvent($event.event, $event.date, $event.hour)"
+></app-calendar-grid>
+
+<app-event-edit-modal
+  [(visible)]="editModalVisible"
+  [(startAt)]="editStartAt"
+  [(endAt)]="editEndAt"
+  [event]="editingEvent"
+  [saving]="saving"
+  (save)="saveEdit()"
+  (discard)="discardEvent($event)"
+  (durationChange)="setEditDurationMinutes($event)"
+></app-event-edit-modal>
+
+<nz-modal
+  [(nzVisible)]="createEventModalVisible"
+  nzTitle="Crear evento"
+  [nzOkLoading]="creating"
+  (nzOnCancel)="createEventModalVisible = false"
+  (nzOnOk)="saveCreateEvent()"
+>
+  <div class="edit-form">
+    <label>
+      <span>Tipo</span>
+      <nz-select [(ngModel)]="createType">
+        <nz-option [nzValue]="CT.SESSION" nzLabel="Sesión de supervisión"></nz-option>
+        <nz-option [nzValue]="CT.FIXED_SCHEME" nzLabel="Evaluación - esquema fijo"></nz-option>
+        <nz-option [nzValue]="CT.SIMPLE_ASSESSMENT" nzLabel="Evaluación - individual"></nz-option>
+      </nz-select>
+    </label>
+
+    <label>
+      <span>Descripción</span>
+      <input nz-input [(ngModel)]="createTitle" />
+    </label>
+
+    <label *ngIf="createType === CT.SESSION">
+      <span>Supervisor</span>
+      <app-user-picker [selectedUser]="createSupervisor" (selectUser)="createSupervisor = $event"></app-user-picker>
+    </label>
+
+    <label *ngIf="createType === CT.SESSION">
+      <span>Esquemas session-based</span>
+      <nz-select [(ngModel)]="createSessionSchemeIds" nzMode="multiple" nzAllowClear>
+        <nz-option *ngFor="let scheme of sessionSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+      </nz-select>
+    </label>
+
+    <app-recurrence-form
+      *ngIf="createType === CT.SESSION"
+      [(enabled)]="repeatSession"
+      [(every)]="repeatEvery"
+      [(unit)]="repeatUnit"
+      [(repeatOnDays)]="repeatOnDays"
+      [(endMode)]="repeatEndMode"
+      [(endDate)]="repeatEndDate"
+      [(count)]="repeatCount"
+      [repeatUnits]="repeatUnits"
+      [weekDayOptions]="weekDayOptions"
+    ></app-recurrence-form>
+
+    <label *ngIf="createType === CT.FIXED_SCHEME">
+      <span>Esquema fijo</span>
+      <nz-select [(ngModel)]="createFixedSchemeIds" nzMode="multiple">
+        <nz-option *ngFor="let scheme of fixedSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <span>Tipo de evaluación</span>
+      <nz-select [(ngModel)]="simpleAssessmentTypeId" nzShowSearch>
+        <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <span>Cuestionarios</span>
+      <nz-select
+        [(ngModel)]="simpleQuestionnaireIds"
+        nzMode="multiple"
+        nzShowSearch
+        nzServerSearch
+        nzAllowClear
+        (nzOnSearch)="searchQuestionnaires($event)"
+      >
+        <nz-option
+          *ngFor="let questionnaire of foundQuestionnaires"
+          [nzValue]="questionnaire._id"
+          [nzLabel]="questionnaire.name"
+        ></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <span>Paquetes</span>
+      <nz-select [(ngModel)]="simpleQuestionnaireBundleIds" nzMode="multiple" nzShowSearch nzAllowClear>
+        <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+      </nz-select>
+    </label>
+
+    <div class="date-row">
+      <label>
+        <span>Inicio</span>
+        <nz-date-picker [(ngModel)]="createStartAt" nzShowTime></nz-date-picker>
+      </label>
+      <label *ngIf="createType === CT.SESSION">
+        <span>Finalización</span>
+        <nz-date-picker [(ngModel)]="createEndAt" nzShowTime></nz-date-picker>
+      </label>
+    </div>
+
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <span>Disponibilidad en minutos</span>
+      <input nz-input type="number" [(ngModel)]="simpleAvailabilityMinutes" />
+    </label>
+  </div>
+</nz-modal>

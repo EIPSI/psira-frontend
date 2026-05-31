@@ -1,5 +1,5 @@
 .question-text {
-  color: #373737;
+  color: #21232a;
   font-weight: normal;
   font-size: 18px;
   margin-bottom: 20px;
@@ -8,7 +8,7 @@
 .question-navigation {
   margin-top: 40px;
   .navigation {
-    color: #2c8aa7;
+    color: #186fb5;
     i {
       font-size: 40px;
       font-weight: bold;
@@ -27,7 +27,7 @@
 }
 
 .option {
-  background-color: #2c8aa7;
+  background-color: #186fb5;
   color: #fff;
   padding: 10px;
   border-radius: 10px;
@@ -40,14 +40,14 @@
 }
 
 .option.active {
-  background-color: #41d5a7;
+  background-color: #89b3e0;
 }
 
 ::ng-deep {
   .question {
     .ant-card {
-      background-color: #f1f4ff;
-      border: 1px solid #89d17f;
+      background-color: #eef4fb;
+      border: 1px solid #89b3e0;
       border-radius: 10px;
       box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     }
@@ -57,7 +57,7 @@
     .ant-card-head-title {
       font-weight: normal;
       font-size: 15px;
-      color: #373737;
+      color: #21232a;
       white-space: initial;
     }
   }

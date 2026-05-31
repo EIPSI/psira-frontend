@@ -15,7 +15,7 @@ export class QuestionComponent {
   @Input()
   public set question(q: Question) {
     this._question = q;
-    if (!this.answer) this.initAnswer(q);
+    if (q) this.initAnswer(q);
   }
   public get question(): Question {
     return this._question;
@@ -59,7 +59,11 @@ export class QuestionComponent {
         (answers) =>
           (this.answer = Object.assign(
             {},
-            answers.find((a) => a.question === this.question._id),
+            answers.find(
+              (a) =>
+                a.question === this.question._id &&
+                (a.occurrenceId || null) === (this.currentOccurrenceId || null)
+            ),
             {
               textValue: this.answer.textValue,
               numberValue: this.answer.numberValue,
@@ -81,17 +85,25 @@ export class QuestionComponent {
   
   private initAnswer(question: Question): void {
     const answers = this.assessmentFormService.assessmentSnapshot?.questionnaireAssessment?.answers ?? [];
-    this.answer = answers.find((a) => a.question === question._id) ?? this.createBlankAnswer(question);
+    this.answer =
+      answers.find(
+        (a) => a.question === question._id && (a.occurrenceId || null) === (this.currentOccurrenceId || null)
+      ) ?? this.createBlankAnswer(question);
   }  
 
   private createBlankAnswer(question: Question): Answer {
     const answer: Answer = {
       question: question._id,
+      occurrenceId: this.currentOccurrenceId,
     };
 
     if (question.type === QuestionType.TEXT) answer.textValue = '';
     if (question.type === QuestionType.SELECT_MULTIPLE) answer.multipleChoiceValue = [];
 
     return answer;
+  }
+
+  private get currentOccurrenceId(): string | null {
+    return this.assessmentFormService.questionnaireSnapshot?.occurrenceId || null;
   }
 }
