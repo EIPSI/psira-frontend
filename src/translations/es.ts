@@ -79,6 +79,7 @@ export default {
     plannedAssessments: 'Evaluaciones Planificadas',
     calendar: 'Calendario',
     evaluationSchemes: 'Esquemas de Evaluación',
+    randomizations: 'Randomización',
     userManagement: 'Configuración de Usuarios',
     listUsers: 'Lista de Usuarios',
     newUser: 'Nuevo Usuario',
@@ -157,6 +158,17 @@ export default {
     therapist: 'Terapeuta',
     responder: 'Respondedor',
     apply: 'Aplicar',
+  },
+  randomizations: {
+    name: 'Nombre',
+    type: 'Tipo de randomización',
+    department: 'Departamento',
+    itemCount: 'Cantidad de elementos',
+    status: 'Estado',
+    createdAt: 'Fecha de creación',
+    updatedAt: 'Última actualización',
+    create: 'Crear Randomización',
+    edit: 'Editar Randomización',
   },
   tables: {
     assessmentAdministration: {
@@ -369,6 +381,7 @@ export default {
     formattedStatus: 'Estado',
     language: 'Idioma',
     abbreviation: 'Abreviatura',
+    departments: 'Departamentos',
     keywords: 'Palabras Clave',
     timeToComplete: 'Tiempo Para Completar',
     copyright: 'Derechos De Autor',

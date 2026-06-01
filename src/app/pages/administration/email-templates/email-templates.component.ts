@@ -75,7 +75,7 @@ export class EmailTemplatesComponent implements OnInit {
     .pipe(finalize(() => (this.isLoading = false)))
     // tslint:disable
     .subscribe((x: any) => { this.data = x.data.getAllEmailTemplates.edges.map((x: any) =>
-      Convert.toAssessmentAdministration(x.node));
+      this.formatEmailTemplate(x.node));
       this.pageInfo = x.data.getAllEmailTemplates.pageInfo;
       const message$ = this.translate.get('emailTemplates.unableToLoad').subscribe((message) => {
         (err: any) => this.errorService.handleError(err, { prefix: message })
@@ -100,8 +100,17 @@ export class EmailTemplatesComponent implements OnInit {
   }: ActionArgs<any, ActionKey>): void {
     switch (action.key) {
       case ActionKey.EDIT:
-        this.router.navigate([`/psira/administration/create-template/${assessmentAdministration.id}`])
+      this.router.navigate([`/psira/administration/create-template/${assessmentAdministration.id}`])
         return;
     }
+  }
+
+  private formatEmailTemplate(template: any): any {
+    return {
+      ...Convert.toAssessmentAdministration(template),
+      departmentNames: template.isPublic || !template.departments?.length
+        ? 'All departments'
+        : template.departments.map((department: any) => department.name || department.id).join(', '),
+    };
   }
 }

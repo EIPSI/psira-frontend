@@ -46,7 +46,8 @@ export enum ResourceActivationAnchor {
 }
 
 export interface ApplyEvaluationSchemeInput {
-  schemeId: number;
+  schemeId?: number;
+  randomizationRuleId?: number;
   patientId?: number;
   targetUserId?: number;
   therapistId?: number;

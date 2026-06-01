@@ -30,4 +30,8 @@ export const EmailTemplatesColumns: TableColumn<any>[] = [
     name: 'module',
     translationPath: 'emailTemplates.module',
   },
+  {
+    title: 'Departments',
+    name: 'departmentNames',
+  },
 ];

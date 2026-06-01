@@ -108,6 +108,14 @@ export const MENU: SideNavInterface[] | any = [
         iconTheme: '',
         submenu: [],
       },
+      {
+        path: 'randomizations',
+        title: 'menu.randomizations',
+        permissions: [PK.VIEW_ASSESSMENTS, PK.MANAGE_ASSESSMENTS],
+        iconType: '',
+        iconTheme: '',
+        submenu: [],
+      },
     ],
   },
   {

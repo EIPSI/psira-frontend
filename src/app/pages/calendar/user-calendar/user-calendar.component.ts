@@ -30,12 +30,27 @@ import { ClinicalSessionKind as CalendarClinicalSessionKind } from '../@types/ca
 import { CalendarEventUiService } from '../@services/calendar-event-ui.service';
 import { CalendarService } from '../@services/calendar.service';
 import { CalendarRecurrenceService, RepeatEndMode, RepeatUnit } from '../@services/calendar-recurrence.service';
+import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
+import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 
 enum CalendarCreateType {
   SESSION = 'SESSION',
   FIXED_SCHEME = 'FIXED_SCHEME',
   SIMPLE_ASSESSMENT = 'SIMPLE_ASSESSMENT',
 }
+
+enum AssessmentContentType {
+  QUESTIONNAIRE = 'QUESTIONNAIRE',
+  QUESTIONNAIRE_BUNDLE = 'QUESTIONNAIRE_BUNDLE',
+  RANDOMIZATION = 'RANDOMIZATION',
+}
+
+enum FixedSchemeSelectionType {
+  SCHEME = 'SCHEME',
+  RANDOMIZATION = 'RANDOMIZATION',
+}
+
+type FixedSchemeApplySelection = { schemeId: number } | { randomizationRuleId: number };
 
 @Component({
   selector: 'app-user-calendar',
@@ -44,6 +59,8 @@ enum CalendarCreateType {
 })
 export class UserCalendarComponent implements OnChanges {
   CT = CalendarCreateType;
+  ACT = AssessmentContentType;
+  FST = FixedSchemeSelectionType;
 
   @Input() user?: User;
 
@@ -63,6 +80,8 @@ export class UserCalendarComponent implements OnChanges {
   createSupervisor?: User;
   createSessionSchemeIds: number[] = [];
   createFixedSchemeIds: number[] = [];
+  createFixedRandomizationRuleIds: number[] = [];
+  fixedSchemeSelectionType = FixedSchemeSelectionType.SCHEME;
   repeatSession = false;
   repeatEvery = 1;
   repeatUnit = RepeatUnit.WEEK;
@@ -71,12 +90,16 @@ export class UserCalendarComponent implements OnChanges {
   repeatEndDate?: Date;
   repeatCount = 12;
   simpleAssessmentTypeId?: number;
+  simpleContentType = AssessmentContentType.QUESTIONNAIRE;
   simpleQuestionnaireIds: string[] = [];
   simpleQuestionnaireBundleIds: string[] = [];
+  simpleRandomizationRuleIds: number[] = [];
   simpleAvailabilityMinutes = 60;
   assessmentTypes: any[] = [];
   foundQuestionnaires: QuestionnaireVersion[] = [];
   questionnaireBundles: any[] = [];
+  lowLevelRandomizations: RandomizationRule[] = [];
+  highLevelRandomizations: RandomizationRule[] = [];
   editingEvent?: CalendarEvent;
   editStartAt?: Date;
   editEndAt?: Date;
@@ -97,6 +120,7 @@ export class UserCalendarComponent implements OnChanges {
     private eventUiService: CalendarEventUiService,
     private modalService: NzModalService,
     private questionnaireService: QuestionnaireManagementService,
+    private randomizationsService: RandomizationsService,
     private recurrenceService: CalendarRecurrenceService,
     private schemesService: EvaluationSchemesService
   ) {}
@@ -108,6 +132,7 @@ export class UserCalendarComponent implements OnChanges {
     this.loadSchemes();
     this.loadAssessmentTypes();
     this.loadBundles();
+    this.loadRandomizations();
   }
 
   openCreateEvent(date: Date = this.selectedDate, hour?: number): void {
@@ -120,6 +145,8 @@ export class UserCalendarComponent implements OnChanges {
     this.createSupervisor = this.currentUser;
     this.createSessionSchemeIds = [];
     this.createFixedSchemeIds = [];
+    this.createFixedRandomizationRuleIds = [];
+    this.fixedSchemeSelectionType = FixedSchemeSelectionType.SCHEME;
     this.repeatSession = false;
     this.repeatEvery = 1;
     this.repeatUnit = RepeatUnit.WEEK;
@@ -128,8 +155,10 @@ export class UserCalendarComponent implements OnChanges {
     this.repeatEndDate = undefined;
     this.repeatCount = 12;
     this.simpleAssessmentTypeId = undefined;
+    this.simpleContentType = AssessmentContentType.QUESTIONNAIRE;
     this.simpleQuestionnaireIds = [];
     this.simpleQuestionnaireBundleIds = [];
+    this.simpleRandomizationRuleIds = [];
     this.simpleAvailabilityMinutes = 60;
     this.createEventModalVisible = true;
   }
@@ -187,17 +216,31 @@ export class UserCalendarComponent implements OnChanges {
 
   searchQuestionnaires(search: string): void {
     const filter = search ? { or: this.createQuestionnaireSearchFilter(search) } : undefined;
-    this.questionnaireService.getQuestionnaires({ filter }).subscribe(
+    this.questionnaireService.getQuestionnaires({ filter, departmentIds: this.contextDepartmentIds() }).subscribe(
       ({ edges }) => {
         this.foundQuestionnaires = edges
           .map((edge: any) => edge.node)
           .filter((questionnaire: QuestionnaireVersion) =>
             questionnaire.zombie === false &&
-            [QuestionnaireStatus.PRIVATE, QuestionnaireStatus.PUBLISHED].includes(questionnaire.status)
+            [QuestionnaireStatus.PRIVATE, QuestionnaireStatus.PUBLISHED].includes(questionnaire.status) &&
+            this.matchesDepartments(questionnaire.departmentIds)
           );
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaires' })
     );
+  }
+
+  onSimpleContentTypeChange(type: AssessmentContentType): void {
+    this.simpleContentType = type;
+    if (type !== AssessmentContentType.QUESTIONNAIRE) this.simpleQuestionnaireIds = [];
+    if (type !== AssessmentContentType.QUESTIONNAIRE_BUNDLE) this.simpleQuestionnaireBundleIds = [];
+    if (type !== AssessmentContentType.RANDOMIZATION) this.simpleRandomizationRuleIds = [];
+  }
+
+  onFixedSchemeSelectionTypeChange(type: FixedSchemeSelectionType): void {
+    this.fixedSchemeSelectionType = type;
+    if (type !== FixedSchemeSelectionType.SCHEME) this.createFixedSchemeIds = [];
+    if (type !== FixedSchemeSelectionType.RANDOMIZATION) this.createFixedRandomizationRuleIds = [];
   }
 
   private saveSupervisionSessions(): void {
@@ -228,12 +271,19 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   private applyFixedSchemes(): void {
-    if (!this.user?.id || !this.createFixedSchemeIds.length) return;
+    if (
+      !this.user?.id ||
+      (this.fixedSchemeSelectionType === FixedSchemeSelectionType.SCHEME && !this.createFixedSchemeIds.length) ||
+      (this.fixedSchemeSelectionType === FixedSchemeSelectionType.RANDOMIZATION && !this.createFixedRandomizationRuleIds.length)
+    ) return;
     const userId = this.user.id;
+    const selectedItems: FixedSchemeApplySelection[] = this.fixedSchemeSelectionType === FixedSchemeSelectionType.SCHEME
+      ? this.createFixedSchemeIds.map((schemeId) => ({ schemeId }))
+      : this.createFixedRandomizationRuleIds.map((randomizationRuleId) => ({ randomizationRuleId }));
     this.creating = true;
-    forkJoin(this.createFixedSchemeIds.map((schemeId) =>
+    forkJoin(selectedItems.map((schemeSelection) =>
       this.schemesService.applyScheme({
-        schemeId,
+        ...schemeSelection,
         targetUserId: userId,
         therapistId: userId,
         responderUserId: userId,
@@ -255,6 +305,7 @@ export class UserCalendarComponent implements OnChanges {
   private saveSimpleAssessment(): void {
     if (!this.user?.id || !this.simpleAssessmentTypeId) return;
     const expirationDate = new Date(this.createStartAt.getTime() + this.simpleAvailabilityMinutes * 60000);
+    const content = this.simpleAssessmentContentPayload();
     this.creating = true;
     this.calendarService
       .createAssessmentOccurrence({
@@ -263,8 +314,7 @@ export class UserCalendarComponent implements OnChanges {
         responderUserId: this.user.id,
         clinicianId: this.user.id,
         informantType: 'CLINICIAN',
-        questionnaires: this.simpleQuestionnaireIds,
-        questionnaireBundles: this.simpleQuestionnaireBundleIds,
+        ...content,
         dates: [{ deliveryDate: this.createStartAt, expirationDate }],
         emailReminder: false,
       })
@@ -384,7 +434,7 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   private loadSchemes(): void {
-    this.schemesService.getSchemes().subscribe(
+    this.schemesService.getSchemes({ departmentIds: this.contextDepartmentIds() }).subscribe(
       ({ edges }) => {
         this.schemes = edges.map((edge: any) => edge.node).filter((scheme: EvaluationScheme) => scheme.active);
         this.fixedSchemes = this.schemes.filter(
@@ -406,12 +456,58 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   private loadBundles(): void {
-    this.bundlesService.getQuestionnairesBundles({ departmentIds: [] } as any).subscribe(
+    this.bundlesService.getQuestionnairesBundles({ departmentIds: this.contextDepartmentIds() } as any).subscribe(
       ({ data }: any) => {
         this.questionnaireBundles = data.getQuestionnaireBundles.edges.map((edge: any) => edge.node);
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaire bundles' })
     );
+  }
+
+  private loadRandomizations(): void {
+    this.randomizationsService
+      .getRandomizations({
+        paging: { first: 50 },
+        departmentIds: this.contextDepartmentIds(),
+        filter: {},
+      })
+      .subscribe(
+        ({ edges }) => {
+          const randomizations = edges.map((edge: any) => edge.node).filter((rule: RandomizationRule) => rule.active);
+          this.lowLevelRandomizations = randomizations.filter(
+            (randomization: RandomizationRule) => randomization.type === RandomizationRuleType.LOW_LEVEL
+          );
+          this.highLevelRandomizations = randomizations.filter(
+            (randomization: RandomizationRule) => randomization.type === RandomizationRuleType.HIGH_LEVEL
+          );
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load randomizations' })
+      );
+  }
+
+  contextDepartmentIds(): number[] {
+    return (this.user?.departments || []).map((department: any) => department.id);
+  }
+
+  private matchesDepartments(itemDepartmentIds: number[] = []): boolean {
+    const departmentIds = this.contextDepartmentIds();
+    if (!departmentIds.length || !itemDepartmentIds?.length) return true;
+    return itemDepartmentIds.some((departmentId) => departmentIds.includes(Number(departmentId)));
+  }
+
+  private simpleAssessmentContentPayload(): {
+    questionnaires: string[];
+    questionnaireBundles: string[];
+    randomizationRuleIds: number[];
+  } {
+    return {
+      questionnaires:
+        this.simpleContentType === AssessmentContentType.QUESTIONNAIRE ? this.simpleQuestionnaireIds : [],
+      questionnaireBundles:
+        this.simpleContentType === AssessmentContentType.QUESTIONNAIRE_BUNDLE ? this.simpleQuestionnaireBundleIds : [],
+      randomizationRuleIds:
+        this.simpleContentType === AssessmentContentType.RANDOMIZATION ? this.simpleRandomizationRuleIds : [],
+    };
   }
 
   private createQuestionnaireSearchFilter(searchString: string): any[] {

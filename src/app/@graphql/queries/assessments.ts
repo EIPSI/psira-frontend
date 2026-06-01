@@ -144,6 +144,7 @@ const assessments = gql`
           }
           questionnaireAssessment {
             status
+            randomizationRuleIds
             questionnaireBundles{
               _id
               name
@@ -351,6 +352,7 @@ const getFullAssessment = gql`
         }
         _id
         status
+        randomizationRuleIds
         answers {
           question
           occurrenceId

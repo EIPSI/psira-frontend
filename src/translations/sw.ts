@@ -72,7 +72,19 @@ export default {
     noTabs: 'Hakuna kurasa',
     disclaimers: 'Kanusho',
     emailTemplates: 'Email Templates - REPLACE',
-    version: 'Version - REPLACE'
+    version: 'Version - REPLACE',
+    randomizations: 'Randomization'
+  },
+  randomizations: {
+    name: 'Name',
+    type: 'Randomization type',
+    department: 'Department',
+    itemCount: 'Number of elements',
+    status: 'Status',
+    createdAt: 'Created at',
+    updatedAt: 'Last update',
+    create: 'Create Randomization',
+    edit: 'Edit Randomization',
   },
   patients: {
     myPatients: 'Wagonjwa Wangu',
@@ -286,6 +298,7 @@ export default {
     formattedStatus: 'Hali',
     language: 'Lugha',
     abbreviation: 'Ufupisho',
+    departments: 'Idara',
     keywords: 'Maneno Muhimu',
     timeToComplete: 'Muda Wa Kukamilisha',
     copyright: 'Hakimiliki',

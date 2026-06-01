@@ -30,6 +30,7 @@ const evaluationSchemeFields = `
       assessmentTypeId
       questionnaireIds
       questionnaireBundleIds
+      randomizationRuleIds
       sessionSelector
       everyNSessions
       startSessionNumber
@@ -47,6 +48,7 @@ const evaluationSchemeFields = `
     assessmentTypeId
     questionnaireIds
     questionnaireBundleIds
+    randomizationRuleIds
     relativeDay
     relativeMinuteOfDay
     startMinuteOfDay
@@ -64,8 +66,8 @@ const evaluationSchemeFields = `
 `;
 
 const evaluationSchemes = gql`
-  query($paging: CursorPaging, $filter: EvaluationSchemeFilter, $sorting: [EvaluationSchemeSort!]) {
-    evaluationSchemes(paging: $paging, filter: $filter, sorting: $sorting) {
+  query($paging: CursorPaging, $filter: EvaluationSchemeFilter, $sorting: [EvaluationSchemeSort!], $departmentIds: [Int!]) {
+    evaluationSchemes(paging: $paging, filter: $filter, sorting: $sorting, departmentIds: $departmentIds) {
       edges {
         cursor
         node {

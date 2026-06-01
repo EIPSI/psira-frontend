@@ -15,6 +15,7 @@ const createQuestionnaire = gql`
       timeToComplete
       language
       abbreviation
+      departmentIds
     }
   }
 `;
@@ -34,6 +35,7 @@ const updateQuestionnaire = gql`
       timeToComplete
       language
       abbreviation
+      departmentIds
     }
   }
 `;

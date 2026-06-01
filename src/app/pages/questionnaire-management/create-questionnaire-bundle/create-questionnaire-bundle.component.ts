@@ -143,7 +143,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
             Convert.toDepartment(department.node)
           );
           const allDepartments = [...accumulatedDepartments, ...departments];
-          this.listOfDepartments = allDepartments;
+          this.listOfDepartments = this.filterAllowedDepartments(allDepartments);
 
           if (data.departments.pageInfo?.hasNextPage) {
             this.loadDepartmentsPage(data.departments.pageInfo.endCursor, allDepartments);
@@ -165,6 +165,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
     if (checked) {
       if (!this.departmentIsSelected(departmentId)) {
         this.selectedDepartments = [...this.selectedDepartments, departmentId];
+        this.getQuestionnaires();
       }
       return;
     }
@@ -172,29 +173,67 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
     this.selectedDepartments = this.selectedDepartments.filter(
       (selectedDepartmentId) => Number(selectedDepartmentId) !== Number(departmentId)
     );
+    this.getQuestionnaires();
   }
 
   selectAllDepartments(): void {
     this.selectedDepartments = this.listOfDepartments.map((department: any) => department.id);
+    this.getQuestionnaires();
   }
 
   removeAllDepartments(): void {
     this.selectedDepartments = [];
+    this.getQuestionnaires();
   }
 
   getQuestionnaires(): void {
-    this.questionnaireService.getQuestionnaires({ paging: { first: 200 } }).subscribe(
+    this.questionnaireService.getQuestionnaires({
+      paging: { first: 50 },
+      departmentIds: this.selectedDepartments,
+    }).subscribe(
       (data) => {
         this.questionnaires = data.edges
           .map((edge: any) => edge.node)
           .filter((questionnaire: any) =>
             questionnaire.status !== 'ARCHIVED' &&
             questionnaire.status !== 'DRAFT' &&
-            questionnaire.zombie !== true
+            questionnaire.zombie !== true &&
+            this.matchesDepartments(questionnaire.departmentIds)
           );
+        this.clearIncompatibleQuestionnaireNodes();
       },
       (err) => this.errorService.handleError(err, { prefix: 'Unable to load questionnaires' })
     );
+  }
+
+  private matchesDepartments(itemDepartmentIds: number[] = []): boolean {
+    if (!this.selectedDepartments?.length || !itemDepartmentIds?.length) return true;
+    return this.selectedDepartments.every((departmentId) =>
+      itemDepartmentIds.map(Number).includes(Number(departmentId))
+    );
+  }
+
+  private clearIncompatibleQuestionnaireNodes(nodes: BundleNode[] = this.rootChildren): void {
+    const availableIds = this.questionnaires.map((questionnaire) => questionnaire._id);
+    nodes.forEach((node) => {
+      if (node.type === 'QUESTIONNAIRE' && node.questionnaireId && !availableIds.includes(node.questionnaireId)) {
+        node.questionnaireId = null;
+      }
+      this.clearIncompatibleQuestionnaireNodes(node.children || []);
+    });
+  }
+
+  private filterAllowedDepartments(departments: any[]): any[] {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const canSeeAll = user?.isSuperUser ||
+      user?.roles?.some((role: any) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
+      user?.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name)) ||
+      user?.roles?.some((role: any) =>
+        role.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name))
+      );
+    if (canSeeAll) return departments;
+    const allowedIds = (user?.departments || []).map((department: any) => Number(department.id));
+    return departments.filter((department: any) => allowedIds.includes(Number(department.id)));
   }
 
   get rootNode(): BundleNode {

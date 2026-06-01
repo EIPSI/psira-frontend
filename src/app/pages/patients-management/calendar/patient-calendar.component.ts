@@ -32,12 +32,27 @@ import { SelectedCaregiver } from '../@types/caregiver';
 import { FormattedPatient } from '../@types/formatted-patient';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
+import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 
 enum CalendarCreateType {
   SESSION = 'SESSION',
   FIXED_SCHEME = 'FIXED_SCHEME',
   SIMPLE_ASSESSMENT = 'SIMPLE_ASSESSMENT',
 }
+
+enum AssessmentContentType {
+  QUESTIONNAIRE = 'QUESTIONNAIRE',
+  QUESTIONNAIRE_BUNDLE = 'QUESTIONNAIRE_BUNDLE',
+  RANDOMIZATION = 'RANDOMIZATION',
+}
+
+enum FixedSchemeSelectionType {
+  SCHEME = 'SCHEME',
+  RANDOMIZATION = 'RANDOMIZATION',
+}
+
+type FixedSchemeApplySelection = { schemeId: number } | { randomizationRuleId: number };
 
 @Component({
   selector: 'app-patient-calendar',
@@ -46,6 +61,8 @@ enum CalendarCreateType {
 })
 export class PatientCalendarComponent implements OnChanges {
   CT = CalendarCreateType;
+  ACT = AssessmentContentType;
+  FST = FixedSchemeSelectionType;
   @Input() patient: FormattedPatient;
 
   selectedDate = new Date();
@@ -74,6 +91,8 @@ export class PatientCalendarComponent implements OnChanges {
   createTherapist?: User;
   createSessionSchemeIds: number[] = [];
   createFixedSchemeIds: number[] = [];
+  createFixedRandomizationRuleIds: number[] = [];
+  fixedSchemeSelectionType = FixedSchemeSelectionType.SCHEME;
   repeatSession = false;
   repeatEvery = 1;
   repeatUnit = RepeatUnit.WEEK;
@@ -84,8 +103,10 @@ export class PatientCalendarComponent implements OnChanges {
   repeatUnits = this.recurrenceService.repeatUnits;
   weekDayOptions = this.recurrenceService.weekDayOptions;
   simpleAssessmentTypeId?: number;
+  simpleContentType = AssessmentContentType.QUESTIONNAIRE;
   simpleQuestionnaireIds: string[] = [];
   simpleQuestionnaireBundleIds: string[] = [];
+  simpleRandomizationRuleIds: number[] = [];
   simpleAvailabilityMinutes = 60;
   simpleResponderUserId?: number;
   simpleResponderKind: 'PATIENT' | 'CAREGIVER' = 'PATIENT';
@@ -94,6 +115,8 @@ export class PatientCalendarComponent implements OnChanges {
   caregivers: SelectedCaregiver[] = [];
   foundQuestionnaires: QuestionnaireVersion[] = [];
   questionnaireBundles: any[] = [];
+  lowLevelRandomizations: RandomizationRule[] = [];
+  highLevelRandomizations: RandomizationRule[] = [];
   private currentUser: User;
   private draggedEvent?: CalendarEvent;
 
@@ -107,6 +130,7 @@ export class PatientCalendarComponent implements OnChanges {
     private errorService: ErrorHandlerService,
     private eventUiService: CalendarEventUiService,
     private modalService: NzModalService,
+    private randomizationsService: RandomizationsService,
     private recurrenceService: CalendarRecurrenceService
   ) {}
 
@@ -117,6 +141,7 @@ export class PatientCalendarComponent implements OnChanges {
       this.loadSchemes();
       this.loadAssessmentTypes();
       this.loadBundles();
+      this.loadRandomizations();
       this.loadCaregivers();
     }
   }
@@ -138,6 +163,8 @@ export class PatientCalendarComponent implements OnChanges {
     this.createTherapist = this.therapist;
     this.createSessionSchemeIds = [];
     this.createFixedSchemeIds = [];
+    this.createFixedRandomizationRuleIds = [];
+    this.fixedSchemeSelectionType = FixedSchemeSelectionType.SCHEME;
     this.repeatSession = false;
     this.repeatEvery = 1;
     this.repeatUnit = RepeatUnit.WEEK;
@@ -146,8 +173,10 @@ export class PatientCalendarComponent implements OnChanges {
     this.repeatEndDate = undefined;
     this.repeatCount = 12;
     this.simpleAssessmentTypeId = undefined;
+    this.simpleContentType = AssessmentContentType.QUESTIONNAIRE;
     this.simpleQuestionnaireIds = [];
     this.simpleQuestionnaireBundleIds = [];
+    this.simpleRandomizationRuleIds = [];
     this.simpleAvailabilityMinutes = 60;
     this.simpleResponderKind = 'PATIENT';
     this.simpleResponderUserId = this.patient?.userId;
@@ -169,14 +198,15 @@ export class PatientCalendarComponent implements OnChanges {
 
   searchQuestionnaires(search: string): void {
     const filter = search ? { or: this.createQuestionnaireSearchFilter(search) } : undefined;
-    this.questionnaireService.getQuestionnaires({ filter }).subscribe(
+    this.questionnaireService.getQuestionnaires({ filter, departmentIds: this.contextDepartmentIds() }).subscribe(
       ({ edges }) => {
         this.foundQuestionnaires = edges
           .map((edge: any) => edge.node)
           .filter(
             (questionnaire: QuestionnaireVersion) =>
               questionnaire.zombie === false &&
-              [QuestionnaireStatus.PRIVATE, QuestionnaireStatus.PUBLISHED].includes(questionnaire.status)
+              [QuestionnaireStatus.PRIVATE, QuestionnaireStatus.PUBLISHED].includes(questionnaire.status) &&
+              this.matchesDepartments(questionnaire.departmentIds)
           );
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaires' })
@@ -202,6 +232,19 @@ export class PatientCalendarComponent implements OnChanges {
     this.selectedCaregiverRelation = caregiver?.relation;
   }
 
+  onSimpleContentTypeChange(type: AssessmentContentType): void {
+    this.simpleContentType = type;
+    if (type !== AssessmentContentType.QUESTIONNAIRE) this.simpleQuestionnaireIds = [];
+    if (type !== AssessmentContentType.QUESTIONNAIRE_BUNDLE) this.simpleQuestionnaireBundleIds = [];
+    if (type !== AssessmentContentType.RANDOMIZATION) this.simpleRandomizationRuleIds = [];
+  }
+
+  onFixedSchemeSelectionTypeChange(type: FixedSchemeSelectionType): void {
+    this.fixedSchemeSelectionType = type;
+    if (type !== FixedSchemeSelectionType.SCHEME) this.createFixedSchemeIds = [];
+    if (type !== FixedSchemeSelectionType.RANDOMIZATION) this.createFixedRandomizationRuleIds = [];
+  }
+
   private saveSession(): void {
     if (!this.patient?.id || !this.createTitle || !this.createStartAt || !this.createEndAt) return;
     const sessions = this.buildSessionCreateInputs();
@@ -220,12 +263,19 @@ export class PatientCalendarComponent implements OnChanges {
   }
 
   private applyFixedScheme(): void {
-    if (!this.patient?.id || !this.createFixedSchemeIds.length) return;
+    if (
+      !this.patient?.id ||
+      (this.fixedSchemeSelectionType === FixedSchemeSelectionType.SCHEME && !this.createFixedSchemeIds.length) ||
+      (this.fixedSchemeSelectionType === FixedSchemeSelectionType.RANDOMIZATION && !this.createFixedRandomizationRuleIds.length)
+    ) return;
     const patient = this.patient;
+    const selectedItems: FixedSchemeApplySelection[] = this.fixedSchemeSelectionType === FixedSchemeSelectionType.SCHEME
+      ? this.createFixedSchemeIds.map((schemeId) => ({ schemeId }))
+      : this.createFixedRandomizationRuleIds.map((randomizationRuleId) => ({ randomizationRuleId }));
     this.creating = true;
-    forkJoin(this.createFixedSchemeIds.map((schemeId) =>
+    forkJoin(selectedItems.map((schemeSelection) =>
       this.schemesService.applyScheme({
-        schemeId,
+        ...schemeSelection,
         patientId: patient.id,
         targetUserId: patient.userId,
         therapistId: this.createTherapist?.id || this.therapist?.id,
@@ -277,6 +327,7 @@ export class PatientCalendarComponent implements OnChanges {
   private saveSimpleAssessment(): void {
     if (!this.patient?.id || !this.simpleAssessmentTypeId || !this.currentUser?.id || !this.simpleResponderUserId) return;
     const expirationDate = new Date(this.createStartAt.getTime() + this.simpleAvailabilityMinutes * 60000);
+    const content = this.simpleAssessmentContentPayload();
     this.creating = true;
     this.calendarService
       .createAssessmentOccurrence({
@@ -287,8 +338,7 @@ export class PatientCalendarComponent implements OnChanges {
         clinicianId: this.currentUser.id,
         informantType: this.simpleResponderKind,
         informantCaregiverRelation: this.simpleResponderKind === 'CAREGIVER' ? this.selectedCaregiverRelation : null,
-        questionnaires: this.simpleQuestionnaireIds,
-        questionnaireBundles: this.simpleQuestionnaireBundleIds,
+        ...content,
         dates: [
           {
             deliveryDate: this.createStartAt,
@@ -459,7 +509,7 @@ export class PatientCalendarComponent implements OnChanges {
   }
 
   private loadSchemes(): void {
-    this.schemesService.getSchemes().subscribe(
+    this.schemesService.getSchemes({ departmentIds: this.contextDepartmentIds() }).subscribe(
       ({ edges }) => {
         this.schemes = edges.map((edge: any) => edge.node).filter((scheme: EvaluationScheme) => scheme.active);
         this.fixedSchemes = this.schemes.filter(
@@ -481,12 +531,58 @@ export class PatientCalendarComponent implements OnChanges {
   }
 
   private loadBundles(): void {
-    this.bundlesService.getQuestionnairesBundles({ departmentIds: [] } as any).subscribe(
+    this.bundlesService.getQuestionnairesBundles({ departmentIds: this.contextDepartmentIds() } as any).subscribe(
       ({ data }: any) => {
         this.questionnaireBundles = data.getQuestionnaireBundles.edges.map((edge: any) => edge.node);
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaire bundles' })
     );
+  }
+
+  private loadRandomizations(): void {
+    this.randomizationsService
+      .getRandomizations({
+        paging: { first: 50 },
+        departmentIds: this.contextDepartmentIds(),
+        filter: {},
+      })
+      .subscribe(
+        ({ edges }) => {
+          const randomizations = edges.map((edge: any) => edge.node).filter((rule: RandomizationRule) => rule.active);
+          this.lowLevelRandomizations = randomizations.filter(
+            (randomization: RandomizationRule) => randomization.type === RandomizationRuleType.LOW_LEVEL
+          );
+          this.highLevelRandomizations = randomizations.filter(
+            (randomization: RandomizationRule) => randomization.type === RandomizationRuleType.HIGH_LEVEL
+          );
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load randomizations' })
+      );
+  }
+
+  contextDepartmentIds(): number[] {
+    return (this.patient?.departments || []).map((department: any) => department.id);
+  }
+
+  private matchesDepartments(itemDepartmentIds: number[] = []): boolean {
+    const departmentIds = this.contextDepartmentIds();
+    if (!departmentIds.length || !itemDepartmentIds?.length) return true;
+    return itemDepartmentIds.some((departmentId) => departmentIds.includes(Number(departmentId)));
+  }
+
+  private simpleAssessmentContentPayload(): {
+    questionnaires: string[];
+    questionnaireBundles: string[];
+    randomizationRuleIds: number[];
+  } {
+    return {
+      questionnaires:
+        this.simpleContentType === AssessmentContentType.QUESTIONNAIRE ? this.simpleQuestionnaireIds : [],
+      questionnaireBundles:
+        this.simpleContentType === AssessmentContentType.QUESTIONNAIRE_BUNDLE ? this.simpleQuestionnaireBundleIds : [],
+      randomizationRuleIds:
+        this.simpleContentType === AssessmentContentType.RANDOMIZATION ? this.simpleRandomizationRuleIds : [],
+    };
   }
 
   private loadCaregivers(): void {

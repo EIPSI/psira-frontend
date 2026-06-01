@@ -246,21 +246,58 @@
     </form>
   </section>
   <section nz-col nzSpan="14" class="questionnaires">
-    <h4>{{ 'questionnaireSelection.selectQuestionnaires' | translate }}</h4>
+    <h4>Contenido de evaluación</h4>
+    <nz-select
+      style="width: 100%; margin-bottom: 12px;"
+      [nzDisabled]="!editMode"
+      [(ngModel)]="assessmentContentType"
+      (ngModelChange)="onAssessmentContentTypeChange($event)"
+    >
+      <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
+      <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de cuestionarios"></nz-option>
+      <nz-option [nzValue]="ACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+    </nz-select>
     <app-questionnaire-selection
+      *ngIf="assessmentContentType === ACT.QUESTIONNAIRE"
       [readonly]="!editMode"
+      [singleSelection]="true"
+      [departmentIds]="targetDepartmentIds()"
+      [disabledMessage]="hasContentTarget() ? '' : contentTargetMessage"
       [selectedQuestionnaires]="selectedQuestionnaires"
       (selectionChange)="onQuestionnaireSelected($event)"
     ></app-questionnaire-selection>
-    <!--  -->
-    <hr>
-    <h4>Select Bundles</h4>
-    <nz-select style="width: 100%;" nzMode="multiple" nzPlaceHolder="Select your bundle..." [(ngModel)]="listOfSelectedBundles" (ngModelChange)="onBundleSelection()">
+    <nz-alert
+      *ngIf="assessmentContentType !== ACT.QUESTIONNAIRE && !hasContentTarget()"
+      nzType="info"
+      nzShowIcon
+      [nzMessage]="contentTargetMessage"
+      style="margin-bottom: 12px;"
+    ></nz-alert>
+    <nz-select
+      *ngIf="assessmentContentType === ACT.QUESTIONNAIRE_BUNDLE && hasContentTarget()"
+      style="width: 100%;"
+      nzPlaceHolder="Select your bundle..."
+      nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados."
+      [nzDisabled]="!editMode"
+      [ngModel]="listOfSelectedBundles && listOfSelectedBundles[0]"
+      (ngModelChange)="onBundleSelection($event)"
+    >
       <nz-option *ngFor="let option of listOfBundles" [nzLabel]="option?.node?.name" [nzValue]="option?.node?._id"></nz-option>
+    </nz-select>
+    <nz-select
+      *ngIf="assessmentContentType === ACT.RANDOMIZATION && hasContentTarget()"
+      style="width: 100%;"
+      nzShowSearch
+      nzPlaceHolder="Seleccionar randomización..."
+      nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados."
+      [nzDisabled]="!editMode"
+      [ngModel]="listOfSelectedRandomizations && listOfSelectedRandomizations[0]"
+      (ngModelChange)="onRandomizationSelection($event)"
+    >
+      <nz-option *ngFor="let randomization of listOfRandomizations" [nzLabel]="randomization.name" [nzValue]="randomization.id"></nz-option>
     </nz-select>
     <br />
     <br />
-    <!--  -->
   </section>
 </article>
 <hr>

@@ -54,6 +54,13 @@ const routes: Routes = [
     loadChildren: () => import('./evaluation-schemes/evaluation-schemes.module').then((m) => m.EvaluationSchemesModule),
   },
   {
+    path: 'randomizations',
+    data: {
+      breadcrumbI18nKey: 'menu.randomizations',
+    },
+    loadChildren: () => import('./randomizations/randomizations.module').then((m) => m.RandomizationsModule),
+  },
+  {
     path: 'user-management',
     data: {},
     loadChildren: () => import('./user-management/user-management.module').then((m) => m.UserManagementModule),

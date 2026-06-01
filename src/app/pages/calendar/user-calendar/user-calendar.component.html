@@ -70,9 +70,24 @@
     ></app-recurrence-form>
 
     <label *ngIf="createType === CT.FIXED_SCHEME">
+      <span>Tipo de selección</span>
+      <nz-select [(ngModel)]="fixedSchemeSelectionType" (ngModelChange)="onFixedSchemeSelectionTypeChange($event)">
+        <nz-option [nzValue]="FST.SCHEME" nzLabel="Esquema fijo"></nz-option>
+        <nz-option [nzValue]="FST.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.FIXED_SCHEME && fixedSchemeSelectionType === FST.SCHEME">
       <span>Esquema fijo</span>
-      <nz-select [(ngModel)]="createFixedSchemeIds" nzMode="multiple">
+      <nz-select [(ngModel)]="createFixedSchemeIds" nzMode="multiple" nzShowSearch>
         <nz-option *ngFor="let scheme of fixedSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.FIXED_SCHEME && fixedSchemeSelectionType === FST.RANDOMIZATION">
+      <span>Randomización</span>
+      <nz-select [(ngModel)]="createFixedRandomizationRuleIds" nzMode="multiple" nzShowSearch>
+        <nz-option *ngFor="let randomization of highLevelRandomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
       </nz-select>
     </label>
 
@@ -84,13 +99,23 @@
     </label>
 
     <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <span>Contenido</span>
+      <nz-select [(ngModel)]="simpleContentType" (ngModelChange)="onSimpleContentTypeChange($event)">
+        <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
+        <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de cuestionarios"></nz-option>
+        <nz-option [nzValue]="ACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT && simpleContentType === ACT.QUESTIONNAIRE">
       <span>Cuestionarios</span>
       <nz-select
-        [(ngModel)]="simpleQuestionnaireIds"
-        nzMode="multiple"
+        [ngModel]="simpleQuestionnaireIds && simpleQuestionnaireIds[0]"
+        (ngModelChange)="simpleQuestionnaireIds = $event ? [$event] : []"
         nzShowSearch
         nzServerSearch
         nzAllowClear
+        nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados."
         (nzOnSearch)="searchQuestionnaires($event)"
       >
         <nz-option
@@ -101,10 +126,17 @@
       </nz-select>
     </label>
 
-    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT && simpleContentType === ACT.QUESTIONNAIRE_BUNDLE">
       <span>Paquetes</span>
-      <nz-select [(ngModel)]="simpleQuestionnaireBundleIds" nzMode="multiple" nzShowSearch nzAllowClear>
+      <nz-select [ngModel]="simpleQuestionnaireBundleIds && simpleQuestionnaireBundleIds[0]" (ngModelChange)="simpleQuestionnaireBundleIds = $event ? [$event] : []" nzShowSearch nzAllowClear nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados.">
         <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT && simpleContentType === ACT.RANDOMIZATION">
+      <span>Randomización</span>
+      <nz-select [ngModel]="simpleRandomizationRuleIds && simpleRandomizationRuleIds[0]" (ngModelChange)="simpleRandomizationRuleIds = $event ? [$event] : []" nzShowSearch nzAllowClear nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados.">
+        <nz-option *ngFor="let randomization of lowLevelRandomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
       </nz-select>
     </label>
 

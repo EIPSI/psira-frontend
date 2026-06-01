@@ -32,7 +32,7 @@
             <nz-form-item>
                 <nz-form-label [nzSpan]="6">All Departments</nz-form-label>
                 <nz-form-control [nzSpan]="14">
-                    <nz-radio-group [(ngModel)]="allDepartments" ngModel="ACTIVE" formControlName="isPublic">
+                    <nz-radio-group (ngModelChange)="onPublicChange($event)" formControlName="isPublic">
                         <label nz-radio [nzValue]="true">Yes</label>
                         <label nz-radio [nzValue]="false">No</label>
                     </nz-radio-group>
@@ -41,9 +41,20 @@
             <nz-form-item *ngIf="!allDepartments">
                 <nz-form-label [nzSpan]="6">Departments</nz-form-label>
                 <nz-form-control [nzSpan]="14">
-                    <nz-checkbox-wrapper style="width: 100%; margin-top: 5px;" (nzOnChange)="selectDepartments($event)">
-                        <label style="align-items: center;" [ngModel]="templateHasDepartment(option.id)" [ngModelOptions]="{standalone: true}" *ngFor="let option of listOfDepartments" [nzValue]="option.id" nz-checkbox>{{option.name}}</label>
-                    </nz-checkbox-wrapper><br><br>
+                    <nz-select
+                        formControlName="departmentIds"
+                        nzMode="multiple"
+                        nzShowSearch
+                        nzAllowClear
+                        nzPlaceHolder="Departments"
+                        (ngModelChange)="selectDepartments($event)"
+                    >
+                        <nz-option *ngFor="let option of listOfDepartments" [nzValue]="option.id" [nzLabel]="option.name"></nz-option>
+                    </nz-select>
+                    <div class="department-actions">
+                        <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">Select all departments</button>
+                        <button nz-button nzSize="small" type="button" (click)="removeDepartments()">Remove departments</button>
+                    </div>
                 </nz-form-control>
             </nz-form-item>
             <nz-form-item>

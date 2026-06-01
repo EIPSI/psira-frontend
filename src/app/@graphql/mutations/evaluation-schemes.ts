@@ -28,6 +28,7 @@ const schemeFields = `
       assessmentTypeId
       questionnaireIds
       questionnaireBundleIds
+      randomizationRuleIds
       sessionSelector
       everyNSessions
       startSessionNumber
@@ -45,6 +46,7 @@ const schemeFields = `
     assessmentTypeId
     questionnaireIds
     questionnaireBundleIds
+    randomizationRuleIds
     relativeDay
     relativeMinuteOfDay
     startMinuteOfDay
@@ -88,6 +90,7 @@ const applyEvaluationScheme = gql`
     applyEvaluationScheme(assignment: $assignment) {
       id
       schemeId
+      randomizationRuleId
       patientId
       targetUserId
       therapistId
@@ -129,6 +132,7 @@ const addSchemeSessionTemplate = gql`
         assessmentTypeId
         questionnaireIds
         questionnaireBundleIds
+        randomizationRuleIds
         sessionSelector
         everyNSessions
         startSessionNumber
@@ -152,6 +156,7 @@ const addSchemeResourceTemplate = gql`
       assessmentTypeId
       questionnaireIds
       questionnaireBundleIds
+      randomizationRuleIds
       sessionSelector
       everyNSessions
       startSessionNumber
@@ -175,6 +180,7 @@ const updateSchemeResourceTemplate = gql`
       assessmentTypeId
       questionnaireIds
       questionnaireBundleIds
+      randomizationRuleIds
       sessionSelector
       everyNSessions
       startSessionNumber
@@ -202,6 +208,7 @@ const addIndependentEvaluationTemplate = gql`
       assessmentTypeId
       questionnaireIds
       questionnaireBundleIds
+      randomizationRuleIds
       relativeDay
       relativeMinuteOfDay
       startMinuteOfDay
@@ -226,6 +233,7 @@ const updateIndependentEvaluationTemplate = gql`
       assessmentTypeId
       questionnaireIds
       questionnaireBundleIds
+      randomizationRuleIds
       relativeDay
       relativeMinuteOfDay
       startMinuteOfDay

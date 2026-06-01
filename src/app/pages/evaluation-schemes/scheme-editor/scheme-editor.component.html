@@ -74,6 +74,10 @@
                 [nzLabel]="department.name"
               ></nz-option>
             </nz-select>
+            <div class="department-actions">
+              <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">Select all departments</button>
+              <button nz-button nzSize="small" type="button" (click)="removeDepartments()">Remove departments</button>
+            </div>
           </nz-form-control>
         </nz-form-item>
 
@@ -107,6 +111,17 @@
         </nz-form-item>
 
         <nz-form-item>
+          <nz-form-label>Contenido</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="contentType" (ngModelChange)="onContentTypeChange(sessionResourceForm, $event)">
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de cuestionarios"></nz-option>
+              <nz-option [nzValue]="ACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionResourceForm.get('contentType')?.value === ACT.QUESTIONNAIRE">
           <nz-form-label>{{ 'evaluationSchemes.questionnaires' | translate }}</nz-form-label>
           <nz-form-control>
             <nz-select
@@ -114,9 +129,7 @@
               nzShowSearch
               nzServerSearch
               nzAllowClear
-              [nzDisabled]="hasSelectedQuestionnaireBundle"
               (nzOnSearch)="searchQuestionnaires($event)"
-              (ngModelChange)="onQuestionnaireChange($event)"
             >
               <nz-option
                 *ngFor="let questionnaire of foundQuestionnaires"
@@ -127,21 +140,20 @@
           </nz-form-control>
         </nz-form-item>
 
-        <nz-form-item>
+        <nz-form-item *ngIf="sessionResourceForm.get('contentType')?.value === ACT.QUESTIONNAIRE_BUNDLE">
           <nz-form-label>Paquetes</nz-form-label>
           <nz-form-control>
-            <nz-select
-              formControlName="questionnaireBundleId"
-              nzShowSearch
-              nzAllowClear
-              [nzDisabled]="hasSelectedQuestionnaire"
-              (ngModelChange)="onQuestionnaireBundleChange($event)"
-            >
-              <nz-option
-                *ngFor="let bundle of questionnaireBundles"
-                [nzValue]="bundle._id"
-                [nzLabel]="bundle.name"
-              ></nz-option>
+            <nz-select formControlName="questionnaireBundleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionResourceForm.get('contentType')?.value === ACT.RANDOMIZATION">
+          <nz-form-label>Randomización</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="randomizationRuleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
@@ -372,6 +384,17 @@
         </nz-form-item>
 
         <nz-form-item>
+          <nz-form-label>Contenido</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="contentType" (ngModelChange)="onContentTypeChange(fixedSlotForm, $event)">
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de cuestionarios"></nz-option>
+              <nz-option [nzValue]="ACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="fixedSlotForm.get('contentType')?.value === ACT.QUESTIONNAIRE">
           <nz-form-label>Cuestionario</nz-form-label>
           <nz-form-control>
             <nz-select
@@ -379,9 +402,7 @@
               nzShowSearch
               nzServerSearch
               nzAllowClear
-              [nzDisabled]="hasSelectedFixedQuestionnaireBundle"
               (nzOnSearch)="searchQuestionnaires($event)"
-              (ngModelChange)="onFixedQuestionnaireChange($event)"
             >
               <nz-option
                 *ngFor="let questionnaire of foundQuestionnaires"
@@ -392,21 +413,20 @@
           </nz-form-control>
         </nz-form-item>
 
-        <nz-form-item>
+        <nz-form-item *ngIf="fixedSlotForm.get('contentType')?.value === ACT.QUESTIONNAIRE_BUNDLE">
           <nz-form-label>Paquete</nz-form-label>
           <nz-form-control>
-            <nz-select
-              formControlName="questionnaireBundleId"
-              nzShowSearch
-              nzAllowClear
-              [nzDisabled]="hasSelectedFixedQuestionnaire"
-              (ngModelChange)="onFixedQuestionnaireBundleChange($event)"
-            >
-              <nz-option
-                *ngFor="let bundle of questionnaireBundles"
-                [nzValue]="bundle._id"
-                [nzLabel]="bundle.name"
-              ></nz-option>
+            <nz-select formControlName="questionnaireBundleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="fixedSlotForm.get('contentType')?.value === ACT.RANDOMIZATION">
+          <nz-form-label>Randomización</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="randomizationRuleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
@@ -513,6 +533,17 @@
           </nz-form-item>
 
           <nz-form-item>
+            <nz-form-label>Contenido</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="contentType" (ngModelChange)="onContentTypeChange(repeatRuleForm, $event)">
+                <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
+                <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de cuestionarios"></nz-option>
+                <nz-option [nzValue]="ACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item *ngIf="repeatRuleForm.get('contentType')?.value === ACT.QUESTIONNAIRE">
             <nz-form-label>Cuestionario</nz-form-label>
             <nz-form-control>
               <nz-select
@@ -520,9 +551,7 @@
                 nzShowSearch
                 nzServerSearch
                 nzAllowClear
-                [nzDisabled]="hasSelectedRepeatQuestionnaireBundle"
                 (nzOnSearch)="searchQuestionnaires($event)"
-                (ngModelChange)="onRepeatQuestionnaireChange($event)"
               >
                 <nz-option
                   *ngFor="let questionnaire of foundQuestionnaires"
@@ -533,21 +562,20 @@
             </nz-form-control>
           </nz-form-item>
 
-          <nz-form-item>
+          <nz-form-item *ngIf="repeatRuleForm.get('contentType')?.value === ACT.QUESTIONNAIRE_BUNDLE">
             <nz-form-label>Paquete</nz-form-label>
             <nz-form-control>
-              <nz-select
-                formControlName="questionnaireBundleId"
-                nzShowSearch
-                nzAllowClear
-                [nzDisabled]="hasSelectedRepeatQuestionnaire"
-                (ngModelChange)="onRepeatQuestionnaireBundleChange($event)"
-              >
-                <nz-option
-                  *ngFor="let bundle of questionnaireBundles"
-                  [nzValue]="bundle._id"
-                  [nzLabel]="bundle.name"
-                ></nz-option>
+              <nz-select formControlName="questionnaireBundleId" nzShowSearch nzAllowClear>
+                <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item *ngIf="repeatRuleForm.get('contentType')?.value === ACT.RANDOMIZATION">
+            <nz-form-label>Randomización</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="randomizationRuleId" nzShowSearch nzAllowClear>
+                <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
               </nz-select>
             </nz-form-control>
           </nz-form-item>

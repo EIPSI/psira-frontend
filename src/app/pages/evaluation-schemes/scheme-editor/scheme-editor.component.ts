@@ -24,6 +24,8 @@ import {
   ResourceActivationAnchor,
 } from '../@types/evaluation-scheme';
 import { EvaluationSchemesService } from '../@services/evaluation-schemes.service';
+import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
+import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 
 enum SessionTargetMode {
   SPECIFIC = 'SPECIFIC',
@@ -39,6 +41,12 @@ enum FixedRepeatRuleMode {
   ADD_FROM_INTERACTION = 'ADD_FROM_INTERACTION',
   EXTEND_LAST_DAY = 'EXTEND_LAST_DAY',
   EXTEND_LAST_WEEK = 'EXTEND_LAST_WEEK',
+}
+
+enum AssessmentContentType {
+  QUESTIONNAIRE = 'QUESTIONNAIRE',
+  QUESTIONNAIRE_BUNDLE = 'QUESTIONNAIRE_BUNDLE',
+  RANDOMIZATION = 'RANDOMIZATION',
 }
 
 @Component({
@@ -77,6 +85,8 @@ export class SchemeEditorComponent implements OnInit {
   public assessmentTypes: any[] = [];
   public foundQuestionnaires: QuestionnaireVersion[] = [];
   public questionnaireBundles: any[] = [];
+  public randomizations: RandomizationRule[] = [];
+  public ACT = AssessmentContentType;
   public departments: Department[] = [];
   public emailTemplates: any[] = [];
   public responderRoleOptions = [
@@ -111,8 +121,10 @@ export class SchemeEditorComponent implements OnInit {
   public sessionResourceForm: FormGroup = this.fb.group({
     resourceKind: [ClinicalSessionResourceKind.PRE_ASSESSMENT, Validators.required],
     assessmentTypeId: [null, Validators.required],
+    contentType: [AssessmentContentType.QUESTIONNAIRE, Validators.required],
     questionnaireId: [null],
     questionnaireBundleId: [null],
+    randomizationRuleId: [null],
     sessionTargetMode: [SessionTargetMode.SPECIFIC, Validators.required],
     sessionSelector: ['1'],
     everyNSessions: [null],
@@ -126,8 +138,10 @@ export class SchemeEditorComponent implements OnInit {
 
   public fixedSlotForm: FormGroup = this.fb.group({
     assessmentTypeId: [null, Validators.required],
+    contentType: [AssessmentContentType.QUESTIONNAIRE, Validators.required],
     questionnaireId: [null],
     questionnaireBundleId: [null],
+    randomizationRuleId: [null],
     relativeDay: [0, Validators.required],
     relativeMinuteOfDay: [9 * 60, Validators.required],
     startTime: ['09:00', Validators.required],
@@ -147,8 +161,10 @@ export class SchemeEditorComponent implements OnInit {
   public repeatRuleForm: FormGroup = this.fb.group({
     mode: [FixedRepeatRuleMode.ADD_FROM_INTERACTION],
     assessmentTypeId: [null],
+    contentType: [AssessmentContentType.QUESTIONNAIRE],
     questionnaireId: [null],
     questionnaireBundleId: [null],
+    randomizationRuleId: [null],
     preset: ['FIVE_PER_DAY'],
     startingDay: [1],
     numberOfDays: [7],
@@ -177,30 +193,6 @@ export class SchemeEditorComponent implements OnInit {
     return this.sessionResourceForm.get('sessionTargetMode')?.value || SessionTargetMode.SPECIFIC;
   }
 
-  get hasSelectedQuestionnaire(): boolean {
-    return !!this.sessionResourceForm.get('questionnaireId')?.value;
-  }
-
-  get hasSelectedQuestionnaireBundle(): boolean {
-    return !!this.sessionResourceForm.get('questionnaireBundleId')?.value;
-  }
-
-  get hasSelectedFixedQuestionnaire(): boolean {
-    return !!this.fixedSlotForm.get('questionnaireId')?.value;
-  }
-
-  get hasSelectedFixedQuestionnaireBundle(): boolean {
-    return !!this.fixedSlotForm.get('questionnaireBundleId')?.value;
-  }
-
-  get hasSelectedRepeatQuestionnaire(): boolean {
-    return !!this.repeatRuleForm.get('questionnaireId')?.value;
-  }
-
-  get hasSelectedRepeatQuestionnaireBundle(): boolean {
-    return !!this.repeatRuleForm.get('questionnaireBundleId')?.value;
-  }
-
   get schemeDurationDays(): number {
     return Math.max(Number(this.baseForm.get('durationDays')?.value || this.scheme?.durationDays || 7), 7);
   }
@@ -223,6 +215,7 @@ export class SchemeEditorComponent implements OnInit {
     private departmentsService: DepartmentsService,
     private questionnaireService: QuestionnaireManagementService,
     private bundlesService: QuestionnaireBundlesService,
+    private randomizationsService: RandomizationsService,
     private errorService: ErrorHandlerService,
     private contextMenuService: NzContextMenuService,
     private modalService: NzModalService
@@ -230,8 +223,15 @@ export class SchemeEditorComponent implements OnInit {
 
   ngOnInit(): void {
     this.baseForm.get('schemeType').valueChanges.subscribe(() => this.onSchemeTypeChange());
+    this.baseForm.get('departmentIds').valueChanges.subscribe(() => {
+      this.loadBundles();
+      this.loadRandomizations();
+      this.loadEmailTemplates();
+      this.clearIncompatibleDraftSelections();
+    });
     this.loadAssessmentTypes();
     this.loadBundles();
+    this.loadRandomizations();
     this.loadDepartments();
     this.loadEmailTemplates();
     this.activatedRoute.paramMap.subscribe((params) => {
@@ -323,8 +323,10 @@ export class SchemeEditorComponent implements OnInit {
     this.sessionResourceForm.patchValue({
       resourceKind: resource.resourceKind,
       assessmentTypeId: resource.assessmentTypeId,
+      contentType: this.inferContentType(resource),
       questionnaireId: resource.questionnaireIds?.[0] || null,
       questionnaireBundleId: resource.questionnaireBundleIds?.[0] || null,
+      randomizationRuleId: resource.randomizationRuleIds?.[0] || null,
       sessionTargetMode: resource.sessionSelector ? SessionTargetMode.SPECIFIC : SessionTargetMode.FREQUENCY,
       sessionSelector: resource.sessionSelector || '',
       everyNSessions: resource.everyNSessions || null,
@@ -375,28 +377,15 @@ export class SchemeEditorComponent implements OnInit {
     });
   }
 
-  public onQuestionnaireChange(questionnaireId: string): void {
-    if (questionnaireId) this.sessionResourceForm.patchValue({ questionnaireBundleId: null });
-  }
-
-  public onQuestionnaireBundleChange(bundleId: string): void {
-    if (bundleId) this.sessionResourceForm.patchValue({ questionnaireId: null });
-  }
-
-  public onFixedQuestionnaireChange(questionnaireId: string): void {
-    if (questionnaireId) this.fixedSlotForm.patchValue({ questionnaireBundleId: null });
-  }
-
-  public onFixedQuestionnaireBundleChange(bundleId: string): void {
-    if (bundleId) this.fixedSlotForm.patchValue({ questionnaireId: null });
-  }
-
-  public onRepeatQuestionnaireChange(questionnaireId: string): void {
-    if (questionnaireId) this.repeatRuleForm.patchValue({ questionnaireBundleId: null });
-  }
-
-  public onRepeatQuestionnaireBundleChange(bundleId: string): void {
-    if (bundleId) this.repeatRuleForm.patchValue({ questionnaireId: null });
+  public onContentTypeChange(form: FormGroup, type: AssessmentContentType): void {
+    form.patchValue({
+      contentType: type,
+      questionnaireId: type === AssessmentContentType.QUESTIONNAIRE ? form.get('questionnaireId')?.value : null,
+      questionnaireBundleId:
+        type === AssessmentContentType.QUESTIONNAIRE_BUNDLE ? form.get('questionnaireBundleId')?.value : null,
+      randomizationRuleId:
+        type === AssessmentContentType.RANDOMIZATION ? form.get('randomizationRuleId')?.value : null,
+    });
   }
 
   public onSessionTargetModeChange(mode: SessionTargetMode): void {
@@ -477,6 +466,7 @@ export class SchemeEditorComponent implements OnInit {
   public resourceContentLabel(resource: any): string {
     if (resource.questionnaireIds?.length) return `Cuestionario: ${resource.questionnaireIds[0]}`;
     if (resource.questionnaireBundleIds?.length) return `Paquete: ${resource.questionnaireBundleIds[0]}`;
+    if (resource.randomizationRuleIds?.length) return `Randomización: ${this.randomizationName(resource.randomizationRuleIds[0])}`;
     return '-';
   }
 
@@ -493,8 +483,10 @@ export class SchemeEditorComponent implements OnInit {
     const endMinute = slot?.endMinuteOfDay || (minute + (slot?.durationMinutes || 60));
     this.fixedSlotForm.reset({
       assessmentTypeId: slot?.assessmentTypeId || null,
+      contentType: this.inferContentType(slot),
       questionnaireId: slot?.questionnaireIds?.[0] || null,
       questionnaireBundleId: slot?.questionnaireBundleIds?.[0] || null,
+      randomizationRuleId: slot?.randomizationRuleIds?.[0] || null,
       relativeDay: slot?.relativeDay === undefined ? day : slot.relativeDay,
       relativeMinuteOfDay: this.fixedSlotStartMinute(slot, minute),
       startTime: this.minuteToTimeValue(this.fixedSlotStartMinute(slot, minute)),
@@ -580,6 +572,7 @@ export class SchemeEditorComponent implements OnInit {
   public fixedSlotContentLabel(slot: any): string {
     if (slot.questionnaireIds?.length) return `Cuestionario ${slot.questionnaireIds[0]}`;
     if (slot.questionnaireBundleIds?.length) return `Paquete ${slot.questionnaireBundleIds[0]}`;
+    if (slot.randomizationRuleIds?.length) return `Randomización ${this.randomizationName(slot.randomizationRuleIds[0])}`;
     return 'Evaluacion';
   }
 
@@ -706,8 +699,10 @@ export class SchemeEditorComponent implements OnInit {
     this.repeatRuleForm.reset({
       mode: FixedRepeatRuleMode.ADD_FROM_INTERACTION,
       assessmentTypeId: null,
+      contentType: AssessmentContentType.QUESTIONNAIRE,
       questionnaireId: null,
       questionnaireBundleId: null,
+      randomizationRuleId: null,
       preset: 'FIVE_PER_DAY',
       startingDay: 1,
       numberOfDays: 7,
@@ -772,14 +767,15 @@ export class SchemeEditorComponent implements OnInit {
 
   public searchQuestionnaires(search: string): void {
     const filter = search ? { or: this.createQuestionnaireSearchFilter(search) } : undefined;
-    this.questionnaireService.getQuestionnaires({ filter }).subscribe(
+    this.questionnaireService.getQuestionnaires({ filter, departmentIds: this.selectedDepartmentIds() }).subscribe(
       ({ edges }) => {
         this.foundQuestionnaires = edges
           .map((edge: any) => edge.node)
           .filter(
             (questionnaire: QuestionnaireVersion) =>
               questionnaire.zombie === false &&
-              [QuestionnaireStatus.PRIVATE, QuestionnaireStatus.PUBLISHED].includes(questionnaire.status)
+              [QuestionnaireStatus.PRIVATE, QuestionnaireStatus.PUBLISHED].includes(questionnaire.status) &&
+              this.matchesSelectedDepartments(questionnaire.departmentIds)
           );
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaires' })
@@ -860,6 +856,8 @@ export class SchemeEditorComponent implements OnInit {
       assessmentTypeId: null,
       questionnaireId: null,
       questionnaireBundleId: null,
+      randomizationRuleId: null,
+      contentType: AssessmentContentType.QUESTIONNAIRE,
       sessionTargetMode: SessionTargetMode.SPECIFIC,
       sessionSelector: '1',
       everyNSessions: null,
@@ -881,7 +879,7 @@ export class SchemeEditorComponent implements OnInit {
 
   private hasAssessmentContent(): boolean {
     const value = this.sessionResourceForm.value;
-    return !!value.questionnaireId || !!value.questionnaireBundleId;
+    return !!value.questionnaireId || !!value.questionnaireBundleId || !!value.randomizationRuleId;
   }
 
   private canSubmitSessionResource(): boolean {
@@ -924,6 +922,7 @@ export class SchemeEditorComponent implements OnInit {
       assessmentTypeId: value.assessmentTypeId,
       questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
       questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
+      randomizationRuleIds: value.randomizationRuleId ? [value.randomizationRuleId] : [],
       sessionSelector: isSpecific ? value.sessionSelector : null,
       everyNSessions: isSpecific ? null : Number(value.everyNSessions),
       startSessionNumber: isSpecific ? null : Number(value.startSessionNumber || 1),
@@ -969,6 +968,39 @@ export class SchemeEditorComponent implements OnInit {
       .split(',')
       .map((role) => role.trim())
       .filter((role) => !!role);
+  }
+
+  private loadRandomizations(): void {
+    this.randomizationsService
+      .getRandomizations({
+        paging: { first: 50 },
+        departmentIds: this.selectedDepartmentIds(),
+        filter: {
+          type: { eq: RandomizationRuleType.LOW_LEVEL },
+        },
+      })
+      .subscribe(
+        ({ edges }) => {
+          this.randomizations = edges
+            .map((edge: any) => edge.node)
+            .filter(
+              (rule: RandomizationRule) =>
+                rule.active &&
+                this.matchesSelectedDepartments((rule.departments || []).map((department: any) => department.id))
+            );
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load randomizations' })
+      );
+  }
+
+  private randomizationName(id: number): string {
+    return this.randomizations.find((randomization) => randomization.id === id)?.name || String(id);
+  }
+
+  private inferContentType(item: any): AssessmentContentType {
+    if (item?.randomizationRuleIds?.length) return AssessmentContentType.RANDOMIZATION;
+    if (item?.questionnaireBundleIds?.length) return AssessmentContentType.QUESTIONNAIRE_BUNDLE;
+    return AssessmentContentType.QUESTIONNAIRE;
   }
 
   private persistBaseScheme(): Promise<EvaluationScheme> {
@@ -1052,6 +1084,8 @@ export class SchemeEditorComponent implements OnInit {
       assessmentTypeId: null,
       questionnaireId: null,
       questionnaireBundleId: null,
+      randomizationRuleId: null,
+      contentType: AssessmentContentType.QUESTIONNAIRE,
       relativeDay: 0,
       relativeMinuteOfDay: 9 * 60,
       startTime: '09:00',
@@ -1212,6 +1246,7 @@ export class SchemeEditorComponent implements OnInit {
       assessmentTypeId: slot.assessmentTypeId,
       questionnaireIds: slot.questionnaireIds || [],
       questionnaireBundleIds: slot.questionnaireBundleIds || [],
+      randomizationRuleIds: slot.randomizationRuleIds || [],
       relativeDay: Number(slot.relativeDay || 0),
       relativeMinuteOfDay: this.fixedSlotStartMinute(slot),
       startMinuteOfDay: this.fixedSlotStartMinute(slot),
@@ -1230,7 +1265,7 @@ export class SchemeEditorComponent implements OnInit {
 
   private canApplyAddFromInteractionRule(): boolean {
     const value = this.repeatRuleForm.value;
-    if (!value.assessmentTypeId || (!value.questionnaireId && !value.questionnaireBundleId)) {
+    if (!value.assessmentTypeId || (!value.questionnaireId && !value.questionnaireBundleId && !value.randomizationRuleId)) {
       this.modalService.warning({
         nzTitle: 'Faltan datos para la regla',
         nzContent: 'Elegí el tipo de evaluación y un cuestionario o paquete.',
@@ -1253,6 +1288,7 @@ export class SchemeEditorComponent implements OnInit {
           assessmentTypeId: value.assessmentTypeId,
           questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
           questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
+          randomizationRuleIds: value.randomizationRuleId ? [value.randomizationRuleId] : [],
           relativeDay: day,
           relativeMinuteOfDay: minute,
           startMinuteOfDay: minute,
@@ -1347,7 +1383,7 @@ export class SchemeEditorComponent implements OnInit {
     }
 
     const value = this.fixedSlotForm.value;
-    if (!value.questionnaireId && !value.questionnaireBundleId) {
+    if (!value.questionnaireId && !value.questionnaireBundleId && !value.randomizationRuleId) {
       this.modalService.warning({
         nzTitle: 'Falta cuestionario o paquete',
         nzContent: 'Elegí un cuestionario o un paquete para esta interacción.',
@@ -1384,6 +1420,7 @@ export class SchemeEditorComponent implements OnInit {
       assessmentTypeId: value.assessmentTypeId,
       questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
       questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
+      randomizationRuleIds: value.randomizationRuleId ? [value.randomizationRuleId] : [],
       relativeDay: Number(value.relativeDay || 0),
       relativeMinuteOfDay: Number(value.relativeMinuteOfDay || 0),
       startMinuteOfDay: Number(value.relativeMinuteOfDay || 0),
@@ -1461,9 +1498,11 @@ export class SchemeEditorComponent implements OnInit {
   }
 
   private loadBundles(): void {
-    this.bundlesService.getQuestionnairesBundles({ departmentIds: [] } as any).subscribe(
+    this.bundlesService.getQuestionnairesBundles({ departmentIds: this.selectedDepartmentIds() } as any).subscribe(
       ({ data }: any) => {
-        this.questionnaireBundles = data.getQuestionnaireBundles.edges.map((edge: any) => edge.node);
+        this.questionnaireBundles = data.getQuestionnaireBundles.edges
+          .map((edge: any) => edge.node)
+          .filter((bundle: any) => this.matchesSelectedDepartments(bundle.departmentIds));
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaire bundles' })
     );
@@ -1472,10 +1511,61 @@ export class SchemeEditorComponent implements OnInit {
   private loadDepartments(): void {
     this.departmentsService.departments({ paging: { first: 50 }, filter: {}, sorting: [] }).subscribe(
       ({ data }: any) => {
-        this.departments = data.departments.edges.map((edge: any) => edge.node);
+        this.departments = this.filterAllowedDepartments(data.departments.edges.map((edge: any) => edge.node));
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
     );
+  }
+
+  selectAllDepartments(): void {
+    this.baseForm.patchValue({
+      departmentIds: this.departments.map((department: any) => department.id),
+    });
+  }
+
+  removeDepartments(): void {
+    this.baseForm.patchValue({ departmentIds: [] });
+  }
+
+  private selectedDepartmentIds(): number[] {
+    return this.baseForm.get('departmentIds')?.value || [];
+  }
+
+  private matchesSelectedDepartments(itemDepartmentIds: number[] = []): boolean {
+    const departmentIds = this.selectedDepartmentIds();
+    if (!departmentIds.length || !itemDepartmentIds?.length) return true;
+    const itemIds = itemDepartmentIds.map(Number);
+    return departmentIds.every((departmentId) => itemIds.includes(Number(departmentId)));
+  }
+
+  private clearIncompatibleDraftSelections(): void {
+    [this.sessionResourceForm, this.fixedSlotForm, this.repeatRuleForm].forEach((form) => {
+      const questionnaireId = form.get('questionnaireId')?.value;
+      if (questionnaireId && !this.foundQuestionnaires.some((questionnaire) => questionnaire._id === questionnaireId)) {
+        form.patchValue({ questionnaireId: null }, { emitEvent: false });
+      }
+      const bundleId = form.get('questionnaireBundleId')?.value;
+      if (bundleId && !this.questionnaireBundles.some((bundle: any) => bundle._id === bundleId)) {
+        form.patchValue({ questionnaireBundleId: null }, { emitEvent: false });
+      }
+      const randomizationId = form.get('randomizationRuleId')?.value;
+      if (randomizationId && !this.randomizations.some((randomization) => randomization.id === randomizationId)) {
+        form.patchValue({ randomizationRuleId: null }, { emitEvent: false });
+      }
+    });
+  }
+
+  private filterAllowedDepartments(departments: any[]): any[] {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const canSeeAll = user?.isSuperUser ||
+      user?.roles?.some((role: any) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
+      user?.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name)) ||
+      user?.roles?.some((role: any) =>
+        role.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name))
+      );
+    if (canSeeAll) return departments;
+    const allowedIds = (user?.departments || []).map((department: any) => Number(department.id));
+    return departments.filter((department: any) => allowedIds.includes(Number(department.id)));
   }
 
   private loadEmailTemplates(): void {
@@ -1485,10 +1575,15 @@ export class SchemeEditorComponent implements OnInit {
         status: { eq: 'ACTIVE' },
         module: { eq: 'ASSESSMENT' },
       } as any,
+      departmentIds: this.selectedDepartmentIds(),
       sorting: [],
     }).subscribe(
       ({ data }: any) => {
         this.emailTemplates = data.getAllEmailTemplates.edges.map((edge: any) => edge.node);
+        const selectedTemplateId = this.baseForm.get('mailTemplateId')?.value;
+        if (selectedTemplateId && !this.emailTemplates.some((template: any) => template.id === selectedTemplateId)) {
+          this.baseForm.patchValue({ mailTemplateId: null });
+        }
         if (this.baseForm.get('emailNotificationsEnabled')?.value && !this.baseForm.get('mailTemplateId')?.value) {
           this.baseForm.patchValue({ mailTemplateId: this.emailTemplates[0]?.id || null });
         }

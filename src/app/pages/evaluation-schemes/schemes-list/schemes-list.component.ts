@@ -22,6 +22,7 @@ import { EvaluationSchemesService } from '../@services/evaluation-schemes.servic
 
 enum ActionKey {
   EDIT,
+  DUPLICATE,
   TOGGLE_ACTIVE,
   DISCARD,
 }
@@ -89,6 +90,9 @@ export class SchemesListComponent implements OnInit {
       case ActionKey.EDIT:
         this.openScheme(scheme);
         return;
+      case ActionKey.DUPLICATE:
+        this.duplicateScheme(scheme);
+        return;
       case ActionKey.TOGGLE_ACTIVE:
         this.toggleActive(scheme);
         return;
@@ -106,6 +110,13 @@ export class SchemesListComponent implements OnInit {
     this.schemesService.updateScheme({ id: scheme.id, active: !scheme.active }).subscribe(
       () => this.loadSchemes(),
       (error) => this.errorService.handleError(error, { prefix: 'Unable to update scheme' })
+    );
+  }
+
+  private duplicateScheme(scheme: EvaluationScheme): void {
+    this.schemesService.createScheme(this.duplicateSchemePayload(scheme)).subscribe(
+      () => this.loadSchemes(),
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate scheme' })
     );
   }
 
@@ -142,8 +153,67 @@ export class SchemesListComponent implements OnInit {
 
     this.actions = [
       { key: ActionKey.EDIT, title: 'Edit Scheme' },
+      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
       { key: ActionKey.TOGGLE_ACTIVE, title: 'Activate/Deactivate' },
       { key: ActionKey.DISCARD, title: 'Eliminar' },
     ];
+  }
+
+  private duplicateSchemePayload(scheme: EvaluationScheme): Partial<EvaluationScheme> {
+    return {
+      name: `${scheme.name} copy`,
+      description: scheme.description,
+      schemeType: scheme.schemeType,
+      defaultRecurrenceRule: scheme.defaultRecurrenceRule,
+      defaultDurationMinutes: scheme.defaultDurationMinutes,
+      durationDays: scheme.durationDays,
+      active: scheme.active,
+      emailNotificationsEnabled: scheme.emailNotificationsEnabled,
+      mailTemplateId: scheme.mailTemplateId,
+      departmentIds: (scheme.departments || []).map((department: any) => department.id),
+      sessionTemplates: (scheme.sessionTemplates || []).map((session: any) => ({
+        sessionKind: session.sessionKind,
+        sessionIndex: session.sessionIndex,
+        title: session.title,
+        relativeOffsetDays: session.relativeOffsetDays,
+        durationMinutes: session.durationMinutes,
+        resourceTemplates: (session.resourceTemplates || []).map((resource: any) => ({
+          resourceKind: resource.resourceKind,
+          assessmentTypeId: resource.assessmentTypeId,
+          questionnaireIds: resource.questionnaireIds || [],
+          questionnaireBundleIds: resource.questionnaireBundleIds || [],
+          randomizationRuleIds: resource.randomizationRuleIds || [],
+          sessionSelector: resource.sessionSelector,
+          everyNSessions: resource.everyNSessions,
+          startSessionNumber: resource.startSessionNumber,
+          endSessionNumber: resource.endSessionNumber,
+          informantType: resource.informantType,
+          defaultResponderRole: resource.defaultResponderRole,
+          activationAnchor: resource.activationAnchor,
+          activationOffsetMinutes: resource.activationOffsetMinutes,
+          availabilityDurationMinutes: resource.availabilityDurationMinutes,
+          reminderMinutes: resource.reminderMinutes || [],
+        })),
+      })),
+      independentEvaluationTemplates: (scheme.independentEvaluationTemplates || []).map((template: any) => ({
+        assessmentTypeId: template.assessmentTypeId,
+        questionnaireIds: template.questionnaireIds || [],
+        questionnaireBundleIds: template.questionnaireBundleIds || [],
+        randomizationRuleIds: template.randomizationRuleIds || [],
+        relativeDay: template.relativeDay,
+        relativeMinuteOfDay: template.relativeMinuteOfDay,
+        startMinuteOfDay: template.startMinuteOfDay,
+        durationMinutes: template.durationMinutes,
+        endMinuteOfDay: template.endMinuteOfDay,
+        triggerMode: template.triggerMode,
+        availabilityDurationMinutes: template.availabilityDurationMinutes,
+        reminderMinutes: template.reminderMinutes || [],
+        required: template.required,
+        singleResponse: template.singleResponse,
+        seedOrder: template.seedOrder,
+        informantType: template.informantType,
+        defaultResponderRole: template.defaultResponderRole,
+      })),
+    } as Partial<EvaluationScheme>;
   }
 }

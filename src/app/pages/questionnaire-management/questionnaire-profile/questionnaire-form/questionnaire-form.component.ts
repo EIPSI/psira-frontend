@@ -11,6 +11,7 @@ import { PermissionKey } from '@shared/@types/permission';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { AngularEditorConfig } from '@kolkov/angular-editor';
+import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
 
 const CryptoJS = require('crypto-js');
 
@@ -28,6 +29,8 @@ export class QuestionnaireFormComponent {
   public loading = false;
   public inputMode = true;
   public existingId: string;
+  public listOfDepartments: any[] = [];
+  public selectedDepartments: number[] = [];
   listOfOption: any = [];
   listOfTagOptions: any = [];
   customDescription = '';
@@ -47,9 +50,11 @@ export class QuestionnaireFormComponent {
     private errorService: ErrorHandlerService,
     private activatedRoute: ActivatedRoute,
     public perms: AppPermissionsService,
-    private router: Router
+    private router: Router,
+    private departmentsService: DepartmentsService
   ) {
     this.resetForm = true;
+    this.loadDepartments();
     this.initQuestionnaire();
   }
 
@@ -64,6 +69,7 @@ export class QuestionnaireFormComponent {
 
     input.keywords = this.listOfTagOptions;
     input.description = this.customDescription;
+    input.departmentIds = this.selectedDepartments;
 
     const action = this.isExisting
       ? this.qmService.updateQuestionnaire(this.existingId, input)
@@ -106,8 +112,31 @@ export class QuestionnaireFormComponent {
     };
     this.listOfTagOptions = questionnaire.keywords;
     this.customDescription = questionnaire.description;
+    this.selectedDepartments = questionnaire.departmentIds || [];
     this.populateForm = true;
     this.inputMode = false;
+  }
+
+  public selectAllDepartments(): void {
+    this.selectedDepartments = this.listOfDepartments.map((department: any) => department.id);
+  }
+
+  public removeDepartments(): void {
+    this.selectedDepartments = [];
+  }
+
+  private loadDepartments(after?: string, accumulatedDepartments: any[] = []): void {
+    this.departmentsService.departments({ paging: { first: 50, after }, filter: {}, sorting: [] }).subscribe(
+      ({ data }: any) => {
+        const departments = data.departments.edges.map((edge: any) => edge.node);
+        const allDepartments = [...accumulatedDepartments, ...departments];
+        this.listOfDepartments = this.filterAllowedDepartments(allDepartments);
+        if (data.departments.pageInfo?.hasNextPage) {
+          this.loadDepartments(data.departments.pageInfo.endCursor, allDepartments);
+        }
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
+    );
   }
 
   // private prepareKeywords(keywords: string = ''): string[] {
@@ -118,4 +147,17 @@ export class QuestionnaireFormComponent {
   //     .map((word) => word.trim())
   //     .filter((word) => word !== '');
   // }
+
+  private filterAllowedDepartments(departments: any[]): any[] {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const canSeeAll = user?.isSuperUser ||
+      user?.roles?.some((role: any) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
+      user?.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name)) ||
+      user?.roles?.some((role: any) =>
+        role.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name))
+      );
+    if (canSeeAll) return departments;
+    const allowedIds = (user?.departments || []).map((department: any) => Number(department.id));
+    return departments.filter((department: any) => allowedIds.includes(Number(department.id)));
+  }
 }

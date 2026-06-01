@@ -22,6 +22,7 @@ import { PageInfo, Paging } from '@shared/@types/paging';
 import { Sorting } from '@shared/@types/sorting';
 import { QuestionnaireVersion } from '@app/pages/questionnaire-management/@types/questionnaire';
 import { TranslateService } from '@ngx-translate/core';
+import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
 
 const CryptoJS = require('crypto-js');
 
@@ -61,6 +62,7 @@ export class QuestionnaireListComponent {
   public loading = false;
 
   public pageInfo: PageInfo;
+  public listOfDepartments: any[] = [];
 
   public questionnaireRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
     paging: { first: DEFAULT_PAGE_SIZE },
@@ -74,9 +76,10 @@ export class QuestionnaireListComponent {
     private router: Router,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private departmentsService: DepartmentsService
   ) {
-    this.getQuestionnaires();
+    this.getDepartments();
 
     if (this.perms.permissionsOnly(PermissionKey.MANAGE_QUESTIONNAIRES)) {
       this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'Discard Questionnaire' });
@@ -133,8 +136,50 @@ export class QuestionnaireListComponent {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(({ edges, pageInfo }) => {
         this.pageInfo = pageInfo;
-        this.data = edges.map((e) => Convert.toFormattedQuestionnaireVersion(e.node));
+        this.data = edges.map((e) => this.formatQuestionnaire(Convert.toFormattedQuestionnaireVersion(e.node)));
       });
+  }
+
+  private getDepartments(): void {
+    this.loadDepartmentsPage();
+  }
+
+  private loadDepartmentsPage(after?: string, accumulatedDepartments: any[] = []): void {
+    this.departmentsService
+      .departments({ paging: { first: 50, after }, filter: {}, sorting: [] })
+      .subscribe(
+        ({ data }: any) => {
+          const departments = data.departments.edges.map((department: any) =>
+            Convert.toDepartment(department.node)
+          );
+          const allDepartments = [...accumulatedDepartments, ...departments];
+          this.listOfDepartments = allDepartments;
+
+          if (data.departments.pageInfo?.hasNextPage) {
+            this.loadDepartmentsPage(data.departments.pageInfo.endCursor, allDepartments);
+            return;
+          }
+
+          this.getQuestionnaires();
+        },
+        () => this.getQuestionnaires()
+      );
+  }
+
+  private formatQuestionnaire(questionnaire: FormattedQuestionnaireVersion): FormattedQuestionnaireVersion {
+    return {
+      ...questionnaire,
+      departmentNames: this.departmentNames(questionnaire.departmentIds),
+    };
+  }
+
+  private departmentNames(departmentIds: number[] = []): string {
+    return departmentIds
+      .map((departmentId) =>
+        this.listOfDepartments.find((department: any) => Number(department.id) === Number(departmentId))?.name
+      )
+      .filter(Boolean)
+      .join(', ');
   }
 
   private async deleteQuestionnaire(

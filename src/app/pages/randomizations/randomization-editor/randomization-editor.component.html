@@ -1,0 +1,148 @@
+<button nz-button routerLink="/psira/randomizations" nzType="secondary">Volver</button>
+
+<form nz-form [formGroup]="form" class="randomization-form">
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">Título</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <input nz-input formControlName="name" placeholder="Nombre de la randomización" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">Estado</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <nz-switch formControlName="active" nzCheckedChildren="Activa" nzUnCheckedChildren="Inactiva"></nz-switch>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">Tipo de Randomización</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <nz-select formControlName="type" (ngModelChange)="onTypeChange($event)">
+        <nz-option [nzValue]="RT.LOW_LEVEL" [nzLabel]="typeLabel[RT.LOW_LEVEL]"></nz-option>
+        <nz-option [nzValue]="RT.HIGH_LEVEL" [nzLabel]="typeLabel[RT.HIGH_LEVEL]"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">Departamentos</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="selectAllDepartments()">
+        Seleccionar todos
+      </button>
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="removeAllDepartments()">
+        Quitar todos
+      </button>
+      <nz-checkbox-wrapper class="department-list">
+        <label
+          *ngFor="let option of listOfDepartments"
+          [nzValue]="option.id"
+          [ngModel]="departmentIsSelected(option.id)"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="toggleDepartment(option.id, $event)"
+          nz-checkbox
+        >
+          {{ option.name }}
+        </label>
+      </nz-checkbox-wrapper>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-alert
+    nzType="info"
+    nzShowIcon
+    class="randomization-notice"
+    nzMessage="Además de las randomizaciones generales disponibles en Gestión de evaluaciones > Randomización, los paquetes de cuestionarios pueden incluir randomizaciones internas entre sus propios cuestionarios. Estas randomizaciones intra-paquete se configuran dentro del paquete y funcionan de manera independiente."
+  ></nz-alert>
+
+  <section class="structure-header">
+    <div>
+      <h3>Elementos a randomizar</h3>
+      <p>{{ typeLabel[selectedType] }} / {{ itemCountLabel }} / selección única</p>
+    </div>
+    <div class="toolbar" *ngIf="selectedType === RT.LOW_LEVEL">
+      <button type="button" nz-button nzSize="small" (click)="addQuestionnaire()">Agregar cuestionario</button>
+      <button type="button" nz-button nzSize="small" (click)="addQuestionnaireBundle()">Agregar paquete</button>
+    </div>
+    <div class="toolbar" *ngIf="selectedType === RT.HIGH_LEVEL">
+      <button type="button" nz-button nzSize="small" (click)="addEvaluationScheme()">Agregar esquema fijo</button>
+    </div>
+  </section>
+
+  <section class="randomization-builder">
+    <div class="item-row header-row">
+      <span>Elemento</span>
+      <span>Selección</span>
+      <span>Proporción</span>
+      <span></span>
+    </div>
+
+    <div class="item-row" *ngFor="let item of items; let i = index">
+      <span class="item-kind">
+        {{
+          item.itemType === RIT.QUESTIONNAIRE
+            ? 'Cuestionario'
+            : item.itemType === RIT.QUESTIONNAIRE_BUNDLE
+            ? 'Paquete'
+            : 'Esquema fijo'
+        }}
+      </span>
+
+      <ng-container [ngSwitch]="item.itemType">
+        <nz-select
+          *ngSwitchCase="RIT.QUESTIONNAIRE"
+          [(ngModel)]="item.questionnaireId"
+          [ngModelOptions]="{ standalone: true }"
+          nzShowSearch
+        >
+          <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
+        </nz-select>
+
+        <nz-select
+          *ngSwitchCase="RIT.QUESTIONNAIRE_BUNDLE"
+          [(ngModel)]="item.questionnaireBundleId"
+          [ngModelOptions]="{ standalone: true }"
+          nzShowSearch
+        >
+          <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+        </nz-select>
+
+        <nz-select
+          *ngSwitchCase="RIT.EVALUATION_SCHEME"
+          [(ngModel)]="item.evaluationSchemeId"
+          [ngModelOptions]="{ standalone: true }"
+          nzShowSearch
+        >
+          <nz-option *ngFor="let scheme of fixedSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+        </nz-select>
+      </ng-container>
+
+      <nz-input-number
+        [(ngModel)]="item.weight"
+        [ngModelOptions]="{ standalone: true }"
+        [nzMin]="1"
+        [nzStep]="1"
+      ></nz-input-number>
+
+      <div class="row-actions">
+        <button type="button" nz-button nzShape="circle" (click)="moveItem(i, -1)" [disabled]="i === 0">
+          <i nz-icon nzType="up"></i>
+        </button>
+        <button type="button" nz-button nzShape="circle" (click)="moveItem(i, 1)" [disabled]="i === items.length - 1">
+          <i nz-icon nzType="down"></i>
+        </button>
+        <button type="button" nz-button nzDanger nzShape="circle" (click)="removeItem(i)">
+          <i nz-icon nzType="delete"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <button nz-button routerLink="/psira/randomizations">Cancelar</button>
+    <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="save()">
+      {{ isUpdateMode ? 'Actualizar' : 'Crear' }}
+    </button>
+  </div>
+</form>

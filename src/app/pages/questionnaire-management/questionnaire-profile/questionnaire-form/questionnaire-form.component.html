@@ -16,6 +16,26 @@
     ></app-form>
   </div>
   <div class="keyword-container">
+    <p class="keyword-title"><b>Departments</b></p>
+    <nz-select
+      [disabled]="!inputMode"
+      nzMode="multiple"
+      nzShowSearch
+      nzAllowClear
+      nzPlaceHolder="Departments"
+      [(ngModel)]="selectedDepartments"
+    >
+      <nz-option
+        *ngFor="let department of listOfDepartments"
+        [nzLabel]="department.name"
+        [nzValue]="department.id"
+      ></nz-option>
+    </nz-select>
+    <div class="department-actions">
+      <button nz-button nzSize="small" type="button" [disabled]="!inputMode" (click)="selectAllDepartments()">Select all departments</button>
+      <button nz-button nzSize="small" type="button" [disabled]="!inputMode" (click)="removeDepartments()">Remove departments</button>
+    </div>
+
     <p class="keyword-title"><b>Keywords</b></p>
     <nz-select nz-tooltip [nzTooltipTitle]="titleTemplate" nzTooltipPlacement="bottomLeft" [disabled]="!inputMode" nzMode="tags" nzPlaceHolder="Keywords" [(ngModel)]="listOfTagOptions">
       <nz-option *ngFor="let option of listOfOption" [nzLabel]="option.label" [nzValue]="option.value"></nz-option>

@@ -40,12 +40,16 @@ export class QuestionnaireManagementService {
   }
 
   public getQuestionnaires(
-    options: { paging?: Paging; filter?: any; sorting?: Sorting[] }
+    options: { paging?: Paging; filter?: any; sorting?: Sorting[]; departmentIds?: number[] }
   ): Observable<ConnectionResult<QuestionnaireVersion>> {
     return this.apollo
       .query<{ questionnaires: ConnectionResult<QuestionnaireVersion> }>({
         query: QuestionnaireQueries.getQuestionnaires,
-        variables: { ...options, paging: {first: 20} },
+        variables: {
+          ...options,
+          paging: options?.paging || { first: 20 },
+          departmentIds: options?.departmentIds?.length ? options.departmentIds : undefined,
+        },
         fetchPolicy: 'no-cache',
       })
       .pipe(map(({ data }) => data.questionnaires));

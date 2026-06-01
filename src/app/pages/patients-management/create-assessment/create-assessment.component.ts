@@ -26,8 +26,16 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { LocationStrategy } from '@angular/common';
 import { EmailTemplatesService } from '@app/pages/administration/@services/email-templates.service';
 import { QuestionnaireBundlesService } from '@app/pages/questionnaire-management/@services/questionnaire-bundles.service';
+import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
+import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 
 const CryptoJS = require('crypto-js');
+
+enum AssessmentContentType {
+  QUESTIONNAIRE = 'QUESTIONNAIRE',
+  QUESTIONNAIRE_BUNDLE = 'QUESTIONNAIRE_BUNDLE',
+  RANDOMIZATION = 'RANDOMIZATION',
+}
 
 @Component({
   selector: 'app-create-assessment',
@@ -43,6 +51,10 @@ export class CreateAssessmentComponent implements OnInit {
   selectedInformant: any = null;
   listOfBundles: any = [];
   listOfSelectedBundles: any = [];
+  listOfRandomizations: RandomizationRule[] = [];
+  listOfSelectedRandomizations: number[] = [];
+  public assessmentContentType = AssessmentContentType.QUESTIONNAIRE;
+  public ACT = AssessmentContentType;
   noteValue: any = '';
   patientEmail = '';
   options = [
@@ -107,6 +119,7 @@ export class CreateAssessmentComponent implements OnInit {
     private departmentsService: DepartmentsService,
     private emailTemplatesService: EmailTemplatesService,
     private bundlesService: QuestionnaireBundlesService,
+    private randomizationsService: RandomizationsService,
     private assessmentService: AssessmentService,
     private nzMessage: NzMessageService,
     private clipboard: Clipboard,
@@ -130,6 +143,7 @@ export class CreateAssessmentComponent implements OnInit {
       mailTemplateId: [null],
       reminderMinutes: [''],
       questionnaireBundles: [[]],
+      randomizationRuleIds: [[]],
       note: [null],
       dates: this.formBuilder.array([
         this.formBuilder.group({
@@ -144,6 +158,7 @@ export class CreateAssessmentComponent implements OnInit {
     this.initAssessment();
     this.getPatient();
     this.getBundles();
+    this.getRandomizations();
     this.getCaregivers();
     this.getUserDepartments({ paging: { first: 50 } });
     this.getPatientEmailTemplates(this.patient.id);
@@ -234,6 +249,17 @@ export class CreateAssessmentComponent implements OnInit {
     this.selectedQuestionnaires = questionnaires;
   }
 
+  public onAssessmentContentTypeChange(type: AssessmentContentType): void {
+    this.assessmentContentType = type;
+    if (type !== AssessmentContentType.QUESTIONNAIRE) this.selectedQuestionnaires = [];
+    if (type !== AssessmentContentType.QUESTIONNAIRE_BUNDLE) this.listOfSelectedBundles = [];
+    if (type !== AssessmentContentType.RANDOMIZATION) this.listOfSelectedRandomizations = [];
+    this.formGroup.patchValue({
+      questionnaireBundles: this.selectedBundleIds(),
+      randomizationRuleIds: this.selectedRandomizationRuleIds(),
+    });
+  }
+
   public userAutoSelect() {
     const userLocalStorage = JSON.parse(localStorage.getItem('user')) as User;
     this.selectedClinician = userLocalStorage;
@@ -315,14 +341,12 @@ export class CreateAssessmentComponent implements OnInit {
   public onSubmitAssessment() {
     if (this.formGroup.invalid) return;
 
-    const questionnaires = this.selectedQuestionnaires.map((q) => q._id);
-    const questionnaireBundles = this.selectedBundleIds();
+    const content = this.assessmentContentPayload();
     const { informant, informantPatient, ...rest } = this.formGroup.value;
     this.applySelectedResponder();
     const newAssessmentData = {
       ...rest,
-      questionnaires,
-      questionnaireBundles,
+      ...content,
       patientId: this.fullAssessment?.patientId ?? this.patient.id,
       targetUserId: this.patient?.userId,
     };
@@ -417,7 +441,12 @@ export class CreateAssessmentComponent implements OnInit {
     this.listOfSelectedBundles = (this.fullAssessment.questionnaireAssessment as any)?.questionnaireBundles?.map(
       (bundle: any) => bundle._id
     ) || [];
-    this.formGroup.patchValue({ questionnaireBundles: this.selectedBundleIds() });
+    this.listOfSelectedRandomizations = (this.fullAssessment.questionnaireAssessment as any)?.randomizationRuleIds || [];
+    this.assessmentContentType = this.inferAssessmentContentType();
+    this.formGroup.patchValue({
+      questionnaireBundles: this.selectedBundleIds(),
+      randomizationRuleIds: this.selectedRandomizationRuleIds(),
+    });
     this.noteValue = this.fullAssessment.note;
     this.patientEmail = this.patient.email;
     this.selectedAssessment = this.fullAssessment.assessmentType?.id;
@@ -475,14 +504,79 @@ export class CreateAssessmentComponent implements OnInit {
       });
   }
 
-  onBundleSelection() {
+  getRandomizations() {
+    const departmentIds = this.patientDepartmentIds();
+    this.randomizationsService
+      .getRandomizations({
+        paging: { first: 50 },
+        departmentIds,
+        filter: {
+          type: { eq: RandomizationRuleType.LOW_LEVEL },
+        },
+      })
+      .subscribe(
+        ({ edges }) => {
+          this.listOfRandomizations = edges.map((edge: any) => edge.node).filter((rule: RandomizationRule) => rule.active);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load randomizations' })
+      );
+  }
+
+  onBundleSelection(selection?: any) {
+    if (selection !== undefined) {
+      this.listOfSelectedBundles = selection ? [selection] : [];
+    }
     this.formGroup.patchValue({ questionnaireBundles: this.selectedBundleIds() });
+  }
+
+  onRandomizationSelection(selection?: any) {
+    if (selection !== undefined) {
+      this.listOfSelectedRandomizations = selection ? [selection] : [];
+    }
+    this.formGroup.patchValue({ randomizationRuleIds: this.selectedRandomizationRuleIds() });
+  }
+
+  patientDepartmentIds(): number[] {
+    return (this.patient?.departments || []).map((department: any) => department.id);
   }
 
   selectedBundleIds(): string[] {
     return (this.listOfSelectedBundles || [])
       .map((bundle: any) => bundle?.node?._id || bundle?._id || bundle)
       .filter((id: string) => !!id);
+  }
+
+  selectedRandomizationRuleIds(): number[] {
+    return (this.listOfSelectedRandomizations || [])
+      .map((randomization: any) => randomization?.id || randomization)
+      .filter((id: number) => !!id);
+  }
+
+  private inferAssessmentContentType(): AssessmentContentType {
+    if (this.listOfSelectedRandomizations.length) return AssessmentContentType.RANDOMIZATION;
+    if (this.listOfSelectedBundles.length) return AssessmentContentType.QUESTIONNAIRE_BUNDLE;
+    return AssessmentContentType.QUESTIONNAIRE;
+  }
+
+  private assessmentContentPayload(): {
+    questionnaires: string[];
+    questionnaireBundles: string[];
+    randomizationRuleIds: number[];
+  } {
+    return {
+      questionnaires:
+        this.assessmentContentType === AssessmentContentType.QUESTIONNAIRE
+          ? this.selectedQuestionnaires.map((q) => q._id)
+          : [],
+      questionnaireBundles:
+        this.assessmentContentType === AssessmentContentType.QUESTIONNAIRE_BUNDLE
+          ? this.selectedBundleIds()
+          : [],
+      randomizationRuleIds:
+        this.assessmentContentType === AssessmentContentType.RANDOMIZATION
+          ? this.selectedRandomizationRuleIds()
+          : [],
+    };
   }
 
   filterUniqueQuestionnaires(questionnaires: any) {

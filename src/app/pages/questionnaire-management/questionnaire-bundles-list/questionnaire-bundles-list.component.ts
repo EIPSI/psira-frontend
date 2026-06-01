@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ActionArgs, DEFAULT_PAGE_SIZE, SortField, TableColumn } from '@app/@shared/@modules/master-data/@types/list';
+import { Action, ActionArgs, DEFAULT_PAGE_SIZE, SortField, TableColumn } from '@app/@shared/@modules/master-data/@types/list';
 import { Filter } from '@app/@shared/@types/filter';
 import { PageInfo, Paging } from '@app/@shared/@types/paging';
 import { QuestionnaireBundlesColumns } from '@app/pages/administration/@tables/questionnaire-bundles.table';
-import { Action } from 'rxjs/internal/scheduler/Action';
 import { QuestionnaireBundlesService } from '../@services/questionnaire-bundles.service';
 import { Sorting } from '@app/@shared/@types/sorting';
 import { finalize } from 'rxjs/operators';
@@ -15,6 +14,8 @@ import { Convert } from '@app/@shared/classes/convert';
 
 enum ActionKey {
   EDIT,
+  DUPLICATE,
+  TOGGLE_ACTIVE,
   DELETE,
 }
 
@@ -51,6 +52,8 @@ export class QuestionnaireBundlesListComponent implements OnInit {
     this.getDepartments();
     this.actions = [
       { key: ActionKey.EDIT, title: 'Edit Bundle' },
+      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
+      { key: ActionKey.TOGGLE_ACTIVE, title: 'Activar / desactivar' },
       { key: ActionKey.DELETE, title: 'Delete Bundle' },
     ];
   }
@@ -132,10 +135,39 @@ export class QuestionnaireBundlesListComponent implements OnInit {
         ]);
         return;
 
+      case ActionKey.DUPLICATE:
+        this.duplicateQuestionnaireBundle(assessmentAdministration);
+        return;
+
+      case ActionKey.TOGGLE_ACTIVE:
+        this.toggleQuestionnaireBundle(assessmentAdministration);
+        return;
+
       case ActionKey.DELETE:
         this.deleteQuestionnaireBundle(assessmentAdministration._id);
         return;
     }
+  }
+
+  private duplicateQuestionnaireBundle(bundle: any): void {
+    this.bundlesService.duplicateQuestionnaireBundle(bundle).subscribe(() => {
+      this.nzMessage.success('Paquete duplicado', { nzDuration: 3000 });
+      this.getQuestionnaireBundles();
+    });
+  }
+
+  private toggleQuestionnaireBundle(bundle: any): void {
+    const structure = this.parseStructure(bundle.structureJson);
+    this.bundlesService.updateQuestionnaireBundle({
+      ...bundle,
+      active: !(bundle.active !== false),
+      structure,
+      structureJson: JSON.stringify(structure),
+      departmentIds: bundle.departmentIds || [],
+    }).subscribe(() => {
+      this.nzMessage.success('Estado actualizado', { nzDuration: 3000 });
+      this.getQuestionnaireBundles();
+    });
   }
 
   private formatBundle(bundle: any): any {

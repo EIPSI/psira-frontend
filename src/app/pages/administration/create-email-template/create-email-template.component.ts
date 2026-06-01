@@ -3,11 +3,10 @@ import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { EmailTemplatesService } from '../@services/email-templates.service';
-import { finalize, switchMap } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { AngularEditorConfig } from '@kolkov/angular-editor';
 import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
-import { DEFAULT_PAGE_SIZE } from '@app/@shared/@modules/master-data/@types/list';
 import { Filter } from '@app/@shared/@types/filter';
 import { Paging } from '@app/@shared/@types/paging';
 import { Sorting } from '@app/@shared/@types/sorting';
@@ -24,13 +23,13 @@ export class CreateEmailTemplateComponent implements OnInit {
   selectedId: number = null;
   emailTemplate: any;
   checked: false;
-  listOfDepartments: [] = [];
+  listOfDepartments: any[] = [];
   public departmentsRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
     paging: { first: 50 },
     filter: {},
     sorting: [],
   };
-  selectedDepartments: [] = [];
+  selectedDepartments: number[] = [];
   customStyles = {height: '250px', width: '100%'}
   isUpdateMode = false;
   allDepartments = false;
@@ -88,37 +87,58 @@ export class CreateEmailTemplateComponent implements OnInit {
           this.emailForm.controls['module'].setValue(this.emailTemplate?.module);
           this.emailForm.controls['isPublic'].setValue(this.emailTemplate?.isPublic);
           this.allDepartments = this.emailTemplate?.isPublic;
-          this.emailForm.controls['departmentIds'].setValue(this.emailTemplate?.departments.map((dep: any) => dep.id));
-          this.selectedDepartments = this.emailTemplate?.departments.map((dep: any) => dep.id);
+          this.selectedDepartments = this.filterAllowedDepartmentIds(
+            this.emailTemplate?.departments.map((dep: any) => dep.id) || []
+          );
+          this.emailForm.controls['departmentIds'].setValue(this.selectedDepartments);
         });
       }
     });
   }
 
-  getDepartments(): void {
+  getDepartments(after?: string, accumulatedDepartments: any[] = []): void {
     this.departmentsService
-      .departments(this.departmentsRequestOptions)
-      .pipe()
+      .departments({
+        ...this.departmentsRequestOptions,
+        paging: { first: 50, after },
+      })
       .subscribe(
         ({ data }: any) => {
-          this.listOfDepartments = data.departments.edges
+          const departments = data.departments.edges
             .map((department: any) => Convert.toDepartment(department.node))
             .filter((department: any) => department.name !== 'Particular');
+          const allDepartments = [...accumulatedDepartments, ...departments];
+          this.listOfDepartments = this.filterAllowedDepartments(allDepartments);
+          this.selectedDepartments = this.filterAllowedDepartmentIds(this.selectedDepartments);
+          this.emailForm.controls['departmentIds'].setValue(this.selectedDepartments);
+          if (data.departments.pageInfo?.hasNextPage) {
+            this.getDepartments(data.departments.pageInfo.endCursor, allDepartments);
+          }
         },
         (err) => this.errorService.handleError(err, { prefix: 'Unable to load departments' })
       );
   }
 
-  selectDepartments(event: any){
+  selectDepartments(event: number[]){
     this.selectedDepartments = event;
+    this.emailForm.controls['departmentIds'].setValue(this.selectedDepartments);
   }
 
-  templateHasDepartment(departmentId: number): boolean {
-    if(this.isUpdateMode && this.emailTemplate !== undefined){
-      const department = this.emailTemplate?.departments?.filter((department: any) => department.id === departmentId); 
-      return department.length > 0;
+  selectAllDepartments(): void {
+    this.selectedDepartments = this.listOfDepartments.map((department: any) => department.id);
+    this.emailForm.controls['departmentIds'].setValue(this.selectedDepartments);
+  }
+
+  removeDepartments(): void {
+    this.selectedDepartments = [];
+    this.emailForm.controls['departmentIds'].setValue([]);
+  }
+
+  onPublicChange(isPublic: boolean): void {
+    this.allDepartments = isPublic;
+    if (isPublic) {
+      this.removeDepartments();
     }
-    return false;
   }
 
   onFormSubmit(){
@@ -149,5 +169,24 @@ export class CreateEmailTemplateComponent implements OnInit {
     (err) => {
       this.nzMessage.error(`${err}`, { nzDuration: 3000 });
     })
+  }
+
+  private filterAllowedDepartments(departments: any[]): any[] {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const canSeeAll = user?.isSuperUser ||
+      user?.roles?.some((role: any) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
+      user?.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name)) ||
+      user?.roles?.some((role: any) =>
+        role.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name))
+      );
+    if (canSeeAll) return departments;
+    const allowedIds = (user?.departments || []).map((department: any) => Number(department.id));
+    return departments.filter((department: any) => allowedIds.includes(Number(department.id)));
+  }
+
+  private filterAllowedDepartmentIds(departmentIds: number[] = []): number[] {
+    const allowedIds = this.listOfDepartments.map((department: any) => Number(department.id));
+    if (!allowedIds.length) return departmentIds || [];
+    return (departmentIds || []).filter((departmentId) => allowedIds.includes(Number(departmentId)));
   }
 }

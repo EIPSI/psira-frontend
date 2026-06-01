@@ -79,7 +79,19 @@ export default {
     noTabs: 'Keine Registerkarten',
     disclaimers: 'Mitteilungen',
     emailTemplates: 'Emails konfigurieren',
-    version: 'Version'
+    version: 'Version',
+    randomizations: 'Randomization'
+  },
+  randomizations: {
+    name: 'Name',
+    type: 'Randomization type',
+    department: 'Department',
+    itemCount: 'Number of elements',
+    status: 'Status',
+    createdAt: 'Created at',
+    updatedAt: 'Last update',
+    create: 'Create Randomization',
+    edit: 'Edit Randomization',
   },
   patients: {
     myPatients: 'Meine Patienten',
@@ -293,6 +305,7 @@ export default {
     formattedStatus: 'Status',
     language: 'Sprache',
     abbreviation: 'Abkürzung',
+    departments: 'Abteilungen',
     keywords: 'Suchwörter',
     timeToComplete: 'Bearbeitungszeit',
     copyright: 'Urheberrechte ©',

@@ -19,6 +19,15 @@ export class QuestionnaireSelectionComponent {
   @Input()
   public readonly = false;
 
+  @Input()
+  public singleSelection = false;
+
+  @Input()
+  public departmentIds: number[] = [];
+
+  @Input()
+  public disabledMessage = '';
+
   public foundQuestionnaires: QuestionnaireVersion[] = [];
 
   isVisible = false;
@@ -27,6 +36,10 @@ export class QuestionnaireSelectionComponent {
   constructor(private questionnaireService: QuestionnaireManagementService, private clipboard: Clipboard) {}
 
   public onQuestionnaireSearch(q: string) {
+    if (this.disabledMessage) {
+      this.foundQuestionnaires = [];
+      return;
+    }
     if (q === '') {
       this.foundQuestionnaires = [];
       return;
@@ -35,31 +48,37 @@ export class QuestionnaireSelectionComponent {
     const filter = { or: createSearchFilter(q) };
 
     this.questionnaireService
-      .getQuestionnaires({ filter })
+      .getQuestionnaires({ filter, departmentIds: this.departmentIds })
       // Added filter to filter out the archieved quest.
-      .subscribe((questionnaires) => (this.foundQuestionnaires = questionnaires.edges.map((e) => e.node).filter(e => e.status !== 'ARCHIVED' && e.status !== 'DRAFT' && e.status !== 'PRIVATE' && e.zombie === false)));
+      .subscribe((questionnaires) => (this.foundQuestionnaires = this.filterQuestionnaires(questionnaires.edges.map((e) => e.node))));
   }
 
   public onQuestionnaireSearchNew(q: string) {
+    if (this.disabledMessage) {
+      this.foundQuestionnaires = [];
+      return;
+    }
     if (q === '') {
       // tslint:disable
       const filter = { or: createSearchFilter(q) };
 
       this.questionnaireService
-        .getQuestionnaires({ filter })
-        .subscribe((questionnaires) => (this.foundQuestionnaires = questionnaires.edges.map((e) => e.node).filter(e => e.status !== 'ARCHIVED' && e.status !== 'DRAFT' && e.status !== 'PRIVATE'  && e.zombie === false)));
+        .getQuestionnaires({ filter, departmentIds: this.departmentIds })
+        .subscribe((questionnaires) => (this.foundQuestionnaires = this.filterQuestionnaires(questionnaires.edges.map((e) => e.node))));
     }
 
     const filter = { or: createSearchFilter(q) };
 
     this.questionnaireService
-      .getQuestionnaires({ filter })
-      .subscribe((questionnaires) => (this.foundQuestionnaires = questionnaires.edges.map((e) => e.node).filter(e => e.status !== 'ARCHIVED' && e.status !== 'DRAFT' && e.status !== 'PRIVATE'  && e.zombie === false)));
+      .getQuestionnaires({ filter, departmentIds: this.departmentIds })
+      .subscribe((questionnaires) => (this.foundQuestionnaires = this.filterQuestionnaires(questionnaires.edges.map((e) => e.node))));
   }
 
   public onToggleQuestionnaire(questionnaire: QuestionnaireVersion): void {
     if (this.isSelected(questionnaire)) {
       this.selectedQuestionnaires.splice(this.selectedIndex(questionnaire), 1);
+    } else if (this.singleSelection) {
+      this.selectedQuestionnaires = [questionnaire];
     } else {
       this.selectedQuestionnaires.push(questionnaire);
     }
@@ -107,6 +126,21 @@ export class QuestionnaireSelectionComponent {
 
   private moveArrayItem(from: number, to: number): void {
     this.selectedQuestionnaires.splice(to, 0, this.selectedQuestionnaires.splice(from, 1)[0]);
+  }
+
+  private filterQuestionnaires(questionnaires: QuestionnaireVersion[]): QuestionnaireVersion[] {
+    return questionnaires.filter((questionnaire) =>
+      questionnaire.status !== 'ARCHIVED' &&
+      questionnaire.status !== 'DRAFT' &&
+      questionnaire.status !== 'PRIVATE' &&
+      questionnaire.zombie === false &&
+      this.matchesDepartments(questionnaire.departmentIds)
+    );
+  }
+
+  private matchesDepartments(itemDepartmentIds: number[] = []): boolean {
+    if (!this.departmentIds?.length || !itemDepartmentIds?.length) return true;
+    return itemDepartmentIds.some((departmentId) => this.departmentIds.includes(Number(departmentId)));
   }
 
   // Handling modal

@@ -18,6 +18,7 @@ export class EvaluationSchemesService {
     paging?: Paging;
     filter?: any;
     sorting?: Sorting[];
+    departmentIds?: number[];
   }): Observable<{ edges: any[]; pageInfo: any }> {
     return this.apollo
       .query({
@@ -26,6 +27,7 @@ export class EvaluationSchemesService {
           paging: params?.paging,
           filter: params?.filter,
           sorting: params?.sorting,
+          departmentIds: params?.departmentIds?.length ? params.departmentIds : undefined,
         },
         fetchPolicy: 'no-cache',
       })

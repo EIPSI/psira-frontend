@@ -46,6 +46,11 @@ export const QuestionnaireColumns: TableColumn<FormattedQuestionnaireVersion>[] 
     },
   },
   {
+    title: 'Departments',
+    name: 'departmentNames',
+    translationPath: 'questionnaires.departments',
+  },
+  {
     title: 'Keywords',
     name: 'keywords',
     translationPath: 'questionnaires.keywords',
@@ -60,16 +65,6 @@ export const QuestionnaireColumns: TableColumn<FormattedQuestionnaireVersion>[] 
     title: 'Copyright',
     name: 'copyright',
     translationPath: 'questionnaires.copyright',
-  },
-  {
-    title: 'Website',
-    name: 'website',
-    translationPath: 'questionnaires.website',
-  },
-  {
-    title: 'License',
-    name: 'license',
-    translationPath: 'questionnaires.license',
   },
   {
     title: 'Created at',

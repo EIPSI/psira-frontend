@@ -77,7 +77,19 @@ export default {
     noTabs: 'Nuk ka skedar',
     disclaimers: 'Mesazhet',
     emailTemplates: 'Shabllonet e Email',
-    version: 'Versioni'
+    version: 'Versioni',
+    randomizations: 'Randomization'
+  },
+  randomizations: {
+    name: 'Name',
+    type: 'Randomization type',
+    department: 'Department',
+    itemCount: 'Number of elements',
+    status: 'Status',
+    createdAt: 'Created at',
+    updatedAt: 'Last update',
+    create: 'Create Randomization',
+    edit: 'Edit Randomization',
   },
   patients: {
     myPatients: 'Klientët e Mi',
@@ -292,6 +304,7 @@ export default {
     formattedStatus: 'Statusi',
     language: 'Gjuha',
     abbreviation: 'Shkurtim',
+    departments: 'Departamentet',
     keywords: 'Fjalë Kyçe',
     timeToComplete: 'Koha për të Përfunduar',
     copyright: 'E Drejta e Autorit',

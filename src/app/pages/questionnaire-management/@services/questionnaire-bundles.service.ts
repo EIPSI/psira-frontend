@@ -26,7 +26,7 @@ export class QuestionnaireBundlesService {
         paging: params && params.paging ? params.paging : undefined,
         filter: params && params.filter ? params.filter : undefined,
         sorting: params && params.sorting ? params.sorting : undefined,
-        departmentIds: params && params.departmentIds ? params.departmentIds : undefined,
+        departmentIds: params?.departmentIds?.length ? params.departmentIds : undefined,
       },
       fetchPolicy: 'no-cache',
     });
@@ -78,6 +78,17 @@ export class QuestionnaireBundlesService {
         _id,
       },
       fetchPolicy: 'no-cache',
+    });
+  }
+
+  public duplicateQuestionnaireBundle(bundle: any): Observable<FetchResult<any>> {
+    const structure = bundle.structure || JSON.parse(bundle.structureJson || '[]');
+    return this.createQuestionnaireBundle({
+      name: `${bundle.name} copy`,
+      active: bundle.active !== false,
+      departmentIds: bundle.departmentIds || [],
+      structure,
+      structureJson: JSON.stringify(structure),
     });
   }
 }

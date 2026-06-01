@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 const getQuestionnaires = gql`
-  query($paging: CursorPaging, $filter: QuestionnaireFilter, $sorting: [QuestionnaireSort!]) {
-    questionnaires(paging: $paging, filter: $filter, sorting: $sorting) {
+  query($paging: CursorPaging, $filter: QuestionnaireFilter, $sorting: [QuestionnaireSort!], $departmentIds: [Float!]) {
+    questionnaires(paging: $paging, filter: $filter, sorting: $sorting, departmentIds: $departmentIds) {
       pageInfo {
         hasNextPage
         hasPreviousPage
@@ -24,6 +24,7 @@ const getQuestionnaires = gql`
           timeToComplete
           language
           abbreviation
+          departmentIds
         }
       }
     }
@@ -52,6 +53,7 @@ const getQuestionnairesVersion = gql`
           timeToComplete
           language
           abbreviation
+          departmentIds
         }
       }
     }
