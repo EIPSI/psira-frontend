@@ -24,6 +24,8 @@ import { DeleteOneInput } from '../../../@shared/@types/delete-one-input';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
+import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 
 const CryptoJS = require('crypto-js');
 
@@ -71,7 +73,13 @@ export class UserFormComponent implements OnInit {
   assignedSupervisors: User[] = [];
   assignedTherapists: User[] = [];
   public defaultRoleCode: string;
+  public automationPreview: any[] = [];
+  public automationPreviewLoading = false;
+  public skippedAutomationIds: number[] = [];
+  public triggerPointLabel: any = EvaluationAutomationTriggerPointLabel;
   private particularDepartment?: Department;
+  private previewRoleIds: number[] = [];
+  private previewDepartmentIds: number[] = [];
 
   get userTitle(): string {
     const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
@@ -87,7 +95,8 @@ export class UserFormComponent implements OnInit {
     private errorService: ErrorHandlerService,
     private rolesService: RolesService,
     public perms: AppPermissionsService,
-    private departmentsService: DepartmentsService
+    private departmentsService: DepartmentsService,
+    private evaluationAutomationsService: EvaluationAutomationsService
   ) {}
 
   ngOnInit(): void {
@@ -270,8 +279,40 @@ export class UserFormComponent implements OnInit {
         this.populateForm = true;
         this.showCancelButton = false;
         this.loadAssignmentOptions();
+        this.refreshAutomationPreview();
       }
     });
+  }
+
+  public handleProfileInputChange(change: { name: string; value: any }): void {
+    if (!this.newMode || !['roleId', 'departmentId'].includes(change.name)) {
+      return;
+    }
+    if (change.name === 'roleId') {
+      this.previewRoleIds = Array.isArray(change.value) ? change.value : [change.value].filter((id) => !!id);
+    }
+    if (change.name === 'departmentId') {
+      this.previewDepartmentIds = Array.isArray(change.value) ? change.value : [change.value].filter((id) => !!id);
+    }
+    this.refreshAutomationPreview();
+  }
+
+  public toggleAutomationPreview(automationId: number, checked: boolean): void {
+    this.skippedAutomationIds = checked
+      ? this.skippedAutomationIds.filter((id) => id !== automationId)
+      : [...new Set([...this.skippedAutomationIds, automationId])];
+  }
+
+  public automationPreviewChecked(automationId: number): boolean {
+    return !this.skippedAutomationIds.includes(automationId);
+  }
+
+  public automationsForTrigger(triggerPoint: string): any[] {
+    return this.automationPreview.filter((automation) => automation.triggerPoint === triggerPoint);
+  }
+
+  public automationPreviewTriggerPoints(): string[] {
+    return [...new Set(this.automationPreview.map((automation) => automation.triggerPoint))];
   }
 
   createUser(formData: any) {
@@ -281,6 +322,7 @@ export class UserFormComponent implements OnInit {
     formData.username = formData.email.toLowerCase();
     formData.roleCodes = this.getRoleCodes(formData.roleId ?? []);
     formData.departmentIds = this.withRequiredSupervisorDepartment(formData.departmentId ?? [], formData.roleCodes);
+    formData.skippedAutomationIds = this.skippedAutomationIds;
     delete formData.roleId;
     delete formData.departmentId;
     const inputData: CreateUserInput = Object.assign({}, formData);
@@ -618,6 +660,56 @@ export class UserFormComponent implements OnInit {
     return user;
   }
 
+  private refreshAutomationPreview(): void {
+    if (!this.newMode) {
+      this.automationPreview = [];
+      return;
+    }
+
+    setTimeout(() => {
+      const roleIds = this.previewRoleIds.length
+        ? this.previewRoleIds
+        : this.currentProfileFieldValue('roleId') || (this.user as any)?.roleId || [];
+      const departmentIds = this.previewDepartmentIds.length
+        ? this.previewDepartmentIds
+        : this.currentProfileFieldValue('departmentId') || (this.user as any)?.departmentId || [];
+      const normalizedRoleIds = Array.isArray(roleIds) ? roleIds : [roleIds].filter((id) => !!id);
+      const normalizedDepartmentIds = Array.isArray(departmentIds)
+        ? departmentIds
+        : [departmentIds].filter((id) => !!id);
+
+      if (!normalizedRoleIds.length || !normalizedDepartmentIds.length) {
+        this.automationPreview = [];
+        this.skippedAutomationIds = [];
+        return;
+      }
+
+      this.automationPreviewLoading = true;
+      this.evaluationAutomationsService
+        .previewAutomations({
+          roleIds: normalizedRoleIds.map(Number),
+          departmentIds: normalizedDepartmentIds.map(Number),
+        })
+        .pipe(finalize(() => (this.automationPreviewLoading = false)))
+        .subscribe(
+          (automations) => {
+            this.automationPreview = automations;
+            const availableIds = automations.map((automation) => automation.automationId);
+            this.skippedAutomationIds = this.skippedAutomationIds.filter((id) => availableIds.includes(id));
+          },
+          (error) => this.errorService.handleError(error, { prefix: 'Unable to load automation preview' })
+        );
+    });
+  }
+
+  private currentProfileFieldValue(fieldName: string): any {
+    for (const group of this.profileFields.groups || []) {
+      const field = group.fields.find((item: any) => item.name === fieldName);
+      if (field) return field.value;
+    }
+    return undefined;
+  }
+
   private applyDefaultRole(): void {
     if (!this.newMode || !this.defaultRoleCode || !this.roles.length || !this.user) return;
 
@@ -625,6 +717,8 @@ export class UserFormComponent implements OnInit {
     if (!defaultRole) return;
 
     (this.user as any).roleId = [defaultRole.id];
+    this.previewRoleIds = [defaultRole.id];
+    this.refreshAutomationPreview();
     this.populateForm = false;
     setTimeout(() => (this.populateForm = true));
   }

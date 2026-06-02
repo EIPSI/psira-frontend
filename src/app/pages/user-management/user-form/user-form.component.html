@@ -19,8 +19,11 @@
       [inputMode]="inputMode"
       [showCancelButton]="showCancelButton"
       [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
+      (inputChange)="handleProfileInputChange($event)"
       (submitForm)="submitForm($event)"
     ></app-form>
+
+    <ng-container *ngTemplateOutlet="automationPreviewBlock"></ng-container>
 
     <div class="assignment-panel supervisor-create-assignment">
       <h3>{{ 'menu.therapists' | translate }}</h3>
@@ -44,8 +47,11 @@
         [inputMode]="inputMode"
         [showCancelButton]="showCancelButton"
         [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
+        (inputChange)="handleProfileInputChange($event)"
         (submitForm)="submitForm($event)"
       ></app-form>
+
+      <ng-container *ngTemplateOutlet="automationPreviewBlock"></ng-container>
 
       <div class="assignment-panel profile-assignment" *ngIf="defaultRoleCode === 'THERAPIST'">
         <h3>{{ 'menu.supervisors' | translate }}</h3>
@@ -98,6 +104,40 @@
       </div>
     </nz-tab>
   </nz-tabset>
+</ng-template>
+
+<ng-template #automationPreviewBlock>
+  <div class="automation-preview" *ngIf="newMode">
+    <nz-spin [nzSpinning]="automationPreviewLoading">
+      <nz-alert
+        *ngIf="!automationPreview.length"
+        nzType="info"
+        nzShowIcon
+        nzMessage="Automatizaciones"
+        nzDescription="No hay automatizaciones aplicables para el rol, departamento y triggers configurados."
+      ></nz-alert>
+
+      <div *ngIf="automationPreview.length">
+        <h3>Automatizaciones que se aplicarán automáticamente</h3>
+        <p class="automation-preview-help">
+          De manera automática estas evaluaciones se aplicarán al rol específico seleccionado. Podés desmarcar las que no querés aplicar.
+        </p>
+        <div class="automation-trigger-group" *ngFor="let triggerPoint of automationPreviewTriggerPoints()">
+          <h4>{{ triggerPointLabel[triggerPoint] || triggerPoint }}</h4>
+          <label
+            nz-checkbox
+            class="automation-preview-item"
+            *ngFor="let automation of automationsForTrigger(triggerPoint)"
+            [ngModel]="automationPreviewChecked(automation.automationId)"
+            (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+          >
+            <strong>{{ automation.title }}</strong>
+            <span>Recurso: {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          </label>
+        </div>
+      </div>
+    </nz-spin>
+  </div>
 </ng-template>
 
 <ng-template #supervisorAssignment>

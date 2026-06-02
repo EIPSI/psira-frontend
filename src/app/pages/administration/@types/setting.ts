@@ -7,6 +7,8 @@ export interface Setting {
   maxLoginAttempts: number;
   passwordLifeTimeInDays: number;
   passwordReUseCutoffInDays: number;
+  evaluationAutomationRunRetentionDays: number;
+  patientCaseManagerAssignableHierarchyRank: number;
   sendWelcomeEmails: boolean;
   welcomeEmailTemplateId: number;
   googleCalendarEnabled?: boolean;

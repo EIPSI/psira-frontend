@@ -11,6 +11,8 @@ const settings = gql`
       maxLoginAttempts
       passwordLifeTimeInDays
       passwordReUseCutoffInDays
+      evaluationAutomationRunRetentionDays
+      patientCaseManagerAssignableHierarchyRank
       sendWelcomeEmails
       welcomeEmailTemplateId
       googleCalendarEnabled

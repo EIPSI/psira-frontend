@@ -116,6 +116,14 @@ export const MENU: SideNavInterface[] | any = [
         iconTheme: '',
         submenu: [],
       },
+      {
+        path: 'evaluation-automations',
+        title: 'menu.evaluationAutomations',
+        permissions: [PK.VIEW_ASSESSMENTS, PK.MANAGE_ASSESSMENTS],
+        iconType: '',
+        iconTheme: '',
+        submenu: [],
+      },
     ],
   },
   {

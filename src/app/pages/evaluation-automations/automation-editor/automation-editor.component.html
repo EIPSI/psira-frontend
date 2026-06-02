@@ -1,0 +1,243 @@
+<form class="automation-editor" nz-form [formGroup]="form" (ngSubmit)="save()">
+  <div class="editor-header">
+    <div>
+      <h1>{{ automationId ? 'Editar Automatización' : 'Crear Automatización' }}</h1>
+      <p>Gestión de Evaluaciones</p>
+    </div>
+    <div class="header-actions">
+      <button nz-button type="button" routerLink="/psira/evaluation-automations">Cancelar</button>
+      <button nz-button nzType="primary" [nzLoading]="saving">Guardar</button>
+    </div>
+  </div>
+
+  <section class="editor-section">
+    <h2>Datos generales</h2>
+    <div nz-row [nzGutter]="16">
+      <div nz-col nzSpan="12">
+        <nz-form-item>
+          <nz-form-label nzRequired>Título</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="title" />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="4">
+        <nz-form-item>
+          <nz-form-label nzRequired>Estado</nz-form-label>
+          <nz-form-control>
+            <nz-switch formControlName="active" nzCheckedChildren="Activa" nzUnCheckedChildren="Inactiva"></nz-switch>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="4">
+        <nz-form-item>
+          <nz-form-label nzRequired>Prioridad</nz-form-label>
+          <nz-form-control>
+            <nz-input-number formControlName="priority" [nzMin]="1"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="24">
+        <nz-form-item>
+          <nz-form-label>Descripción</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input formControlName="description" rows="3"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+  </section>
+
+  <section class="editor-section">
+    <h2>Población objetivo</h2>
+    <div nz-row [nzGutter]="16">
+      <div nz-col nzSpan="12">
+        <nz-form-item>
+          <nz-form-label nzRequired>Departamento/s</nz-form-label>
+          <nz-form-control>
+            <div class="department-actions">
+              <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">Seleccionar todos</button>
+              <button nz-button nzSize="small" type="button" (click)="removeAllDepartments()">Quitar todos</button>
+            </div>
+            <nz-select formControlName="departmentIds" nzMode="multiple" nzShowSearch (ngModelChange)="onDepartmentsChange()">
+              <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="12">
+        <nz-form-item>
+          <nz-form-label nzRequired>Rol único</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="roleId" nzShowSearch>
+              <nz-option *ngFor="let role of roles" [nzValue]="role.id" [nzLabel]="role.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+  </section>
+
+  <section class="editor-section" *ngIf="form.get('roleId')?.value">
+    <h2>Condiciones específicas</h2>
+    <nz-alert
+      nzType="info"
+      nzShowIcon
+      nzMessage="Sección en desarrollo"
+      nzDescription="Las condiciones específicas se habilitarán cuando exista un catálogo dinámico de datos disponibles por rol."
+    ></nz-alert>
+  </section>
+
+  <section class="editor-section">
+    <h2>Trigger</h2>
+    <nz-radio-group formControlName="triggerPoint">
+      <label nz-radio-button *ngFor="let trigger of triggerPoints" [nzValue]="trigger">
+        {{ triggerPointLabel[trigger] }}
+      </label>
+    </nz-radio-group>
+  </section>
+
+  <section class="editor-section">
+    <h2>Tipo de automatización</h2>
+    <nz-radio-group formControlName="automationType" (ngModelChange)="onAutomationTypeChange($event)">
+      <label nz-radio-button *ngFor="let type of automationTypes" [nzValue]="type">
+        {{ automationTypeLabel[type] }}
+      </label>
+    </nz-radio-group>
+  </section>
+
+  <section class="editor-section">
+    <h2>Configuración específica</h2>
+    <div nz-row [nzGutter]="16">
+      <div nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzRequired>Tiempo desde el Trigger Point</nz-form-label>
+          <nz-form-control>
+            <nz-input-number formControlName="delayAmount" [nzMin]="0"></nz-input-number>
+            <span class="unit-label">{{ isFixedScheme ? 'día(s)' : 'minuto(s)' }}</span>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="16" *ngIf="isFixedScheme">
+        <nz-form-item>
+          <nz-form-label nzRequired>Esquema fijo asociado</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="schemeId" nzShowSearch nzPlaceHolder="Seleccionar esquema fijo">
+              <nz-option *ngFor="let scheme of schemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
+
+    <ng-container *ngIf="isIndividualEvaluation">
+      <div nz-row [nzGutter]="16">
+        <div nz-col nzSpan="8">
+          <nz-form-item>
+            <nz-form-label nzRequired>Tipo de contenido</nz-form-label>
+            <nz-form-control>
+              <nz-select [ngModel]="contentType" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onContentTypeChange($event)">
+                <nz-option [nzValue]="EACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
+                <nz-option [nzValue]="EACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de Cuestionarios"></nz-option>
+                <nz-option [nzValue]="EACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzSpan="8">
+          <nz-form-item>
+            <nz-form-label nzRequired>Tipo de evaluación</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="assessmentTypeId" nzShowSearch>
+                <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzSpan="8">
+          <nz-form-item>
+            <nz-form-label>Nombre de la evaluación</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="evaluationName" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <nz-form-item *ngIf="contentType === EACT.QUESTIONNAIRE">
+        <nz-form-label nzRequired>Cuestionario</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="questionnaireIds" nzShowSearch>
+            <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item *ngIf="contentType === EACT.QUESTIONNAIRE_BUNDLE">
+        <nz-form-label nzRequired>Paquete de Cuestionarios</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="questionnaireBundleIds" nzShowSearch>
+            <nz-option *ngFor="let bundle of bundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item *ngIf="contentType === EACT.RANDOMIZATION">
+        <nz-form-label nzRequired>Randomización</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="randomizationRuleIds" nzShowSearch>
+            <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <div nz-row [nzGutter]="16">
+        <div nz-col nzSpan="12">
+          <nz-form-item>
+            <nz-form-label>Expiración</nz-form-label>
+            <nz-form-control>
+              <nz-input-number formControlName="expirationMinutes" [nzMin]="1"></nz-input-number>
+              <span class="unit-label">minuto(s)</span>
+              <div class="field-help">Opcional. Se cuenta desde que la evaluación queda disponible y define hasta cuándo puede responderse.</div>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzSpan="12">
+          <nz-form-item>
+            <nz-form-label>Recordatorios</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="reminderMinutesText" placeholder="10, 20, 25" />
+              <div class="field-help">Minutos desde la disponibilidad, separados por coma.</div>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div nz-row [nzGutter]="16">
+        <div nz-col nzSpan="8">
+          <nz-form-item>
+            <nz-form-label>Email</nz-form-label>
+            <nz-form-control>
+              <label nz-checkbox formControlName="emailNotificationsEnabled">Enviar notificación por email</label>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzSpan="16" *ngIf="form.get('emailNotificationsEnabled')?.value">
+          <nz-form-item>
+            <nz-form-label nzRequired>Template de email</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="mailTemplateId" nzShowSearch>
+                <nz-option *ngFor="let template of emailTemplates" [nzValue]="template.id" [nzLabel]="template.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+    </ng-container>
+  </section>
+
+  <section class="editor-section">
+    <h2>Resumen</h2>
+    <p class="summary">{{ summary() }}</p>
+  </section>
+</form>

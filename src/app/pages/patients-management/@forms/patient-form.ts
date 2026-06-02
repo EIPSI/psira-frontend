@@ -41,18 +41,6 @@ const informationFields: Field[] = [
   },
   {
     value: '',
-    name: 'medicalRecordNo',
-    title: 'ID',
-    label: 'Medical record number',
-    translationPath: 'forms.patients.id',
-    description: 'Enter medical record number',
-    type: 'text',
-    validationMessage: 'please enter medical record number',
-    isRequired: false,
-    span: 8,
-  },
-  {
-    value: '',
     title: 'Date of Birth',
     name: 'birthDate',
     label: 'Birth Date',
@@ -81,36 +69,6 @@ const informationFields: Field[] = [
     span: 8,
   },
 ];
-
-const departmentsField: Field = {
-  value: null, // 1. Cambiamos [] por null
-  name: 'departmentIds',
-  title: 'Department',
-  label: 'Department',
-  translationPath: 'forms.patients.department',
-  description: 'Select Department',
-  type: 'select',
-  // mode: 'multiple', // 2. BORRAMOS esta línea o la comentamos
-  validationMessage: 'please select Department',
-  isRequired: true,
-  options: [],
-  span: 8,
-};
-
-const caseManagersField: Field = {
-  value: null, // 3. Cambiamos [] por null
-  name: 'caseManagerIds',
-  title: 'Case Manager',
-  label: 'Case Manager',
-  translationPath: 'forms.patients.caseManager',
-  description: 'Select Case Manager',
-  type: 'select',
-  // mode: 'multiple', // 4. BORRAMOS esta línea o la comentamos
-  validationMessage: 'please select Case Manager',
-  isRequired: false,
-  options: [],
-  span: 8,
-};
 
 const addressFields: Field[] = [
   {
@@ -319,7 +277,7 @@ const getForm = (createMode: boolean): Form => {
       {
         title: 'Patient Information',
         translationPath: 'forms.patients.patientInformation',
-        fields: [...informationFields, departmentsField, caseManagersField],
+        fields: informationFields,
       },
       {
         title: 'Patient Address',

@@ -80,6 +80,7 @@ export default {
     calendar: 'Calendario',
     evaluationSchemes: 'Esquemas de Evaluación',
     randomizations: 'Randomización',
+    evaluationAutomations: 'Automatizaciones',
     userManagement: 'Configuración de Usuarios',
     listUsers: 'Lista de Usuarios',
     newUser: 'Nuevo Usuario',
@@ -169,6 +170,10 @@ export default {
     updatedAt: 'Última actualización',
     create: 'Crear Randomización',
     edit: 'Editar Randomización',
+  },
+  evaluationAutomations: {
+    create: 'Crear Automatización',
+    edit: 'Editar Automatización',
   },
   tables: {
     assessmentAdministration: {

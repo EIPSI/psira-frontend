@@ -53,4 +53,5 @@ export interface CreateUserInput {
   acceptedTerm?: boolean;
   departmentIds?: number[];
   roleCodes?: string[];
+  skippedAutomationIds?: number[];
 }

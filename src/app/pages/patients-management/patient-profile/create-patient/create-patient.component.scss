@@ -1,0 +1,59 @@
+.institutional-section {
+  margin-bottom: 24px;
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+}
+
+.institutional-field {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  input,
+  nz-select {
+    width: 100%;
+  }
+}
+
+.required-mark {
+  color: red;
+}
+
+.field-value {
+  min-height: 32px;
+  padding-top: 6px;
+}
+
+.automation-preview {
+  border-top: 1px solid #eef0f3;
+  margin-top: 24px;
+  max-width: 760px;
+  padding-top: 20px;
+}
+
+.automation-preview-help {
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.automation-trigger-group {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.automation-preview-item {
+  display: flex;
+  gap: 8px;
+
+  span {
+    color: #6b7280;
+    margin-left: 6px;
+  }
+}
