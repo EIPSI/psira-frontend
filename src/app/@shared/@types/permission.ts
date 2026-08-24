@@ -9,8 +9,14 @@ export enum PermissionKey {
 
   VIEW_ASSESSMENTS = 'view assessments',
   MANAGE_ASSESSMENTS = 'manage assessments',
+  MANAGE_DEPARTMENT_ASSESSMENTS = 'manage department assessments',
+  MANAGE_ALL_ASSESSMENTS = 'manage all assessments',
   ASSIGN_ANY_ASSESSMENT_USER = 'assign any assessment user',
   DELETE_ASSESSMENTS = 'delete assessments',
+  VIEW_EVALUATION_AUTOMATIONS = 'view evaluation automations',
+  VIEW_ALL_EVALUATION_AUTOMATIONS = 'view all evaluation automations',
+  MANAGE_EVALUATION_AUTOMATIONS = 'manage evaluation automations',
+  MANAGE_ALL_EVALUATION_AUTOMATIONS = 'manage all evaluation automations',
 
   VIEW_USERS = 'view users',
   MANAGE_USERS = 'manage users',

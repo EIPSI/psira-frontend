@@ -254,15 +254,13 @@ export class PatientsListComponent {
     const state: PatientStatus = await modal.afterClose.toPromise();
     if (!state) return;
 
-    // update patient
-    patient.statusId = state.id;
     this.loading = true;
     this.patientsService
-      .updatePatient(PatientModel.updateData(patient))
+      .changePatientStatus(patient.id, state.id)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         ({ data }) => {
-          patient = PatientModel.fromJson(data.updateOnePatient);
+          patient = PatientModel.fromJson(data.changePatientStatus);
           const list = [...this.data];
           list.splice(
             list.findIndex((p) => p.id === patient.id),

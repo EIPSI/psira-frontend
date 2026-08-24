@@ -19,6 +19,7 @@
       [inputMode]="inputMode"
       [showCancelButton]="showCancelButton"
       [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
+      displayMode="definition-list"
       (inputChange)="handleProfileInputChange($event)"
       (submitForm)="submitForm($event)"
     ></app-form>
@@ -47,6 +48,7 @@
         [inputMode]="inputMode"
         [showCancelButton]="showCancelButton"
         [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
+        displayMode="definition-list"
         (inputChange)="handleProfileInputChange($event)"
         (submitForm)="submitForm($event)"
       ></app-form>

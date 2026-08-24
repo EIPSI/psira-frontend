@@ -1,0 +1,28 @@
+<nz-table
+  nzSize="small"
+  [nzData]="runs"
+  [nzLoading]="loading"
+  [nzFrontPagination]="false"
+  [nzNoResult]="userId ? 'Sin automatizaciones aplicadas' : 'Este registro no tiene usuario asociado'"
+>
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Automatización</th>
+      <th>Disparador</th>
+      <th>Estado</th>
+      <th>Recurso</th>
+      <th>Mensaje</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let run of runs">
+      <td>{{ run.createdAt | date: 'short' }}</td>
+      <td>{{ run.automationTitle || 'Automatización eliminada' }}</td>
+      <td>{{ triggerPointLabel[run.triggerPoint] || run.triggerPoint }}</td>
+      <td><nz-tag [nzColor]="statusColor(run.status)">{{ run.status }}</nz-tag></td>
+      <td>{{ run.resourceType ? (run.resourceType + ' #' + run.resourceId) : '-' }}</td>
+      <td>{{ run.message || run.reason || '-' }}</td>
+    </tr>
+  </tbody>
+</nz-table>

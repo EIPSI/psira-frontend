@@ -18,6 +18,8 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { finalize, map, switchMap } from 'rxjs/operators';
 import { EvaluationAutomationsService } from '../@services/evaluation-automations.service';
 import {
+  CaseEventReason,
+  CaseEventReasonContext,
   EvaluationAutomation,
   EvaluationAutomationConditionOperator,
   EvaluationAutomationContentType,
@@ -27,6 +29,13 @@ import {
   EvaluationAutomationType,
   EvaluationAutomationTypeLabel,
 } from '../@types/evaluation-automation';
+
+type TriggerReasonScope = 'CLINICAL' | 'SUPERVISION';
+
+interface TriggerReasonGroup {
+  label: string;
+  reasons: CaseEventReason[];
+}
 
 @Component({
   selector: 'app-automation-editor',
@@ -47,13 +56,28 @@ export class AutomationEditorComponent implements OnInit {
   public randomizations: RandomizationRule[] = [];
   public emailTemplates: any[] = [];
   public contentType = EvaluationAutomationContentType.QUESTIONNAIRE;
+  public triggerReasonOptions: CaseEventReason[] = [];
+  public triggerReasonGroups: TriggerReasonGroup[] = [];
 
   public triggerPoints = Object.values(EvaluationAutomationTriggerPoint);
   public triggerPointLabel = EvaluationAutomationTriggerPointLabel;
   public automationTypes = Object.values(EvaluationAutomationType);
   public automationTypeLabel = EvaluationAutomationTypeLabel;
+  public delayUnits = Object.values(EvaluationAutomationDelayUnit);
+  public delayUnitLabel: Record<EvaluationAutomationDelayUnit, string> = {
+    [EvaluationAutomationDelayUnit.MINUTES]: 'Minutos',
+    [EvaluationAutomationDelayUnit.HOURS]: 'Horas',
+    [EvaluationAutomationDelayUnit.DAYS]: 'Días',
+    [EvaluationAutomationDelayUnit.WEEKS]: 'Semanas',
+    [EvaluationAutomationDelayUnit.MONTHS]: 'Meses',
+    [EvaluationAutomationDelayUnit.YEARS]: 'Años',
+  };
   public EAT = EvaluationAutomationType;
   public EACT = EvaluationAutomationContentType;
+  public triggerReasonScopeOptions: Array<{ value: TriggerReasonScope; label: string }> = [
+    { value: 'CLINICAL', label: 'Tratamiento' },
+    { value: 'SUPERVISION', label: 'Supervisión' },
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -112,6 +136,29 @@ export class AutomationEditorComponent implements OnInit {
 
   public onDepartmentsChange(): void {
     this.loadDepartmentScopedResources();
+    this.loadTriggerReasons();
+  }
+
+  public onTriggerPointChange(triggerPoint: EvaluationAutomationTriggerPoint): void {
+    if (triggerPoint !== EvaluationAutomationTriggerPoint.SESSION_NUMBER) {
+      this.form.patchValue({ triggerSessionNumber: null });
+    }
+    if (triggerPoint !== EvaluationAutomationTriggerPoint.LAST_LOGIN) {
+      this.form.patchValue({ lastLoginInactiveDays: null });
+    }
+    if (!this.usesReasonFilter(triggerPoint)) {
+      this.form.patchValue({ triggerReasonIds: [], triggerReasonScope: null });
+      this.triggerReasonOptions = [];
+      this.triggerReasonGroups = [];
+      return;
+    }
+    this.form.patchValue({ triggerReasonIds: [], triggerReasonScope: null });
+    this.loadTriggerReasons();
+  }
+
+  public onTriggerReasonScopeChange(): void {
+    this.form.patchValue({ triggerReasonIds: [] });
+    this.loadTriggerReasons();
   }
 
   public selectAllDepartments(): void {
@@ -119,16 +166,17 @@ export class AutomationEditorComponent implements OnInit {
       departmentIds: this.departments.map((department) => department.id),
     });
     this.loadDepartmentScopedResources();
+    this.loadTriggerReasons();
   }
 
   public removeAllDepartments(): void {
     this.form.patchValue({ departmentIds: [] });
     this.loadDepartmentScopedResources();
+    this.loadTriggerReasons();
   }
 
   public onAutomationTypeChange(type: EvaluationAutomationType): void {
     this.form.patchValue({
-      delayUnit: type === EvaluationAutomationType.FIXED_SCHEME ? EvaluationAutomationDelayUnit.DAYS : EvaluationAutomationDelayUnit.MINUTES,
       schemeId: null,
       assessmentTypeId: null,
       questionnaireIds: null,
@@ -176,12 +224,29 @@ export class AutomationEditorComponent implements OnInit {
     const role = this.roles.find((item) => item.id === this.form?.get('roleId')?.value)?.name || 'el rol seleccionado';
     const trigger = this.triggerPointLabel[this.form?.get('triggerPoint')?.value] || 'el trigger seleccionado';
     const delay = this.form?.get('delayAmount')?.value || 0;
+    const unit = this.delayUnitLabel[this.form?.get('delayUnit')?.value] || '';
     if (this.isFixedScheme) {
       const scheme = this.schemes.find((item) => item.id === this.form?.get('schemeId')?.value)?.name || 'el esquema seleccionado';
-      return `Cuando un usuario con rol ${role} cumpla ${trigger}, se asignará el esquema fijo ${scheme} ${delay} día(s) después.`;
+      return `Cuando un usuario con rol ${role} cumpla ${trigger}, se asignará el esquema fijo ${scheme} ${delay} ${unit.toLowerCase()} después.`;
     }
     const name = this.form?.get('evaluationName')?.value || 'la evaluación configurada';
-    return `Cuando un usuario con rol ${role} cumpla ${trigger}, se programará ${name} ${delay} minuto(s) después.`;
+    return `Cuando un usuario con rol ${role} cumpla ${trigger}, se programará ${name} ${delay} ${unit.toLowerCase()} después.`;
+  }
+
+  public isSessionNumberTrigger(): boolean {
+    return this.form?.get('triggerPoint')?.value === EvaluationAutomationTriggerPoint.SESSION_NUMBER;
+  }
+
+  public isLastLoginTrigger(): boolean {
+    return this.form?.get('triggerPoint')?.value === EvaluationAutomationTriggerPoint.LAST_LOGIN;
+  }
+
+  public usesReasonFilter(triggerPoint = this.form?.get('triggerPoint')?.value): boolean {
+    return [
+      EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION,
+      EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION,
+      EvaluationAutomationTriggerPoint.NEW_TREATMENT,
+    ].includes(triggerPoint);
   }
 
   private buildForm(): void {
@@ -195,6 +260,10 @@ export class AutomationEditorComponent implements OnInit {
       conditions: this.fb.array([]),
       triggerPoint: [EvaluationAutomationTriggerPoint.USER_CREATED, Validators.required],
       automationType: [EvaluationAutomationType.FIXED_SCHEME, Validators.required],
+      triggerSessionNumber: [null],
+      triggerReasonScope: [null],
+      triggerReasonIds: [[]],
+      lastLoginInactiveDays: [null],
       delayAmount: [0, [Validators.required, Validators.min(0)]],
       delayUnit: [EvaluationAutomationDelayUnit.DAYS, Validators.required],
       schemeId: [null],
@@ -230,6 +299,7 @@ export class AutomationEditorComponent implements OnInit {
           this.assessmentTypes = assessmentTypes;
           this.emailTemplates = emailTemplates;
           this.loadDepartmentScopedResources();
+          this.loadTriggerReasons();
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load automation options' })
       );
@@ -376,6 +446,10 @@ export class AutomationEditorComponent implements OnInit {
       roleId: automation.role?.id,
       triggerPoint: automation.triggerPoint,
       automationType: automation.automationType,
+      triggerSessionNumber: automation.triggerSessionNumber,
+      triggerReasonScope: this.scopeForReasonContexts(automation.triggerReasonContexts || [], automation.triggerPoint),
+      triggerReasonIds: automation.triggerReasonIds || [],
+      lastLoginInactiveDays: automation.lastLoginInactiveDays,
       delayAmount: automation.delayAmount,
       delayUnit: automation.delayUnit,
       schemeId: automation.schemeId,
@@ -390,6 +464,7 @@ export class AutomationEditorComponent implements OnInit {
       mailTemplateId: automation.mailTemplateId,
     });
     this.loadDepartmentScopedResources();
+    this.loadTriggerReasons();
   }
 
   private buildPayload(): Partial<EvaluationAutomation> {
@@ -404,6 +479,18 @@ export class AutomationEditorComponent implements OnInit {
       conditions: [],
       triggerPoint: value.triggerPoint,
       automationType: value.automationType,
+      triggerSessionNumber: value.triggerPoint === EvaluationAutomationTriggerPoint.SESSION_NUMBER
+        ? Number(value.triggerSessionNumber)
+        : null,
+      triggerReasonIds: this.usesReasonFilter(value.triggerPoint)
+        ? this.normalizeNumberArray(value.triggerReasonIds)
+        : [],
+      triggerReasonContexts: this.usesReasonFilter(value.triggerPoint)
+        ? this.contextsForTriggerScope(value.triggerPoint, value.triggerReasonScope)
+        : [],
+      lastLoginInactiveDays: value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN && value.lastLoginInactiveDays
+        ? Number(value.lastLoginInactiveDays)
+        : null,
       delayAmount: Number(value.delayAmount),
       delayUnit: value.delayUnit,
     };
@@ -446,6 +533,19 @@ export class AutomationEditorComponent implements OnInit {
 
   private hasValidTypeConfiguration(): boolean {
     const value = this.form.value;
+    if (value.triggerPoint === EvaluationAutomationTriggerPoint.SESSION_NUMBER && !value.triggerSessionNumber) {
+      this.message.error('Debe indicarse el número de sesión que activa la automatización');
+      return false;
+    }
+    if (
+      value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN &&
+      value.lastLoginInactiveDays &&
+      Number(value.lastLoginInactiveDays) < 1
+    ) {
+      this.message.error('Los días desde el login anterior deben ser mayores a cero');
+      return false;
+    }
+
     if (value.automationType === EvaluationAutomationType.FIXED_SCHEME) {
       if (!value.schemeId) {
         this.message.error('Debe seleccionarse un esquema fijo');
@@ -477,10 +577,163 @@ export class AutomationEditorComponent implements OnInit {
     return true;
   }
 
+  private loadTriggerReasons(): void {
+    const contexts = this.contextsForTriggerScope(
+      this.form?.get('triggerPoint')?.value,
+      this.form?.get('triggerReasonScope')?.value
+    );
+    if (!contexts.length) {
+      this.triggerReasonOptions = [];
+      this.triggerReasonGroups = [];
+      return;
+    }
+
+    const departmentIds = this.selectedDepartmentIds.length ? this.selectedDepartmentIds : [undefined];
+    forkJoin(
+      contexts.flatMap((context) =>
+        departmentIds.map((departmentId: number | undefined) =>
+          this.loadReasonTree(context, undefined, departmentId).pipe(
+            map((reasons) => ({ context, reasons }))
+          )
+        )
+      )
+    ).subscribe(
+      (groups: Array<{ context: CaseEventReasonContext; reasons: CaseEventReason[] }>) => {
+        const byId = new Map<number, CaseEventReason>();
+        const byContext = new Map<CaseEventReasonContext, Map<number, CaseEventReason>>();
+        groups.forEach((group) => {
+          if (!byContext.has(group.context)) {
+            byContext.set(group.context, new Map<number, CaseEventReason>());
+          }
+          group.reasons.forEach((reason: CaseEventReason) => {
+            byId.set(reason.id, reason);
+            byContext.get(group.context)?.set(reason.id, reason);
+          });
+        });
+        this.triggerReasonOptions = Array.from(byId.values());
+        this.triggerReasonGroups = Array.from(byContext.entries())
+          .map(([context, reasons]) => ({
+            label: this.contextLabel(context),
+            reasons: Array.from(reasons.values()),
+          }))
+          .filter((group) => group.reasons.length);
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load event reasons' })
+    );
+  }
+
+  private loadReasonTree(
+    context: CaseEventReasonContext,
+    parentId?: number,
+    departmentId?: number
+  ): Observable<CaseEventReason[]> {
+    return this.automationsService.getCaseEventReasons(context, parentId, departmentId).pipe(
+      switchMap((reasons: CaseEventReason[]) => {
+        if (!reasons.length) {
+          return of([]);
+        }
+        return forkJoin(
+          reasons.map((reason: CaseEventReason) =>
+            this.loadReasonTree(context, reason.id, departmentId).pipe(
+              map((children: CaseEventReason[]) => {
+                const parentLabel = reason.label;
+                return [
+                  { ...reason, label: parentLabel },
+                  ...children.map((child: CaseEventReason) => ({
+                    ...child,
+                    label: `${parentLabel} > ${child.label}`,
+                  })),
+                ];
+              })
+            )
+          )
+        ).pipe(map((groups: CaseEventReason[][]) => groups.flat()));
+      })
+    );
+  }
+
+  private contextsForTrigger(triggerPoint: EvaluationAutomationTriggerPoint): CaseEventReasonContext[] {
+    switch (triggerPoint) {
+      case EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION:
+        return [
+          CaseEventReasonContext.SESSION_CANCELLATION,
+          CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION,
+        ];
+      case EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION:
+        return [
+          CaseEventReasonContext.TREATMENT_FINALIZATION,
+          CaseEventReasonContext.SUPERVISION_FINALIZATION,
+        ];
+      case EvaluationAutomationTriggerPoint.NEW_TREATMENT:
+        return [
+          CaseEventReasonContext.NEW_TREATMENT,
+          CaseEventReasonContext.NEW_SUPERVISION,
+        ];
+      default:
+        return [];
+    }
+  }
+
+  private contextsForTriggerScope(
+    triggerPoint: EvaluationAutomationTriggerPoint,
+    scope?: TriggerReasonScope
+  ): CaseEventReasonContext[] {
+    const contexts = this.contextsForTrigger(triggerPoint);
+    if (!scope) return contexts;
+    return contexts.filter((context) => this.scopeForContext(context) === scope);
+  }
+
+  private scopeForReasonContexts(
+    contexts: CaseEventReasonContext[],
+    triggerPoint: EvaluationAutomationTriggerPoint
+  ): TriggerReasonScope | null {
+    const expectedContexts = this.contextsForTrigger(triggerPoint);
+    const scopedContexts = (contexts || []).filter((context) => expectedContexts.includes(context));
+    if (!scopedContexts.length) return null;
+    const scopes = Array.from(new Set(scopedContexts.map((context) => this.scopeForContext(context))));
+    return scopes.length === 1 ? scopes[0] : null;
+  }
+
+  private scopeForContext(context: CaseEventReasonContext): TriggerReasonScope {
+    return [
+      CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION,
+      CaseEventReasonContext.SUPERVISION_FINALIZATION,
+      CaseEventReasonContext.NEW_SUPERVISION,
+    ].includes(context)
+      ? 'SUPERVISION'
+      : 'CLINICAL';
+  }
+
+  private contextLabel(context: CaseEventReasonContext): string {
+    switch (context) {
+      case CaseEventReasonContext.SESSION_CANCELLATION:
+        return 'Tratamiento';
+      case CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION:
+        return 'Supervisión';
+      case CaseEventReasonContext.TREATMENT_FINALIZATION:
+        return 'Tratamiento';
+      case CaseEventReasonContext.SUPERVISION_FINALIZATION:
+        return 'Supervisión';
+      case CaseEventReasonContext.NEW_TREATMENT:
+        return 'Tratamiento';
+      case CaseEventReasonContext.NEW_SUPERVISION:
+        return 'Supervisión';
+      default:
+        return 'Motivo';
+    }
+  }
+
   private parseReminderMinutes(value: string): number[] {
     return (value || '')
       .split(',')
       .map((part) => Number(part.trim()))
       .filter((part) => Number.isFinite(part) && part >= 0);
+  }
+
+  private normalizeNumberArray(value: any): number[] {
+    const values = Array.isArray(value) ? value : value ? [value] : [];
+    return values
+      .map((item) => Number(item))
+      .filter((item) => Number.isFinite(item));
   }
 }

@@ -19,6 +19,8 @@
 .patient-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-top: 10px;
   margin-bottom: 20px;
 
@@ -26,10 +28,65 @@
     margin-bottom: 0;
   }
 
-  .status-selector {
-    margin-left: 20px;
+  .patient-header-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .status-selector {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.cycle-tab-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cycle-tab-action {
+  height: 38px;
+  border-radius: 4px 4px 0 0;
+  font-weight: 500;
+}
+
+.cycle-tab-action-danger {
+  color: #fff;
+  background: #cf1322;
+  border-color: #cf1322;
+}
+
+.cycle-tab-action-primary {
+  color: #fff;
+  background: #1677ff;
+  border-color: #1677ff;
+}
+
+.cycle-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 900px) {
+  .patient-header {
+    align-items: flex-start;
+    flex-direction: column;
+
+    .patient-header-actions {
+      justify-content: flex-start;
+    }
   }
 }
 

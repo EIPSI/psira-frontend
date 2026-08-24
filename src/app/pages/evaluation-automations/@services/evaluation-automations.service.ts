@@ -6,7 +6,7 @@ import { Paging } from '@shared/@types/paging';
 import { Sorting } from '@shared/@types/sorting';
 import { EvaluationAutomationMutations } from '../@graphql/evaluation-automation-mutations';
 import { EvaluationAutomationQueries } from '../@graphql/evaluation-automations';
-import { EvaluationAutomation } from '../@types/evaluation-automation';
+import { CaseEventReason, CaseEventReasonContext, EvaluationAutomation } from '../@types/evaluation-automation';
 
 @Injectable({
   providedIn: 'root',
@@ -91,6 +91,38 @@ export class EvaluationAutomationsService {
         fetchPolicy: 'no-cache',
       })
       .pipe(map((result: any) => result.data.evaluationAutomationPreview || []));
+  }
+
+  getAutomationRuns(params?: {
+    paging?: Paging;
+    filter?: any;
+    sorting?: Sorting[];
+  }): Observable<{ edges: any[]; pageInfo: any }> {
+    return this.apollo
+      .query({
+        query: EvaluationAutomationQueries.evaluationAutomationRuns,
+        variables: {
+          paging: params?.paging,
+          filter: params?.filter,
+          sorting: params?.sorting,
+        },
+        fetchPolicy: 'no-cache',
+      })
+      .pipe(map((result: any) => result.data.evaluationAutomationRuns));
+  }
+
+  getCaseEventReasons(
+    context: CaseEventReasonContext,
+    parentId?: number,
+    departmentId?: number
+  ): Observable<CaseEventReason[]> {
+    return this.apollo
+      .query({
+        query: EvaluationAutomationQueries.caseEventReasons,
+        variables: { context, parentId, departmentId, includeInactive: false },
+        fetchPolicy: 'no-cache',
+      })
+      .pipe(map((result: any) => result.data.caseEventReasons || []));
   }
 
   createAutomation(automation: Partial<EvaluationAutomation>): Observable<EvaluationAutomation> {

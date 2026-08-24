@@ -20,6 +20,7 @@ export class FormComponent implements OnInit {
   @Input() showEditButton = true;
   @Input() uploadUrl: string;
   @Input() images: any[];
+  @Input() displayMode: 'grid' | 'definition-list' = 'grid';
 
   @Input()
   set resetForm(val: boolean) {

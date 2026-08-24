@@ -7,10 +7,20 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, from, Observable } from 'rxjs';
+import { concatMap, finalize, switchMap, toArray } from 'rxjs/operators';
 import { AssessmentAdministrationService } from '@app/pages/administration/@services/assessment-administration.service';
-import { CalendarEvent, CalendarView } from '@app/pages/calendar/@types/calendar';
+import {
+  AddClinicalSessionSchemesApplicationMode,
+  CalendarEvent,
+  CalendarEventType,
+  CalendarView,
+  CaseEventReasonContext,
+  ClinicalSessionCancellationReason,
+  ClinicalSessionCancellationType,
+  ClinicalSessionModality,
+  ClinicalSessionSchemeApplication,
+} from '@app/pages/calendar/@types/calendar';
 import { CalendarService } from '@app/pages/calendar/@services/calendar.service';
 import { CalendarEventUiService } from '@app/pages/calendar/@services/calendar-event-ui.service';
 import { CalendarRecurrenceService, RepeatEndMode, RepeatUnit } from '@app/pages/calendar/@services/calendar-recurrence.service';
@@ -32,6 +42,7 @@ import { SelectedCaregiver } from '../@types/caregiver';
 import { FormattedPatient } from '../@types/formatted-patient';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 
@@ -82,6 +93,22 @@ export class PatientCalendarComponent implements OnChanges {
   editingEvent?: CalendarEvent;
   editStartAt?: Date;
   editEndAt?: Date;
+  editSessionNumber?: number;
+  editModality = ClinicalSessionModality.IN_PERSON;
+  editDescription = '';
+  editRestructure = false;
+  editRestructureEvery = 1;
+  editRestructureUnit = RepeatUnit.WEEK;
+  editRestructureOnDays: number[] = [];
+  editRestructureEndMode = RepeatEndMode.AFTER_COUNT;
+  editRestructureEndDate?: Date;
+  editRestructureCount = 12;
+  editAddSchemeIds: number[] = [];
+  editAddSchemesPropagate = false;
+  editAddSchemesApplicationMode = AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION;
+  editOverwriteExistingSchemes = false;
+  editStopExistingSchemesFromSession = false;
+  activeSchemeApplications: ClinicalSessionSchemeApplication[] = [];
   editModalVisible = false;
   createEventModalVisible = false;
   createTitle = '';
@@ -89,6 +116,8 @@ export class PatientCalendarComponent implements OnChanges {
   createStartAt = new Date();
   createEndAt = new Date(new Date().getTime() + 60 * 60 * 1000);
   createTherapist?: User;
+  createModality = ClinicalSessionModality.IN_PERSON;
+  createResponsibleUserIds: number[] = [];
   createSessionSchemeIds: number[] = [];
   createFixedSchemeIds: number[] = [];
   createFixedRandomizationRuleIds: number[] = [];
@@ -102,6 +131,14 @@ export class PatientCalendarComponent implements OnChanges {
   repeatCount = 12;
   repeatUnits = this.recurrenceService.repeatUnits;
   weekDayOptions = this.recurrenceService.weekDayOptions;
+  addSchemeApplicationModeOptions = [
+    { label: 'Desde esta sesión', value: AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION },
+    { label: 'Estructura original', value: AddClinicalSessionSchemesApplicationMode.ORIGINAL_SESSION_NUMBER },
+  ];
+  modalityOptions = [
+    { label: 'Presencial', value: ClinicalSessionModality.IN_PERSON },
+    { label: 'Online', value: ClinicalSessionModality.ONLINE },
+  ];
   simpleAssessmentTypeId?: number;
   simpleContentType = AssessmentContentType.QUESTIONNAIRE;
   simpleQuestionnaireIds: string[] = [];
@@ -119,6 +156,21 @@ export class PatientCalendarComponent implements OnChanges {
   highLevelRandomizations: RandomizationRule[] = [];
   private currentUser: User;
   private draggedEvent?: CalendarEvent;
+  contextEvent?: CalendarEvent;
+  cancelModalVisible = false;
+  cancelEvent?: CalendarEvent;
+  cancelType = ClinicalSessionCancellationType.RESCHEDULED;
+  cancelReasonId?: number;
+  cancelOtherReason = '';
+  cancelClinicalNote = '';
+  cancellationReasons: ClinicalSessionCancellationReason[] = [];
+  cancellationReasonLevels: ClinicalSessionCancellationReason[][] = [];
+  selectedCancellationReasonIds: number[] = [];
+  cancellationRootLabel = 'Motivo';
+
+  get showCancellationOtherReason(): boolean {
+    return this.isSelectedOtherReason(this.cancellationReasonLevels, this.cancelReasonId);
+  }
 
   constructor(
     private assessmentAdministrationService: AssessmentAdministrationService,
@@ -130,6 +182,7 @@ export class PatientCalendarComponent implements OnChanges {
     private errorService: ErrorHandlerService,
     private eventUiService: CalendarEventUiService,
     private modalService: NzModalService,
+    private contextMenuService: NzContextMenuService,
     private randomizationsService: RandomizationsService,
     private recurrenceService: CalendarRecurrenceService
   ) {}
@@ -143,6 +196,7 @@ export class PatientCalendarComponent implements OnChanges {
       this.loadBundles();
       this.loadRandomizations();
       this.loadCaregivers();
+      this.loadCancellationReasons();
     }
   }
 
@@ -153,6 +207,14 @@ export class PatientCalendarComponent implements OnChanges {
   }
 
   openCreateEvent(date: Date = this.selectedDate, hour?: number): void {
+    if (!this.canManagePatientCalendar()) {
+      this.modalService.warning({
+        nzTitle: 'Calendario del caso',
+        nzContent: 'Solo los administradores del caso pueden crear sesiones y evaluaciones.',
+      });
+      return;
+    }
+
     const startAt = new Date(date);
     startAt.setHours(hour ?? 9, 0, 0, 0);
     this.createType = CalendarCreateType.SESSION;
@@ -160,7 +222,9 @@ export class PatientCalendarComponent implements OnChanges {
     this.createSessionKind = ClinicalSessionKind.CLINICAL;
     this.createStartAt = startAt;
     this.createEndAt = new Date(startAt.getTime() + 60 * 60 * 1000);
-    this.createTherapist = this.therapist;
+    this.createResponsibleUserIds = this.defaultCaseAdministratorIds();
+    this.createTherapist = this.primaryResponsibleUser();
+    this.createModality = ClinicalSessionModality.IN_PERSON;
     this.createSessionSchemeIds = [];
     this.createFixedSchemeIds = [];
     this.createFixedRandomizationRuleIds = [];
@@ -185,6 +249,7 @@ export class PatientCalendarComponent implements OnChanges {
   }
 
   saveCreateEvent(): void {
+    if (!this.canManagePatientCalendar()) return;
     if (this.createType === CalendarCreateType.SESSION) {
       this.saveSession();
       return;
@@ -251,8 +316,12 @@ export class PatientCalendarComponent implements OnChanges {
     if (!sessions.length) return;
 
     this.creating = true;
-    forkJoin(sessions.map((session) => this.calendarService.createClinicalSession(session)))
-      .pipe(finalize(() => (this.creating = false)))
+    from(sessions)
+      .pipe(
+        concatMap((session) => this.calendarService.createClinicalSession(session)),
+        toArray(),
+        finalize(() => (this.creating = false))
+      )
       .subscribe(
         () => {
           this.createEventModalVisible = false;
@@ -269,6 +338,8 @@ export class PatientCalendarComponent implements OnChanges {
       (this.fixedSchemeSelectionType === FixedSchemeSelectionType.RANDOMIZATION && !this.createFixedRandomizationRuleIds.length)
     ) return;
     const patient = this.patient;
+    const startDate = startOfDay(this.createStartAt);
+    const primaryResponsibleUserId = this.primaryResponsibleUserId();
     const selectedItems: FixedSchemeApplySelection[] = this.fixedSchemeSelectionType === FixedSchemeSelectionType.SCHEME
       ? this.createFixedSchemeIds.map((schemeId) => ({ schemeId }))
       : this.createFixedRandomizationRuleIds.map((randomizationRuleId) => ({ randomizationRuleId }));
@@ -278,10 +349,10 @@ export class PatientCalendarComponent implements OnChanges {
         ...schemeSelection,
         patientId: patient.id,
         targetUserId: patient.userId,
-        therapistId: this.createTherapist?.id || this.therapist?.id,
+        therapistId: primaryResponsibleUserId || this.therapist?.id,
         responderUserId: patient.userId,
-        clinicianId: this.createTherapist?.id || this.currentUser?.id,
-        startDate: this.createStartAt,
+        clinicianId: primaryResponsibleUserId || this.currentUser?.id,
+        startDate,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       })
     ))
@@ -297,17 +368,33 @@ export class PatientCalendarComponent implements OnChanges {
 
   private buildSessionCreateInputs(): any[] {
     const patient = this.patient;
-    return this.buildSessionOccurrences().map((occurrence) => ({
+    const nextSessionNumber = this.nextSessionNumber();
+    const responsibleUserIds = this.selectedResponsibleUserIds();
+    const primaryResponsibleUserId = this.primaryResponsibleUserId();
+    return this.buildSessionOccurrences()
+      .sort((left, right) => left.startAt.getTime() - right.startAt.getTime())
+      .map((occurrence, index) => ({
       title: this.createTitle,
       sessionKind: this.createSessionKind,
       startAt: occurrence.startAt,
       endAt: occurrence.endAt,
+      sessionNumber: nextSessionNumber + index,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       schemeIds: this.createSessionSchemeIds,
       patientId: patient.id,
       targetUserId: patient.userId,
-      therapistId: this.createTherapist?.id,
+      therapistId: primaryResponsibleUserId,
+      responsibleUserIds,
+      modality: this.createModality,
     }));
+  }
+
+  private nextSessionNumber(): number {
+    const existingNumbers = (this.events || [])
+      .filter((event) => event.clinicalSessionId && event.sessionKind === this.createSessionKind)
+      .map((event) => Number(event.sessionNumber || 0))
+      .filter((sessionNumber) => Number.isFinite(sessionNumber));
+    return Math.max(0, ...existingNumbers) + 1;
   }
 
   private buildSessionOccurrences(): Array<{ startAt: Date; endAt: Date }> {
@@ -328,6 +415,8 @@ export class PatientCalendarComponent implements OnChanges {
     if (!this.patient?.id || !this.simpleAssessmentTypeId || !this.currentUser?.id || !this.simpleResponderUserId) return;
     const expirationDate = new Date(this.createStartAt.getTime() + this.simpleAvailabilityMinutes * 60000);
     const content = this.simpleAssessmentContentPayload();
+    const responsibleUserIds = this.selectedResponsibleUserIds();
+    const primaryResponsibleUserId = this.primaryResponsibleUserId() || this.currentUser.id;
     this.creating = true;
     this.calendarService
       .createAssessmentOccurrence({
@@ -335,7 +424,8 @@ export class PatientCalendarComponent implements OnChanges {
         patientId: this.patient.id,
         targetUserId: this.patient.userId,
         responderUserId: this.simpleResponderUserId,
-        clinicianId: this.currentUser.id,
+        clinicianId: primaryResponsibleUserId,
+        responsibleUserIds,
         informantType: this.simpleResponderKind,
         informantCaregiverRelation: this.simpleResponderKind === 'CAREGIVER' ? this.selectedCaregiverRelation : null,
         ...content,
@@ -361,7 +451,70 @@ export class PatientCalendarComponent implements OnChanges {
     this.editingEvent = event;
     this.editStartAt = new Date(event.startAt);
     this.editEndAt = new Date(event.endAt);
+    this.editSessionNumber = event.sessionNumber;
+    this.editModality = event.modality || ClinicalSessionModality.IN_PERSON;
+    this.editDescription = event.description || '';
+    this.editRestructure = false;
+    this.editRestructureEvery = 1;
+    this.editRestructureUnit = RepeatUnit.WEEK;
+    this.editRestructureOnDays = [this.editStartAt.getDay()];
+    this.editRestructureEndMode = RepeatEndMode.AFTER_COUNT;
+    this.editRestructureEndDate = undefined;
+    this.editRestructureCount = 12;
+    this.editAddSchemeIds = [];
+    this.editAddSchemesPropagate = false;
+    this.editAddSchemesApplicationMode = AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION;
+    this.editOverwriteExistingSchemes = false;
+    this.editStopExistingSchemesFromSession = false;
+    this.activeSchemeApplications = [];
+    if (event.clinicalSessionId) this.loadActiveSchemeApplications(event.clinicalSessionId);
     this.editModalVisible = true;
+  }
+
+  stopActiveScheme(application: ClinicalSessionSchemeApplication): void {
+    if (!this.editingEvent?.clinicalSessionId) return;
+    this.modalService.confirm({
+      nzTitle: 'Detener esquema',
+      nzContent: 'Se cancelarán evaluaciones pendientes de este esquema desde esta sesión en adelante.',
+      nzOkText: 'Detener',
+      nzOkDanger: true,
+      nzCancelText: 'Volver',
+      nzOnOk: () => {
+        this.saving = true;
+        this.calendarService
+          .stopClinicalSessionScheme(this.editingEvent.clinicalSessionId as number, application.schemeId)
+          .pipe(finalize(() => (this.saving = false)))
+          .subscribe(
+            () => {
+              this.loadActiveSchemeApplications(this.editingEvent.clinicalSessionId as number);
+              this.loadEvents();
+            },
+            (error) => this.errorService.handleError(error, { prefix: 'Unable to stop evaluation scheme' })
+          );
+      },
+    });
+  }
+
+  openEventContextMenu(event: MouseEvent, menu: NzDropdownMenuComponent, calendarEvent: CalendarEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextEvent = calendarEvent;
+    this.contextMenuService.create(event, menu);
+  }
+
+  openContextEvent(): void {
+    if (!this.contextEvent) return;
+    this.openEdit(this.contextEvent);
+  }
+
+  duplicateContextEvent(): void {
+    if (!this.contextEvent) return;
+    this.duplicateEvent(this.contextEvent);
+  }
+
+  discardContextEvent(): void {
+    if (!this.contextEvent) return;
+    this.discardEvent(this.contextEvent);
   }
 
   onEventDragStart(event: DragEvent, calendarEvent: CalendarEvent): void {
@@ -390,33 +543,90 @@ export class PatientCalendarComponent implements OnChanges {
 
   saveEdit(): void {
     if (!this.editingEvent || !this.editStartAt || !this.editEndAt) return;
+    if (!this.editingEvent.editable) return;
 
     const clinicalSessionId = this.editingEvent.clinicalSessionId;
     const occurrenceId = this.editingEvent.occurrenceId;
     if (!clinicalSessionId && !occurrenceId) return;
 
+    if (clinicalSessionId) {
+      this.saving = true;
+      const update$ = this.calendarService
+        .updateClinicalSession({
+          clinicalSessionId,
+          sessionNumber: this.editSessionNumber ? Number(this.editSessionNumber) : undefined,
+          startAt: this.editStartAt,
+          endAt: this.editEndAt,
+          clinicalHistory: this.editDescription,
+          modality: this.editModality,
+        });
+      const save$: Observable<any> = this.editRestructure
+        ? update$.pipe(
+            switchMap(() =>
+              this.calendarService.restructureClinicalSessions({
+                clinicalSessionId,
+                startAt: this.editStartAt as Date,
+                endAt: this.editEndAt as Date,
+                every: this.editRestructureEvery,
+                unit: this.editRestructureUnit as any,
+                repeatOnDays: this.editRestructureOnDays,
+                endMode: this.editRestructureEndMode as any,
+                endDate: this.editRestructureEndDate,
+                count: this.editRestructureCount,
+              })
+            )
+          )
+        : update$;
+      const saveWithSchemes$: Observable<any> = this.editAddSchemeIds.length
+        ? save$.pipe(
+            switchMap(() =>
+              this.calendarService.addClinicalSessionSchemes({
+                clinicalSessionId,
+                propagateFuture: this.editRestructure || this.editAddSchemesPropagate,
+                schemeIds: this.editAddSchemeIds,
+                applicationMode: this.editAddSchemesApplicationMode,
+                overwriteExisting: this.editOverwriteExistingSchemes,
+              })
+            )
+          )
+        : save$;
+      saveWithSchemes$
+        .pipe(finalize(() => (this.saving = false)))
+        .subscribe(
+          () => {
+            this.editModalVisible = false;
+            this.loadEvents();
+          },
+          (error) => this.errorService.handleError(error, { prefix: 'Unable to update clinical session' })
+        );
+      return;
+    }
+
     this.moveEvent(this.editingEvent, this.editStartAt, this.editEndAt, true);
   }
 
   discardEvent(event: CalendarEvent): void {
-    if (event.clinicalSessionId) return this.cancelSession(event);
-    if (event.assessmentId && event.editable) return this.deleteAssessmentEvent(event);
+    if (!event.deletable) return;
+    if (event.type === CalendarEventType.SESSION && event.clinicalSessionId) return this.cancelSession(event);
+    if (event.type === CalendarEventType.ASSESSMENT && event.assessmentId) {
+      return this.deleteAssessmentEvent(event);
+    }
   }
 
   private cancelSession(event: CalendarEvent): void {
     if (!event.clinicalSessionId) return;
 
     this.modalService.confirm({
-      nzTitle: 'Cancelar sesion',
-      nzContent: 'La sesion se cancelara. Esta accion no elimina el registro del calendario.',
+      nzTitle: 'Cancelación',
+      nzContent: 'Confirmá que la cancelación no fue un error.',
       nzOkText: 'Continuar',
       nzCancelText: 'Volver',
-      nzOnOk: () => this.confirmFutureRenumber(event),
+      nzOnOk: () => this.openCancellationModal(event),
     });
   }
 
   private deleteAssessmentEvent(event: CalendarEvent): void {
-    if (!event.assessmentId || !event.editable) return;
+    if (!event.assessmentId || !event.deletable) return;
 
     this.modalService.confirm({
       nzTitle: 'Descartar evaluación',
@@ -428,29 +638,98 @@ export class PatientCalendarComponent implements OnChanges {
     });
   }
 
-  private confirmFutureRenumber(event: CalendarEvent): void {
-    this.modalService.confirm({
-      nzTitle: 'Renumerar sesiones futuras',
-      nzContent: 'Si esta sesion ya no cuenta, las sesiones futuras pueden bajar un numero para mantener la secuencia.',
-      nzOkText: 'Renumerar futuras',
-      nzCancelText: 'No renumerar',
-      nzClosable: false,
-      nzMaskClosable: false,
-      nzOnOk: () => this.cancelClinicalSession(event, true),
-      nzOnCancel: () => this.cancelClinicalSession(event, false),
-    });
+  private openCancellationModal(event: CalendarEvent): void {
+    this.cancelEvent = event;
+    this.cancelType = ClinicalSessionCancellationType.RESCHEDULED;
+    this.cancelReasonId = undefined;
+    this.cancelOtherReason = '';
+    this.cancelClinicalNote = '';
+    this.resetCancellationReasonSelection();
+    this.cancelModalVisible = true;
   }
 
-  private cancelClinicalSession(event: CalendarEvent, renumberFutureSessions: boolean): void {
+  onCancelTypeChange(type: ClinicalSessionCancellationType): void {
+    this.cancelType = type;
+    this.cancelReasonId = undefined;
+    this.cancelOtherReason = '';
+    this.cancelClinicalNote = '';
+    this.resetCancellationReasonSelection();
+  }
+
+  onCancellationReasonChange(levelIndex: number, reasonId?: number): void {
+    this.selectedCancellationReasonIds = this.selectedCancellationReasonIds.slice(0, levelIndex);
+    this.cancellationReasonLevels = this.cancellationReasonLevels.slice(0, levelIndex + 1);
+
+    if (!reasonId) {
+      this.cancelReasonId = this.selectedCancellationReasonIds[this.selectedCancellationReasonIds.length - 1];
+      return;
+    }
+
+    this.selectedCancellationReasonIds[levelIndex] = reasonId;
+    this.cancelReasonId = reasonId;
+    this.calendarService.getClinicalSessionCancellationReasons(reasonId).subscribe(
+      (children) => {
+        if (children?.length) {
+          this.cancellationReasonLevels[levelIndex + 1] = children;
+        }
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load cancellation reason level' })
+    );
+  }
+
+  cancellationReasonLevelLabel(levelIndex: number): string {
+    if (levelIndex === 0) return this.cancellationRootLabel;
+    const parentId = this.selectedCancellationReasonIds[levelIndex - 1];
+    const parent = this.cancellationReasonLevels[levelIndex - 1]?.find(
+      (reason) => Number(reason.id) === Number(parentId)
+    );
+    return parent?.nextLevelLabel || 'Submotivo';
+  }
+
+  confirmCancellation(): void {
+    if (!this.cancelEvent) return;
+    if (this.cancelType === ClinicalSessionCancellationType.NO_SHOW && !this.cancelReasonId) {
+      this.modalService.warning({
+        nzTitle: 'Motivo requerido',
+        nzContent: 'Para registrar una falta tenés que seleccionar un motivo.',
+      });
+      return;
+    }
+    if (this.cancelType === ClinicalSessionCancellationType.NO_SHOW && this.showCancellationOtherReason && !this.cancelOtherReason.trim()) {
+      this.modalService.warning({
+        nzTitle: 'Otro motivo requerido',
+        nzContent: 'Completá el detalle de Otro motivo.',
+      });
+      return;
+    }
+    this.cancelClinicalSession(this.cancelEvent);
+  }
+
+  private cancelClinicalSession(event: CalendarEvent): void {
     this.saving = true;
     this.calendarService
       .discardCalendarEvent(event, {
-        renumberFutureSessions,
-        cancellationReason: 'Cancelled from patient calendar',
+        renumberFutureSessions: true,
+        cancellationType: this.cancelType,
+        cancellationReason:
+          this.cancelType === ClinicalSessionCancellationType.RESCHEDULED
+            ? 'Cancelación por reprogramación'
+            : undefined,
+        cancellationReasonId:
+          this.cancelType === ClinicalSessionCancellationType.NO_SHOW ? this.cancelReasonId : undefined,
+        cancellationOtherReason:
+          this.cancelType === ClinicalSessionCancellationType.NO_SHOW && this.showCancellationOtherReason
+            ? this.cancelOtherReason.trim()
+            : undefined,
+        cancellationComment: this.cancelClinicalNote.trim() || undefined,
       })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe(
-        () => this.loadEvents(),
+        () => {
+          this.cancelModalVisible = false;
+          this.editModalVisible = false;
+          this.loadEvents();
+        },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to cancel session' })
       );
   }
@@ -478,6 +757,88 @@ export class PatientCalendarComponent implements OnChanges {
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to move calendar event' })
     );
+  }
+
+  private duplicateEvent(event: CalendarEvent): void {
+    if (!event.clinicalSessionId || !event.editable) {
+      this.modalService.warning({
+        nzTitle: 'Duplicar evento',
+        nzContent: 'Por ahora solo se pueden duplicar sesiones desde el calendario.',
+      });
+      return;
+    }
+
+    const startAt = new Date(event.startAt);
+    const endAt = new Date(event.endAt);
+    const responsibleUserIds = this.eventResponsibleUserIds(event);
+    const primaryResponsibleUserId = responsibleUserIds[0];
+    this.creating = true;
+    this.calendarService
+      .createClinicalSession({
+        title: event.title,
+        sessionKind: event.sessionKind || ClinicalSessionKind.CLINICAL,
+        startAt,
+        endAt,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        patientId: this.patient.id,
+        targetUserId: this.patient.userId,
+        therapistId: primaryResponsibleUserId,
+        responsibleUserIds,
+        modality: event.modality || ClinicalSessionModality.IN_PERSON,
+      })
+      .pipe(finalize(() => (this.creating = false)))
+      .subscribe(
+        () => this.loadEvents(),
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate calendar event' })
+      );
+  }
+
+  private canManagePatientCalendar(): boolean {
+    const currentUserId = this.currentUser?.id;
+    return !!currentUserId && this.caseAdministratorOptions().some((user) => user.id === currentUserId);
+  }
+
+  userLabel(user: User): string {
+    return [user?.firstName, user?.middleName, user?.lastName]
+      .filter((part) => !!part)
+      .join(' ') || user?.username || user?.email || `Usuario ${user?.id}`;
+  }
+
+  caseAdministratorOptions(): User[] {
+    return this.patient?.caseManagers || [];
+  }
+
+  onResponsibleUsersChange(userIds: number[]): void {
+    this.createResponsibleUserIds = userIds || [];
+    this.createTherapist = this.primaryResponsibleUser();
+  }
+
+  private defaultCaseAdministratorIds(): number[] {
+    const administrators = this.caseAdministratorOptions();
+    const currentUserId = this.currentUser?.id;
+    if (currentUserId && administrators.some((user) => user.id === currentUserId)) return [currentUserId];
+    return administrators[0]?.id ? [administrators[0].id] : [];
+  }
+
+  private selectedResponsibleUserIds(): number[] {
+    return Array.from(new Set((this.createResponsibleUserIds || []).filter((id: number) => !!id)));
+  }
+
+  private primaryResponsibleUserId(): number | undefined {
+    return this.selectedResponsibleUserIds()[0];
+  }
+
+  private primaryResponsibleUser(): User | undefined {
+    const userId = this.primaryResponsibleUserId();
+    return this.caseAdministratorOptions().find((user) => user.id === userId);
+  }
+
+  private eventResponsibleUserIds(event: CalendarEvent): number[] {
+    const eventIds = event.responsibleUserIds || [];
+    const fallbackIds = [event.therapistId, this.primaryResponsibleUserId(), this.therapist?.id].filter(
+      (id: number | undefined) => !!id
+    );
+    return Array.from(new Set([...(eventIds || []), ...(fallbackIds as number[])]));
   }
 
   loadEvents(): void {
@@ -603,6 +964,47 @@ export class PatientCalendarComponent implements OnChanges {
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load caregivers' })
       );
+  }
+
+  private loadCancellationReasons(): void {
+    this.loadCancellationRootLabel();
+    this.calendarService.getClinicalSessionCancellationReasons().subscribe(
+      (reasons) => {
+        this.cancellationReasons = reasons || [];
+        this.resetCancellationReasonSelection();
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load cancellation reasons' })
+    );
+  }
+
+  private loadCancellationRootLabel(): void {
+    this.calendarService.getCaseEventReasonTrees(false).subscribe(
+      (trees) => {
+        const tree = (trees || []).find((item) =>
+          item.context === CaseEventReasonContext.SESSION_CANCELLATION &&
+          !item.departmentId
+        ) || (trees || []).find((item) => item.context === CaseEventReasonContext.SESSION_CANCELLATION);
+        this.cancellationRootLabel = tree?.levelLabels?.[0] || 'Motivo';
+      },
+      () => (this.cancellationRootLabel = 'Motivo')
+    );
+  }
+
+  private loadActiveSchemeApplications(clinicalSessionId: number): void {
+    this.calendarService.getClinicalSessionSchemeApplications(clinicalSessionId).subscribe(
+      (applications) => (this.activeSchemeApplications = applications || []),
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load active evaluation schemes' })
+    );
+  }
+
+  private resetCancellationReasonSelection(): void {
+    this.selectedCancellationReasonIds = [];
+    this.cancellationReasonLevels = this.cancellationReasons.length ? [this.cancellationReasons] : [];
+  }
+
+  private isSelectedOtherReason(levels: ClinicalSessionCancellationReason[][], reasonId?: number): boolean {
+    if (!reasonId) return false;
+    return levels.some((level) => level.some((reason) => Number(reason.id) === Number(reasonId) && !!reason.isOther));
   }
 
   private createQuestionnaireSearchFilter(searchString: string): any[] {

@@ -13,18 +13,36 @@ export class EvaluationAutomationModel {
         ? json.scheme?.name || (json.schemeId ? `Esquema #${json.schemeId}` : '-')
         : json.evaluationName || json.assessmentType?.name || '-';
 
+    const delayUnitLabel: Record<string, string> = {
+      MINUTES: 'minuto(s)',
+      HOURS: 'hora(s)',
+      DAYS: 'día(s)',
+      WEEKS: 'semana(s)',
+      MONTHS: 'mes(es)',
+      YEARS: 'año(s)',
+    };
+    const triggerColor: Record<string, string> = {
+      [EvaluationAutomationTriggerPoint.USER_CREATED]: 'blue',
+      [EvaluationAutomationTriggerPoint.FIRST_LOGIN]: 'cyan',
+      [EvaluationAutomationTriggerPoint.LAST_LOGIN]: 'cyan',
+      [EvaluationAutomationTriggerPoint.SESSION_NUMBER]: 'green',
+      [EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION]: 'volcano',
+      [EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION]: 'orange',
+      [EvaluationAutomationTriggerPoint.NEW_TREATMENT]: 'purple',
+    };
+
     return {
       ...json,
       departmentNames: (json.departments || []).map((department) => department.name).join(', '),
       roleName: json.role?.name || json.role?.code || '-',
       resourceName,
-      delayLabel: `${json.delayAmount || 0} ${json.delayUnit === 'DAYS' ? 'día(s)' : 'minuto(s)'}`,
+      delayLabel: `${json.delayAmount || 0} ${delayUnitLabel[json.delayUnit] || json.delayUnit}`,
       formattedStatus: {
         color: json.active ? 'green' : 'default',
         title: json.active ? 'Activa' : 'Inactiva',
       },
       formattedTriggerPoint: {
-        color: json.triggerPoint === EvaluationAutomationTriggerPoint.USER_CREATED ? 'blue' : 'cyan',
+        color: triggerColor[json.triggerPoint] || 'default',
         title: EvaluationAutomationTriggerPointLabel[json.triggerPoint] || json.triggerPoint,
       },
       formattedAutomationType: {

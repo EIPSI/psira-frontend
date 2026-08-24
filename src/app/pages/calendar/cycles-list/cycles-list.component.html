@@ -1,0 +1,30 @@
+<nz-table
+  nzSize="small"
+  [nzData]="cycles"
+  [nzLoading]="loading"
+  [nzFrontPagination]="false"
+  [nzNoResult]="'Sin ciclos registrados'"
+>
+  <thead>
+    <tr>
+      <th>Ciclo</th>
+      <th>Estado</th>
+      <th>Inicio</th>
+      <th>Finalización</th>
+      <th>Última sesión</th>
+      <th>Motivo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let cycle of cycles">
+      <td>{{ cycle.cycleNumber }}</td>
+      <td>
+        <nz-tag [nzColor]="statusColor(cycle.status)">{{ statusLabel(cycle.status) }}</nz-tag>
+      </td>
+      <td>{{ cycle.startedAt | date: 'short' }}</td>
+      <td>{{ cycle.finalizedAt ? (cycle.finalizedAt | date: 'short') : '-' }}</td>
+      <td>{{ cycle.lastSessionNumber || '-' }}</td>
+      <td>{{ reasonLabel(cycle) }}</td>
+    </tr>
+  </tbody>
+</nz-table>

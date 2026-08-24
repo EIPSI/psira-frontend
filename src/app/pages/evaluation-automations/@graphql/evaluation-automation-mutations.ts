@@ -7,6 +7,10 @@ const evaluationAutomationFields = `
   active
   triggerPoint
   automationType
+  triggerSessionNumber
+  triggerReasonIds
+  triggerReasonContexts
+  lastLoginInactiveDays
   delayAmount
   delayUnit
   priority

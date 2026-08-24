@@ -1,0 +1,12 @@
+<nz-card nzTitle="Seguimiento clinico" [nzLoading]="loading">
+  <div class="setting-form" *ngIf="settings">
+    <label>
+      <span>Ventana de edicion por sesion</span>
+      <input nz-input type="number" min="0" [(ngModel)]="settings.editWindowDays" />
+    </label>
+    <span>dias desde la fecha de la sesion</span>
+    <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveSettings()">
+      Guardar
+    </button>
+  </div>
+</nz-card>

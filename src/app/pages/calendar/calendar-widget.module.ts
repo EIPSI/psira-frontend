@@ -17,8 +17,11 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzTableModule } from 'ng-zorro-antd/table';
+import { AppliedAutomationsListComponent } from './applied-automations-list/applied-automations-list.component';
 import { CalendarGridComponent } from './calendar-grid/calendar-grid.component';
 import { CalendarComponent } from './calendar.component';
+import { ClinicalFollowUpListComponent } from './clinical-follow-up-list/clinical-follow-up-list.component';
+import { CyclesListComponent } from './cycles-list/cycles-list.component';
 import { EventEditModalComponent } from './event-edit-modal/event-edit-modal.component';
 import { RecurrenceFormComponent } from './recurrence-form/recurrence-form.component';
 import { SessionsListComponent } from './sessions-list/sessions-list.component';
@@ -28,6 +31,9 @@ import { UserCalendarComponent } from './user-calendar/user-calendar.component';
   declarations: [
     CalendarComponent,
     CalendarGridComponent,
+    AppliedAutomationsListComponent,
+    ClinicalFollowUpListComponent,
+    CyclesListComponent,
     EventEditModalComponent,
     RecurrenceFormComponent,
     SessionsListComponent,
@@ -56,6 +62,9 @@ import { UserCalendarComponent } from './user-calendar/user-calendar.component';
   exports: [
     CalendarComponent,
     CalendarGridComponent,
+    AppliedAutomationsListComponent,
+    ClinicalFollowUpListComponent,
+    CyclesListComponent,
     EventEditModalComponent,
     RecurrenceFormComponent,
     SessionsListComponent,

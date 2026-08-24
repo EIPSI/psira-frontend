@@ -15,6 +15,28 @@
     <qrcode [qrdata]="newUrl.toString()" [width]="450" [errorCorrectionLevel]="'M'"></qrcode>
   </ng-container>
 </nz-modal>
+<nz-modal
+  [(nzVisible)]="assessmentModalVisible"
+  nzTitle="Editar evaluación"
+  [nzFooter]="null"
+  [nzWidth]="980"
+  nzClassName="assessment-edit-modal"
+  (nzOnCancel)="closeAssessmentModal()"
+>
+  <ng-container *nzModalContent>
+    <nz-spin [nzSpinning]="assessmentModalLoading">
+      <app-create-assessment
+        *ngIf="editingAssessment"
+        [patient]="patient"
+        [assessment]="editingAssessment"
+        [embedded]="true"
+        [startEditing]="true"
+        (saved)="onAssessmentSaved()"
+        (cancelled)="closeAssessmentModal()"
+      ></app-create-assessment>
+    </nz-spin>
+  </ng-container>
+</nz-modal>
 <ng-template #modalTitle>
   <h5>{{modalData.patient.firstName}} {{modalData.patient.lastName}}</h5>
   <p>{{modalData.assessmentType.name}}</p>
@@ -35,7 +57,7 @@
    <ng-template #badgeTitle>You have {{this.cacheFilters?.and?.length}} active filters on cache. Press the reset button to reset filters.</ng-template>
 </div>
   <ng-container actions-right>
-    <button nz-button nzType="primary" nzShape="circle" (click)="onPatientSelect()">
+    <button nz-button nzType="primary" nzShape="circle" [disabled]="!canManagePatientAssessments()" (click)="onPatientSelect()">
       <i nz-icon nzType="plus"></i>
     </button>
   </ng-container>

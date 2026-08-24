@@ -5,6 +5,8 @@ import { PatientStatusesComponent } from '../patient-statuses/patient-statuses.c
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { PermissionGuard } from '../../../permission.guard';
 import { AutomaticEmailSettingsComponent } from './automatic-email-settings/automatic-email-settings.component';
+import { FollowUpSettingsComponent } from './follow-up-settings/follow-up-settings.component';
+import { SessionCancellationReasonsComponent } from './session-cancellation-reasons/session-cancellation-reasons.component';
 
 const routes: Routes = [
   {
@@ -39,6 +41,28 @@ const routes: Routes = [
           breadcrumbI18nKey: 'menu.automaticEmails',
           permissions: {
             only: [PermissionKey.VIEW_SYSCONF],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'follow-up-settings',
+        component: FollowUpSettingsComponent,
+        data: {
+          breadcrumbI18nKey: 'Seguimiento clinico',
+          permissions: {
+            only: [PermissionKey.VIEW_SETTINGS],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'session-cancellation-reasons',
+        component: SessionCancellationReasonsComponent,
+        data: {
+          breadcrumbI18nKey: 'Configuración Motivos',
+          permissions: {
+            only: [PermissionKey.VIEW_SETTINGS],
           },
         },
         canActivate: [PermissionGuard],

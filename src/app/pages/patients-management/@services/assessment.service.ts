@@ -34,6 +34,19 @@ export class AssessmentService {
       .pipe(map((result: any) => result.data.assessments));
   }
 
+  getPatientAssessments(patientId: number, includeArchived = false): Observable<any[]> {
+    return this.apollo
+      .query({
+        query: AssessmentsQueries.patientAssessments,
+        variables: {
+          patientId,
+          includeArchived,
+        },
+        fetchPolicy: 'no-cache',
+      })
+      .pipe(map((result: any) => result.data.patientAssessments || []));
+  }
+
   getFullAssessment(assessmentId: number, uuid?: string | null): Observable<FullAssessment> {
     return this.apollo
       .query({

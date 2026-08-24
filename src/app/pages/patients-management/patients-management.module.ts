@@ -41,6 +41,8 @@ import { AssessmentsComponent } from './assessments/assessments.component';
 import { CreateAssessmentComponent } from './create-assessment/create-assessment.component';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AssessmentModule } from '../assessment/assessment.module';
 import { QRCodeModule } from 'angularx-qrcode';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
@@ -71,7 +73,9 @@ const antModules = [
   NzCheckboxModule,
   NzCalendarModule,
   NzEmptyModule,
-  NzSpinModule
+  NzSpinModule,
+  NzDropDownModule,
+  NzMenuModule
 ];
 
 @NgModule({

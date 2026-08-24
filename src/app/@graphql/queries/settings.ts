@@ -12,6 +12,7 @@ const settings = gql`
       passwordLifeTimeInDays
       passwordReUseCutoffInDays
       evaluationAutomationRunRetentionDays
+      treatmentFinalizationUndoWindowDays
       patientCaseManagerAssignableHierarchyRank
       sendWelcomeEmails
       welcomeEmailTemplateId

@@ -7,6 +7,14 @@ import { PatientModel } from '@app/pages/patients-management/@models/patient.mod
 import { PatientStatusesService } from '@app/pages/patients-management/@services/patient-statuses.service';
 import { PatientsService } from '@app/pages/patients-management/@services/patients.service';
 import { PatientStatus } from '@app/pages/patients-management/@types/patient-status';
+import {
+  CaseEventReason,
+  CaseEventReasonContext,
+  ClinicalSessionKind,
+  TreatmentCycle,
+  TreatmentCycleStatus,
+} from '@app/pages/calendar/@types/calendar';
+import { CalendarService } from '@app/pages/calendar/@services/calendar.service';
 import { finalize } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ErrorHandlerService } from '@app/@shared/services/error-handler.service';
@@ -19,11 +27,41 @@ const CryptoJS = require('crypto-js');
   styleUrls: ['./patient-profile.component.scss'],
 })
 export class PatientProfileComponent implements OnInit {
+  public CSK = ClinicalSessionKind;
+  public TCS = TreatmentCycleStatus;
   patient: FormattedPatient;
   filter: CaseManagerFilter;
   patientStatuses: PatientStatus[] = [];
   loading = false;
+  cycleLoading = false;
+  cycleSaving = false;
   selectedTabIndex = 0;
+  activeTreatmentCycle?: TreatmentCycle;
+  finalizeModalVisible = false;
+  newTreatmentModalVisible = false;
+  cancelFinalizationModalVisible = false;
+  finalizationReasonLevels: CaseEventReason[][] = [];
+  selectedFinalizationReasonIds: number[] = [];
+  finalizationRootLabel = 'Motivo';
+  finalizationReasonId?: number;
+  finalizationOtherReason = '';
+  finalizationNote = '';
+  finalizationLastSessionNumber?: number;
+  newTreatmentReasonLevels: CaseEventReason[][] = [];
+  selectedNewTreatmentReasonIds: number[] = [];
+  newTreatmentRootLabel = 'Motivo';
+  newTreatmentReasonId?: number;
+  newTreatmentOtherReason = '';
+  newTreatmentNote = '';
+  cancelFinalizationNote = '';
+
+  get showFinalizationOtherReason(): boolean {
+    return this.isSelectedOtherReason(this.finalizationReasonLevels, this.finalizationReasonId);
+  }
+
+  get showNewTreatmentOtherReason(): boolean {
+    return this.isSelectedOtherReason(this.newTreatmentReasonLevels, this.newTreatmentReasonId);
+  }
 
   get patientTitle(): string {
     const name = [this.patient?.firstName, this.patient?.middleName, this.patient?.lastName]
@@ -37,6 +75,7 @@ export class PatientProfileComponent implements OnInit {
     private router: Router,
     private patientStatusesService: PatientStatusesService,
     private patientsService: PatientsService,
+    private calendarService: CalendarService,
     private message: NzMessageService,
     private errorService: ErrorHandlerService
   ) {}
@@ -55,9 +94,173 @@ export class PatientProfileComponent implements OnInit {
         this.filter = {
           patientId: this.patient.id,
         };
+        this.loadTreatmentCycle();
       }
       this.selectedTabIndex = params.tab === 'sessions' ? 2 : 0;
     });
+  }
+
+  loadTreatmentCycle(): void {
+    if (!this.patient?.id) return;
+    this.cycleLoading = true;
+    this.calendarService
+      .getActiveTreatmentCycle({
+        patientId: this.patient.id,
+        cycleKind: ClinicalSessionKind.CLINICAL,
+      })
+      .pipe(finalize(() => (this.cycleLoading = false)))
+      .subscribe(
+        (cycle) => {
+          this.activeTreatmentCycle = cycle;
+          this.finalizationLastSessionNumber = cycle?.lastSessionNumber;
+          this.detectLastSessionNumber();
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load treatment cycle' })
+      );
+  }
+
+  openFinalizeTreatment(): void {
+    this.finalizeModalVisible = true;
+    this.finalizationReasonId = undefined;
+    this.selectedFinalizationReasonIds = [];
+    this.finalizationReasonLevels = [];
+    this.finalizationOtherReason = '';
+    this.finalizationNote = '';
+    this.loadReasonRootLabel(CaseEventReasonContext.TREATMENT_FINALIZATION, (label) => (this.finalizationRootLabel = label));
+    this.loadReasonLevel(CaseEventReasonContext.TREATMENT_FINALIZATION, undefined, this.finalizationReasonLevels, 0);
+    this.detectLastSessionNumber();
+  }
+
+  openNewTreatment(): void {
+    this.newTreatmentModalVisible = true;
+    this.newTreatmentReasonId = undefined;
+    this.selectedNewTreatmentReasonIds = [];
+    this.newTreatmentReasonLevels = [];
+    this.newTreatmentOtherReason = '';
+    this.newTreatmentNote = '';
+    this.loadReasonRootLabel(CaseEventReasonContext.NEW_TREATMENT, (label) => (this.newTreatmentRootLabel = label));
+    this.loadReasonLevel(CaseEventReasonContext.NEW_TREATMENT, undefined, this.newTreatmentReasonLevels, 0);
+  }
+
+  openCancelFinalization(): void {
+    this.cancelFinalizationNote = '';
+    this.cancelFinalizationModalVisible = true;
+  }
+
+  canUndoFinalization(): boolean {
+    if (!this.activeTreatmentCycle?.finalizationUndoExpiresAt) return false;
+    return new Date(this.activeTreatmentCycle.finalizationUndoExpiresAt).getTime() > Date.now();
+  }
+
+  onFinalizationReasonChange(levelIndex: number, reasonId?: number): void {
+    this.selectReason(
+      CaseEventReasonContext.TREATMENT_FINALIZATION,
+      this.finalizationReasonLevels,
+      this.selectedFinalizationReasonIds,
+      levelIndex,
+      reasonId,
+      (id) => (this.finalizationReasonId = id)
+    );
+  }
+
+  onNewTreatmentReasonChange(levelIndex: number, reasonId?: number): void {
+    this.selectReason(
+      CaseEventReasonContext.NEW_TREATMENT,
+      this.newTreatmentReasonLevels,
+      this.selectedNewTreatmentReasonIds,
+      levelIndex,
+      reasonId,
+      (id) => (this.newTreatmentReasonId = id)
+    );
+  }
+
+  finalizationReasonLevelLabel(levelIndex: number): string {
+    return this.reasonLevelLabel(this.finalizationReasonLevels, this.selectedFinalizationReasonIds, levelIndex, this.finalizationRootLabel);
+  }
+
+  newTreatmentReasonLevelLabel(levelIndex: number): string {
+    return this.reasonLevelLabel(this.newTreatmentReasonLevels, this.selectedNewTreatmentReasonIds, levelIndex, this.newTreatmentRootLabel);
+  }
+
+  confirmFinalizeTreatment(): void {
+    if (!this.finalizationReasonId) {
+      this.message.warning('Seleccioná un motivo.');
+      return;
+    }
+    if (this.showFinalizationOtherReason && !this.finalizationOtherReason.trim()) {
+      this.message.warning('Completá Otro motivo.');
+      return;
+    }
+    this.cycleSaving = true;
+    this.calendarService
+      .finalizeTreatmentCycle({
+        treatmentCycleId: this.activeTreatmentCycle?.id,
+        patientId: this.patient.id,
+        cycleKind: ClinicalSessionKind.CLINICAL,
+        finalizationReasonId: this.finalizationReasonId,
+        finalizationOtherReason: this.showFinalizationOtherReason
+          ? this.finalizationOtherReason.trim() || undefined
+          : undefined,
+        finalizationNote: this.finalizationNote,
+        lastSessionNumber: this.finalizationLastSessionNumber ? Number(this.finalizationLastSessionNumber) : undefined,
+      })
+      .pipe(finalize(() => (this.cycleSaving = false)))
+      .subscribe(
+        (cycle) => {
+          this.activeTreatmentCycle = cycle;
+          this.finalizeModalVisible = false;
+          this.message.success('Tratamiento finalizado');
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to finalize treatment' })
+      );
+  }
+
+  confirmCancelFinalization(): void {
+    if (!this.activeTreatmentCycle?.id) return;
+    this.cycleSaving = true;
+    this.calendarService
+      .cancelTreatmentCycleFinalization(this.activeTreatmentCycle.id, this.cancelFinalizationNote)
+      .pipe(finalize(() => (this.cycleSaving = false)))
+      .subscribe(
+        (cycle) => {
+          this.activeTreatmentCycle = cycle;
+          this.cancelFinalizationModalVisible = false;
+          this.message.success('Finalización anulada');
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to cancel finalization' })
+      );
+  }
+
+  confirmNewTreatment(): void {
+    if (!this.newTreatmentReasonId) {
+      this.message.warning('Seleccioná un motivo.');
+      return;
+    }
+    if (this.showNewTreatmentOtherReason && !this.newTreatmentOtherReason.trim()) {
+      this.message.warning('Completá Otro motivo.');
+      return;
+    }
+    this.cycleSaving = true;
+    this.calendarService
+      .startNewTreatmentCycle({
+        previousTreatmentCycleId: this.activeTreatmentCycle?.id,
+        patientId: this.patient.id,
+        cycleKind: ClinicalSessionKind.CLINICAL,
+        newTreatmentReasonId: this.newTreatmentReasonId,
+        newTreatmentOtherReason: this.showNewTreatmentOtherReason
+          ? this.newTreatmentOtherReason.trim() || undefined
+          : undefined,
+        newTreatmentNote: this.newTreatmentNote,
+      })
+      .pipe(finalize(() => (this.cycleSaving = false)))
+      .subscribe(
+        (cycle) => {
+          this.activeTreatmentCycle = cycle;
+          this.newTreatmentModalVisible = false;
+          this.message.success('Nuevo tratamiento iniciado');
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to start new treatment' })
+      );
   }
 
   getPatientStatuses() {
@@ -71,13 +274,12 @@ export class PatientProfileComponent implements OnInit {
 
   changeStatus(statusId: number) {
     this.loading = true;
-    const updateData = { ...this.patient, statusId };
     this.patientsService
-      .updatePatient(PatientModel.updateData(updateData))
+      .changePatientStatus(this.patient.id, statusId)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         ({ data }) => {
-          this.patient = PatientModel.fromJson(data.updateOnePatient);
+          this.patient = PatientModel.fromJson(data.changePatientStatus);
           this.message.success('Patient status updated successfully');
         },
         (error: any) => this.errorService.handleError(error, { prefix: 'Unable to update patient status' })
@@ -92,5 +294,102 @@ export class PatientProfileComponent implements OnInit {
     const userStr = localStorage.getItem('auth_app_token');
     const user = JSON.parse(userStr);
     return user.accessToken;
+  }
+
+  private detectLastSessionNumber(): void {
+    if (!this.patient?.id) return;
+    this.calendarService
+      .getClinicalSessions({
+        patientId: this.patient.id,
+        sessionKind: ClinicalSessionKind.CLINICAL,
+        includeCancelled: false,
+      })
+      .subscribe(
+        (sessions) => {
+          const now = Date.now();
+          const elapsedSessions = sessions
+            .filter((session) => {
+              const startAt = session.calendarOccurrence?.startAt;
+              return startAt && new Date(startAt).getTime() <= now;
+            })
+            .sort((left, right) =>
+              new Date(left.calendarOccurrence?.startAt || 0).getTime() -
+              new Date(right.calendarOccurrence?.startAt || 0).getTime()
+            );
+          const lastSession = elapsedSessions[elapsedSessions.length - 1];
+          if (lastSession?.sessionNumber) this.finalizationLastSessionNumber = Number(lastSession.sessionNumber);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to detect last session' })
+      );
+  }
+
+  private selectReason(
+    context: CaseEventReasonContext,
+    levels: CaseEventReason[][],
+    selectedIds: number[],
+    levelIndex: number,
+    reasonId: number | undefined,
+    assign: (id: number | undefined) => void
+  ): void {
+    selectedIds.splice(levelIndex);
+    levels.splice(levelIndex + 1);
+    if (!reasonId) {
+      assign(selectedIds[selectedIds.length - 1]);
+      return;
+    }
+    selectedIds[levelIndex] = reasonId;
+    assign(reasonId);
+    this.loadReasonLevel(context, reasonId, levels, levelIndex + 1);
+  }
+
+  private loadReasonLevel(
+    context: CaseEventReasonContext,
+    parentId: number | undefined,
+    targetLevels: CaseEventReason[][],
+    levelIndex: number
+  ): void {
+    this.calendarService.getCaseEventReasons(context, parentId).subscribe(
+      (reasons) => {
+        if (reasons.length) {
+          targetLevels[levelIndex] = reasons;
+        }
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load reasons' })
+    );
+  }
+
+  private loadReasonRootLabel(
+    context: CaseEventReasonContext,
+    assign: (label: string) => void
+  ): void {
+    this.calendarService.getCaseEventReasonTrees(false).subscribe(
+      (trees) => {
+        const tree = (trees || []).find((item) =>
+          item.context === context &&
+          !item.departmentId
+        ) || (trees || []).find((item) => item.context === context);
+        assign(tree?.levelLabels?.[0] || 'Motivo');
+      },
+      () => assign('Motivo')
+    );
+  }
+
+  private reasonLevelLabel(
+    levels: CaseEventReason[][],
+    selectedIds: number[],
+    levelIndex: number,
+    rootLabel: string
+  ): string {
+    if (levelIndex === 0) return rootLabel;
+    const parentId = selectedIds[levelIndex - 1];
+    const parent = levels[levelIndex - 1]?.find(
+      (reason) => Number(reason.id) === Number(parentId)
+    );
+    return parent?.nextLevelLabel || 'Submotivo';
+  }
+
+  private isSelectedOtherReason(levels: CaseEventReason[][], reasonId?: number): boolean {
+    if (!reasonId) return false;
+    return levels.some((level) => level.some((reason) => Number(reason.id) === Number(reasonId) && !!reason.isOther));
   }
 }

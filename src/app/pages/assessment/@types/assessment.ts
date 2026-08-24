@@ -39,10 +39,12 @@ export interface Assessment {
   responderUserId?: number;
   note: string;
   clinicianId: number;
+  responsibleUserIds?: number[];
   patient?: Patient;
   targetUser?: User;
   responderUser?: User;
   clinician?: User;
+  responsibleUsers?: User[];
   informantType: string;
   questionnaireAssessmentId?: string;
   createdAt?: Date;

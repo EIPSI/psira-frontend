@@ -19,7 +19,7 @@ import { Sorting } from '@shared/@types/sorting';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { AssessmentService } from '@app/pages/patients-management/@services/assessment.service';
 import { PageInfo } from '../../../@shared/@types/paging';
-import { FormattedAssessment } from '@app/pages/assessment/@types/assessment';
+import { FormattedAssessment, FullAssessment } from '@app/pages/assessment/@types/assessment';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { LocationStrategy } from '@angular/common';
 import { ClipboardService } from 'ngx-clipboard';
@@ -61,9 +61,13 @@ export class AssessmentsComponent implements OnInit {
   public isLoading = false;
   public onlyArchivedAssessments = (localStorage.getItem('onlyArchivedAssessmentsPatients') === 'true');
   isVisible = false;
+  assessmentModalVisible = false;
+  assessmentModalLoading = false;
+  editingAssessment?: FullAssessment;
   newUrl : URL;
   modalData : any = '';
   statusFilter = '';
+  searchString = '';
   public pageInfo: PageInfo;
   public onlyMyAssessments = (localStorage.getItem('onlyMyAssessmentsPatients') === 'true');
 
@@ -118,7 +122,7 @@ export class AssessmentsComponent implements OnInit {
   }
 
   public onSearch(searchString: string): void {
-    this.assessmentRequestOptions.filter = { or: this.createSearchFilter(searchString) };
+    this.searchString = searchString || '';
     this.getAssessments();
   }
 
@@ -202,6 +206,14 @@ export class AssessmentsComponent implements OnInit {
   }
 
   public onPatientSelect(): void {
+    if (!this.canManagePatientAssessments()) {
+      this.modalService.warning({
+        nzTitle: 'Evaluaciones',
+        nzContent: 'Solo los administradores del caso pueden crear evaluaciones individuales.',
+      });
+      return;
+    }
+
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
     this.router.navigate(['/psira/case-management/create-assessment'], {
       queryParams: {
@@ -215,12 +227,17 @@ export class AssessmentsComponent implements OnInit {
       this.openLinkedSession();
       return;
     }
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(assessment), environment.secretKey).toString();
-    this.router.navigate(['/psira/case-management/create-assessment'], {
-      queryParams: {
-        assessment: dataString,
-      },
-    });
+    this.openAssessmentModal(assessment);
+  }
+
+  closeAssessmentModal(): void {
+    this.assessmentModalVisible = false;
+    this.editingAssessment = undefined;
+  }
+
+  onAssessmentSaved(): void {
+    this.closeAssessmentModal();
+    this.getAssessments();
   }
 
   private showAssessment({ uuid }: FormattedAssessment): void {
@@ -287,59 +304,69 @@ export class AssessmentsComponent implements OnInit {
   }
 
   private getAssessments(): void {
-    // copy to not modify original options
-    const options = { ...this.assessmentRequestOptions };
-
-    if(localStorage.getItem('filter-patient-assessment')){
-      options.filter = {...options.filter, ...JSON.parse(localStorage.getItem('filter-patient-assessment'))}
-    }
-
-    if(options.sorting.length === 0){
-      options.sorting.push({field: 'createdAt', direction: 'DESC'})
-    }
-
-    if(!this.onlyArchivedAssessments){
-      options.filter = {
-        ...options.filter,
-        and: [{ deleted: {is: false} }, ...(options.filter.and ?? [])],
-      };
-    } 
-
-    options.filter = {
-      ...options.filter,
-      and: [{ patient: { id: { eq: this.patient?.id } } }, ...(options.filter.and ?? [])],
-    };
-
-    // apply for only my patients
-    if (this.onlyMyAssessments)
-      options.filter = {
-        ...options.filter,
-        and: [{ clinician: { id: { eq: this.userId } } }, ...(options.filter.and ?? [])],
-      };
-
-    // apply for archived assessments
-    if (this.onlyArchivedAssessments){
-      options.filter = {
-        ...options.filter,
-        and: [{ deleted: {is: true} }, ...(options.filter.and ?? [])],
-      };
-    }
-
-    // apply for assessment status
-    if(this.statusFilter) {
-      options.filter = {...options.filter, and: [...options.filter.and, {status: {eq: this.statusFilter}}]}
-    }
-
+    if (!this.patient?.id) return;
     this.isLoading = true;
     this.assessmentService
-      .getAssessments(options)
+      .getPatientAssessments(this.patient.id, this.onlyArchivedAssessments)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
-        ({ edges, pageInfo }) => {
-          this.data = edges.map((e: any) => Convert.toFormattedAssessment(e.node));
-          this.pageInfo = pageInfo;
+        (assessments: any[]) => {
+          this.data = this.filterPatientAssessments(assessments).map((assessment: any) =>
+            Convert.toFormattedAssessment(assessment)
+          );
+          this.pageInfo = {
+            startCursor: '',
+            endCursor: '',
+            hasNextPage: false,
+            hasPreviousPage: false,
+          };
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessments' })
+      );
+  }
+
+  private filterPatientAssessments(assessments: any[]): any[] {
+    return assessments.filter((assessment) => {
+      if (this.onlyArchivedAssessments && !assessment.deleted) return false;
+      if (this.onlyMyAssessments && !this.isResponsibleForAssessment(assessment)) return false;
+      if (this.statusFilter && assessment.status !== this.statusFilter) return false;
+      if (this.searchString && !this.matchesSearch(assessment, this.searchString)) return false;
+      return true;
+    });
+  }
+
+  private matchesSearch(assessment: any, searchString: string): boolean {
+    const normalized = searchString.toLowerCase();
+    return [
+      assessment.assessmentType?.name,
+      assessment.patient?.firstName,
+      assessment.patient?.middleName,
+      assessment.patient?.lastName,
+      assessment.patient?.medicalRecordNo,
+      assessment.clinician?.firstName,
+      assessment.clinician?.middleName,
+      assessment.clinician?.lastName,
+      assessment.clinician?.workID,
+    ]
+      .filter((value) => !!value)
+      .some((value) => `${value}`.toLowerCase().includes(normalized));
+  }
+
+  private openAssessmentModal(assessment: FormattedAssessment): void {
+    if (!assessment.id) return;
+    this.assessmentModalLoading = true;
+    this.assessmentService
+      .getFullAssessment(assessment.id)
+      .pipe(finalize(() => (this.assessmentModalLoading = false)))
+      .subscribe(
+        (fullAssessment: FullAssessment) => {
+          this.editingAssessment = {
+            ...fullAssessment,
+            patient: this.patient as any,
+          };
+          this.assessmentModalVisible = true;
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessment' })
       );
   }
 
@@ -425,6 +452,17 @@ export class AssessmentsComponent implements OnInit {
         },
         (error) => this.errorService.handleError(error, { prefix: `Unable to delete assessment "${assessment.name}"` })
       );
+  }
+
+  canManagePatientAssessments(): boolean {
+    const userId = this.userId;
+    return !!userId && (this.patient?.caseManagers || []).some((user) => user.id === userId);
+  }
+
+  private isResponsibleForAssessment(assessment: any): boolean {
+    const userId = this.userId;
+    const responsibleUserIds = (assessment.responsibleUsers || []).map((user: User) => user.id);
+    return assessment.clinicianId === userId || responsibleUserIds.includes(userId);
   }
 
   private get userId(): number {

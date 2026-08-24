@@ -53,6 +53,11 @@
   text-align: left;
 }
 
+.month-day,
+.time-cell {
+  cursor: pointer;
+}
+
 .month-day:hover,
 .time-cell:hover {
   background: #f5fbfb;
@@ -78,19 +83,42 @@
 
 .calendar-event {
   border-radius: 6px;
+  border: 0;
   color: #fff;
   cursor: pointer;
   display: block;
   font-size: 12px;
   line-height: 1.3;
+  max-width: 100%;
+  min-height: 24px;
   overflow: hidden;
   padding: 3px 6px;
+  pointer-events: auto;
+  position: relative;
+  text-align: left;
   text-overflow: ellipsis;
+  user-select: none;
   white-space: nowrap;
+  width: 100%;
+  z-index: 1;
+}
+
+.calendar-event:focus,
+.calendar-event:focus-visible {
+  outline: 0;
 }
 
 .calendar-event:active {
   cursor: grabbing;
+}
+
+.calendar-event * {
+  pointer-events: none;
+}
+
+.calendar-event--dragging {
+  cursor: grabbing;
+  opacity: 0.58;
 }
 
 .calendar-event--session {
@@ -103,6 +131,25 @@
 
 .calendar-event--timed {
   margin: 2px 0;
+}
+
+.calendar-drag-preview {
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.22);
+  color: #fff;
+  font-size: 12px;
+  left: 0;
+  line-height: 1.3;
+  max-width: 260px;
+  min-width: 180px;
+  padding: 6px 8px;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  transform: translate3d(0, 0, 0);
+  user-select: none;
+  white-space: nowrap;
+  z-index: 10000;
 }
 
 .time-grid {
@@ -153,7 +200,7 @@
   display: grid;
   gap: 12px;
 
-  label {
+  .form-field {
     display: grid;
     gap: 6px;
   }
@@ -165,6 +212,11 @@
   display: grid;
   gap: 12px;
   padding: 12px;
+}
+
+.repeat-panel .form-field {
+  display: grid;
+  gap: 6px;
 }
 
 .inline-check {
@@ -211,7 +263,30 @@
   gap: 8px;
 }
 
-.date-row label {
+.scheme-application-list {
+  display: grid;
+  gap: 8px;
+}
+
+.scheme-application-row {
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 8px;
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    color: #667085;
+  }
+}
+
+.date-row .form-field {
   flex: 1;
 }
 

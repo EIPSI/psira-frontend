@@ -23,11 +23,48 @@
   gap: 14px;
 }
 
-.session-editor label {
+.form-field {
   display: grid;
   gap: 6px;
 }
 
+.form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .history-field {
   margin-top: 4px;
+}
+
+.scheme-application-list {
+  display: grid;
+  gap: 8px;
+}
+
+.scheme-application-row {
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 8px;
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    color: #667085;
+  }
+}
+
+.resource-row {
+  cursor: pointer;
+}
+
+.resource-row:hover td {
+  background: #f6ffed;
 }

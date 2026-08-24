@@ -1,7 +1,7 @@
-<div class="buttons">
+<div class="buttons" *ngIf="!embedded">
     <button nz-button nzType="primary" (click)="goBack(patient)">Back</button>
 </div>
-<h1 *ngIf="patientTitle">{{ patientTitle }}</h1>
+<h1 *ngIf="patientTitle && !embedded">{{ patientTitle }}</h1>
 <div nz-row [nzGutter]="200">
     <div nz-col nzSpan="10">
         <form nz-form [nzLayout]="'inline'" [formGroup]="formGroup" (submit)="onSubmitAssessment()">
@@ -20,11 +20,28 @@
             </nz-form-item>
             <nz-form-item>
                 <nz-form-control class="input-class">
-                    <h5>{{ 'createAssessment.assessmentManager' | translate }}</h5>
-                    <app-user-picker [readonly]="!editMode" [selectedUser]="selectedClinician" (selectUser)="onUserSelect($event)"></app-user-picker>
+                    <h5>Administradores del caso</h5>
+                    <nz-select
+                        [nzBorderless]="!editMode"
+                        class="input-class"
+                        [nzDisabled]="!editMode"
+                        [(ngModel)]="selectedResponsibleUserIds"
+                        (ngModelChange)="onResponsibleUsersChange($event)"
+                        formControlName="responsibleUserIds"
+                        nzMode="multiple"
+                        nzAllowClear
+                        nzShowSearch
+                        nzNotFoundContent="No hay administradores asignados al caso."
+                    >
+                        <nz-option
+                            *ngFor="let administrator of caseAdministratorOptions()"
+                            [nzLabel]="userLabel(administrator)"
+                            [nzValue]="administrator.id"
+                        ></nz-option>
+                    </nz-select>
                     <p>
                         <b>Tip:
-                        </b>Only users that share a department with the patient are shown.</p>
+                        </b>Only case administrators assigned to the patient are shown.</p>
                 </nz-form-control>
             </nz-form-item>
             <nz-form-item style="margin-bottom: 15px">
@@ -188,7 +205,7 @@
                 </nz-input-group>
             </nz-form-item>
             <div *ngIf="editMode" style="margin-top: 20px; display: flex; justify-content: space-between">
-                <button nz-button class="button" style="margin-right: 10px" (click)="editMode = !editMode">Cancel</button>
+                <button nz-button class="button" style="margin-right: 10px" type="button" (click)="cancelEdit()">Cancel</button>
                 <button nz-button nzType="primary" class="button" [disabled]="!formGroup.valid">Submit</button>
             </div>
             <button nz-button nzType="primary" type="button" *ngIf="!editMode" (click)="editMode = !editMode">
@@ -244,14 +261,14 @@
     </div>
 </div>
 <!--  -->
-<hr>
-<div style="margin-top: 15px; margin-bottom: 15px;">
+<hr *ngIf="!embedded">
+<div style="margin-top: 15px; margin-bottom: 15px;" *ngIf="!embedded">
     <h5>
         <span nz-icon nzType="link" nzTheme="outline"></span>
         Questionnaire Link</h5>
     <br/>
 </div>
-<div class="link-container" *ngIf="fullAssessment?.uuid !== null && fullAssessment?.uuid !== undefined">
+<div class="link-container" *ngIf="!embedded && fullAssessment?.uuid !== null && fullAssessment?.uuid !== undefined">
     <a style="margin-right: 10px;" target="_blank" [href]="assessmentUrl">{{ this.assessmentUrl?.toString().slice(0, 50) }}...</a>
     <button (click)="copyAssessmentLink(this.assessmentUrl)" nz-button nzType="default" nzShape="circle"><span nz-icon nzType="copy"></span></button>
 </div>

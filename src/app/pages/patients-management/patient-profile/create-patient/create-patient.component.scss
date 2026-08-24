@@ -30,6 +30,35 @@
   padding-top: 6px;
 }
 
+.definition-list-fields {
+  display: block;
+  margin: 0 !important;
+
+  .institutional-field {
+    align-items: flex-start;
+    border-bottom: 1px solid #eef0f3;
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(180px, 28%) 1fr;
+    margin-bottom: 0;
+    min-height: 44px;
+    padding: 10px 0;
+    width: 100%;
+
+    label {
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .field-value {
+      color: #111827;
+      padding: 0;
+      text-align: right;
+      word-break: break-word;
+    }
+  }
+}
+
 .automation-preview {
   border-top: 1px solid #eef0f3;
   margin-top: 24px;

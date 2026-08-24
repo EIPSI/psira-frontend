@@ -86,10 +86,16 @@ export class CreateAssessmentComponent implements OnInit {
   public fullAssessment: FullAssessment;
   public isLoading = false;
   public selectedClinician: User;
+  public selectedResponsibleUserIds: number[] = [];
   public users: User[] = [];
   @Input() public patient: FormattedPatient;
+  @Input() public assessment: FullAssessment;
+  @Input() public embedded = false;
+  @Input() public startEditing = false;
   @Input() public caregivers: SelectedCaregiver[] = [];
   @Output() public selectionChange = new EventEmitter<QuestionnaireVersion[]>();
+  @Output() public saved = new EventEmitter<void>();
+  @Output() public cancelled = new EventEmitter<void>();
   filter: CaseManagerFilter;
   public data: Partial<SelectedCaregiver>[];
   public departments: Department[] = [];
@@ -130,6 +136,7 @@ export class CreateAssessmentComponent implements OnInit {
     this.formGroup = this.formBuilder.group({
       assessmentTypeId: [null, Validators.required],
       clinicianId: [null, Validators.required],
+      responsibleUserIds: [[]],
       targetUserId: [null, Validators.required],
       responderUserId: [null, Validators.required],
       informantPatient: [null],
@@ -161,7 +168,9 @@ export class CreateAssessmentComponent implements OnInit {
     this.getRandomizations();
     this.getCaregivers();
     this.getUserDepartments({ paging: { first: 50 } });
-    this.getPatientEmailTemplates(this.patient.id);
+    if (this.patient?.id) {
+      this.getPatientEmailTemplates(this.patient.id);
+    }
     this.hasEmail = environment.email;
   }
 
@@ -263,10 +272,30 @@ export class CreateAssessmentComponent implements OnInit {
   public userAutoSelect() {
     const userLocalStorage = JSON.parse(localStorage.getItem('user')) as User;
     this.selectedClinician = userLocalStorage;
+    this.selectedResponsibleUserIds = userLocalStorage?.id ? [userLocalStorage.id] : [];
+    this.formGroup?.patchValue({
+      clinicianId: userLocalStorage?.id,
+      responsibleUserIds: this.selectedResponsibleUserIds,
+    });
   }
 
   public onUserSelect(user: User) {
     this.formGroup.patchValue({ clinicianId: user?.id });
+  }
+
+  public userLabel(user: User): string {
+    return [user?.firstName, user?.middleName, user?.lastName]
+      .filter((part) => !!part)
+      .join(' ') || user?.username || user?.email || `Usuario ${user?.id}`;
+  }
+
+  public caseAdministratorOptions(): User[] {
+    return this.patient?.caseManagers || [];
+  }
+
+  public onResponsibleUsersChange(userIds: number[]): void {
+    this.selectedResponsibleUserIds = userIds || [];
+    this.syncResponsibleUsers();
   }
 
   public copyAssessmentLink(url: any) {
@@ -312,7 +341,64 @@ export class CreateAssessmentComponent implements OnInit {
       );
   }
 
+  private initializeResponsibleUsers(): void {
+    if (this.isUpdate && this.fullAssessment) {
+      this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
+      this.syncResponsibleUsers();
+      return;
+    }
+
+    const administrators = this.caseAdministratorOptions();
+    const currentUser = JSON.parse(localStorage.getItem('user')) as User;
+    if (currentUser?.id && administrators.some((user) => user.id === currentUser.id)) {
+      this.selectedResponsibleUserIds = [currentUser.id];
+    } else {
+      this.selectedResponsibleUserIds = administrators[0]?.id ? [administrators[0].id] : [];
+    }
+    this.syncResponsibleUsers();
+  }
+
+  private assessmentResponsibleUserIds(): number[] {
+    const responsibleUsers = (this.fullAssessment as any)?.responsibleUsers || [];
+    const ids: number[] = responsibleUsers.map((user: User) => user.id);
+    if (!ids.length && this.fullAssessment?.clinicianId) ids.push(this.fullAssessment.clinicianId);
+    return Array.from(new Set(ids.filter((id: number) => !!id)));
+  }
+
+  private syncResponsibleUsers(): void {
+    const allowedIds = this.caseAdministratorOptions().map((user) => user.id);
+    const selectedIds = this.selectedResponsibleUserIds || [];
+    const filteredIds = allowedIds.length
+      ? selectedIds.filter((id: number) => allowedIds.includes(id))
+      : this.patient?.id ? [] : selectedIds;
+    this.selectedResponsibleUserIds = Array.from(new Set(filteredIds));
+    const primaryUser = this.primaryResponsibleUser();
+    this.selectedClinician = primaryUser || this.selectedClinician;
+    this.formGroup.patchValue({
+      clinicianId: this.primaryResponsibleUserId(),
+      responsibleUserIds: this.selectedResponsibleUserIds,
+    });
+  }
+
+  private primaryResponsibleUserId(): number | undefined {
+    return this.selectedResponsibleUserIds[0];
+  }
+
+  private primaryResponsibleUser(): User | undefined {
+    const userId = this.primaryResponsibleUserId();
+    return this.caseAdministratorOptions().find((user) => user.id === userId);
+  }
+
   public getPatient() {
+    if (this.embedded) {
+      if (!this.isUpdate && this.editMode && this.patient) {
+        this.initializeResponsibleUsers();
+        this.selectedInformant = this.patient.userId;
+        this.applySelectedResponder();
+      }
+      return;
+    }
+
     this.activatedRoute.queryParams.subscribe((params) => {
       if (params.profile) {
         console.log('here');
@@ -321,10 +407,12 @@ export class CreateAssessmentComponent implements OnInit {
         console.log(PatientModel.fromJson(patient));
         this.patient = PatientModel.fromJson(patient);
         this.patientEmail = this.patient.email;
+        this.initializeResponsibleUsers();
         this.onSelectChange(this.typeSelected);
       }
     });
-    if (this.editMode) {
+    if (this.editMode && this.patient) {
+      this.initializeResponsibleUsers();
       this.selectedInformant = this.patient.userId;
       this.applySelectedResponder();
     }
@@ -339,16 +427,20 @@ export class CreateAssessmentComponent implements OnInit {
   }
 
   public onSubmitAssessment() {
+    this.syncResponsibleUsers();
     if (this.formGroup.invalid) return;
 
     const content = this.assessmentContentPayload();
     const { informant, informantPatient, ...rest } = this.formGroup.value;
     this.applySelectedResponder();
+    if (!this.primaryResponsibleUserId()) return;
     const newAssessmentData = {
       ...rest,
       ...content,
       patientId: this.fullAssessment?.patientId ?? this.patient.id,
       targetUserId: this.patient?.userId,
+      clinicianId: this.primaryResponsibleUserId(),
+      responsibleUserIds: this.selectedResponsibleUserIds,
     };
     newAssessmentData.dates = (newAssessmentData.dates || []).map((date: any) => ({
       ...date,
@@ -389,14 +481,15 @@ export class CreateAssessmentComponent implements OnInit {
           this.nzMessage.success('Assessment created', { nzDuration: 3000 });
         }
         this.editMode = false;
+        this.saved.emit();
       },
       (err) => this.errorService.handleError(err, { prefix: 'Unable to create assessment ' })
     );
   }
 
   public async initAssessment(): Promise<void> {
-    const data = this.activatedRoute.snapshot.queryParamMap.get('assessment');
-    if (!data) {
+    const data = this.embedded ? null : this.activatedRoute.snapshot.queryParamMap.get('assessment');
+    if (!data && !this.assessment) {
       this.formGroup.removeControl('deliveryDate');
       this.formGroup.removeControl('expirationDate');
       this.isUpdate = false;
@@ -404,15 +497,21 @@ export class CreateAssessmentComponent implements OnInit {
     }
 
     this.isUpdate = true;
-    const bytes = CryptoJS.AES.decrypt(data, environment.secretKey);
-    const assessment: FullAssessment = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-    this.fullAssessment = assessment;
+    if (this.assessment) {
+      this.fullAssessment = this.assessment;
+    } else {
+      const bytes = CryptoJS.AES.decrypt(data, environment.secretKey);
+      this.fullAssessment = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    }
     this.assessmentUrl = new URL(this.generateAssessmentURL(this.fullAssessment?.uuid), window.location.origin);
-    this.patient = this.fullAssessment.patient;
-    this.editMode = false;
+    if (!this.patient) {
+      this.patient = this.fullAssessment.patient as FormattedPatient;
+    }
+    this.editMode = this.embedded ? this.startEditing : false;
     this.formGroup.patchValue({
       assessmentTypeId: this.fullAssessment.assessmentType?.id,
       clinicianId: this.fullAssessment.clinician.id,
+      responsibleUserIds: this.assessmentResponsibleUserIds(),
       deliveryDate: this.fullAssessment.deliveryDate,
       informantType: this.fullAssessment.informantType,
       targetUserId: this.fullAssessment.targetUserId,
@@ -434,7 +533,8 @@ export class CreateAssessmentComponent implements OnInit {
         reminderMinutes: (this.fullAssessment.reminderMinutes || []).join(', '),
       })
     );
-    this.selectedClinician = this.fullAssessment.clinician;
+    this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
+    this.selectedClinician = this.primaryResponsibleUser() || this.fullAssessment.clinician;
     this.expireDate = this.fullAssessment.expirationDate;
     this.deliveryDate = this.fullAssessment.deliveryDate;
     this.selectedQuestionnaires = this.fullAssessment.questionnaireAssessment.questionnaires;
@@ -491,7 +591,7 @@ export class CreateAssessmentComponent implements OnInit {
   }
 
   getBundles() {
-    const departments = this.patient.departments.map((item) => {
+    const departments = (this.patient?.departments || []).map((item) => {
       return item.id;
     });
 
@@ -655,5 +755,13 @@ export class CreateAssessmentComponent implements OnInit {
       .split(',')
       .map((part) => Number(part.trim()))
       .filter((part) => Number.isFinite(part) && part >= 0);
+  }
+
+  public cancelEdit(): void {
+    if (this.embedded) {
+      this.cancelled.emit();
+      return;
+    }
+    this.editMode = false;
   }
 }

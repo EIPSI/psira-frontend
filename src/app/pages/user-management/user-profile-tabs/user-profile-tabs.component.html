@@ -6,82 +6,12 @@
   <nz-tab *ngIf="isTherapist" [nzTitle]="'core.calendar' | translate">
     <app-user-calendar [user]="user"></app-user-calendar>
   </nz-tab>
-  <nz-tab [nzTitle]="'core.assessments' | translate">
-    <app-master-data-list [columns]="assessmentColumns" [data]="assessments" [loading]="assessmentsLoading"></app-master-data-list>
-  </nz-tab>
-  <nz-tab *ngIf="isTherapist" nzTitle="Sesiones">
-    <app-sessions-list [therapistId]="user?.id" [sessionKind]="CSK.SUPERVISION"></app-sessions-list>
-  </nz-tab>
-  <nz-tab [nzTitle]="'core.profile' | translate">
-    <app-user-form></app-user-form>
-  </nz-tab>
-  <nz-tab *ngIf="isTherapist" [nzTitle]="'menu.supervisors' | translate">
-    <app-master-data-list
-      [data]="supervisors"
-      [columns]="supervisorColumns"
-      [loading]="supervisorsLoading"
-      [actions]="supervisorActions"
-      (executeAction)="onSupervisorAction($event)"
-    >
-      <ng-container actions-right>
-        <button
-          nz-button
-          nzType="primary"
-          nzShape="circle"
-          (click)="toggleSupervisorAssignDrawer()"
-          *ngIf="perms.permissionsOnly(PK.MANAGE_USERS)"
-        >
-          <i nz-icon nzType="plus"></i>
-        </button>
-      </ng-container>
-    </app-master-data-list>
-
-    <nz-drawer
-      [nzWidth]="820"
-      [nzMask]="true"
-      [nzClosable]="true"
-      [nzMaskClosable]="false"
-      [nzVisible]="showSupervisorAssignDrawer"
-      nzPlacement="right"
-      [nzTitle]="'menu.supervisors' | translate"
-      (nzOnClose)="toggleSupervisorAssignDrawer()"
-    >
-      <div>
-        <h5>{{ 'menu.supervisors' | translate }}</h5>
-      </div>
-      <form nz-form class="search-form">
-        <nz-form-item class="form-item">
-          <nz-form-label nzFor="supervisor">{{ 'menu.supervisors' | translate }}</nz-form-label>
-          <nz-form-control class="form-control">
-            <nz-select
-              [(ngModel)]="selectedSupervisorId"
-              name="supervisor"
-              [nzLoading]="supervisorsLoading"
-              nzShowSearch
-              nzPlaceHolder="Supervisor"
-              class="assignment-select"
-            >
-              <nz-option
-                *ngFor="let supervisor of availableSupervisors"
-                [nzValue]="supervisor.id"
-                [nzLabel]="formatUserName(supervisor)"
-              ></nz-option>
-            </nz-select>
-          </nz-form-control>
-        </nz-form-item>
-      </form>
-      <button nz-button nzType="primary" [disabled]="!selectedSupervisorId" (click)="assignSupervisor()">
-        <i nz-icon nzType="plus"></i>
-        {{ 'core.add' | translate }}
-      </button>
-    </nz-drawer>
-  </nz-tab>
-  <nz-tab [nzTitle]="'core.departments' | translate">
-    <nz-list [nzDataSource]="user?.departments || []" [nzRenderItem]="department">
-      <ng-template #department let-item>
-        <nz-list-item>{{ item.name }}</nz-list-item>
-      </ng-template>
-    </nz-list>
+  <nz-tab *ngIf="isTherapist" nzTitle="Historia de supervision">
+    <app-clinical-follow-up-list
+      [therapistId]="user?.id"
+      [sessionKind]="CSK.SUPERVISION"
+      title="Historia de supervision"
+    ></app-clinical-follow-up-list>
   </nz-tab>
   <nz-tab [nzTitle]="'core.reports' | translate">
     <app-master-data-list
@@ -91,4 +21,95 @@
       (rowClick)="generateReport($event)"
     ></app-master-data-list>
   </nz-tab>
+  <nz-tab nzTitle="Datos del perfil">
+    <nz-tabset nzSize="small">
+      <nz-tab [nzTitle]="'core.profile' | translate">
+        <app-user-form></app-user-form>
+      </nz-tab>
+      <nz-tab *ngIf="isTherapist" [nzTitle]="'menu.supervisors' | translate">
+        <app-master-data-list
+          [data]="supervisors"
+          [columns]="supervisorColumns"
+          [loading]="supervisorsLoading"
+          [actions]="supervisorActions"
+          (executeAction)="onSupervisorAction($event)"
+        >
+          <ng-container actions-right>
+            <button
+              nz-button
+              nzType="primary"
+              nzShape="circle"
+              (click)="toggleSupervisorAssignDrawer()"
+              *ngIf="perms.permissionsOnly(PK.MANAGE_USERS)"
+            >
+              <i nz-icon nzType="plus"></i>
+            </button>
+          </ng-container>
+        </app-master-data-list>
+      </nz-tab>
+      <nz-tab [nzTitle]="'core.departments' | translate">
+        <nz-list [nzDataSource]="user?.departments || []" [nzRenderItem]="department">
+          <ng-template #department let-item>
+            <nz-list-item>{{ item.name }}</nz-list-item>
+          </ng-template>
+        </nz-list>
+      </nz-tab>
+    </nz-tabset>
+  </nz-tab>
+  <nz-tab nzTitle="Más">
+    <nz-tabset nzSize="small">
+      <nz-tab [nzTitle]="'core.assessments' | translate">
+        <app-master-data-list [columns]="assessmentColumns" [data]="assessments" [loading]="assessmentsLoading"></app-master-data-list>
+      </nz-tab>
+      <nz-tab *ngIf="isTherapist" nzTitle="Sesiones">
+        <app-sessions-list [therapistId]="user?.id" [sessionKind]="CSK.SUPERVISION"></app-sessions-list>
+      </nz-tab>
+      <nz-tab *ngIf="isTherapist" nzTitle="Ciclos">
+        <app-cycles-list [therapistId]="user?.id" [cycleKind]="CSK.SUPERVISION"></app-cycles-list>
+      </nz-tab>
+      <nz-tab nzTitle="Automatizaciones aplicadas">
+        <app-applied-automations-list [userId]="user?.id"></app-applied-automations-list>
+      </nz-tab>
+    </nz-tabset>
+  </nz-tab>
 </nz-tabset>
+
+<nz-drawer
+  [nzWidth]="820"
+  [nzMask]="true"
+  [nzClosable]="true"
+  [nzMaskClosable]="false"
+  [nzVisible]="showSupervisorAssignDrawer"
+  nzPlacement="right"
+  [nzTitle]="'menu.supervisors' | translate"
+  (nzOnClose)="toggleSupervisorAssignDrawer()"
+>
+  <div>
+    <h5>{{ 'menu.supervisors' | translate }}</h5>
+  </div>
+  <form nz-form class="search-form">
+    <nz-form-item class="form-item">
+      <nz-form-label nzFor="supervisor">{{ 'menu.supervisors' | translate }}</nz-form-label>
+      <nz-form-control class="form-control">
+        <nz-select
+          [(ngModel)]="selectedSupervisorId"
+          name="supervisor"
+          [nzLoading]="supervisorsLoading"
+          nzShowSearch
+          nzPlaceHolder="Supervisor"
+          class="assignment-select"
+        >
+          <nz-option
+            *ngFor="let supervisor of availableSupervisors"
+            [nzValue]="supervisor.id"
+            [nzLabel]="formatUserName(supervisor)"
+          ></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+  </form>
+  <button nz-button nzType="primary" [disabled]="!selectedSupervisorId" (click)="assignSupervisor()">
+    <i nz-icon nzType="plus"></i>
+    {{ 'core.add' | translate }}
+  </button>
+</nz-drawer>

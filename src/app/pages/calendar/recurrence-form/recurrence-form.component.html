@@ -6,16 +6,16 @@
 
   <ng-container *ngIf="enabled">
     <div class="repeat-grid">
-      <label>
+      <div class="form-field">
         <span>Repeat every</span>
         <input nz-input type="number" min="1" [ngModel]="every" (ngModelChange)="setEvery($event)" />
-      </label>
-      <label>
+      </div>
+      <div class="form-field">
         <span>Unidad</span>
         <nz-select [ngModel]="unit" (ngModelChange)="setUnit($event)">
           <nz-option *ngFor="let option of repeatUnits" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
         </nz-select>
-      </label>
+      </div>
     </div>
 
     <div class="repeat-days" *ngIf="unit === RU.WEEK">
@@ -32,23 +32,23 @@
       </button>
     </div>
 
-    <label>
+    <div class="form-field">
       <span>Ends</span>
       <nz-select [ngModel]="endMode" (ngModelChange)="setEndMode($event)">
         <nz-option [nzValue]="RE.NEVER" nzLabel="Never"></nz-option>
         <nz-option [nzValue]="RE.ON_DATE" nzLabel="On"></nz-option>
         <nz-option [nzValue]="RE.AFTER_COUNT" nzLabel="After"></nz-option>
       </nz-select>
-    </label>
+    </div>
 
-    <label *ngIf="endMode === RE.ON_DATE">
+    <div class="form-field" *ngIf="endMode === RE.ON_DATE">
       <span>Fecha final</span>
       <nz-date-picker [ngModel]="endDate" (ngModelChange)="setEndDate($event)"></nz-date-picker>
-    </label>
+    </div>
 
-    <label *ngIf="endMode === RE.AFTER_COUNT">
+    <div class="form-field" *ngIf="endMode === RE.AFTER_COUNT">
       <span>Cantidad</span>
       <input nz-input type="number" min="1" [ngModel]="count" (ngModelChange)="setCount($event)" />
-    </label>
+    </div>
   </ng-container>
 </div>

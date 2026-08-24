@@ -23,29 +23,38 @@
   <nz-spin [nzSpinning]="loading">
     <section *ngIf="view === CV.MONTH" class="month-view">
       <div class="weekday" *ngFor="let day of weekDays">{{ day | date:'EEE' }}</div>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabindex="0"
         class="month-day"
         *ngFor="let day of monthDays"
         [class.month-day--muted]="isMutedMonthDay(day)"
         [class.month-day--today]="(day | date:'yyyyMMdd') === (today | date:'yyyyMMdd')"
-        (click)="openCreateEvent(day)"
-        (dragover)="eventDragOver.emit($event)"
-        (drop)="eventDrop.emit({ event: $event, date: day })"
+        (mouseup)="onCellMouseUp($event, day)"
+        (contextmenu)="onCellContextMenu($event)"
+        (dragenter)="onDragOver($event)"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, day)"
       >
         <span class="day-number">{{ day | date:'d' }}</span>
-        <span
+        <div
           class="calendar-event"
           *ngFor="let event of eventsForDate(day) | slice:0:4"
+          [attr.data-event-id]="event.id"
           [ngClass]="eventClass(event)"
+          [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
           draggable="true"
-          (dragstart)="eventDragStart.emit({ event: $event, calendarEvent: event })"
-          (click)="onEventClick($event, event)"
+          (dragstart)="onEventDragStart($event, event)"
+          (dragend)="onEventDragEnd()"
+          (mousedown)="onEventMouseDown($event, event)"
+          (mouseup)="onEventMouseUp($event, event)"
+          (click)="onEventNativeClick($event)"
+          (contextmenu)="onEventContextMenu($event, event)"
         >
           <span>{{ formatTime(event.startAt) }}</span>
           {{ event.title }}
-        </span>
-      </button>
+        </div>
+      </div>
     </section>
 
     <section *ngIf="view === CV.WEEK" class="time-grid">
@@ -57,25 +66,34 @@
 
       <ng-container *ngFor="let hour of hourSlots">
         <div class="time-label">{{ hour }}:00</div>
-        <button
-          type="button"
+        <div
+          role="button"
+          tabindex="0"
           class="time-cell"
           *ngFor="let day of weekDays"
-          (click)="openCreateEvent(day, hour)"
-          (dragover)="eventDragOver.emit($event)"
-          (drop)="eventDrop.emit({ event: $event, date: day, hour: hour })"
+          (mouseup)="onCellMouseUp($event, day, hour)"
+          (contextmenu)="onCellContextMenu($event)"
+          (dragenter)="onDragOver($event)"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event, day, hour)"
         >
-          <span
+          <div
             class="calendar-event calendar-event--timed"
             *ngFor="let event of eventsForHour(day, hour)"
+            [attr.data-event-id]="event.id"
             [ngClass]="eventClass(event)"
+            [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
             draggable="true"
-            (dragstart)="eventDragStart.emit({ event: $event, calendarEvent: event })"
-            (click)="onEventClick($event, event)"
+            (dragstart)="onEventDragStart($event, event)"
+            (dragend)="onEventDragEnd()"
+            (mousedown)="onEventMouseDown($event, event)"
+            (mouseup)="onEventMouseUp($event, event)"
+            (click)="onEventNativeClick($event)"
+            (contextmenu)="onEventContextMenu($event, event)"
           >
             {{ formatTime(event.startAt) }} {{ event.title }}
-          </span>
-        </button>
+          </div>
+        </div>
       </ng-container>
     </section>
 
@@ -88,25 +106,45 @@
 
       <ng-container *ngFor="let hour of hourSlots">
         <div class="time-label">{{ hour }}:00</div>
-        <button
-          type="button"
+        <div
+          role="button"
+          tabindex="0"
           class="time-cell"
-          (click)="openCreateEvent(selectedDate, hour)"
-          (dragover)="eventDragOver.emit($event)"
-          (drop)="eventDrop.emit({ event: $event, date: selectedDate, hour: hour })"
+          (mouseup)="onCellMouseUp($event, selectedDate, hour)"
+          (contextmenu)="onCellContextMenu($event)"
+          (dragenter)="onDragOver($event)"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event, selectedDate, hour)"
         >
-          <span
+          <div
             class="calendar-event calendar-event--timed"
             *ngFor="let event of eventsForHour(selectedDate, hour)"
+            [attr.data-event-id]="event.id"
             [ngClass]="eventClass(event)"
+            [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
             draggable="true"
-            (dragstart)="eventDragStart.emit({ event: $event, calendarEvent: event })"
-            (click)="onEventClick($event, event)"
+            (dragstart)="onEventDragStart($event, event)"
+            (dragend)="onEventDragEnd()"
+            (mousedown)="onEventMouseDown($event, event)"
+            (mouseup)="onEventMouseUp($event, event)"
+            (click)="onEventNativeClick($event)"
+            (contextmenu)="onEventContextMenu($event, event)"
           >
             {{ formatTime(event.startAt) }} {{ event.title }}
-          </span>
-        </button>
+          </div>
+        </div>
       </ng-container>
     </section>
   </nz-spin>
+</div>
+
+<div
+  *ngIf="dragPreviewEvent"
+  class="calendar-drag-preview"
+  [ngClass]="eventClass(dragPreviewEvent)"
+  [style.left.px]="dragPreviewX + 12"
+  [style.top.px]="dragPreviewY + 12"
+>
+  <span>{{ formatTime(dragPreviewEvent.startAt) }}</span>
+  {{ dragPreviewEvent.title }}
 </div>

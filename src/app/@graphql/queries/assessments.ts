@@ -208,6 +208,188 @@ const assessments = gql`
   }
 `;
 
+const patientAssessments = gql`
+  query($patientId: Int!, $includeArchived: Boolean) {
+    patientAssessments(patientId: $patientId, includeArchived: $includeArchived) {
+      id
+      uuid
+      date
+      assessmentType {
+        id
+        name
+      }
+      emailReminder
+      emailStatus
+      receiverEmail
+      patientId
+      targetUserId
+      responderUserId
+      mailTemplateId
+      reminderMinutes
+      clinicianId
+      submissionDate
+      status
+      deliveryDate
+      expirationDate
+      note
+      origin
+      editableFromAssessmentList
+      clinicalSessionId
+      schemeId
+      schemeAssignmentId
+      createdAt
+      updatedAt
+      deletedAt
+      deleted
+      informantType
+      clinician {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+      }
+      responsibleUsers {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        workID
+      }
+      targetUser {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+        roles {
+          id
+          name
+          hierarchy
+          code
+        }
+      }
+      responderUser {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+      }
+      informantClinician {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+        deletedAt
+      }
+      informantCaregiverRelation
+      clinicalSession {
+        id
+        sessionKind
+        sessionNumber
+        clinicalStatus
+        historyLabel
+        calendarOccurrence {
+          id
+          title
+          startAt
+          endAt
+        }
+      }
+      patient {
+        id
+        active
+        medicalRecordNo
+        firstName
+        middleName
+        lastName
+        phone
+        email
+        address
+        gender
+        birthDate
+        birthCountryCode
+        nationality
+        createdAt
+        updatedAt
+      }
+      questionnaireAssessment {
+        status
+        randomizationRuleIds
+        questionnaireBundles {
+          _id
+          name
+        }
+        resolvedQuestionnaires {
+          occurrenceId
+          questionnaireId
+          sourceBundleId
+          path
+          orderIndex
+        }
+        questionnaires(populate: true) {
+          _id
+          name
+          status
+          createdAt
+          keywords
+          copyright
+          website
+          license
+          timeToComplete
+          language
+          abbreviation
+        }
+      }
+    }
+  }
+`;
+
 const questionnaires = gql`
   query($paging: CursorPaging, $filter: AssessmentFilter, $sorting: [AssessmentSort!]) {
     questionnaires(paging: $paging, filter: $filter, sorting: $sorting) {
@@ -427,6 +609,16 @@ const getFullAssessment = gql`
         createdAt
         updatedAt
       }
+      responsibleUsers {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        workID
+      }
       patient {
         id
         active
@@ -443,6 +635,16 @@ const getFullAssessment = gql`
         nationality
         createdAt
         updatedAt
+        caseManagers {
+          id
+          username
+          active
+          firstName
+          middleName
+          lastName
+          email
+          workID
+        }
       }
     }
   }
@@ -531,6 +733,7 @@ const getFullPublicAssessment = gql`
 
 export const AssessmentsQueries = {
   assessments,
+  patientAssessments,
   questionnaires,
   getFullAssessment,
   getFullPublicAssessment,

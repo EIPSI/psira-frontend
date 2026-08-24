@@ -90,11 +90,69 @@
 
   <section class="editor-section">
     <h2>Trigger</h2>
-    <nz-radio-group formControlName="triggerPoint">
+    <nz-radio-group formControlName="triggerPoint" (ngModelChange)="onTriggerPointChange($event)">
       <label nz-radio-button *ngFor="let trigger of triggerPoints" [nzValue]="trigger">
         {{ triggerPointLabel[trigger] }}
       </label>
     </nz-radio-group>
+
+    <div nz-row [nzGutter]="16" class="trigger-options" *ngIf="isSessionNumberTrigger() || usesReasonFilter() || isLastLoginTrigger()">
+      <div nz-col nzSpan="8" *ngIf="isSessionNumberTrigger()">
+        <nz-form-item>
+          <nz-form-label nzRequired>Número de sesión</nz-form-label>
+          <nz-form-control>
+            <nz-input-number formControlName="triggerSessionNumber" [nzMin]="1"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="8" *ngIf="isLastLoginTrigger()">
+        <nz-form-item>
+          <nz-form-label>Días desde login anterior</nz-form-label>
+          <nz-form-control>
+            <nz-input-number formControlName="lastLoginInactiveDays" [nzMin]="1"></nz-input-number>
+            <div class="field-help">Opcional. Si se completa, aplica solo cuando el login anterior fue hace al menos esa cantidad de días.</div>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="8" *ngIf="usesReasonFilter()">
+        <nz-form-item>
+          <nz-form-label>Ámbito</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="triggerReasonScope"
+              nzAllowClear
+              nzPlaceHolder="Todos"
+              (ngModelChange)="onTriggerReasonScopeChange()"
+            >
+              <nz-option
+                *ngFor="let scope of triggerReasonScopeOptions"
+                [nzValue]="scope.value"
+                [nzLabel]="scope.label"
+              ></nz-option>
+            </nz-select>
+            <div class="field-help">Opcional. Sin selección aplica a tratamiento y supervisión.</div>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="8" *ngIf="usesReasonFilter()">
+        <nz-form-item>
+          <nz-form-label>Motivos específicos</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="triggerReasonIds"
+              nzMode="multiple"
+              nzShowSearch
+              nzPlaceHolder="Sin selección aplica a todos los motivos"
+            >
+              <nz-option-group *ngFor="let group of triggerReasonGroups" [nzLabel]="group.label">
+                <nz-option *ngFor="let reason of group.reasons" [nzValue]="reason.id" [nzLabel]="reason.label"></nz-option>
+              </nz-option-group>
+            </nz-select>
+            <div class="field-help">Opcional. Si no se selecciona ningún motivo, aplica a todos los motivos del ámbito elegido.</div>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>
   </section>
 
   <section class="editor-section">
@@ -114,11 +172,20 @@
           <nz-form-label nzRequired>Tiempo desde el Trigger Point</nz-form-label>
           <nz-form-control>
             <nz-input-number formControlName="delayAmount" [nzMin]="0"></nz-input-number>
-            <span class="unit-label">{{ isFixedScheme ? 'día(s)' : 'minuto(s)' }}</span>
           </nz-form-control>
         </nz-form-item>
       </div>
-      <div nz-col nzSpan="16" *ngIf="isFixedScheme">
+      <div nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzRequired>Unidad</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="delayUnit">
+              <nz-option *ngFor="let unit of delayUnits" [nzValue]="unit" [nzLabel]="delayUnitLabel[unit]"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="8" *ngIf="isFixedScheme">
         <nz-form-item>
           <nz-form-label nzRequired>Esquema fijo asociado</nz-form-label>
           <nz-form-control>

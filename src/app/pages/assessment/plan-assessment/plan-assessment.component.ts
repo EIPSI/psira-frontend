@@ -76,6 +76,8 @@ export class PlanAssessmentComponent implements OnInit {
   @Input() public caregivers: SelectedCaregiver[] = [];
   public selectedInformant: any = null;
   public selectedClinician: User;
+  public selectedResponsibleUserIds: number[] = [];
+  public responsibleUserOptions: User[] = [];
   public fullAssessment: FullAssessment;
   public assessmentForm: FormGroup;
   public editMode = true;
@@ -211,6 +213,7 @@ export class PlanAssessmentComponent implements OnInit {
     this.getRoles();
     this.initAssessment();
     this.userAutoSelect();
+    if (this.patient?.id && !this.isUpdate) this.onPatientSelect(this.patient);
     this.hasEmail = environment.email;
   }
 
@@ -245,16 +248,25 @@ export class PlanAssessmentComponent implements OnInit {
   public userAutoSelect() {
     const userLocalStorage = JSON.parse(localStorage.getItem('user')) as User;
     this.selectedClinician = userLocalStorage;
+    this.selectedResponsibleUserIds = userLocalStorage?.id ? [userLocalStorage.id] : [];
+    this.assessmentForm?.patchValue({
+      clinicianId: userLocalStorage?.id,
+      responsibleUserIds: this.selectedResponsibleUserIds,
+    });
   }
 
   public onSubmitAssessment() {
+    this.syncResponsibleUsers();
     if (this.assessmentForm.invalid) return;
+    if (!this.primaryResponsibleUserId()) return;
     const content = this.assessmentContentPayload();
     const { informant, informantPatient, ...rest } = this.assessmentForm.value;
     this.applySelectedResponder();
     const newAssessmentData = {
       ...rest,
       ...content,
+      clinicianId: this.primaryResponsibleUserId(),
+      responsibleUserIds: this.selectedResponsibleUserIds,
     };
     newAssessmentData.dates = (newAssessmentData.dates || []).map((date: any) => ({
       ...date,
@@ -317,6 +329,17 @@ export class PlanAssessmentComponent implements OnInit {
     this.assessmentForm.patchValue({
       clinicianId: user?.id,
     });
+  }
+
+  public userLabel(user: User): string {
+    return [user?.firstName, user?.middleName, user?.lastName]
+      .filter((part) => !!part)
+      .join(' ') || user?.username || user?.email || `Usuario ${user?.id}`;
+  }
+
+  public onResponsibleUsersChange(userIds: number[]): void {
+    this.selectedResponsibleUserIds = userIds || [];
+    this.syncResponsibleUsers();
   }
 
   public onTargetUserSelect(user: User) {
@@ -401,6 +424,7 @@ export class PlanAssessmentComponent implements OnInit {
     this.defaultResponderToTargetRole();
     this.populateResponderOptions();
     this.departments = user.departments || [];
+    this.loadSupervisorResponsibleUsers(user.id);
     this.clearAssessmentContent();
     this.loadContentOptions();
   }
@@ -421,6 +445,67 @@ export class PlanAssessmentComponent implements OnInit {
     this.assessmentForm.get('targetUserId').updateValueAndValidity();
   }
 
+  private initializePatientResponsibleUsers(): void {
+    this.responsibleUserOptions = this.patient?.caseManagers || [];
+    this.initializeResponsibleUsersFromOptions();
+  }
+
+  private loadSupervisorResponsibleUsers(therapistId: number): void {
+    if (!therapistId) return;
+    this.usersService.getSupervisors({ first: 50, therapistId }).subscribe(
+      ({ data }: any) => {
+        this.responsibleUserOptions = (data?.supervisors?.edges || []).map((edge: any) => edge.node);
+        this.initializeResponsibleUsersFromOptions();
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
+    );
+  }
+
+  private initializeResponsibleUsersFromOptions(): void {
+    if (this.isUpdate && this.fullAssessment) {
+      this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
+    } else {
+      const currentUser = JSON.parse(localStorage.getItem('user')) as User;
+      if (currentUser?.id && this.responsibleUserOptions.some((user) => user.id === currentUser.id)) {
+        this.selectedResponsibleUserIds = [currentUser.id];
+      } else {
+        this.selectedResponsibleUserIds = this.responsibleUserOptions[0]?.id ? [this.responsibleUserOptions[0].id] : [];
+      }
+    }
+    this.syncResponsibleUsers();
+  }
+
+  private assessmentResponsibleUserIds(): number[] {
+    const responsibleUsers = (this.fullAssessment as any)?.responsibleUsers || [];
+    const ids: number[] = responsibleUsers.map((user: User) => user.id);
+    if (!ids.length && this.fullAssessment?.clinicianId) ids.push(this.fullAssessment.clinicianId);
+    return Array.from(new Set(ids.filter((id: number) => !!id)));
+  }
+
+  private syncResponsibleUsers(): void {
+    const allowedIds = this.responsibleUserOptions.map((user) => user.id);
+    const selectedIds = this.selectedResponsibleUserIds || [];
+    const hasRestrictedTarget = !!this.assessmentForm?.value?.patientId || !!this.assessmentForm?.value?.targetUserId;
+    const filteredIds = allowedIds.length
+      ? selectedIds.filter((id: number) => allowedIds.includes(id))
+      : hasRestrictedTarget ? [] : selectedIds;
+    this.selectedResponsibleUserIds = Array.from(new Set(filteredIds));
+    this.selectedClinician = this.primaryResponsibleUser() || this.selectedClinician;
+    this.assessmentForm.patchValue({
+      clinicianId: this.primaryResponsibleUserId(),
+      responsibleUserIds: this.selectedResponsibleUserIds,
+    });
+  }
+
+  private primaryResponsibleUserId(): number | undefined {
+    return this.selectedResponsibleUserIds[0];
+  }
+
+  private primaryResponsibleUser(): User | undefined {
+    const userId = this.primaryResponsibleUserId();
+    return this.responsibleUserOptions.find((user) => user.id === userId);
+  }
+
   public onPatientSelect(patient: Patient) {
     this.patient = patient;
     this.selectedPatient = patient;
@@ -429,6 +514,7 @@ export class PlanAssessmentComponent implements OnInit {
       targetUserId: patient?.userId,
     });
     this.defaultResponderToTargetRole();
+    this.initializePatientResponsibleUsers();
     this.users = [];
     this.clearAssessmentContent();
 
@@ -602,6 +688,7 @@ export class PlanAssessmentComponent implements OnInit {
         targetUserId: [null],
         responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
+        responsibleUserIds: [[]],
         questionnaires: [[]],
         questionnaireBundles: [[]],
         randomizationRuleIds: [[]],
@@ -625,6 +712,7 @@ export class PlanAssessmentComponent implements OnInit {
         targetUserId: [null],
         responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
+        responsibleUserIds: [[]],
         questionnaires: [[]],
         questionnaireBundles: [[]],
         randomizationRuleIds: [[]],
@@ -672,6 +760,7 @@ export class PlanAssessmentComponent implements OnInit {
           targetUserId: this.fullAssessment.targetUserId,
           responderUserId: this.fullAssessment.responderUserId,
           clinicianId: this.fullAssessment.clinicianId,
+          responsibleUserIds: this.assessmentResponsibleUserIds(),
           informantPatient: this.fullAssessment.patient,
           informantClinicianId: this.fullAssessment.informantClinician?.id || null,
           informantCaregiverRelation: this.fullAssessment.informantCaregiverRelation,
@@ -703,6 +792,7 @@ export class PlanAssessmentComponent implements OnInit {
         this.listOfSelectedRandomizations = (this.fullAssessment.questionnaireAssessment as any)?.randomizationRuleIds || [];
         this.assessmentContentType = this.inferAssessmentContentType();
         this.selectedPatient = this.fullAssessment.patient;
+        this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
         this.selectedClinician = this.fullAssessment.clinician;
         this.fullAssessment = this.fullAssessment;
         this.patient = this.fullAssessment.patient;
@@ -712,6 +802,11 @@ export class PlanAssessmentComponent implements OnInit {
         this.loadContentOptions();
         this.selectedAssessment = this.fullAssessment.assessmentType?.id;
         this.targetRoleCode = this.fullAssessment.patientId ? 'PATIENT' : this.fullAssessment.targetUser?.roles?.[0]?.code ?? 'PATIENT';
+        if (this.fullAssessment.patientId) {
+          this.initializePatientResponsibleUsers();
+        } else if (this.fullAssessment.targetUserId) {
+          this.loadSupervisorResponsibleUsers(this.fullAssessment.targetUserId);
+        }
         this.responderRoleCode = this.fullAssessment.informantType || 'PATIENT';
         this.typeSelected = this.responderRoleCode;
         if (this.fullAssessment.informantClinician) {

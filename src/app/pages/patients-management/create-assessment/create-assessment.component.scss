@@ -80,3 +80,50 @@ nz-date-picker [nzInputReadOnly] {
   display: flex;
   align-items: center;
 }
+
+:host-context(.assessment-edit-modal) {
+  display: block;
+}
+
+:host-context(.assessment-edit-modal) div[nz-row] {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:host-context(.assessment-edit-modal) div[nz-col] {
+  flex: none;
+  max-width: 100%;
+  width: 100%;
+}
+
+:host-context(.assessment-edit-modal) form[nz-form] {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+:host-context(.assessment-edit-modal) nz-form-item,
+:host-context(.assessment-edit-modal) nz-form-control,
+:host-context(.assessment-edit-modal) nz-input-group,
+:host-context(.assessment-edit-modal) nz-select,
+:host-context(.assessment-edit-modal) nz-date-picker,
+:host-context(.assessment-edit-modal) .input-class,
+:host-context(.assessment-edit-modal) .date-picker1,
+:host-context(.assessment-edit-modal) .questionnaire {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+:host-context(.assessment-edit-modal) .date-picker,
+:host-context(.assessment-edit-modal) .email-label-wrapper {
+  align-items: stretch;
+  display: grid;
+  gap: 10px;
+  justify-content: stretch;
+}
+
+:host-context(.assessment-edit-modal) .button {
+  width: auto;
+}

@@ -151,7 +151,12 @@ export class AutomationsListComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (!this.perms.permissionsOnly(PermissionKey.MANAGE_ASSESSMENTS)) return;
+    if (
+      !this.perms.permissionsOnly(PermissionKey.MANAGE_EVALUATION_AUTOMATIONS) &&
+      !this.perms.permissionsOnly(PermissionKey.MANAGE_ALL_EVALUATION_AUTOMATIONS)
+    ) {
+      return;
+    }
 
     this.actions = [
       { key: ActionKey.EDIT, title: 'Ver / editar' },

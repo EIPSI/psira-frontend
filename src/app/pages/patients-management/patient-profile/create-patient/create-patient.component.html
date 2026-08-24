@@ -1,7 +1,7 @@
 <section class="institutional-section">
   <h2>Institucional</h2>
-  <div nz-row nzGutter="16">
-    <div nz-col class="institutional-field" nzSpan="8">
+  <div nz-row nzGutter="16" [ngClass]="{ 'definition-list-fields': !inputMode }">
+    <div nz-col class="institutional-field" [nzSpan]="inputMode ? 8 : 24">
       <label>
         <b><span translate>forms.patients.id</span></b>
       </label>
@@ -14,7 +14,7 @@
       <div class="field-value" *ngIf="!inputMode">{{ medicalRecordNo || '-' }}</div>
     </div>
 
-    <div nz-col class="institutional-field" nzSpan="8">
+    <div nz-col class="institutional-field" [nzSpan]="inputMode ? 8 : 24">
       <label>
         <b><span translate>forms.patients.department</span> <span class="required-mark" *ngIf="inputMode">*</span></b>
       </label>
@@ -34,7 +34,7 @@
       <div class="field-value" *ngIf="!inputMode">{{ selectedDepartmentLabels() }}</div>
     </div>
 
-    <div nz-col class="institutional-field" nzSpan="8">
+    <div nz-col class="institutional-field" [nzSpan]="inputMode ? 8 : 24">
       <label>
         <b><span translate>forms.patients.caseManager</span></b>
       </label>
@@ -63,6 +63,7 @@
   [resetForm]="resetForm"
   [showEditButton]="perms.permissionsOnly(PK.MANAGE_PATIENTS)"
   [showCancelButton]="showCancelButton"
+  displayMode="definition-list"
   [populateForm]="populateForm"
   [loadingMessage]="loadingMessage"
   (inputModeChanged)="handleInputModeChanged($event)"

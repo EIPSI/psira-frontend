@@ -6,19 +6,51 @@
   (rangeChange)="loadEvents()"
   (createEvent)="openCreateEvent($event.date, $event.hour)"
   (eventClick)="openEdit($event)"
+  (eventContextMenu)="openEventContextMenu($event.event, calendarEventContextMenu, $event.calendarEvent)"
   (eventDragStart)="onEventDragStart($event.event, $event.calendarEvent)"
   (eventDragOver)="allowDrop($event)"
   (eventDrop)="onDropEvent($event.event, $event.date, $event.hour)"
 ></app-calendar-grid>
 
+<nz-dropdown-menu #calendarEventContextMenu="nzDropdownMenu">
+  <ul nz-menu>
+    <li nz-menu-item (click)="openContextEvent()">Abrir</li>
+    <li nz-menu-item *ngIf="contextEvent?.editable && contextEvent?.clinicalSessionId" (click)="duplicateContextEvent()">Duplicar</li>
+    <li nz-menu-item *ngIf="contextEvent?.deletable" (click)="discardContextEvent()">
+      {{ contextEvent?.type === 'ASSESSMENT' ? 'Descartar' : 'Cancelación' }}
+    </li>
+  </ul>
+</nz-dropdown-menu>
+
 <app-event-edit-modal
   [(visible)]="editModalVisible"
   [(startAt)]="editStartAt"
   [(endAt)]="editEndAt"
+  [(sessionNumber)]="editSessionNumber"
+  [(modality)]="editModality"
+  [(description)]="editDescription"
+  [(restructureEnabled)]="editRestructure"
+  [(restructureEvery)]="editRestructureEvery"
+  [(restructureUnit)]="editRestructureUnit"
+  [(restructureOnDays)]="editRestructureOnDays"
+  [(restructureEndMode)]="editRestructureEndMode"
+  [(restructureEndDate)]="editRestructureEndDate"
+  [(restructureCount)]="editRestructureCount"
+  [(addSchemeIds)]="editAddSchemeIds"
+  [(addSchemesPropagate)]="editAddSchemesPropagate"
+  [(addSchemesApplicationMode)]="editAddSchemesApplicationMode"
+  [(overwriteExistingSchemes)]="editOverwriteExistingSchemes"
   [event]="editingEvent"
   [saving]="saving"
+  [modalityOptions]="modalityOptions"
+  [repeatUnits]="repeatUnits"
+  [weekDayOptions]="weekDayOptions"
+  [schemeOptions]="sessionSchemes"
+  [addSchemeApplicationModeOptions]="addSchemeApplicationModeOptions"
+  [activeSchemeApplications]="activeSchemeApplications"
   (save)="saveEdit()"
   (discard)="discardEvent($event)"
+  (stopScheme)="stopActiveScheme($event)"
   (durationChange)="setEditDurationMinutes($event)"
 ></app-event-edit-modal>
 
@@ -44,15 +76,39 @@
       <input nz-input [(ngModel)]="createTitle" />
     </label>
 
-    <label *ngIf="createType === CT.SESSION">
-      <span>Supervisor</span>
-      <app-user-picker [selectedUser]="createSupervisor" (selectUser)="createSupervisor = $event"></app-user-picker>
+    <label>
+      <span>Supervisores</span>
+      <nz-select
+        [(ngModel)]="createResponsibleUserIds"
+        (ngModelChange)="onResponsibleUsersChange($event)"
+        nzMode="multiple"
+        nzAllowClear
+        nzShowSearch
+        nzNotFoundContent="No hay supervisores asignados a este terapeuta."
+      >
+        <nz-option
+          *ngFor="let supervisor of supervisorOptions"
+          [nzValue]="supervisor.id"
+          [nzLabel]="userLabel(supervisor)"
+        ></nz-option>
+      </nz-select>
     </label>
 
     <label *ngIf="createType === CT.SESSION">
       <span>Esquemas session-based</span>
       <nz-select [(ngModel)]="createSessionSchemeIds" nzMode="multiple" nzAllowClear>
         <nz-option *ngFor="let scheme of sessionSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+      </nz-select>
+    </label>
+
+    <label *ngIf="createType === CT.SESSION">
+      <span>Modalidad</span>
+      <nz-select [(ngModel)]="createModality">
+        <nz-option
+          *ngFor="let option of modalityOptions"
+          [nzValue]="option.value"
+          [nzLabel]="option.label"
+        ></nz-option>
       </nz-select>
     </label>
 
@@ -156,4 +212,55 @@
       <input nz-input type="number" [(ngModel)]="simpleAvailabilityMinutes" />
     </label>
   </div>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="cancelModalVisible"
+  nzTitle="Cancelación"
+  [nzOkLoading]="saving"
+  nzOkText="Confirmar"
+  nzCancelText="Volver"
+  (nzOnCancel)="cancelModalVisible = false"
+  (nzOnOk)="confirmCancellation()"
+>
+  <ng-container *nzModalContent>
+    <div class="edit-form">
+      <label>
+        <span>Tipo</span>
+        <nz-select [ngModel]="cancelType" (ngModelChange)="onCancelTypeChange($event)">
+          <nz-option nzValue="RESCHEDULED" nzLabel="Cancelación por reprogramación"></nz-option>
+          <nz-option nzValue="NO_SHOW" nzLabel="Cancelación por falta"></nz-option>
+        </nz-select>
+      </label>
+
+      <label
+        *ngFor="let level of cancellationReasonLevels; let levelIndex = index"
+        [hidden]="cancelType !== 'NO_SHOW'"
+      >
+        <span>{{ cancellationReasonLevelLabel(levelIndex) }}</span>
+        <nz-select
+          [ngModel]="selectedCancellationReasonIds[levelIndex]"
+          (ngModelChange)="onCancellationReasonChange(levelIndex, $event)"
+          nzAllowClear
+          nzShowSearch
+        >
+          <nz-option
+            *ngFor="let reason of level"
+            [nzValue]="reason.id"
+            [nzLabel]="reason.label"
+          ></nz-option>
+        </nz-select>
+      </label>
+
+      <label *ngIf="cancelType === 'NO_SHOW' && showCancellationOtherReason">
+        <span>Otro motivo</span>
+        <textarea nz-input rows="3" [(ngModel)]="cancelOtherReason"></textarea>
+      </label>
+
+      <label>
+        <span>Nota de supervisión</span>
+        <textarea nz-input rows="3" [(ngModel)]="cancelClinicalNote"></textarea>
+      </label>
+    </div>
+  </ng-container>
 </nz-modal>

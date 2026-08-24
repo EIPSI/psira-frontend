@@ -1,0 +1,150 @@
+<div class="follow-up-toolbar">
+  <div class="filters">
+    <nz-range-picker [(ngModel)]="dateRange" (ngModelChange)="applyFilters()"></nz-range-picker>
+    <nz-select [(ngModel)]="sortDirection" (ngModelChange)="applyFilters()" class="sort-select">
+      <nz-option nzValue="DESC" nzLabel="Mas recientes primero"></nz-option>
+      <nz-option nzValue="ASC" nzLabel="Mas antiguas primero"></nz-option>
+    </nz-select>
+  </div>
+  <div class="settings" *ngIf="settings">
+    Ventana de edicion: {{ settings.editWindowDays }} dias
+  </div>
+  <button nz-button nzType="primary" (click)="openNoteModal()">Agregar nota</button>
+</div>
+
+<nz-spin [nzSpinning]="loading">
+  <div class="follow-up-document" *ngIf="documentItems.length; else emptyState">
+    <section
+      class="follow-up-card"
+      [class.follow-up-card--cancelled]="item.type === 'SESSION' && isNoShowCancelled(item.session)"
+      [class.follow-up-card--entry]="item.type === 'ENTRY'"
+      *ngFor="let item of documentItems"
+    >
+      <header class="card-header" *ngIf="item.type === 'SESSION'">
+        <div>
+          <h3>Sesion {{ displaySessionNumber(item.session) || '-' }}</h3>
+          <span>{{ sessionDate(item.session) | date: 'short' }}</span>
+        </div>
+        <div class="card-actions">
+          <nz-tag [nzColor]="isNoShowCancelled(item.session) ? 'default' : 'processing'">
+            {{ isNoShowCancelled(item.session) ? 'Cancelada por falta' : item.session.clinicalStatus }}
+          </nz-tag>
+          <button nz-button nzType="link" [disabled]="!canEdit(item.session)" (click)="openEdit(item.session)">
+            Editar
+          </button>
+        </div>
+      </header>
+
+      <ng-container *ngIf="item.type === 'SESSION'">
+        <div class="cancel-detail" *ngIf="isNoShowCancelled(item.session)">
+          {{ cancellationDetail(item.session) || 'Sin motivo registrado' }}
+        </div>
+        <div class="cancel-detail" *ngIf="isNoShowCancelled(item.session) && item.session.cancellationComment">
+          <strong>{{ cancellationNoteLabel(item.session) }}:</strong>
+          {{ item.session.cancellationComment }}
+        </div>
+
+        <p class="follow-up-text">{{ item.session.clinicalHistory || 'Sin seguimiento' }}</p>
+
+        <div class="assessment-strip" *ngIf="assessmentResources(item.session).length">
+          <button
+            type="button"
+            class="assessment-pill"
+            [class.assessment-pill--done]="assessmentIsAnswered(resource.assessment)"
+            [class.assessment-pill--pending]="!assessmentIsAnswered(resource.assessment)"
+            [disabled]="!assessmentIsAnswered(resource.assessment)"
+            *ngFor="let resource of assessmentResources(item.session)"
+            (click)="openRawAssessment(resource)"
+          >
+            {{ assessmentName(resource) }}
+          </button>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="item.type === 'ENTRY'">
+        <header class="card-header">
+          <div>
+            <h3>{{ item.entry.title }}</h3>
+            <span>{{ item.entry.occurredAt | date: 'short' }}</span>
+          </div>
+          <nz-tag [nzColor]="entryColor(item.entry)">
+            {{ item.entry.entryKind }}
+          </nz-tag>
+        </header>
+        <div class="cancel-detail" *ngIf="item.entry.reasonSnapshot">
+          {{ item.entry.reasonSnapshot }}
+        </div>
+        <p class="follow-up-text">{{ item.entry.content || 'Sin nota' }}</p>
+      </ng-container>
+    </section>
+  </div>
+</nz-spin>
+
+<ng-template #emptyState>
+  <div class="empty-state">Sin seguimientos para mostrar</div>
+</ng-template>
+
+<nz-modal
+  [(nzVisible)]="editModalVisible"
+  [nzTitle]="editingSession ? sessionTitle(editingSession) : title"
+  [nzOkLoading]="saving"
+  nzOkText="Guardar"
+  nzCancelText="Cancelar"
+  (nzOnCancel)="editModalVisible = false"
+  (nzOnOk)="saveFollowUp()"
+>
+  <ng-container *nzModalContent>
+  <div *ngIf="editingSession" class="follow-up-editor">
+    <label>{{ editingSession.historyLabel }}</label>
+    <textarea nz-input rows="8" [(ngModel)]="editHistory"></textarea>
+    <div class="version-list" *ngIf="versions.length">
+      <h4>Versiones anteriores</h4>
+      <div class="version-row" *ngFor="let version of versions">
+        <strong>{{ version.createdAt | date: 'short' }}</strong>
+        <span *ngIf="version.editedBy">{{ formatPerson(version.editedBy) }}</span>
+        <p>{{ version.previousText || 'Sin texto previo' }}</p>
+      </div>
+    </div>
+  </div>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="noteModalVisible"
+  [nzTitle]="'Agregar nota'"
+  [nzOkLoading]="saving"
+  nzOkText="Guardar"
+  nzCancelText="Cancelar"
+  (nzOnCancel)="noteModalVisible = false"
+  (nzOnOk)="saveNote()"
+>
+  <ng-container *nzModalContent>
+    <div class="follow-up-editor">
+      <label>Fecha</label>
+      <nz-date-picker
+        nzShowTime
+        [(ngModel)]="noteOccurredAt"
+        style="width: 100%;"
+      ></nz-date-picker>
+      <label>Titulo</label>
+      <input nz-input [(ngModel)]="noteTitle" />
+      <label>Nota</label>
+      <textarea nz-input rows="6" [(ngModel)]="noteContent"></textarea>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="rawAssessmentModalVisible"
+  [nzTitle]="rawAssessmentTitle"
+  nzOkText="Cerrar"
+  [nzCancelText]="null"
+  (nzOnCancel)="rawAssessmentModalVisible = false"
+  (nzOnOk)="rawAssessmentModalVisible = false"
+>
+  <ng-container *nzModalContent>
+    <nz-spin [nzSpinning]="rawAssessmentLoading">
+      <pre class="raw-assessment">{{ rawAssessmentData || 'Sin respuestas registradas' }}</pre>
+    </nz-spin>
+  </ng-container>
+</nz-modal>

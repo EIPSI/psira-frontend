@@ -1,6 +1,11 @@
 export enum EvaluationAutomationTriggerPoint {
   USER_CREATED = 'USER_CREATED',
   FIRST_LOGIN = 'FIRST_LOGIN',
+  LAST_LOGIN = 'LAST_LOGIN',
+  SESSION_NUMBER = 'SESSION_NUMBER',
+  TREATMENT_FINALIZATION = 'TREATMENT_FINALIZATION',
+  SESSION_NO_SHOW_CANCELLATION = 'SESSION_NO_SHOW_CANCELLATION',
+  NEW_TREATMENT = 'NEW_TREATMENT',
 }
 
 export enum EvaluationAutomationType {
@@ -11,6 +16,10 @@ export enum EvaluationAutomationType {
 export enum EvaluationAutomationDelayUnit {
   DAYS = 'DAYS',
   MINUTES = 'MINUTES',
+  HOURS = 'HOURS',
+  WEEKS = 'WEEKS',
+  MONTHS = 'MONTHS',
+  YEARS = 'YEARS',
 }
 
 export enum EvaluationAutomationConditionOperator {
@@ -36,6 +45,11 @@ export enum EvaluationAutomationContentType {
 export const EvaluationAutomationTriggerPointLabel: Record<EvaluationAutomationTriggerPoint, string> = {
   [EvaluationAutomationTriggerPoint.USER_CREATED]: 'Creación de usuario',
   [EvaluationAutomationTriggerPoint.FIRST_LOGIN]: 'Primer logueo',
+  [EvaluationAutomationTriggerPoint.LAST_LOGIN]: 'Último logueo',
+  [EvaluationAutomationTriggerPoint.SESSION_NUMBER]: 'Sesión X',
+  [EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION]: 'Finalización de tratamiento/supervisión',
+  [EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION]: 'Cancelación por falta',
+  [EvaluationAutomationTriggerPoint.NEW_TREATMENT]: 'Nuevo tratamiento/supervisión',
 };
 
 export const EvaluationAutomationTypeLabel: Record<EvaluationAutomationType, string> = {
@@ -70,6 +84,10 @@ export interface EvaluationAutomation {
   active: boolean;
   triggerPoint: EvaluationAutomationTriggerPoint;
   automationType: EvaluationAutomationType;
+  triggerSessionNumber?: number;
+  triggerReasonIds?: number[];
+  triggerReasonContexts?: CaseEventReasonContext[];
+  lastLoginInactiveDays?: number;
   delayAmount: number;
   delayUnit: EvaluationAutomationDelayUnit;
   priority: number;
@@ -97,4 +115,26 @@ export interface EvaluationAutomation {
   roleName?: string;
   resourceName?: string;
   delayLabel?: string;
+}
+
+export enum CaseEventReasonContext {
+  SESSION_CANCELLATION = 'SESSION_CANCELLATION',
+  SUPERVISION_SESSION_CANCELLATION = 'SUPERVISION_SESSION_CANCELLATION',
+  TREATMENT_FINALIZATION = 'TREATMENT_FINALIZATION',
+  SUPERVISION_FINALIZATION = 'SUPERVISION_FINALIZATION',
+  NEW_TREATMENT = 'NEW_TREATMENT',
+  NEW_SUPERVISION = 'NEW_SUPERVISION',
+}
+
+export interface CaseEventReason {
+  id: number;
+  context: CaseEventReasonContext;
+  label: string;
+  nextLevelLabel?: string;
+  parentId?: number;
+  departmentId?: number;
+  active: boolean;
+  isOther: boolean;
+  sortOrder: number;
+  children?: CaseEventReason[];
 }
