@@ -12,6 +12,7 @@ export class SelectInputComponent implements OnInit {
   @Input() inputMode = false;
   @Input() autoFill = false;
   @Input() inputModel: any;
+  @Input() showLabel = true;
   @Output() valueChange: EventEmitter<any> = new EventEmitter<any>();
   inputGroup: FormGroup;
 

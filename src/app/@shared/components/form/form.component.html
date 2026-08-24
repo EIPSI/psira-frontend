@@ -4,7 +4,7 @@
 <nz-spin
   [nzSpinning]="isLoading"
   [nzIndicator]="indicatorTemplate"
-  [ngClass]="{ 'definition-list-form': displayMode === 'definition-list' && !inputMode }"
+  [ngClass]="{ 'definition-form': definitionLayout, 'definition-align-left': definitionLayout && definitionValueAlignClass === 'definition-align-left', 'definition-align-right': definitionLayout && definitionValueAlignClass === 'definition-align-right' }"
 >
   <ng-container *ngFor="let group of form.groups">
     <ng-container *ngIf="!group.hidden">
@@ -16,12 +16,45 @@
       </div>
       <div nz-row nzGutter="16" class="form-fields">
         <ng-container *ngFor="let field of group.fields; let i = index">
-          <div nz-col class="gutter-row form-item" [nzSpan]="field?.span" *ngIf="!field.hidden">
+          <div
+            nz-col
+            class="gutter-row form-item"
+            [ngClass]="{ 'definition-form-item': definitionLayout, 'definition-array-item': definitionLayout && field.type === 'array' }"
+            [nzSpan]="definitionLayout ? 24 : field?.span"
+            *ngIf="!field.hidden"
+          >
+            <div class="definition-label" *ngIf="definitionLayout" [ngStyle]="definitionLabelStyle">
+              <b>
+                <ng-container *ngIf="field.translationPath; else plainFieldTitle">
+                  <span [translate]="field.translationPath"></span>
+                </ng-container>
+                <ng-template #plainFieldTitle>{{ field.displayLabel || field.title || field.label }}</ng-template>
+                <span class="required-mark" *ngIf="field?.isRequired && inputMode"> *</span>
+              </b>
+            </div>
+            <div class="definition-control">
+            <ng-container *ngIf="definitionLayout && !inputMode; else editableField">
+              <div class="definition-array-cards" *ngIf="field.type === 'array'; else definitionValue">
+                <div class="definition-array-card" *ngFor="let row of field.rows; let rowIndex = index">
+                  <div class="definition-array-card-title">{{ field.label || field.title }} {{ rowIndex + 1 }}</div>
+                  <div class="definition-array-card-field" *ngFor="let child of row">
+                    <span class="definition-array-card-label">{{ fieldLabel(child) }}</span>
+                    <span class="definition-array-card-value">{{ displayFieldValue(child) }}</span>
+                  </div>
+                </div>
+                <div class="definition-value" *ngIf="!field.rows?.length">-</div>
+              </div>
+              <ng-template #definitionValue>
+                <div class="definition-value">{{ displayFieldValue(field) }}</div>
+              </ng-template>
+            </ng-container>
+            <ng-template #editableField>
             <ng-container [ngSwitch]="field.type">
               <div *ngSwitchCase="'text'">
                 <app-text-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-text-input>
@@ -30,6 +63,7 @@
                 <app-text-area-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-text-area-input>
@@ -38,6 +72,7 @@
                 <app-number-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-number-input>
@@ -46,6 +81,7 @@
                 <app-select-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-select-input>
@@ -54,6 +90,7 @@
                 <app-search-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (searchOptions)="handleSearch($event)"
                   (valueChange)="handleInputChange(field, $event)"
                 >
@@ -63,6 +100,7 @@
                 <app-check-box-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-check-box-input>
@@ -71,6 +109,7 @@
                 <app-radio-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-radio-input>
@@ -79,6 +118,7 @@
                 <app-date-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-date-input>
@@ -87,6 +127,7 @@
                 <app-date-range-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-date-range-input>
@@ -95,6 +136,7 @@
                 <app-password-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-password-input>
@@ -103,6 +145,8 @@
                 <app-array-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
+                  [formalLayout]="definitionLayout"
                   (rowAdded)="handleRowAdded($event)"
                   (rowRemoved)="handleRowRemoved($event)"
                   (valueChange)="handleInputChange(field, $event)"
@@ -113,11 +157,14 @@
                 <app-file-input
                   [field]="field"
                   [inputMode]="inputMode"
+                  [showLabel]="!definitionLayout"
                   (valueChange)="handleInputChange(field, $event)"
                 >
                 </app-file-input>
               </div>
             </ng-container>
+            </ng-template>
+            </div>
           </div>
         </ng-container>
       </div>

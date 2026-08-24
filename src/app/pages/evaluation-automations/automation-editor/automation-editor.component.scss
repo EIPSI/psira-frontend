@@ -48,10 +48,13 @@
 }
 
 .condition-row {
-  display: grid;
-  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(160px, 1fr) 40px;
-  gap: 8px;
   margin-bottom: 8px;
+}
+
+.condition-actions {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 24px;
 }
 
 .department-actions {
@@ -89,7 +92,7 @@
     flex-direction: column;
   }
 
-  .condition-row {
-    grid-template-columns: 1fr;
+  .condition-actions {
+    padding-bottom: 0;
   }
 }

@@ -270,6 +270,9 @@ const emergencyContactFields: Field[] = [
 
 const getForm = (createMode: boolean): Form => {
   return {
+    layout: 'definition',
+    labelWidth: '28%',
+    valueAlign: 'left',
     submitButtonText: 'Save Patient',
     editButtonText: 'Edit Patient',
     submitButtonClass: 'right-align-submit',

@@ -1,55 +1,61 @@
 <section class="institutional-section">
   <h2>Institucional</h2>
-  <div nz-row nzGutter="16" [ngClass]="{ 'definition-list-fields': !inputMode }">
-    <div nz-col class="institutional-field" [nzSpan]="inputMode ? 8 : 24">
-      <label>
+  <div class="institutional-definition-fields">
+    <div class="institutional-field">
+      <label class="institutional-label">
         <b><span translate>forms.patients.id</span></b>
       </label>
-      <input
-        *ngIf="inputMode"
-        nz-input
-        placeholder="Enter medical record number"
-        [(ngModel)]="medicalRecordNo"
-      />
-      <div class="field-value" *ngIf="!inputMode">{{ medicalRecordNo || '-' }}</div>
+      <div class="institutional-control">
+        <input
+          *ngIf="inputMode"
+          nz-input
+          placeholder="Enter medical record number"
+          [(ngModel)]="medicalRecordNo"
+        />
+        <div class="field-value" *ngIf="!inputMode">{{ medicalRecordNo || '-' }}</div>
+      </div>
     </div>
 
-    <div nz-col class="institutional-field" [nzSpan]="inputMode ? 8 : 24">
-      <label>
+    <div class="institutional-field">
+      <label class="institutional-label">
         <b><span translate>forms.patients.department</span> <span class="required-mark" *ngIf="inputMode">*</span></b>
       </label>
-      <nz-select
-        *ngIf="inputMode"
-        nzMode="multiple"
-        nzShowSearch
-        nzAllowClear
-        nzPlaceHolder="Select Department"
-        [nzDisabled]="getAccessScope() === 'ASSIGNED'"
-        [(ngModel)]="selectedDepartmentIds"
-        (ngModelChange)="handleDepartmentSelection($event)"
-      >
-        <nz-option *ngFor="let option of departmentOptions" [nzValue]="option.value" [nzLabel]="option.label">
-        </nz-option>
-      </nz-select>
-      <div class="field-value" *ngIf="!inputMode">{{ selectedDepartmentLabels() }}</div>
+      <div class="institutional-control">
+        <nz-select
+          *ngIf="inputMode"
+          nzMode="multiple"
+          nzShowSearch
+          nzAllowClear
+          nzPlaceHolder="Select Department"
+          [nzDisabled]="getAccessScope() === 'ASSIGNED'"
+          [(ngModel)]="selectedDepartmentIds"
+          (ngModelChange)="handleDepartmentSelection($event)"
+        >
+          <nz-option *ngFor="let option of departmentOptions" [nzValue]="option.value" [nzLabel]="option.label">
+          </nz-option>
+        </nz-select>
+        <div class="field-value" *ngIf="!inputMode">{{ selectedDepartmentLabels() }}</div>
+      </div>
     </div>
 
-    <div nz-col class="institutional-field" [nzSpan]="inputMode ? 8 : 24">
-      <label>
+    <div class="institutional-field">
+      <label class="institutional-label">
         <b><span translate>forms.patients.caseManager</span></b>
       </label>
-      <nz-select
-        *ngIf="inputMode"
-        nzShowSearch
-        nzAllowClear
-        nzPlaceHolder="Select Case Manager"
-        [nzDisabled]="getAccessScope() === 'ASSIGNED'"
-        [(ngModel)]="selectedCaseManagerId"
-      >
-        <nz-option *ngFor="let option of caseManagerOptions" [nzValue]="option.value" [nzLabel]="option.label">
-        </nz-option>
-      </nz-select>
-      <div class="field-value" *ngIf="!inputMode">{{ selectedCaseManagerLabel() }}</div>
+      <div class="institutional-control">
+        <nz-select
+          *ngIf="inputMode"
+          nzShowSearch
+          nzAllowClear
+          nzPlaceHolder="Select Case Manager"
+          [nzDisabled]="getAccessScope() === 'ASSIGNED'"
+          [(ngModel)]="selectedCaseManagerId"
+        >
+          <nz-option *ngFor="let option of caseManagerOptions" [nzValue]="option.value" [nzLabel]="option.label">
+          </nz-option>
+        </nz-select>
+        <div class="field-value" *ngIf="!inputMode">{{ selectedCaseManagerLabel() }}</div>
+      </div>
     </div>
   </div>
 </section>
@@ -63,7 +69,7 @@
   [resetForm]="resetForm"
   [showEditButton]="perms.permissionsOnly(PK.MANAGE_PATIENTS)"
   [showCancelButton]="showCancelButton"
-  displayMode="definition-list"
+  layoutMode="definition"
   [populateForm]="populateForm"
   [loadingMessage]="loadingMessage"
   (inputModeChanged)="handleInputModeChanged($event)"

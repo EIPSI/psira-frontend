@@ -45,6 +45,11 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
+import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
+import {
+  EvaluationAutomationTriggerPoint,
+  EvaluationAutomationTriggerPointLabel,
+} from '@app/pages/evaluation-automations/@types/evaluation-automation';
 
 enum CalendarCreateType {
   SESSION = 'SESSION',
@@ -74,6 +79,7 @@ export class PatientCalendarComponent implements OnChanges {
   CT = CalendarCreateType;
   ACT = AssessmentContentType;
   FST = FixedSchemeSelectionType;
+  triggerPointLabel = EvaluationAutomationTriggerPointLabel;
   @Input() patient: FormattedPatient;
 
   selectedDate = new Date();
@@ -167,6 +173,9 @@ export class PatientCalendarComponent implements OnChanges {
   cancellationReasonLevels: ClinicalSessionCancellationReason[][] = [];
   selectedCancellationReasonIds: number[] = [];
   cancellationRootLabel = 'Motivo';
+  automationPreview: any[] = [];
+  automationPreviewLoading = false;
+  skippedAutomationIds: number[] = [];
 
   get showCancellationOtherReason(): boolean {
     return this.isSelectedOtherReason(this.cancellationReasonLevels, this.cancelReasonId);
@@ -184,6 +193,7 @@ export class PatientCalendarComponent implements OnChanges {
     private modalService: NzModalService,
     private contextMenuService: NzContextMenuService,
     private randomizationsService: RandomizationsService,
+    private evaluationAutomationsService: EvaluationAutomationsService,
     private recurrenceService: CalendarRecurrenceService
   ) {}
 
@@ -644,6 +654,7 @@ export class PatientCalendarComponent implements OnChanges {
     this.cancelReasonId = undefined;
     this.cancelOtherReason = '';
     this.cancelClinicalNote = '';
+    this.resetAutomationPreview();
     this.resetCancellationReasonSelection();
     this.cancelModalVisible = true;
   }
@@ -653,7 +664,9 @@ export class PatientCalendarComponent implements OnChanges {
     this.cancelReasonId = undefined;
     this.cancelOtherReason = '';
     this.cancelClinicalNote = '';
+    this.resetAutomationPreview();
     this.resetCancellationReasonSelection();
+    this.refreshCancellationAutomationPreview();
   }
 
   onCancellationReasonChange(levelIndex: number, reasonId?: number): void {
@@ -662,11 +675,13 @@ export class PatientCalendarComponent implements OnChanges {
 
     if (!reasonId) {
       this.cancelReasonId = this.selectedCancellationReasonIds[this.selectedCancellationReasonIds.length - 1];
+      this.refreshCancellationAutomationPreview();
       return;
     }
 
     this.selectedCancellationReasonIds[levelIndex] = reasonId;
     this.cancelReasonId = reasonId;
+    this.refreshCancellationAutomationPreview();
     this.calendarService.getClinicalSessionCancellationReasons(reasonId).subscribe(
       (children) => {
         if (children?.length) {
@@ -722,6 +737,7 @@ export class PatientCalendarComponent implements OnChanges {
             ? this.cancelOtherReason.trim()
             : undefined,
         cancellationComment: this.cancelClinicalNote.trim() || undefined,
+        excludedAutomationIds: this.skippedAutomationIds,
       })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe(
@@ -731,6 +747,52 @@ export class PatientCalendarComponent implements OnChanges {
           this.loadEvents();
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to cancel session' })
+      );
+  }
+
+  toggleAutomationPreview(automationId: number, checked: boolean): void {
+    this.skippedAutomationIds = checked
+      ? this.skippedAutomationIds.filter((id) => id !== automationId)
+      : [...new Set([...this.skippedAutomationIds, automationId])];
+  }
+
+  automationPreviewChecked(automationId: number): boolean {
+    return !this.skippedAutomationIds.includes(automationId);
+  }
+
+  private resetAutomationPreview(): void {
+    this.automationPreview = [];
+    this.skippedAutomationIds = [];
+    this.automationPreviewLoading = false;
+  }
+
+  private refreshCancellationAutomationPreview(): void {
+    if (this.cancelType !== ClinicalSessionCancellationType.NO_SHOW) {
+      this.resetAutomationPreview();
+      return;
+    }
+    const departmentIds = this.contextDepartmentIds();
+    if (!departmentIds.length) {
+      this.resetAutomationPreview();
+      return;
+    }
+    this.automationPreviewLoading = true;
+    this.evaluationAutomationsService
+      .previewAutomations({
+        roleCodes: ['PATIENT'],
+        departmentIds,
+        triggerPoint: EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION,
+        reasonContexts: [CaseEventReasonContext.SESSION_CANCELLATION],
+        reasonIds: this.selectedCancellationReasonIds.filter((id) => !!id),
+      })
+      .pipe(finalize(() => (this.automationPreviewLoading = false)))
+      .subscribe(
+        (automations) => {
+          this.automationPreview = automations || [];
+          const availableIds = this.automationPreview.map((automation) => automation.automationId);
+          this.skippedAutomationIds = this.skippedAutomationIds.filter((id) => availableIds.includes(id));
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load automation preview' })
       );
   }
 

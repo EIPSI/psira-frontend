@@ -44,6 +44,11 @@ import { CalendarService } from '../@services/calendar.service';
 import { CalendarRecurrenceService, RepeatEndMode, RepeatUnit } from '../@services/calendar-recurrence.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
+import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
+import {
+  EvaluationAutomationTriggerPoint,
+  EvaluationAutomationTriggerPointLabel,
+} from '@app/pages/evaluation-automations/@types/evaluation-automation';
 
 enum CalendarCreateType {
   SESSION = 'SESSION',
@@ -73,6 +78,7 @@ export class UserCalendarComponent implements OnChanges {
   CT = CalendarCreateType;
   ACT = AssessmentContentType;
   FST = FixedSchemeSelectionType;
+  triggerPointLabel = EvaluationAutomationTriggerPointLabel;
 
   @Input() user?: User;
 
@@ -161,6 +167,9 @@ export class UserCalendarComponent implements OnChanges {
   cancellationReasonLevels: ClinicalSessionCancellationReason[][] = [];
   selectedCancellationReasonIds: number[] = [];
   cancellationRootLabel = 'Motivo';
+  automationPreview: any[] = [];
+  automationPreviewLoading = false;
+  skippedAutomationIds: number[] = [];
 
   get showCancellationOtherReason(): boolean {
     return this.isSelectedOtherReason(this.cancellationReasonLevels, this.cancelReasonId);
@@ -178,6 +187,7 @@ export class UserCalendarComponent implements OnChanges {
     private randomizationsService: RandomizationsService,
     private recurrenceService: CalendarRecurrenceService,
     private schemesService: EvaluationSchemesService,
+    private evaluationAutomationsService: EvaluationAutomationsService,
     private usersService: UsersService
   ) {}
 
@@ -542,6 +552,7 @@ export class UserCalendarComponent implements OnChanges {
     this.cancelReasonId = undefined;
     this.cancelOtherReason = '';
     this.cancelClinicalNote = '';
+    this.resetAutomationPreview();
     this.resetCancellationReasonSelection();
     this.cancelModalVisible = true;
   }
@@ -551,7 +562,9 @@ export class UserCalendarComponent implements OnChanges {
     this.cancelReasonId = undefined;
     this.cancelOtherReason = '';
     this.cancelClinicalNote = '';
+    this.resetAutomationPreview();
     this.resetCancellationReasonSelection();
+    this.refreshCancellationAutomationPreview();
   }
 
   onCancellationReasonChange(levelIndex: number, reasonId?: number): void {
@@ -560,11 +573,13 @@ export class UserCalendarComponent implements OnChanges {
 
     if (!reasonId) {
       this.cancelReasonId = this.selectedCancellationReasonIds[this.selectedCancellationReasonIds.length - 1];
+      this.refreshCancellationAutomationPreview();
       return;
     }
 
     this.selectedCancellationReasonIds[levelIndex] = reasonId;
     this.cancelReasonId = reasonId;
+    this.refreshCancellationAutomationPreview();
     this.calendarService.getClinicalSessionCancellationReasons(reasonId, CalendarClinicalSessionKind.SUPERVISION).subscribe(
       (children) => {
         if (children?.length) {
@@ -616,6 +631,7 @@ export class UserCalendarComponent implements OnChanges {
             ? this.cancelOtherReason.trim()
             : undefined,
         cancellationComment: this.cancelClinicalNote.trim() || undefined,
+        excludedAutomationIds: this.skippedAutomationIds,
       })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe(
@@ -692,6 +708,60 @@ export class UserCalendarComponent implements OnChanges {
         () => this.loadEvents(),
         (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate calendar event' })
       );
+  }
+
+  toggleAutomationPreview(automationId: number, checked: boolean): void {
+    this.skippedAutomationIds = checked
+      ? this.skippedAutomationIds.filter((id) => id !== automationId)
+      : [...new Set([...this.skippedAutomationIds, automationId])];
+  }
+
+  automationPreviewChecked(automationId: number): boolean {
+    return !this.skippedAutomationIds.includes(automationId);
+  }
+
+  private resetAutomationPreview(): void {
+    this.automationPreview = [];
+    this.skippedAutomationIds = [];
+    this.automationPreviewLoading = false;
+  }
+
+  private refreshCancellationAutomationPreview(): void {
+    if (this.cancelType !== ClinicalSessionCancellationType.NO_SHOW) {
+      this.resetAutomationPreview();
+      return;
+    }
+    const departmentIds = this.contextDepartmentIds();
+    const roleIds = this.userRoleIds();
+    if (!departmentIds.length || !roleIds.length) {
+      this.resetAutomationPreview();
+      return;
+    }
+
+    this.automationPreviewLoading = true;
+    this.evaluationAutomationsService
+      .previewAutomations({
+        roleIds,
+        departmentIds,
+        triggerPoint: EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION,
+        reasonContexts: [CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION],
+        reasonIds: this.selectedCancellationReasonIds.filter((id) => !!id),
+      })
+      .pipe(finalize(() => (this.automationPreviewLoading = false)))
+      .subscribe(
+        (automations) => {
+          this.automationPreview = automations || [];
+          const availableIds = this.automationPreview.map((automation) => automation.automationId);
+          this.skippedAutomationIds = this.skippedAutomationIds.filter((id) => availableIds.includes(id));
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load automation preview' })
+      );
+  }
+
+  private userRoleIds(): number[] {
+    return (this.user?.roles || [])
+      .map((role: any) => Number(role.id))
+      .filter((id: number) => Number.isFinite(id));
   }
 
   private canManageUserCalendar(): boolean {

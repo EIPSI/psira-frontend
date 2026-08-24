@@ -52,24 +52,77 @@
   </div>
 </ng-template>
 
-<nz-tabset nzSize="large" [(nzSelectedIndex)]="selectedTabIndex" [nzTabBarExtraContent]="cycleTabActions">
-  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.calendar' | translate">
+<ng-container *ngIf="!patientTitle">
+  <app-create-patient></app-create-patient>
+</ng-container>
+
+<nz-tabset *ngIf="patientTitle" nzSize="large" [(nzSelectedIndex)]="selectedTabIndex" [nzTabBarExtraContent]="cycleTabActions">
+  <nz-tab [nzTitle]="'core.calendar' | translate">
     <app-patient-calendar [patient]="patient"></app-patient-calendar>
   </nz-tab>
-  <nz-tab *ngIf="patientTitle" nzTitle="Historia clinica">
+  <nz-tab nzTitle="Historia clinica">
     <app-clinical-follow-up-list
       [patientId]="patient?.id"
       [sessionKind]="CSK.CLINICAL"
       title="Historia clinica"
     ></app-clinical-follow-up-list>
   </nz-tab>
-  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.reports' | translate">
+  <nz-tab [nzTitle]="'core.reports' | translate">
     <app-reports [patient]="patient"></app-reports>
   </nz-tab>
-  <nz-tab *ngIf="patientTitle" nzTitle="Datos del caso">
+  <nz-tab nzTitle="Datos del caso">
     <nz-tabset nzSize="small">
       <nz-tab [nzTitle]="'core.profile' | translate">
         <app-create-patient></app-create-patient>
+      </nz-tab>
+      <nz-tab nzTitle="Settings">
+        <nz-spin [nzSpinning]="accountLoading">
+          <nz-alert
+            *ngIf="!patientAccountUser"
+            nzType="warning"
+            nzShowIcon
+            nzMessage="No se encontró la cuenta de usuario asociada al paciente."
+          ></nz-alert>
+
+          <div nz-row nzGutter="16" *ngIf="patientAccountUser">
+            <div nz-col>
+              <nz-card style="width: 300px" nzTitle="Enable or Disable {{ patientAccountUser?.firstName }}">
+                <p>To disable and Enable {{ patientAccountUser?.firstName }} toggle the switch below.</p>
+                <nz-switch
+                  [disabled]="!canManagePatientAccount()"
+                  [ngModel]="patientAccountUser.active"
+                  (ngModelChange)="setPatientAccountActive($event)"
+                ></nz-switch>
+              </nz-card>
+            </div>
+            <div nz-col>
+              <nz-card style="width: 300px" nzTitle="Change {{ patientAccountUser?.firstName }}'s password">
+                <p>To change password for {{ patientAccountUser.firstName }} toggle the button below.</p>
+                <button
+                  [disabled]="!canManagePatientAccount()"
+                  (click)="showPatientPasswordForm()"
+                  nz-button
+                  nzType="primary"
+                >
+                  Change Password
+                </button>
+              </nz-card>
+            </div>
+            <div nz-col>
+              <nz-card style="width: 300px" nzTitle="Delete User {{ patientAccountUser?.firstName }} ({{ patientAccountUser?.username }})">
+                <p>To remove User {{ patientAccountUser?.firstName }} toggle the button below.</p>
+                <button
+                  [disabled]="!canDeletePatientAccount()"
+                  (click)="handleDeletePatientAccount()"
+                  nz-button
+                  nzType="danger"
+                >
+                  Delete User
+                </button>
+              </nz-card>
+            </div>
+          </div>
+        </nz-spin>
       </nz-tab>
       <nz-tab [nzTitle]="'core.caseManagers' | translate">
         <app-case-managers [managerType]="'caseManager'" [patient]="patient" [showAssignButton]="true" [filter]="filter">
@@ -83,7 +136,7 @@
       </nz-tab>
     </nz-tabset>
   </nz-tab>
-  <nz-tab *ngIf="patientTitle" nzTitle="Más">
+  <nz-tab nzTitle="Más">
     <nz-tabset nzSize="small">
       <nz-tab [nzTitle]="'core.assessments' | translate">
         <app-assessments [patient]="patient"></app-assessments>
@@ -100,6 +153,28 @@
     </nz-tabset>
   </nz-tab>
 </nz-tabset>
+
+<nz-modal
+  [(nzVisible)]="passwordModalVisible"
+  nzTitle="Change Password"
+  nzOkText="Change password"
+  nzCancelText="Cancel"
+  [nzOkLoading]="accountLoading"
+  (nzOnCancel)="passwordModalVisible = false"
+  (nzOnOk)="submitPatientPasswordForm()"
+>
+  <ng-container *nzModalContent>
+    <app-form
+      #patientPasswordForm
+      [form]="updatePasswordForm"
+      [formData]="patientAccountUser"
+      [isLoading]="accountLoading"
+      [showSubmitButton]="false"
+      [showCancelButton]="false"
+      (submitForm)="updatePatientUserPassword($event)"
+    ></app-form>
+  </ng-container>
+</nz-modal>
 
 <nz-modal
   [(nzVisible)]="finalizeModalVisible"
@@ -138,6 +213,22 @@
         <span>Nota clínica</span>
         <textarea nz-input rows="4" [(ngModel)]="finalizationNote"></textarea>
       </label>
+
+      <nz-spin [nzSpinning]="automationPreviewLoading">
+        <div class="automation-preview" *ngIf="automationPreview.length">
+          <h3>Automatizaciones que se aplicarán</h3>
+          <label
+            class="automation-preview-item"
+            *ngFor="let automation of automationPreview"
+            nz-checkbox
+            [ngModel]="automationPreviewChecked(automation.automationId)"
+            (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+          >
+            <strong>{{ automation.title }}</strong>
+            <span>{{ triggerPointLabel[automation.triggerPoint] || automation.triggerPoint }} · {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          </label>
+        </div>
+      </nz-spin>
     </div>
   </ng-container>
 </nz-modal>
@@ -199,6 +290,22 @@
         <span>Nota clínica</span>
         <textarea nz-input rows="4" [(ngModel)]="newTreatmentNote"></textarea>
       </label>
+
+      <nz-spin [nzSpinning]="automationPreviewLoading">
+        <div class="automation-preview" *ngIf="automationPreview.length">
+          <h3>Automatizaciones que se aplicarán</h3>
+          <label
+            class="automation-preview-item"
+            *ngFor="let automation of automationPreview"
+            nz-checkbox
+            [ngModel]="automationPreviewChecked(automation.automationId)"
+            (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+          >
+            <strong>{{ automation.title }}</strong>
+            <span>{{ triggerPointLabel[automation.triggerPoint] || automation.triggerPoint }} · {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          </label>
+        </div>
+      </nz-spin>
     </div>
   </ng-container>
 </nz-modal>

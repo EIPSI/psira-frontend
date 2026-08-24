@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { userForms } from '@app/pages/user-management/@forms/user.form';
 import { Form } from '@shared/components/form/@types/form';
@@ -35,6 +35,10 @@ const CryptoJS = require('crypto-js');
   styleUrls: ['./user-form.component.scss'],
 })
 export class UserFormComponent implements OnInit {
+  @Input() section: 'all' | 'profile' | 'settings' = 'all';
+  @Input() showTitle = true;
+  @Input() userOverride?: User;
+  @Input() roleCodeOverride?: string;
   @ViewChild(FormComponent) _child: FormComponent;
   PK = PermissionKey;
   user: User;
@@ -100,7 +104,18 @@ export class UserFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.getUserFromUrl();
+    if (this.userOverride) {
+      this.defaultRoleCode = this.roleCodeOverride || this.userOverride.roles?.[0]?.code;
+      this.user = this.withProfileRelations({ ...this.userOverride });
+      if (this.user.birthDate) this.user.birthDate = String(this.user.birthDate).slice(0, 10) as any;
+      this.newMode = false;
+      this.inputMode = false;
+      this.showCancelButton = true;
+      this.profileFields = userForms.userProfileEdit;
+      this.populateForm = true;
+    } else {
+      this.getUserFromUrl();
+    }
     this.getUser();
     this.getRoles({ paging: { first: 50 } });
     this.getDepartments({paging: {first: 50}});
@@ -187,7 +202,9 @@ export class UserFormComponent implements OnInit {
           })
         );
         this.applyDefaultRole();
-        this.loadAssignmentOptions();
+        if (this.section !== 'settings') {
+          this.loadAssignmentOptions();
+        }
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
     );
@@ -267,7 +284,9 @@ export class UserFormComponent implements OnInit {
         if (this.user.birthDate) this.user.birthDate = decryptedData.birthDate.slice(0, 10);
         this.profileFields = userForms.userProfileEdit;
         this.populateForm = true;
-        this.loadAssignmentOptions();
+        if (this.section !== 'settings') {
+          this.loadAssignmentOptions();
+        }
       } else {
         this.defaultRoleCode = params.roleCode || this.activatedRoute.snapshot.data?.roleCode;
         this.user = { password: this.generateTemporaryPassword() } as User & { password: string };
@@ -278,7 +297,9 @@ export class UserFormComponent implements OnInit {
         this.applyDefaultRole();
         this.populateForm = true;
         this.showCancelButton = false;
-        this.loadAssignmentOptions();
+        if (this.section !== 'settings') {
+          this.loadAssignmentOptions();
+        }
         this.refreshAutomationPreview();
       }
     });

@@ -19,7 +19,7 @@
       [inputMode]="inputMode"
       [showCancelButton]="showCancelButton"
       [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
-      displayMode="definition-list"
+      layoutMode="definition"
       (inputChange)="handleProfileInputChange($event)"
       (submitForm)="submitForm($event)"
     ></app-form>
@@ -34,78 +34,94 @@
 </ng-container>
 
 <ng-template #standardUserForm>
-  <h1 *ngIf="userTitle">{{ userTitle }}</h1>
+  <h1 *ngIf="showTitle && userTitle">{{ userTitle }}</h1>
 
-  <nz-tabset>
+  <ng-container *ngIf="section === 'profile'">
+    <ng-container *ngTemplateOutlet="profileSection"></ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="section === 'settings'">
+    <ng-container *ngTemplateOutlet="settingsSection"></ng-container>
+  </ng-container>
+
+  <nz-tabset *ngIf="section === 'all'">
     <nz-tab nzTitle="Profile">
-      <app-form
-        [form]="profileFields"
-        [formData]="user"
-        [resetForm]="resetForm"
-        [populateForm]="populateForm"
-        [isLoading]="isLoading"
-        [loadingMessage]="loadingMessage"
-        [inputMode]="inputMode"
-        [showCancelButton]="showCancelButton"
-        [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
-        displayMode="definition-list"
-        (inputChange)="handleProfileInputChange($event)"
-        (submitForm)="submitForm($event)"
-      ></app-form>
-
-      <ng-container *ngTemplateOutlet="automationPreviewBlock"></ng-container>
-
-      <div class="assignment-panel profile-assignment" *ngIf="defaultRoleCode === 'THERAPIST'">
-        <h3>{{ 'menu.supervisors' | translate }}</h3>
-        <ng-container *ngTemplateOutlet="supervisorAssignment"></ng-container>
-      </div>
-
-      <div class="assignment-panel profile-assignment" *ngIf="defaultRoleCode === 'SUPERVISOR'">
-        <h3>{{ 'menu.therapists' | translate }}</h3>
-        <ng-container *ngTemplateOutlet="therapistAssignment"></ng-container>
-      </div>
+      <ng-container *ngTemplateOutlet="profileSection"></ng-container>
     </nz-tab>
     <nz-tab nzTitle="Settings">
-      <div nz-row nzGutter="16">
-        <div nz-col>
-          <nz-card style="width: 300px" nzTitle="Enable or Disable {{ user?.firstName }}">
-            <p>To disable and Enable {{ user?.firstName }} toggle the switch below.</p>
-            <nz-switch
-              [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
-              (ngModelChange)="activateUser(user)"
-              [(ngModel)]="user.active"
-            ></nz-switch>
-          </nz-card>
-        </div>
-        <div nz-col>
-          <nz-card style="width: 300px" nzTitle="Change {{ user?.firstName }}'s password">
-            <p>To change password for {{ user.firstName }} toggle the button below.</p>
-            <button
-              [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
-              (click)="showChangePasswordForm()"
-              nz-button
-              nzType="primary"
-            >
-              Change Password
-            </button>
-          </nz-card>
-        </div>
-        <div nz-col>
-          <nz-card style="width: 300px" nzTitle="Delete User {{ user?.firstName }} ({{ user?.username }})">
-            <p>To remove User {{ user?.firstName }} toggle the button below.</p>
-            <button
-              [disabled]="!perms.permissionsOnly([PK.DELETE_USERS]) || !perms.hasAccessLevelToUser(user)"
-              (click)="handleDeleteAction(user)"
-              nz-button
-              nzType="danger"
-            >
-              Delete User
-            </button>
-          </nz-card>
-        </div>
-      </div>
+      <ng-container *ngTemplateOutlet="settingsSection"></ng-container>
     </nz-tab>
   </nz-tabset>
+</ng-template>
+
+<ng-template #profileSection>
+  <app-form
+    [form]="profileFields"
+    [formData]="user"
+    [resetForm]="resetForm"
+    [populateForm]="populateForm"
+    [isLoading]="isLoading"
+    [loadingMessage]="loadingMessage"
+    [inputMode]="inputMode"
+    [showCancelButton]="showCancelButton"
+    [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
+    layoutMode="definition"
+    (inputChange)="handleProfileInputChange($event)"
+    (submitForm)="submitForm($event)"
+  ></app-form>
+
+  <ng-container *ngTemplateOutlet="automationPreviewBlock"></ng-container>
+
+  <div class="assignment-panel profile-assignment" *ngIf="defaultRoleCode === 'THERAPIST'">
+    <h3>{{ 'menu.supervisors' | translate }}</h3>
+    <ng-container *ngTemplateOutlet="supervisorAssignment"></ng-container>
+  </div>
+
+  <div class="assignment-panel profile-assignment" *ngIf="defaultRoleCode === 'SUPERVISOR'">
+    <h3>{{ 'menu.therapists' | translate }}</h3>
+    <ng-container *ngTemplateOutlet="therapistAssignment"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #settingsSection>
+  <div nz-row nzGutter="16">
+    <div nz-col>
+      <nz-card style="width: 300px" nzTitle="Enable or Disable {{ user?.firstName }}">
+        <p>To disable and Enable {{ user?.firstName }} toggle the switch below.</p>
+        <nz-switch
+          [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
+          (ngModelChange)="activateUser(user)"
+          [(ngModel)]="user.active"
+        ></nz-switch>
+      </nz-card>
+    </div>
+    <div nz-col>
+      <nz-card style="width: 300px" nzTitle="Change {{ user?.firstName }}'s password">
+        <p>To change password for {{ user.firstName }} toggle the button below.</p>
+        <button
+          [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
+          (click)="showChangePasswordForm()"
+          nz-button
+          nzType="primary"
+        >
+          Change Password
+        </button>
+      </nz-card>
+    </div>
+    <div nz-col>
+      <nz-card style="width: 300px" nzTitle="Delete User {{ user?.firstName }} ({{ user?.username }})">
+        <p>To remove User {{ user?.firstName }} toggle the button below.</p>
+        <button
+          [disabled]="!perms.permissionsOnly([PK.DELETE_USERS]) || !perms.hasAccessLevelToUser(user)"
+          (click)="handleDeleteAction(user)"
+          nz-button
+          nzType="danger"
+        >
+          Delete User
+        </button>
+      </nz-card>
+    </div>
+  </div>
 </ng-template>
 
 <ng-template #automationPreviewBlock>

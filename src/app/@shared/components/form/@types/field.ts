@@ -1,6 +1,7 @@
 export interface Field {
   value: number | string | number[] | string[] | boolean;
   title?: string;
+  displayLabel?: string;
   name?: string;
   description?: string;
   label?: string;

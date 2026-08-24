@@ -261,6 +261,22 @@
         <span>Nota de supervisión</span>
         <textarea nz-input rows="3" [(ngModel)]="cancelClinicalNote"></textarea>
       </label>
+
+      <nz-spin [nzSpinning]="automationPreviewLoading">
+        <div class="automation-preview" *ngIf="automationPreview.length">
+          <h3>Automatizaciones que se aplicarán</h3>
+          <label
+            class="automation-preview-item"
+            *ngFor="let automation of automationPreview"
+            nz-checkbox
+            [ngModel]="automationPreviewChecked(automation.automationId)"
+            (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+          >
+            <strong>{{ automation.title }}</strong>
+            <span>{{ triggerPointLabel[automation.triggerPoint] || automation.triggerPoint }} · {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          </label>
+        </div>
+      </nz-spin>
     </div>
   </ng-container>
 </nz-modal>

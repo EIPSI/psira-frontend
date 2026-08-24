@@ -1,4 +1,4 @@
-<label>
+<label *ngIf="showLabel">
   <b>
     <ng-container *ngIf="field.translationPath; else plainTitle">
       <span [translate]="field.translationPath"></span>

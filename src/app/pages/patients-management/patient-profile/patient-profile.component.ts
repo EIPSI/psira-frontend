@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { environment } from '@env/environment';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CaseManagerFilter } from '@app/pages/patients-management/@types/case-manager-filter';
@@ -18,6 +18,22 @@ import { CalendarService } from '@app/pages/calendar/@services/calendar.service'
 import { finalize } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ErrorHandlerService } from '@app/@shared/services/error-handler.service';
+import { UsersService } from '@app/pages/user-management/@services/users.service';
+import { User } from '@app/pages/user-management/@types/user';
+import { userForms } from '@app/pages/user-management/@forms/user.form';
+import { Form } from '@shared/components/form/@types/form';
+import { FormComponent } from '@shared/components/form/form.component';
+import { UserUpdatePasswordInput } from '@app/pages/user-management/user-form/user-update-password.type';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { DeleteOneInput } from '@app/@shared/@types/delete-one-input';
+import { PermissionKey } from '@app/@shared/@types/permission';
+import { AppPermissionsService } from '@shared/services/app-permissions.service';
+import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
+import {
+  EvaluationAutomationTriggerPoint,
+  EvaluationAutomationTriggerPointLabel,
+} from '@app/pages/evaluation-automations/@types/evaluation-automation';
+import { PatientCalendarComponent } from '../calendar/patient-calendar.component';
 
 const CryptoJS = require('crypto-js');
 
@@ -27,12 +43,20 @@ const CryptoJS = require('crypto-js');
   styleUrls: ['./patient-profile.component.scss'],
 })
 export class PatientProfileComponent implements OnInit {
+  @ViewChild('patientPasswordForm') patientPasswordForm: FormComponent;
+  @ViewChild(PatientCalendarComponent) patientCalendar?: PatientCalendarComponent;
   public CSK = ClinicalSessionKind;
   public TCS = TreatmentCycleStatus;
+  public PK = PermissionKey;
+  public triggerPointLabel = EvaluationAutomationTriggerPointLabel;
   patient: FormattedPatient;
+  patientAccountUser: User;
   filter: CaseManagerFilter;
   patientStatuses: PatientStatus[] = [];
   loading = false;
+  accountLoading = false;
+  passwordModalVisible = false;
+  updatePasswordForm: Form = userForms.updateUserPassword;
   cycleLoading = false;
   cycleSaving = false;
   selectedTabIndex = 0;
@@ -54,6 +78,9 @@ export class PatientProfileComponent implements OnInit {
   newTreatmentOtherReason = '';
   newTreatmentNote = '';
   cancelFinalizationNote = '';
+  automationPreview: any[] = [];
+  automationPreviewLoading = false;
+  skippedAutomationIds: number[] = [];
 
   get showFinalizationOtherReason(): boolean {
     return this.isSelectedOtherReason(this.finalizationReasonLevels, this.finalizationReasonId);
@@ -76,8 +103,12 @@ export class PatientProfileComponent implements OnInit {
     private patientStatusesService: PatientStatusesService,
     private patientsService: PatientsService,
     private calendarService: CalendarService,
+    private usersService: UsersService,
+    private evaluationAutomationsService: EvaluationAutomationsService,
+    private modalService: NzModalService,
     private message: NzMessageService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    public perms: AppPermissionsService
   ) {}
 
   ngOnInit(): void {
@@ -94,6 +125,7 @@ export class PatientProfileComponent implements OnInit {
         this.filter = {
           patientId: this.patient.id,
         };
+        this.loadPatientAccountUser();
         this.loadTreatmentCycle();
       }
       this.selectedTabIndex = params.tab === 'sessions' ? 2 : 0;
@@ -126,9 +158,15 @@ export class PatientProfileComponent implements OnInit {
     this.finalizationReasonLevels = [];
     this.finalizationOtherReason = '';
     this.finalizationNote = '';
+    this.resetAutomationPreview();
     this.loadReasonRootLabel(CaseEventReasonContext.TREATMENT_FINALIZATION, (label) => (this.finalizationRootLabel = label));
     this.loadReasonLevel(CaseEventReasonContext.TREATMENT_FINALIZATION, undefined, this.finalizationReasonLevels, 0);
     this.detectLastSessionNumber();
+    this.refreshReasonAutomationPreview(
+      EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION,
+      CaseEventReasonContext.TREATMENT_FINALIZATION,
+      []
+    );
   }
 
   openNewTreatment(): void {
@@ -138,8 +176,14 @@ export class PatientProfileComponent implements OnInit {
     this.newTreatmentReasonLevels = [];
     this.newTreatmentOtherReason = '';
     this.newTreatmentNote = '';
+    this.resetAutomationPreview();
     this.loadReasonRootLabel(CaseEventReasonContext.NEW_TREATMENT, (label) => (this.newTreatmentRootLabel = label));
     this.loadReasonLevel(CaseEventReasonContext.NEW_TREATMENT, undefined, this.newTreatmentReasonLevels, 0);
+    this.refreshReasonAutomationPreview(
+      EvaluationAutomationTriggerPoint.NEW_TREATMENT,
+      CaseEventReasonContext.NEW_TREATMENT,
+      []
+    );
   }
 
   openCancelFinalization(): void {
@@ -161,6 +205,11 @@ export class PatientProfileComponent implements OnInit {
       reasonId,
       (id) => (this.finalizationReasonId = id)
     );
+    this.refreshReasonAutomationPreview(
+      EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION,
+      CaseEventReasonContext.TREATMENT_FINALIZATION,
+      this.selectedFinalizationReasonIds
+    );
   }
 
   onNewTreatmentReasonChange(levelIndex: number, reasonId?: number): void {
@@ -171,6 +220,11 @@ export class PatientProfileComponent implements OnInit {
       levelIndex,
       reasonId,
       (id) => (this.newTreatmentReasonId = id)
+    );
+    this.refreshReasonAutomationPreview(
+      EvaluationAutomationTriggerPoint.NEW_TREATMENT,
+      CaseEventReasonContext.NEW_TREATMENT,
+      this.selectedNewTreatmentReasonIds
     );
   }
 
@@ -203,12 +257,14 @@ export class PatientProfileComponent implements OnInit {
           : undefined,
         finalizationNote: this.finalizationNote,
         lastSessionNumber: this.finalizationLastSessionNumber ? Number(this.finalizationLastSessionNumber) : undefined,
+        excludedAutomationIds: this.skippedAutomationIds,
       })
       .pipe(finalize(() => (this.cycleSaving = false)))
       .subscribe(
         (cycle) => {
           this.activeTreatmentCycle = cycle;
           this.finalizeModalVisible = false;
+          this.refreshCalendarAfterAutomationTrigger();
           this.message.success('Tratamiento finalizado');
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to finalize treatment' })
@@ -225,6 +281,7 @@ export class PatientProfileComponent implements OnInit {
         (cycle) => {
           this.activeTreatmentCycle = cycle;
           this.cancelFinalizationModalVisible = false;
+          this.refreshCalendarAfterAutomationTrigger();
           this.message.success('Finalización anulada');
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to cancel finalization' })
@@ -251,16 +308,75 @@ export class PatientProfileComponent implements OnInit {
           ? this.newTreatmentOtherReason.trim() || undefined
           : undefined,
         newTreatmentNote: this.newTreatmentNote,
+        excludedAutomationIds: this.skippedAutomationIds,
       })
       .pipe(finalize(() => (this.cycleSaving = false)))
       .subscribe(
         (cycle) => {
           this.activeTreatmentCycle = cycle;
           this.newTreatmentModalVisible = false;
+          this.refreshCalendarAfterAutomationTrigger();
           this.message.success('Nuevo tratamiento iniciado');
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to start new treatment' })
       );
+  }
+
+  toggleAutomationPreview(automationId: number, checked: boolean): void {
+    this.skippedAutomationIds = checked
+      ? this.skippedAutomationIds.filter((id) => id !== automationId)
+      : [...new Set([...this.skippedAutomationIds, automationId])];
+  }
+
+  automationPreviewChecked(automationId: number): boolean {
+    return !this.skippedAutomationIds.includes(automationId);
+  }
+
+  private resetAutomationPreview(): void {
+    this.automationPreview = [];
+    this.skippedAutomationIds = [];
+    this.automationPreviewLoading = false;
+  }
+
+  private refreshCalendarAfterAutomationTrigger(): void {
+    this.patientCalendar?.loadEvents();
+  }
+
+  private refreshReasonAutomationPreview(
+    triggerPoint: EvaluationAutomationTriggerPoint,
+    reasonContext: CaseEventReasonContext,
+    reasonIds: number[]
+  ): void {
+    const departmentIds = this.patientDepartmentIds();
+    if (!departmentIds.length) {
+      this.resetAutomationPreview();
+      return;
+    }
+
+    this.automationPreviewLoading = true;
+    this.evaluationAutomationsService
+      .previewAutomations({
+        roleCodes: ['PATIENT'],
+        departmentIds,
+        triggerPoint,
+        reasonContexts: [reasonContext],
+        reasonIds: (reasonIds || []).filter((id) => !!id),
+      })
+      .pipe(finalize(() => (this.automationPreviewLoading = false)))
+      .subscribe(
+        (automations) => {
+          this.automationPreview = automations || [];
+          const availableIds = this.automationPreview.map((automation) => automation.automationId);
+          this.skippedAutomationIds = this.skippedAutomationIds.filter((id) => availableIds.includes(id));
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load automation preview' })
+      );
+  }
+
+  private patientDepartmentIds(): number[] {
+    return (this.patient?.departments || [])
+      .map((department: any) => Number(department.id))
+      .filter((id: number) => Number.isFinite(id));
   }
 
   getPatientStatuses() {
@@ -286,6 +402,117 @@ export class PatientProfileComponent implements OnInit {
       );
   }
 
+  loadPatientAccountUser(): void {
+    if (!this.patient?.userId) {
+      this.patientAccountUser = null;
+      return;
+    }
+    this.accountLoading = true;
+    this.usersService
+      .getUsers({
+        paging: { first: 1 },
+        filter: { id: { eq: this.patient.userId } },
+      })
+      .pipe(finalize(() => (this.accountLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.patientAccountUser = data?.users?.edges?.[0]?.node || null;
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load patient user account' })
+      );
+  }
+
+  canManagePatientAccount(): boolean {
+    return (
+      !!this.patientAccountUser?.id &&
+      this.perms.permissionsOnly([PermissionKey.MANAGE_USERS]) &&
+      this.perms.hasAccessLevelToUser(this.patientAccountUser)
+    );
+  }
+
+  canDeletePatientAccount(): boolean {
+    return (
+      !!this.patientAccountUser?.id &&
+      this.perms.permissionsOnly([PermissionKey.DELETE_USERS]) &&
+      this.perms.hasAccessLevelToUser(this.patientAccountUser)
+    );
+  }
+
+  setPatientAccountActive(active: boolean): void {
+    if (!this.patientAccountUser?.id) return;
+    this.accountLoading = true;
+    this.usersService
+      .updateUser({ id: this.patientAccountUser.id, update: { active } })
+      .pipe(finalize(() => (this.accountLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.patientAccountUser = data?.updateOneUser || { ...this.patientAccountUser, active };
+          this.message.success('User account updated successfully');
+        },
+        (error) => {
+          this.patientAccountUser = { ...this.patientAccountUser, active: !active };
+          this.errorService.handleError(error, { prefix: 'Unable to update patient user account' });
+        }
+      );
+  }
+
+  showPatientPasswordForm(): void {
+    this.resetPatientPasswordForm();
+    this.passwordModalVisible = true;
+  }
+
+  submitPatientPasswordForm(): void {
+    this.patientPasswordForm?.handleSubmitForm(this.updatePasswordForm);
+  }
+
+  updatePatientUserPassword(form: any): void {
+    if (!this.patientAccountUser?.id) return;
+    const inputs: UserUpdatePasswordInput = {
+      id: this.patientAccountUser.id,
+      newPassword: form.newPassword,
+      newPasswordConfirmation: form.newPasswordConfirmation,
+    };
+    this.accountLoading = true;
+    this.usersService
+      .updateUserPassword(inputs)
+      .pipe(finalize(() => (this.accountLoading = false)))
+      .subscribe(
+        () => {
+          this.passwordModalVisible = false;
+          this.resetPatientPasswordForm();
+          this.message.success('Password has successfully been changed');
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to change password' })
+      );
+  }
+
+  handleDeletePatientAccount(): void {
+    if (!this.patientAccountUser?.id) return;
+    this.modalService.confirm({
+      nzTitle: 'Confirm',
+      nzContent: `Are you sure you want to delete ${this.patientAccountUser.firstName} ${this.patientAccountUser.lastName}`,
+      nzOkText: 'Delete',
+      nzOnOk: () => this.deletePatientAccount(),
+      nzCancelText: 'Cancel',
+    });
+  }
+
+  deletePatientAccount(): void {
+    if (!this.patientAccountUser?.id) return;
+    const input: DeleteOneInput = { id: this.patientAccountUser.id };
+    this.accountLoading = true;
+    this.usersService
+      .deleteOneUser(input)
+      .pipe(finalize(() => (this.accountLoading = false)))
+      .subscribe(
+        () => this.router.navigate(['/psira/case-management/patients']),
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: `Unable to delete user "${this.patientAccountUser.firstName} ${this.patientAccountUser.lastName}"`,
+          })
+      );
+  }
+
   goBack() {
     this.router.navigate(['/psira/case-management/patients']);
   }
@@ -294,6 +521,10 @@ export class PatientProfileComponent implements OnInit {
     const userStr = localStorage.getItem('auth_app_token');
     const user = JSON.parse(userStr);
     return user.accessToken;
+  }
+
+  private resetPatientPasswordForm(): void {
+    this.updatePasswordForm.groups.map((group) => group.fields.map((field) => (field.value = '')));
   }
 
   private detectLastSessionNumber(): void {

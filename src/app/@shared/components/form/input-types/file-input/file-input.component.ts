@@ -12,6 +12,7 @@ export class FileInputComponent implements OnInit {
   @Input() name: string;
   @Input() inputMode = false;
   @Input() autoFill = false;
+  @Input() showLabel = true;
   @Output() valueChange: EventEmitter<any> = new EventEmitter<any>();
   inputGroup: FormGroup;
 

@@ -82,6 +82,9 @@ const changeUserPassword: Form = {
 };
 
 const userProfile: Form = {
+  layout: 'definition',
+  labelWidth: '28%',
+  valueAlign: 'left',
   submitButtonText: 'Save User',
   editButtonText: 'Edit User',
   submitButtonClass: 'right-align-submit',
@@ -209,6 +212,9 @@ const userProfile: Form = {
 };
 
 const userProfileEdit: Form = {
+  layout: 'definition',
+  labelWidth: '28%',
+  valueAlign: 'left',
   submitButtonText: 'Save User',
   editButtonText: 'Edit User',
   submitButtonClass: 'right-align-submit',

@@ -51,6 +51,7 @@ import { CustomDirectivesModule } from '@app/@shared/directives/custom-directive
 import { NzCalendarModule } from 'ng-zorro-antd/calendar';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { PatientCalendarComponent } from './calendar/patient-calendar.component';
 import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
 
@@ -74,6 +75,7 @@ const antModules = [
   NzCalendarModule,
   NzEmptyModule,
   NzSpinModule,
+  NzSwitchModule,
   NzDropDownModule,
   NzMenuModule
 ];

@@ -2,6 +2,9 @@ import { Form } from '@shared/components/form/@types/form';
 import { getNames } from 'i18n-iso-countries';
 
 export const CaregiverForm: Form = {
+  layout: 'definition',
+  labelWidth: '28%',
+  valueAlign: 'left',
   submitButtonText: 'Submit Contact',
   editButtonText: 'Submit Contact',
   submitButtonClass: 'full-width',

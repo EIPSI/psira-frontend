@@ -14,7 +14,12 @@ import {
   subMonths,
   subWeeks,
 } from 'date-fns';
-import { CalendarEvent, CalendarEventType, CalendarView } from '../@types/calendar';
+import {
+  CalendarEvent,
+  CalendarEventType,
+  CalendarView,
+  ClinicalSessionCancellationType,
+} from '../@types/calendar';
 
 @Component({
   selector: 'app-calendar-grid',
@@ -120,7 +125,16 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   }
 
   eventClass(event: CalendarEvent): string {
-    return event.type === CalendarEventType.SESSION ? 'calendar-event--session' : 'calendar-event--assessment';
+    const classes = [
+      event.type === CalendarEventType.SESSION ? 'calendar-event--session' : 'calendar-event--assessment',
+    ];
+    if (
+      event.type === CalendarEventType.SESSION &&
+      event.cancellationType === ClinicalSessionCancellationType.NO_SHOW
+    ) {
+      classes.push('calendar-event--no-show');
+    }
+    return classes.join(' ');
   }
 
   formatTime(value: string): string {

@@ -21,6 +21,7 @@ import {
   CaseEventReason,
   CaseEventReasonContext,
   EvaluationAutomation,
+  EvaluationAutomationConditionOperatorLabel,
   EvaluationAutomationConditionOperator,
   EvaluationAutomationContentType,
   EvaluationAutomationDelayUnit,
@@ -64,6 +65,8 @@ export class AutomationEditorComponent implements OnInit {
   public automationTypes = Object.values(EvaluationAutomationType);
   public automationTypeLabel = EvaluationAutomationTypeLabel;
   public delayUnits = Object.values(EvaluationAutomationDelayUnit);
+  public conditionOperators = Object.values(EvaluationAutomationConditionOperator);
+  public conditionOperatorLabel = EvaluationAutomationConditionOperatorLabel;
   public delayUnitLabel: Record<EvaluationAutomationDelayUnit, string> = {
     [EvaluationAutomationDelayUnit.MINUTES]: 'Minutos',
     [EvaluationAutomationDelayUnit.HOURS]: 'Horas',
@@ -197,6 +200,7 @@ export class AutomationEditorComponent implements OnInit {
   }
 
   public save(): void {
+    this.clearConditionalRequiredErrors();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -274,7 +278,7 @@ export class AutomationEditorComponent implements OnInit {
       evaluationName: [null],
       expirationMinutes: [null],
       reminderMinutesText: [''],
-      emailNotificationsEnabled: [true],
+      emailNotificationsEnabled: [false],
       mailTemplateId: [null],
     });
   }
@@ -463,6 +467,7 @@ export class AutomationEditorComponent implements OnInit {
       emailNotificationsEnabled: automation.emailNotificationsEnabled !== false,
       mailTemplateId: automation.mailTemplateId,
     });
+    (automation.conditions || []).forEach((condition) => this.addCondition(condition));
     this.loadDepartmentScopedResources();
     this.loadTriggerReasons();
   }
@@ -476,7 +481,7 @@ export class AutomationEditorComponent implements OnInit {
       priority: Number(value.priority),
       departmentIds: value.departmentIds,
       roleId: value.roleId,
-      conditions: [],
+      conditions: this.normalizedConditions(value.conditions),
       triggerPoint: value.triggerPoint,
       automationType: value.automationType,
       triggerSessionNumber: value.triggerPoint === EvaluationAutomationTriggerPoint.SESSION_NUMBER
@@ -524,9 +529,9 @@ export class AutomationEditorComponent implements OnInit {
       this.contentType === EvaluationAutomationContentType.RANDOMIZATION && value.randomizationRuleIds
         ? [value.randomizationRuleIds]
         : [];
-    payload.expirationMinutes = value.expirationMinutes;
+    payload.expirationMinutes = value.expirationMinutes ? Number(value.expirationMinutes) : null;
     payload.reminderMinutes = this.parseReminderMinutes(value.reminderMinutesText);
-    payload.emailNotificationsEnabled = value.emailNotificationsEnabled;
+    payload.emailNotificationsEnabled = !!value.emailNotificationsEnabled;
     payload.mailTemplateId = value.emailNotificationsEnabled ? value.mailTemplateId : null;
     return payload;
   }
@@ -534,6 +539,7 @@ export class AutomationEditorComponent implements OnInit {
   private hasValidTypeConfiguration(): boolean {
     const value = this.form.value;
     if (value.triggerPoint === EvaluationAutomationTriggerPoint.SESSION_NUMBER && !value.triggerSessionNumber) {
+      this.markRequired('triggerSessionNumber');
       this.message.error('Debe indicarse el número de sesión que activa la automatización');
       return false;
     }
@@ -548,6 +554,7 @@ export class AutomationEditorComponent implements OnInit {
 
     if (value.automationType === EvaluationAutomationType.FIXED_SCHEME) {
       if (!value.schemeId) {
+        this.markRequired('schemeId');
         this.message.error('Debe seleccionarse un esquema fijo');
         return false;
       }
@@ -555,26 +562,83 @@ export class AutomationEditorComponent implements OnInit {
     }
 
     if (!value.assessmentTypeId) {
+      this.markRequired('assessmentTypeId');
       this.message.error('Debe seleccionarse un tipo de evaluación');
       return false;
     }
     if (this.contentType === EvaluationAutomationContentType.QUESTIONNAIRE && !value.questionnaireIds) {
+      this.markRequired('questionnaireIds');
       this.message.error('Debe seleccionarse un cuestionario');
       return false;
     }
     if (this.contentType === EvaluationAutomationContentType.QUESTIONNAIRE_BUNDLE && !value.questionnaireBundleIds) {
+      this.markRequired('questionnaireBundleIds');
       this.message.error('Debe seleccionarse un paquete de cuestionarios');
       return false;
     }
     if (this.contentType === EvaluationAutomationContentType.RANDOMIZATION && !value.randomizationRuleIds) {
+      this.markRequired('randomizationRuleIds');
       this.message.error('Debe seleccionarse una randomización');
       return false;
     }
     if (value.emailNotificationsEnabled && !value.mailTemplateId) {
+      this.markRequired('mailTemplateId');
       this.message.error('El template de email es obligatorio cuando el email está activo');
       return false;
     }
     return true;
+  }
+
+  public conditionRequiresValue(index: number): boolean {
+    const operator = this.conditions.at(index)?.get('operator')?.value;
+    return ![
+      EvaluationAutomationConditionOperator.IS_EMPTY,
+      EvaluationAutomationConditionOperator.IS_NOT_EMPTY,
+      EvaluationAutomationConditionOperator.BOOLEAN,
+    ].includes(operator);
+  }
+
+  private normalizedConditions(conditions: any[]): any[] {
+    return (conditions || [])
+      .map((condition) => ({
+        field: (condition.field || '').trim(),
+        operator: condition.operator,
+        value: this.conditionOperatorNeedsValue(condition.operator) ? condition.value : null,
+      }))
+      .filter((condition) => condition.field && condition.operator);
+  }
+
+  private conditionOperatorNeedsValue(operator: EvaluationAutomationConditionOperator): boolean {
+    return ![
+      EvaluationAutomationConditionOperator.IS_EMPTY,
+      EvaluationAutomationConditionOperator.IS_NOT_EMPTY,
+      EvaluationAutomationConditionOperator.BOOLEAN,
+    ].includes(operator);
+  }
+
+  private markRequired(controlName: string): void {
+    const control = this.form.get(controlName);
+    control?.setErrors({ ...(control.errors || {}), required: true });
+    control?.markAsTouched();
+    control?.markAsDirty();
+  }
+
+  private clearConditionalRequiredErrors(): void {
+    [
+      'triggerSessionNumber',
+      'schemeId',
+      'assessmentTypeId',
+      'questionnaireIds',
+      'questionnaireBundleIds',
+      'randomizationRuleIds',
+      'mailTemplateId',
+    ].forEach((controlName) => {
+      const control = this.form.get(controlName);
+      if (!control?.errors?.required) return;
+      const errors = { ...control.errors };
+      delete errors.required;
+      control.setErrors(Object.keys(errors).length ? errors : null);
+    });
   }
 
   private loadTriggerReasons(): void {

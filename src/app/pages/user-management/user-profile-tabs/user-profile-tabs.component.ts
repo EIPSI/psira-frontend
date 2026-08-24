@@ -39,6 +39,7 @@ export class UserProfileTabsComponent implements OnInit {
   public reportsLoading = false;
   public supervisorsLoading = false;
   public assessmentsLoading = false;
+  public assessmentsLoaded = false;
   public showSupervisorAssignDrawer = false;
   public supervisorActions: Action<SupervisorActionKey>[] = [];
 
@@ -91,7 +92,6 @@ export class UserProfileTabsComponent implements OnInit {
         this.user = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
       }
       this.getReports();
-      this.getAssessments();
       this.getSupervisors();
       this.setSupervisorActions();
     });
@@ -163,8 +163,8 @@ export class UserProfileTabsComponent implements OnInit {
       );
   }
 
-  private getAssessments(): void {
-    if (!this.user?.id) return;
+  public getAssessments(): void {
+    if (!this.user?.id || this.assessmentsLoaded) return;
 
     this.assessmentsLoading = true;
     this.assessmentService
@@ -179,6 +179,7 @@ export class UserProfileTabsComponent implements OnInit {
       .subscribe(
         ({ edges }: any) => {
           this.assessments = edges.map((edge: any) => Convert.toFormattedAssessment(edge.node));
+          this.assessmentsLoaded = true;
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessments' })
       );

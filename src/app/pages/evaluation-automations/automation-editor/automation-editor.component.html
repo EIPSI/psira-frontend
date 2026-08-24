@@ -16,7 +16,7 @@
       <div nz-col nzSpan="12">
         <nz-form-item>
           <nz-form-label nzRequired>Título</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="El título es obligatorio">
             <input nz-input formControlName="title" />
           </nz-form-control>
         </nz-form-item>
@@ -32,7 +32,7 @@
       <div nz-col nzSpan="4">
         <nz-form-item>
           <nz-form-label nzRequired>Prioridad</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="La prioridad es obligatoria y debe ser mayor a cero">
             <nz-input-number formControlName="priority" [nzMin]="1"></nz-input-number>
           </nz-form-control>
         </nz-form-item>
@@ -40,7 +40,7 @@
       <div nz-col nzSpan="24">
         <nz-form-item>
           <nz-form-label>Descripción</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="Seleccioná al menos un departamento">
             <textarea nz-input formControlName="description" rows="3"></textarea>
           </nz-form-control>
         </nz-form-item>
@@ -54,7 +54,7 @@
       <div nz-col nzSpan="12">
         <nz-form-item>
           <nz-form-label nzRequired>Departamento/s</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="Seleccioná un rol">
             <div class="department-actions">
               <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">Seleccionar todos</button>
               <button nz-button nzSize="small" type="button" (click)="removeAllDepartments()">Quitar todos</button>
@@ -80,12 +80,59 @@
 
   <section class="editor-section" *ngIf="form.get('roleId')?.value">
     <h2>Condiciones específicas</h2>
-    <nz-alert
-      nzType="info"
-      nzShowIcon
-      nzMessage="Sección en desarrollo"
-      nzDescription="Las condiciones específicas se habilitarán cuando exista un catálogo dinámico de datos disponibles por rol."
-    ></nz-alert>
+    <div formArrayName="conditions" class="conditions-list">
+      <div
+        nz-row
+        [nzGutter]="16"
+        class="condition-row"
+        *ngFor="let condition of conditions.controls; let i = index"
+        [formGroupName]="i"
+      >
+        <div nz-col nzSpan="7">
+          <nz-form-item>
+            <nz-form-label nzRequired>Campo</nz-form-label>
+            <nz-form-control nzErrorTip="El campo es obligatorio">
+              <input nz-input formControlName="field" placeholder="Ej. status.name" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzSpan="7">
+          <nz-form-item>
+            <nz-form-label nzRequired>Operador</nz-form-label>
+            <nz-form-control nzErrorTip="El operador es obligatorio">
+              <nz-select formControlName="operator">
+                <nz-option
+                  *ngFor="let operator of conditionOperators"
+                  [nzValue]="operator"
+                  [nzLabel]="conditionOperatorLabel[operator]"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzSpan="7">
+          <nz-form-item>
+            <nz-form-label>Valor</nz-form-label>
+            <nz-form-control>
+              <input
+                nz-input
+                formControlName="value"
+                [disabled]="!conditionRequiresValue(i)"
+              />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzSpan="3" class="condition-actions">
+          <button nz-button type="button" nzDanger (click)="removeCondition(i)" title="Eliminar condición">
+            <i nz-icon nzType="delete"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <button nz-button type="button" (click)="addCondition()">
+      <i nz-icon nzType="plus"></i>
+      Agregar condición
+    </button>
   </section>
 
   <section class="editor-section">
@@ -100,7 +147,7 @@
       <div nz-col nzSpan="8" *ngIf="isSessionNumberTrigger()">
         <nz-form-item>
           <nz-form-label nzRequired>Número de sesión</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="El número de sesión es obligatorio para este trigger">
             <nz-input-number formControlName="triggerSessionNumber" [nzMin]="1"></nz-input-number>
           </nz-form-control>
         </nz-form-item>
@@ -170,7 +217,7 @@
       <div nz-col nzSpan="8">
         <nz-form-item>
           <nz-form-label nzRequired>Tiempo desde el Trigger Point</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="El tiempo desde el trigger es obligatorio">
             <nz-input-number formControlName="delayAmount" [nzMin]="0"></nz-input-number>
           </nz-form-control>
         </nz-form-item>
@@ -178,7 +225,7 @@
       <div nz-col nzSpan="8">
         <nz-form-item>
           <nz-form-label nzRequired>Unidad</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="La unidad es obligatoria">
             <nz-select formControlName="delayUnit">
               <nz-option *ngFor="let unit of delayUnits" [nzValue]="unit" [nzLabel]="delayUnitLabel[unit]"></nz-option>
             </nz-select>
@@ -188,7 +235,7 @@
       <div nz-col nzSpan="8" *ngIf="isFixedScheme">
         <nz-form-item>
           <nz-form-label nzRequired>Esquema fijo asociado</nz-form-label>
-          <nz-form-control>
+          <nz-form-control nzErrorTip="Seleccioná un esquema fijo">
             <nz-select formControlName="schemeId" nzShowSearch nzPlaceHolder="Seleccionar esquema fijo">
               <nz-option *ngFor="let scheme of schemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
             </nz-select>
@@ -214,7 +261,7 @@
         <div nz-col nzSpan="8">
           <nz-form-item>
             <nz-form-label nzRequired>Tipo de evaluación</nz-form-label>
-            <nz-form-control>
+            <nz-form-control nzErrorTip="Seleccioná un tipo de evaluación">
               <nz-select formControlName="assessmentTypeId" nzShowSearch>
                 <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
               </nz-select>
@@ -233,7 +280,7 @@
 
       <nz-form-item *ngIf="contentType === EACT.QUESTIONNAIRE">
         <nz-form-label nzRequired>Cuestionario</nz-form-label>
-        <nz-form-control>
+          <nz-form-control nzErrorTip="Seleccioná un cuestionario">
           <nz-select formControlName="questionnaireIds" nzShowSearch>
             <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
           </nz-select>
@@ -242,7 +289,7 @@
 
       <nz-form-item *ngIf="contentType === EACT.QUESTIONNAIRE_BUNDLE">
         <nz-form-label nzRequired>Paquete de Cuestionarios</nz-form-label>
-        <nz-form-control>
+          <nz-form-control nzErrorTip="Seleccioná un paquete de cuestionarios">
           <nz-select formControlName="questionnaireBundleIds" nzShowSearch>
             <nz-option *ngFor="let bundle of bundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
           </nz-select>
@@ -251,7 +298,7 @@
 
       <nz-form-item *ngIf="contentType === EACT.RANDOMIZATION">
         <nz-form-label nzRequired>Randomización</nz-form-label>
-        <nz-form-control>
+          <nz-form-control nzErrorTip="Seleccioná una randomización">
           <nz-select formControlName="randomizationRuleIds" nzShowSearch>
             <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
           </nz-select>
@@ -292,7 +339,7 @@
         <div nz-col nzSpan="16" *ngIf="form.get('emailNotificationsEnabled')?.value">
           <nz-form-item>
             <nz-form-label nzRequired>Template de email</nz-form-label>
-            <nz-form-control>
+            <nz-form-control nzErrorTip="Seleccioná un template de email">
               <nz-select formControlName="mailTemplateId" nzShowSearch>
                 <nz-option *ngFor="let template of emailTemplates" [nzValue]="template.id" [nzLabel]="template.name"></nz-option>
               </nz-select>

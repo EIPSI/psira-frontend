@@ -20,6 +20,7 @@ export class FormComponent implements OnInit {
   @Input() showEditButton = true;
   @Input() uploadUrl: string;
   @Input() images: any[];
+  @Input() layoutMode: 'grid' | 'definition' = 'grid';
   @Input() displayMode: 'grid' | 'definition-list' = 'grid';
 
   @Input()
@@ -55,6 +56,54 @@ export class FormComponent implements OnInit {
   constructor() {}
 
   ngOnInit(): void {}
+
+  get definitionLayout(): boolean {
+    return this.layoutMode === 'definition' ||
+      this.displayMode === 'definition-list' ||
+      this.form?.layout === 'definition';
+  }
+
+  get definitionLabelStyle(): { [key: string]: string } {
+    return this.form?.labelWidth ? { flex: `0 0 ${this.form.labelWidth}` } : {};
+  }
+
+  get definitionValueAlignClass(): string {
+    return this.form?.valueAlign === 'right' ? 'definition-align-right' : 'definition-align-left';
+  }
+
+  fieldLabel(field: Field): string {
+    return field.displayLabel || field.title || field.label || field.name || '';
+  }
+
+  displayFieldValue(field: Field): string {
+    if (field.type === 'password') return field.value ? '*************' : '-';
+    if (field.type === 'select' || field.type === 'radio') return this.optionLabel(field);
+    if (field.type === 'checkBox') return this.optionLabel(field);
+    if (Array.isArray(field.value)) return field.value.length ? field.value.join(', ') : '-';
+    if (field.value === true) return 'Yes';
+    if (field.value === false) return 'No';
+    return field.value !== undefined && field.value !== null && field.value !== '' ? String(field.value) : '-';
+  }
+
+  optionLabel(field: Field): string {
+    if (!field.options?.length) return this.displayRawValue(field.value);
+    const findLabel = (value: any) =>
+      field.options.find((option) => option.value === value)?.label || String(value);
+    if (Array.isArray(field.value)) {
+      const values = field.value as any[];
+      return values.length ? values.map((value: any) => findLabel(value)).join(', ') : '-';
+    }
+    return field.value !== undefined && field.value !== null && field.value !== ''
+      ? findLabel(field.value)
+      : '-';
+  }
+
+  displayRawValue(value: any): string {
+    if (Array.isArray(value)) return value.length ? value.join(', ') : '-';
+    if (value === true) return 'Yes';
+    if (value === false) return 'No';
+    return value !== undefined && value !== null && value !== '' ? String(value) : '-';
+  }
 
   public onCancel(): void {
     this.toggleEdit();

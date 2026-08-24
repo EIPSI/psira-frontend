@@ -37,7 +37,7 @@ nz-select {
   background: #f7f7f7;
 }
 
-:host ::ng-deep .definition-list-form {
+:host ::ng-deep .definition-form {
   h2 {
     border-bottom: 1px solid #e5e7eb;
     font-size: 18px;
@@ -50,36 +50,89 @@ nz-select {
     margin: 0 !important;
   }
 
-  .form-item {
+  .definition-form-item {
+    align-items: flex-start;
     border-bottom: 1px solid #eef0f3;
     display: flex;
+    gap: 24px;
     margin-bottom: 0;
     min-height: 44px;
     padding: 10px 0;
     width: 100%;
+  }
 
-    > div {
-      align-items: flex-start;
-      display: grid;
-      gap: 24px;
-      grid-template-columns: minmax(180px, 28%) 1fr;
-      width: 100%;
-    }
+  .definition-label {
+    color: #6b7280;
+    flex: 0 0 28%;
+    min-width: 180px;
+    padding-top: 6px;
+  }
 
-    label {
-      color: #6b7280;
-      margin: 0;
-    }
+  .definition-label b {
+    font-weight: 600;
+  }
 
-    label b {
-      font-weight: 600;
-    }
+  .definition-control {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 
-    .field-value {
-      color: #111827;
-      padding: 0;
+  .field-value,
+  .definition-value {
+    color: #111827;
+    padding: 6px 0 0;
+    word-break: break-word;
+  }
+
+  .definition-array-cards {
+    display: grid;
+    gap: 12px;
+  }
+
+  .definition-array-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .definition-array-card-title {
+    border-bottom: 1px solid #eef0f3;
+    color: #111827;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .definition-array-card-field {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(140px, 32%) 1fr;
+    padding: 6px 0;
+  }
+
+  .definition-array-card-label {
+    color: #6b7280;
+    font-weight: 600;
+  }
+
+  .definition-array-card-value {
+    color: #111827;
+    word-break: break-word;
+  }
+
+  &.definition-align-right {
+    .field-value,
+    .definition-value,
+    .definition-array-card-value {
       text-align: right;
-      word-break: break-word;
+    }
+  }
+
+  &.definition-align-left {
+    .field-value,
+    .definition-value,
+    .definition-array-card-value {
+      text-align: left;
     }
   }
 
@@ -90,4 +143,32 @@ nz-select {
   app-array-input > div {
     display: block;
   }
+}
+
+@media (max-width: 720px) {
+  :host ::ng-deep .definition-form {
+    .definition-form-item {
+      display: block;
+    }
+
+    .definition-label {
+      min-width: 0;
+      padding-bottom: 6px;
+    }
+
+    .definition-value,
+    .field-value,
+    .definition-array-card-value {
+      text-align: left;
+    }
+
+    .definition-array-card-field {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+  }
+}
+
+.required-mark {
+  color: red;
 }

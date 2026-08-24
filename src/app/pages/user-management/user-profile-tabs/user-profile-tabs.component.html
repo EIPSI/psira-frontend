@@ -2,7 +2,7 @@
   <h1>{{ userTitle }}</h1>
 </div>
 
-<nz-tabset nzSize="large">
+<nz-tabset *ngIf="user" nzSize="large">
   <nz-tab *ngIf="isTherapist" [nzTitle]="'core.calendar' | translate">
     <app-user-calendar [user]="user"></app-user-calendar>
   </nz-tab>
@@ -24,7 +24,20 @@
   <nz-tab nzTitle="Datos del perfil">
     <nz-tabset nzSize="small">
       <nz-tab [nzTitle]="'core.profile' | translate">
-        <app-user-form></app-user-form>
+        <app-user-form
+          section="profile"
+          [showTitle]="false"
+          [userOverride]="user"
+          [roleCodeOverride]="roleCode"
+        ></app-user-form>
+      </nz-tab>
+      <nz-tab nzTitle="Settings">
+        <app-user-form
+          section="settings"
+          [showTitle]="false"
+          [userOverride]="user"
+          [roleCodeOverride]="roleCode"
+        ></app-user-form>
       </nz-tab>
       <nz-tab *ngIf="isTherapist" [nzTitle]="'menu.supervisors' | translate">
         <app-master-data-list
@@ -58,7 +71,7 @@
   </nz-tab>
   <nz-tab nzTitle="Más">
     <nz-tabset nzSize="small">
-      <nz-tab [nzTitle]="'core.assessments' | translate">
+      <nz-tab [nzTitle]="'core.assessments' | translate" (nzSelect)="getAssessments()">
         <app-master-data-list [columns]="assessmentColumns" [data]="assessments" [loading]="assessmentsLoading"></app-master-data-list>
       </nz-tab>
       <nz-tab *ngIf="isTherapist" nzTitle="Sesiones">

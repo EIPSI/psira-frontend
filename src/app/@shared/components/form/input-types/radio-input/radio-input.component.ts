@@ -11,6 +11,7 @@ export class RadioInputComponent implements OnInit {
   @Input() field: Field;
   @Input() inputMode = false;
   @Input() autoFill = false;
+  @Input() showLabel = true;
   @Output() valueChange: EventEmitter<any> = new EventEmitter<any>();
   inputGroup: FormGroup;
 

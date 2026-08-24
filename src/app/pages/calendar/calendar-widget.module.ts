@@ -5,6 +5,7 @@ import { SharedModule } from '@shared';
 import { TranslateModule } from '@ngx-translate/core';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCalendarModule } from 'ng-zorro-antd/calendar';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -46,6 +47,7 @@ import { UserCalendarComponent } from './user-calendar/user-calendar.component';
     TranslateModule.forChild(),
     NzButtonModule,
     NzCalendarModule,
+    NzCheckboxModule,
     NzDatePickerModule,
     NzDropDownModule,
     NzEmptyModule,

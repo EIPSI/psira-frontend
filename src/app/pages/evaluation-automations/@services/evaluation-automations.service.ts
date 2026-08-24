@@ -83,6 +83,8 @@ export class EvaluationAutomationsService {
     roleCodes?: string[];
     departmentIds?: number[];
     triggerPoint?: string;
+    reasonIds?: number[];
+    reasonContexts?: string[];
   }): Observable<any[]> {
     return this.apollo
       .query({
