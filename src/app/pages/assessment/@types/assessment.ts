@@ -55,6 +55,7 @@ export interface Assessment {
   emailStatus: string;
   receiverEmail?: string;
   reminderMinutes?: number[];
+  reminderUnit?: string;
   questionnaireAssessment:any;
   questionnaires: []
   origin?: AssessmentOrigin;
@@ -92,6 +93,7 @@ export interface FullAssessment extends Assessment {
   emailStatus: string;
   mailTemplateId: number;
   reminderMinutes?: number[];
+  reminderUnit?: string;
 }
 
 export interface FormattedAssessment extends Assessment {

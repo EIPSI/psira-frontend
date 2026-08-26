@@ -45,6 +45,20 @@ h5 {
   margin-right: 15px;
 }
 
+.unit-row {
+  display: flex;
+  gap: 8px;
+}
+
+.unit-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.unit-row nz-select {
+  flex: 0 0 132px;
+}
+
 .evaluation-title {
   width: 100%;
   margin: 10px 0;

@@ -44,26 +44,6 @@
           </nz-form-control>
         </nz-form-item>
 
-        <nz-form-item>
-          <nz-form-label>Notificaciones por email</nz-form-label>
-          <nz-form-control>
-            <nz-switch formControlName="emailNotificationsEnabled"></nz-switch>
-          </nz-form-control>
-        </nz-form-item>
-
-        <nz-form-item *ngIf="baseForm.get('emailNotificationsEnabled')?.value">
-          <nz-form-label nzRequired>Template de email</nz-form-label>
-          <nz-form-control>
-            <nz-select formControlName="mailTemplateId" nzShowSearch nzAllowClear>
-              <nz-option
-                *ngFor="let template of emailTemplates"
-                [nzValue]="template.id"
-                [nzLabel]="template.name"
-              ></nz-option>
-            </nz-select>
-          </nz-form-control>
-        </nz-form-item>
-
         <nz-form-item class="description-field">
           <nz-form-label>Departamentos</nz-form-label>
           <nz-form-control>
@@ -88,10 +68,11 @@
     <section class="editor-section" *ngIf="isSessionBased">
       <div class="section-title">
         <h2>Session-based</h2>
-        <p>Configuracion de evaluaciones pre/post por numero de sesion.</p>
+        <p>Primero definí el contenido, después cuándo aparece dentro de la serie de sesiones.</p>
       </div>
 
       <form nz-form [formGroup]="sessionResourceForm" class="rule-grid">
+        <div class="rule-subtitle">Contenido de evaluación</div>
         <nz-form-item>
           <nz-form-label nzRequired>{{ 'evaluationSchemes.resourceKind' | translate }}</nz-form-label>
           <nz-form-control>
@@ -107,6 +88,13 @@
             <nz-select formControlName="assessmentTypeId" nzShowSearch>
               <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
             </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>Nombre de la evaluación (opcional)</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="name" placeholder="Si se deja vacío se usará el tipo de evaluación" />
           </nz-form-control>
         </nz-form-item>
 
@@ -158,6 +146,7 @@
           </nz-form-control>
         </nz-form-item>
 
+        <div class="rule-subtitle">Programación en sesiones</div>
         <nz-form-item>
           <nz-form-label nzRequired>Programacion</nz-form-label>
           <nz-form-control>
@@ -204,16 +193,26 @@
         </nz-form-item>
 
         <nz-form-item>
-          <nz-form-label>Vencimiento (Minutos)</nz-form-label>
+          <nz-form-label>Vencimiento</nz-form-label>
           <nz-form-control>
-            <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+            <div class="unit-row">
+              <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+              <nz-select formControlName="availabilityDurationUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+              </nz-select>
+            </div>
           </nz-form-control>
         </nz-form-item>
 
         <nz-form-item>
-          <nz-form-label>Recordatorios (Minutos)</nz-form-label>
+          <nz-form-label>Recordatorios</nz-form-label>
           <nz-form-control>
-            <input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" />
+            <div class="unit-row">
+              <input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" />
+              <nz-select formControlName="reminderUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+              </nz-select>
+            </div>
           </nz-form-control>
         </nz-form-item>
 
@@ -265,9 +264,9 @@
             <td>{{ resourceContentLabel(resource) }}</td>
             <td>{{ resourceTargetLabel(resource) }}</td>
             <td>{{ resource.activationOffsetMinutes }} min</td>
-            <td>{{ resource.availabilityDurationMinutes }} min</td>
+            <td>{{ durationLabel(resource.availabilityDurationMinutes, resource.availabilityDurationUnit) }}</td>
             <td>{{ resourceResponderLabel(resource) }}</td>
-            <td>{{ (resource.reminderMinutes || []).join(', ') }}</td>
+            <td>{{ reminderLabel(resource.reminderMinutes, resource.reminderUnit) }}</td>
           </tr>
         </tbody>
       </nz-table>
@@ -379,6 +378,13 @@
         </nz-form-item>
 
         <nz-form-item>
+          <nz-form-label>Nombre de la evaluación (opcional)</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="name" placeholder="Si se deja vacío se usará el tipo de evaluación" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
           <nz-form-label>Día relativo</nz-form-label>
           <nz-form-control><input nz-input [value]="fixedSlotDayTitle()" disabled /></nz-form-control>
         </nz-form-item>
@@ -452,13 +458,27 @@
         </nz-form-item>
 
         <nz-form-item>
-          <nz-form-label>Tiempo de expiración (min)</nz-form-label>
-          <nz-form-control><input nz-input type="number" formControlName="availabilityDurationMinutes" /></nz-form-control>
+          <nz-form-label>Tiempo de expiración</nz-form-label>
+          <nz-form-control>
+            <div class="unit-row">
+              <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+              <nz-select formControlName="availabilityDurationUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+              </nz-select>
+            </div>
+          </nz-form-control>
         </nz-form-item>
 
         <nz-form-item>
-          <nz-form-label>Recordatorios (min)</nz-form-label>
-          <nz-form-control><input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" /></nz-form-control>
+          <nz-form-label>Recordatorios</nz-form-label>
+          <nz-form-control>
+            <div class="unit-row">
+              <input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" />
+              <nz-select formControlName="reminderUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+              </nz-select>
+            </div>
+          </nz-form-control>
         </nz-form-item>
 
         <nz-form-item>
@@ -516,6 +536,13 @@
               <nz-select formControlName="assessmentTypeId" nzShowSearch>
                 <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
               </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Nombre de la evaluación (opcional)</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="name" placeholder="Si se deja vacío se usará el tipo de evaluación" />
             </nz-form-control>
           </nz-form-item>
 
@@ -601,13 +628,27 @@
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label>Tiempo de expiración (min)</nz-form-label>
-            <nz-form-control><input nz-input type="number" formControlName="availabilityDurationMinutes" /></nz-form-control>
+            <nz-form-label>Tiempo de expiración</nz-form-label>
+            <nz-form-control>
+              <div class="unit-row">
+                <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+                <nz-select formControlName="availabilityDurationUnit">
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                </nz-select>
+              </div>
+            </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label>Recordatorios (min)</nz-form-label>
-            <nz-form-control><input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" /></nz-form-control>
+            <nz-form-label>Recordatorios</nz-form-label>
+            <nz-form-control>
+              <div class="unit-row">
+                <input nz-input formControlName="reminderMinutes" placeholder="10, 15, 19" />
+                <nz-select formControlName="reminderUnit">
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                </nz-select>
+              </div>
+            </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>

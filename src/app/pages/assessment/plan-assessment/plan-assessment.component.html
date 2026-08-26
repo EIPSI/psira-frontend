@@ -49,9 +49,8 @@
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
-        <nz-form-label>{{ 'planAssessment.assessmentName' | translate }}</nz-form-label>
+        <nz-form-label>Tipo de evaluación</nz-form-label>
         <nz-form-control>
-          <!--          <input nz-input type="string" formControlName="name" [readonly]="!editMode" />-->
           <nz-select
             [nzBorderless]="!editMode"
             class="input-class"
@@ -61,6 +60,12 @@
           >
             <nz-option *ngFor="let data of data" [nzLabel]="data.name" [nzValue]="data.id">{{ data.name }}</nz-option>
           </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Nombre de la evaluación (opcional)</nz-form-label>
+        <nz-form-control>
+          <input nz-input formControlName="name" [readonly]="!editMode" placeholder="Si se deja vacío se usará el tipo de evaluación" />
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
@@ -151,24 +156,27 @@
         </nz-form-item>
         <nz-form-item>
           <nz-input-group class="date-picker1">
-            <h5>Reminders after activation (minutes)</h5>
-            <input
-              [disableControl]="!editMode"
-              nz-input
-              formControlName="reminderMinutes"
-              placeholder="10, 15, 20"
-            />
+            <h5>Recordatorios después de la activación</h5>
+            <div class="unit-row">
+              <input
+                [disableControl]="!editMode"
+                nz-input
+                formControlName="reminderMinutes"
+                placeholder="10, 15, 20"
+              />
+              <nz-select formControlName="reminderUnit" [nzDisabled]="!editMode">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+              </nz-select>
+            </div>
           </nz-input-group>
         </nz-form-item>
       </div>
       <!-- End Update -->
 
       <!-- Start Create -->
-      <div *ngIf="!isUpdate">
-        <div *ngFor="let control of  datesFieldAsFormArray.controls ;let i = index;" formArrayName='dates' >
-          <div [formGroupName]="i" >
+      <div *ngIf="!isUpdate && datesFieldAsFormArray.controls.length" formArrayName="dates">
+          <div [formGroupName]="0" >
               <div class="date-picker">
-                <h5 class="evaluation-title">Evaluation {{ i + 1 }}</h5>
                 <nz-form-item style="margin-top: 14px">
                   <nz-input-group class="date-picker1">
                     <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
@@ -195,34 +203,28 @@
                 </nz-form-item>
                 <nz-form-item>
                   <nz-input-group class="date-picker1">
-                    <h5>Reminders after activation (minutes)</h5>
-                    <input
-                      [disableControl]="!editMode"
-                      nz-input
-                      formControlName="reminderMinutes"
-                      placeholder="10, 15, 20"
-                    />
+                    <h5>Recordatorios después de la activación</h5>
+                    <div class="unit-row">
+                      <input
+                        [disableControl]="!editMode"
+                        nz-input
+                        formControlName="reminderMinutes"
+                        placeholder="10, 15, 20"
+                      />
+                      <nz-select formControlName="reminderUnit" [nzDisabled]="!editMode">
+                        <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                      </nz-select>
+                    </div>
                   </nz-input-group>
                 </nz-form-item>
-                <button *ngIf="i !== 0" (click)="remove(i)" nz-button nzShape="circle"><span nz-icon nzType="delete"></span></button>
               </div>
           </div>
-        </div>
-        <button (click)="addControl()" [disabled]="!editMode" type="button" nz-button>
-          <span nz-icon nzType="plus"></span>
-          Add another evaluation
-        </button>
       </div>
       <!-- End Create -->
 
-      <ng-container *ngIf="hasEmail">
-        <p class="field-help">Las notificaciones se resuelven automáticamente desde Notificaciones.</p>
-        <input formControlName="receiverEmail" type="hidden" />
-      </ng-container>
-
       <nz-form-item>
         <nz-input-group>
-          <h5>Notes for the assessment manager</h5>
+          <h5>{{ targetType === 'patient' ? 'Nota clínica de evaluación' : 'Nota de supervisión de evaluación' }}</h5>
           <nz-textarea-count [nzMaxCharacterCount]="200" placeholder="Write notes">
             <textarea formControlName="note" nz-input [disableControl]="!editMode"></textarea>
           </nz-textarea-count>

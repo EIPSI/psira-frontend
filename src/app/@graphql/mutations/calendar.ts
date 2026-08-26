@@ -56,9 +56,12 @@ const createAssessmentOccurrence = gql`
       status
       assessments {
         id
+        name
         status
         deliveryDate
         expirationDate
+        reminderMinutes
+        reminderUnit
       }
     }
   }

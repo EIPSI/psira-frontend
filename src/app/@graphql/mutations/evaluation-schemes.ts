@@ -9,8 +9,6 @@ const schemeFields = `
   defaultDurationMinutes
   durationDays
   active
-  emailNotificationsEnabled
-  mailTemplateId
   departments {
     id
     name
@@ -38,7 +36,9 @@ const schemeFields = `
       activationAnchor
       activationOffsetMinutes
       availabilityDurationMinutes
+      availabilityDurationUnit
       reminderMinutes
+      reminderUnit
     }
   }
   independentEvaluationTemplates {
@@ -54,7 +54,9 @@ const schemeFields = `
     endMinuteOfDay
     triggerMode
     availabilityDurationMinutes
+    availabilityDurationUnit
     reminderMinutes
+    reminderUnit
     required
     singleResponse
     seedOrder
@@ -130,6 +132,7 @@ const addSchemeSessionTemplate = gql`
         id
         resourceKind
         assessmentTypeId
+        name
         questionnaireIds
         questionnaireBundleIds
         randomizationRuleIds
@@ -154,6 +157,7 @@ const addSchemeResourceTemplate = gql`
       sessionTemplateId
       resourceKind
       assessmentTypeId
+      name
       questionnaireIds
       questionnaireBundleIds
       randomizationRuleIds
@@ -178,6 +182,7 @@ const updateSchemeResourceTemplate = gql`
       sessionTemplateId
       resourceKind
       assessmentTypeId
+      name
       questionnaireIds
       questionnaireBundleIds
       randomizationRuleIds
@@ -206,6 +211,7 @@ const addIndependentEvaluationTemplate = gql`
     addIndependentEvaluationTemplate(evaluationTemplate: $evaluationTemplate) {
       id
       assessmentTypeId
+      name
       questionnaireIds
       questionnaireBundleIds
       randomizationRuleIds
@@ -231,6 +237,7 @@ const updateIndependentEvaluationTemplate = gql`
     updateIndependentEvaluationTemplate(evaluationTemplate: $evaluationTemplate) {
       id
       assessmentTypeId
+      name
       questionnaireIds
       questionnaireBundleIds
       randomizationRuleIds

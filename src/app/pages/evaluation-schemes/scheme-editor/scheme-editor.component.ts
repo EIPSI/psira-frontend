@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EmailTemplatesService } from '@app/pages/administration/@services/email-templates.service';
 import { AssessmentAdministrationService } from '@app/pages/administration/@services/assessment-administration.service';
 import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
 import { Department } from '@app/pages/patients-management/@types/department';
@@ -49,6 +48,8 @@ enum AssessmentContentType {
   RANDOMIZATION = 'RANDOMIZATION',
 }
 
+type TimeUnit = 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'MONTHS';
+
 @Component({
   selector: 'app-scheme-editor',
   templateUrl: './scheme-editor.component.html',
@@ -88,7 +89,13 @@ export class SchemeEditorComponent implements OnInit {
   public randomizations: RandomizationRule[] = [];
   public ACT = AssessmentContentType;
   public departments: Department[] = [];
-  public emailTemplates: any[] = [];
+  public timeUnits: Array<{ value: TimeUnit; label: string }> = [
+    { value: 'MINUTES', label: 'Minutos' },
+    { value: 'HOURS', label: 'Horas' },
+    { value: 'DAYS', label: 'Días' },
+    { value: 'WEEKS', label: 'Semanas' },
+    { value: 'MONTHS', label: 'Meses' },
+  ];
   public responderRoleOptions = [
     { label: 'Paciente', value: 'PATIENT' },
     { label: 'Cuidador', value: 'CAREGIVER' },
@@ -111,8 +118,6 @@ export class SchemeEditorComponent implements OnInit {
     name: ['', Validators.required],
     description: [''],
     active: [true],
-    emailNotificationsEnabled: [true],
-    mailTemplateId: [null],
     departmentIds: [[]],
     durationDays: [7],
     schemeType: [EvaluationSchemeType.SESSION_BASED, Validators.required],
@@ -121,6 +126,7 @@ export class SchemeEditorComponent implements OnInit {
   public sessionResourceForm: FormGroup = this.fb.group({
     resourceKind: [ClinicalSessionResourceKind.PRE_ASSESSMENT, Validators.required],
     assessmentTypeId: [null, Validators.required],
+    name: [null],
     contentType: [AssessmentContentType.QUESTIONNAIRE, Validators.required],
     questionnaireId: [null],
     questionnaireBundleId: [null],
@@ -132,12 +138,15 @@ export class SchemeEditorComponent implements OnInit {
     endSessionNumber: [null],
     activationOffsetMinutes: [-15],
     availabilityDurationMinutes: [30],
+    availabilityDurationUnit: ['MINUTES'],
     reminderMinutes: [''],
+    reminderUnit: ['MINUTES'],
     responderRoles: [[]],
   });
 
   public fixedSlotForm: FormGroup = this.fb.group({
     assessmentTypeId: [null, Validators.required],
+    name: [null],
     contentType: [AssessmentContentType.QUESTIONNAIRE, Validators.required],
     questionnaireId: [null],
     questionnaireBundleId: [null],
@@ -150,7 +159,9 @@ export class SchemeEditorComponent implements OnInit {
     endMinuteOfDay: [10 * 60],
     triggerMode: [FixedTriggerMode.BLOCK_START, Validators.required],
     availabilityDurationMinutes: [60, Validators.required],
+    availabilityDurationUnit: ['MINUTES'],
     reminderMinutes: [''],
+    reminderUnit: ['MINUTES'],
     required: [false],
     singleResponse: [true],
     seedOrder: [0],
@@ -161,6 +172,7 @@ export class SchemeEditorComponent implements OnInit {
   public repeatRuleForm: FormGroup = this.fb.group({
     mode: [FixedRepeatRuleMode.ADD_FROM_INTERACTION],
     assessmentTypeId: [null],
+    name: [null],
     contentType: [AssessmentContentType.QUESTIONNAIRE],
     questionnaireId: [null],
     questionnaireBundleId: [null],
@@ -171,7 +183,9 @@ export class SchemeEditorComponent implements OnInit {
     numberOfWeeks: [1],
     triggerMode: [FixedTriggerMode.BLOCK_START],
     availabilityDurationMinutes: [60],
+    availabilityDurationUnit: ['MINUTES'],
     reminderMinutes: [''],
+    reminderUnit: ['MINUTES'],
     required: [false],
     singleResponse: [true],
     responderRoles: [[]],
@@ -210,7 +224,6 @@ export class SchemeEditorComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private schemesService: EvaluationSchemesService,
-    private emailTemplatesService: EmailTemplatesService,
     private assessmentAdministrationService: AssessmentAdministrationService,
     private departmentsService: DepartmentsService,
     private questionnaireService: QuestionnaireManagementService,
@@ -226,14 +239,12 @@ export class SchemeEditorComponent implements OnInit {
     this.baseForm.get('departmentIds').valueChanges.subscribe(() => {
       this.loadBundles();
       this.loadRandomizations();
-      this.loadEmailTemplates();
       this.clearIncompatibleDraftSelections();
     });
     this.loadAssessmentTypes();
     this.loadBundles();
     this.loadRandomizations();
     this.loadDepartments();
-    this.loadEmailTemplates();
     this.activatedRoute.paramMap.subscribe((params) => {
       const id = Number(params.get('id'));
       if (id) {
@@ -323,6 +334,7 @@ export class SchemeEditorComponent implements OnInit {
     this.sessionResourceForm.patchValue({
       resourceKind: resource.resourceKind,
       assessmentTypeId: resource.assessmentTypeId,
+      name: resource.name || null,
       contentType: this.inferContentType(resource),
       questionnaireId: resource.questionnaireIds?.[0] || null,
       questionnaireBundleId: resource.questionnaireBundleIds?.[0] || null,
@@ -333,8 +345,13 @@ export class SchemeEditorComponent implements OnInit {
       startSessionNumber: resource.startSessionNumber || 1,
       endSessionNumber: resource.endSessionNumber || null,
       activationOffsetMinutes: resource.activationOffsetMinutes,
-      availabilityDurationMinutes: resource.availabilityDurationMinutes,
-      reminderMinutes: (resource.reminderMinutes || []).join(', '),
+      availabilityDurationMinutes: this.minutesToUnitAmount(
+        resource.availabilityDurationMinutes,
+        resource.availabilityDurationUnit as TimeUnit
+      ),
+      availabilityDurationUnit: resource.availabilityDurationUnit || 'MINUTES',
+      reminderMinutes: this.minutesListToUnitText(resource.reminderMinutes || [], resource.reminderUnit as TimeUnit),
+      reminderUnit: resource.reminderUnit || 'MINUTES',
       responderRoles: this.parseResponderRoles(resource.defaultResponderRole),
     });
   }
@@ -464,6 +481,9 @@ export class SchemeEditorComponent implements OnInit {
   }
 
   public resourceContentLabel(resource: any): string {
+    if (resource.name) return resource.name;
+    const assessmentTypeName = this.assessmentTypes.find((type) => Number(type.id) === Number(resource.assessmentTypeId))?.name;
+    if (assessmentTypeName) return assessmentTypeName;
     if (resource.questionnaireIds?.length) return `Cuestionario: ${resource.questionnaireIds[0]}`;
     if (resource.questionnaireBundleIds?.length) return `Paquete: ${resource.questionnaireBundleIds[0]}`;
     if (resource.randomizationRuleIds?.length) return `Randomización: ${this.randomizationName(resource.randomizationRuleIds[0])}`;
@@ -483,6 +503,7 @@ export class SchemeEditorComponent implements OnInit {
     const endMinute = slot?.endMinuteOfDay || (minute + (slot?.durationMinutes || 60));
     this.fixedSlotForm.reset({
       assessmentTypeId: slot?.assessmentTypeId || null,
+      name: slot?.name || null,
       contentType: this.inferContentType(slot),
       questionnaireId: slot?.questionnaireIds?.[0] || null,
       questionnaireBundleId: slot?.questionnaireBundleIds?.[0] || null,
@@ -494,8 +515,13 @@ export class SchemeEditorComponent implements OnInit {
       durationMinutes: slot?.durationMinutes || Math.max(15, endMinute - minute),
       endMinuteOfDay: endMinute,
       triggerMode: slot?.triggerMode || FixedTriggerMode.BLOCK_START,
-      availabilityDurationMinutes: slot?.availabilityDurationMinutes || 60,
-      reminderMinutes: (slot?.reminderMinutes || []).join(', '),
+      availabilityDurationMinutes: this.minutesToUnitAmount(
+        slot?.availabilityDurationMinutes || 60,
+        slot?.availabilityDurationUnit as TimeUnit
+      ),
+      availabilityDurationUnit: slot?.availabilityDurationUnit || 'MINUTES',
+      reminderMinutes: this.minutesListToUnitText(slot?.reminderMinutes || [], slot?.reminderUnit as TimeUnit),
+      reminderUnit: slot?.reminderUnit || 'MINUTES',
       required: !!slot?.required,
       singleResponse: slot?.singleResponse === undefined ? true : slot.singleResponse,
       seedOrder: slot?.seedOrder || 0,
@@ -570,6 +596,9 @@ export class SchemeEditorComponent implements OnInit {
   }
 
   public fixedSlotContentLabel(slot: any): string {
+    if (slot.name) return slot.name;
+    const assessmentTypeName = this.assessmentTypes.find((type) => Number(type.id) === Number(slot.assessmentTypeId))?.name;
+    if (assessmentTypeName) return assessmentTypeName;
     if (slot.questionnaireIds?.length) return `Cuestionario ${slot.questionnaireIds[0]}`;
     if (slot.questionnaireBundleIds?.length) return `Paquete ${slot.questionnaireBundleIds[0]}`;
     if (slot.randomizationRuleIds?.length) return `Randomización ${this.randomizationName(slot.randomizationRuleIds[0])}`;
@@ -699,6 +728,7 @@ export class SchemeEditorComponent implements OnInit {
     this.repeatRuleForm.reset({
       mode: FixedRepeatRuleMode.ADD_FROM_INTERACTION,
       assessmentTypeId: null,
+      name: null,
       contentType: AssessmentContentType.QUESTIONNAIRE,
       questionnaireId: null,
       questionnaireBundleId: null,
@@ -709,7 +739,9 @@ export class SchemeEditorComponent implements OnInit {
       numberOfWeeks: 1,
       triggerMode: FixedTriggerMode.BLOCK_START,
       availabilityDurationMinutes: 60,
+      availabilityDurationUnit: 'MINUTES',
       reminderMinutes: '',
+      reminderUnit: 'MINUTES',
       required: false,
       singleResponse: true,
       responderRoles: [],
@@ -818,10 +850,6 @@ export class SchemeEditorComponent implements OnInit {
             name: this.scheme.name,
             description: this.scheme.description,
             active: this.scheme.active,
-            emailNotificationsEnabled: this.scheme.emailNotificationsEnabled === undefined
-              ? true
-              : this.scheme.emailNotificationsEnabled,
-            mailTemplateId: this.scheme.mailTemplateId || null,
             departmentIds: (this.scheme.departments || []).map((department: any) => department.id),
             durationDays: this.scheme.durationDays || 7,
             schemeType: this.scheme.schemeType,
@@ -854,6 +882,7 @@ export class SchemeEditorComponent implements OnInit {
     this.sessionResourceForm.reset({
       resourceKind: ClinicalSessionResourceKind.PRE_ASSESSMENT,
       assessmentTypeId: null,
+      name: null,
       questionnaireId: null,
       questionnaireBundleId: null,
       randomizationRuleId: null,
@@ -865,7 +894,9 @@ export class SchemeEditorComponent implements OnInit {
       endSessionNumber: null,
       activationOffsetMinutes: -15,
       availabilityDurationMinutes: 30,
+      availabilityDurationUnit: 'MINUTES',
       reminderMinutes: '',
+      reminderUnit: 'MINUTES',
       responderRoles: [],
     });
   }
@@ -920,6 +951,7 @@ export class SchemeEditorComponent implements OnInit {
     return {
       resourceKind: value.resourceKind,
       assessmentTypeId: value.assessmentTypeId,
+      name: value.name?.trim() || null,
       questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
       questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
       randomizationRuleIds: value.randomizationRuleId ? [value.randomizationRuleId] : [],
@@ -929,8 +961,13 @@ export class SchemeEditorComponent implements OnInit {
       endSessionNumber: isSpecific || !value.endSessionNumber ? null : Number(value.endSessionNumber),
       activationAnchor: this.activationAnchorForKind(value.resourceKind),
       activationOffsetMinutes: Number(value.activationOffsetMinutes || 0),
-      availabilityDurationMinutes: Number(value.availabilityDurationMinutes || 0),
-      reminderMinutes: this.parseReminderMinutes(value.reminderMinutes),
+      availabilityDurationMinutes: this.unitAmountToMinutes(
+        Number(value.availabilityDurationMinutes || 0),
+        value.availabilityDurationUnit
+      ),
+      availabilityDurationUnit: value.availabilityDurationUnit || 'MINUTES',
+      reminderMinutes: this.parseReminderMinutes(value.reminderMinutes, value.reminderUnit),
+      reminderUnit: value.reminderUnit || 'MINUTES',
       defaultResponderRole: (value.responderRoles || []).join(','),
     };
   }
@@ -956,11 +993,64 @@ export class SchemeEditorComponent implements OnInit {
       : ResourceActivationAnchor.SESSION_START;
   }
 
-  private parseReminderMinutes(value: string): number[] {
+  private parseReminderMinutes(value: string, unit: TimeUnit = 'MINUTES'): number[] {
     return (value || '')
       .split(',')
       .map((part) => Number(part.trim()))
-      .filter((part) => Number.isFinite(part) && part >= 0);
+      .filter((part) => Number.isFinite(part) && part >= 0)
+      .map((part) => this.unitAmountToMinutes(part, unit));
+  }
+
+  public durationLabel(minutes: number, unit: TimeUnit = 'MINUTES'): string {
+    const displayUnit = unit || 'MINUTES';
+    return `${this.minutesToUnitAmount(minutes, displayUnit)} ${this.timeUnitLabel(displayUnit)}`;
+  }
+
+  public reminderLabel(minutes: number[] = [], unit: TimeUnit = 'MINUTES'): string {
+    if (!minutes?.length) return '-';
+    return `${this.minutesListToUnitText(minutes, unit)} ${this.timeUnitLabel(unit || 'MINUTES')}`;
+  }
+
+  private timeUnitLabel(unit: TimeUnit): string {
+    return this.timeUnits.find((item) => item.value === unit)?.label.toLowerCase() || 'minutos';
+  }
+
+  private unitAmountToMinutes(value: number, unit: TimeUnit = 'MINUTES'): number {
+    const amount = Number(value || 0);
+    switch (unit || 'MINUTES') {
+      case 'HOURS':
+        return amount * 60;
+      case 'DAYS':
+        return amount * 24 * 60;
+      case 'WEEKS':
+        return amount * 7 * 24 * 60;
+      case 'MONTHS':
+        return amount * 30 * 24 * 60;
+      default:
+        return amount;
+    }
+  }
+
+  private minutesToUnitAmount(minutes: number, unit: TimeUnit = 'MINUTES'): number {
+    const value = Number(minutes || 0);
+    switch (unit || 'MINUTES') {
+      case 'HOURS':
+        return value / 60;
+      case 'DAYS':
+        return value / (24 * 60);
+      case 'WEEKS':
+        return value / (7 * 24 * 60);
+      case 'MONTHS':
+        return value / (30 * 24 * 60);
+      default:
+        return value;
+    }
+  }
+
+  private minutesListToUnitText(minutes: number[] = [], unit: TimeUnit = 'MINUTES'): string {
+    return (minutes || [])
+      .map((minute) => this.minutesToUnitAmount(minute, unit || 'MINUTES'))
+      .join(', ');
   }
 
   private parseResponderRoles(value?: string): string[] {
@@ -1064,24 +1154,21 @@ export class SchemeEditorComponent implements OnInit {
   }
 
   private canPersistBaseScheme(): boolean {
-    if (this.baseForm.valid && this.hasRequiredEmailTemplate()) return true;
+    if (this.baseForm.valid) return true;
 
     this.baseForm.markAllAsTouched();
     this.modalService.warning({
       nzTitle: 'Faltan datos del esquema',
-      nzContent: 'Completá el nombre, el tipo y el template de email si las notificaciones están activadas.',
+      nzContent: 'Completá el nombre y el tipo de esquema.',
       nzOkText: 'Entendido',
     });
     return false;
   }
 
-  private hasRequiredEmailTemplate(): boolean {
-    return !this.baseForm.get('emailNotificationsEnabled')?.value || !!this.baseForm.get('mailTemplateId')?.value;
-  }
-
   private resetFixedSlotForm(): void {
     this.fixedSlotForm.reset({
       assessmentTypeId: null,
+      name: null,
       questionnaireId: null,
       questionnaireBundleId: null,
       randomizationRuleId: null,
@@ -1094,7 +1181,9 @@ export class SchemeEditorComponent implements OnInit {
       endMinuteOfDay: 10 * 60,
       triggerMode: FixedTriggerMode.BLOCK_START,
       availabilityDurationMinutes: 60,
+      availabilityDurationUnit: 'MINUTES',
       reminderMinutes: '',
+      reminderUnit: 'MINUTES',
       required: false,
       singleResponse: true,
       seedOrder: 0,
@@ -1244,6 +1333,7 @@ export class SchemeEditorComponent implements OnInit {
   private copyFixedSlotPayload(slot: any): any {
     return {
       assessmentTypeId: slot.assessmentTypeId,
+      name: slot.name || null,
       questionnaireIds: slot.questionnaireIds || [],
       questionnaireBundleIds: slot.questionnaireBundleIds || [],
       randomizationRuleIds: slot.randomizationRuleIds || [],
@@ -1254,7 +1344,9 @@ export class SchemeEditorComponent implements OnInit {
       endMinuteOfDay: this.fixedSlotEndMinute(slot),
       triggerMode: slot.triggerMode || FixedTriggerMode.BLOCK_START,
       availabilityDurationMinutes: Number(slot.availabilityDurationMinutes || 60),
+      availabilityDurationUnit: slot.availabilityDurationUnit || 'MINUTES',
       reminderMinutes: slot.reminderMinutes || [],
+      reminderUnit: slot.reminderUnit || 'MINUTES',
       required: !!slot.required,
       singleResponse: slot.singleResponse === undefined ? true : !!slot.singleResponse,
       seedOrder: Number(slot.seedOrder || 0),
@@ -1286,6 +1378,7 @@ export class SchemeEditorComponent implements OnInit {
       this.presetMinutes(value.preset).forEach((minute, index) => {
         slots.push({
           assessmentTypeId: value.assessmentTypeId,
+          name: value.name?.trim() || null,
           questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
           questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
           randomizationRuleIds: value.randomizationRuleId ? [value.randomizationRuleId] : [],
@@ -1295,8 +1388,13 @@ export class SchemeEditorComponent implements OnInit {
           durationMinutes: 60,
           endMinuteOfDay: Math.min(24 * 60, minute + 60),
           triggerMode: value.triggerMode || FixedTriggerMode.BLOCK_START,
-          availabilityDurationMinutes: Number(value.availabilityDurationMinutes || 60),
-          reminderMinutes: this.parseReminderMinutes(value.reminderMinutes),
+          availabilityDurationMinutes: this.unitAmountToMinutes(
+            Number(value.availabilityDurationMinutes || 60),
+            value.availabilityDurationUnit
+          ),
+          availabilityDurationUnit: value.availabilityDurationUnit || 'MINUTES',
+          reminderMinutes: this.parseReminderMinutes(value.reminderMinutes, value.reminderUnit),
+          reminderUnit: value.reminderUnit || 'MINUTES',
           required: !!value.required,
           singleResponse: value.singleResponse === undefined ? true : !!value.singleResponse,
           seedOrder: index,
@@ -1418,6 +1516,7 @@ export class SchemeEditorComponent implements OnInit {
     const value = this.fixedSlotForm.value;
     return {
       assessmentTypeId: value.assessmentTypeId,
+      name: value.name?.trim() || null,
       questionnaireIds: value.questionnaireId ? [value.questionnaireId] : [],
       questionnaireBundleIds: value.questionnaireBundleId ? [value.questionnaireBundleId] : [],
       randomizationRuleIds: value.randomizationRuleId ? [value.randomizationRuleId] : [],
@@ -1427,8 +1526,13 @@ export class SchemeEditorComponent implements OnInit {
       durationMinutes: Number(value.durationMinutes || 60),
       endMinuteOfDay: Number(value.endMinuteOfDay || 0),
       triggerMode: value.triggerMode || FixedTriggerMode.BLOCK_START,
-      availabilityDurationMinutes: Number(value.availabilityDurationMinutes || 60),
-      reminderMinutes: this.parseReminderMinutes(value.reminderMinutes),
+      availabilityDurationMinutes: this.unitAmountToMinutes(
+        Number(value.availabilityDurationMinutes || 60),
+        value.availabilityDurationUnit
+      ),
+      availabilityDurationUnit: value.availabilityDurationUnit || 'MINUTES',
+      reminderMinutes: this.parseReminderMinutes(value.reminderMinutes, value.reminderUnit),
+      reminderUnit: value.reminderUnit || 'MINUTES',
       required: !!value.required,
       singleResponse: value.singleResponse === undefined ? true : !!value.singleResponse,
       seedOrder: Number(value.seedOrder || 0),
@@ -1566,30 +1670,6 @@ export class SchemeEditorComponent implements OnInit {
     if (canSeeAll) return departments;
     const allowedIds = (user?.departments || []).map((department: any) => Number(department.id));
     return departments.filter((department: any) => allowedIds.includes(Number(department.id)));
-  }
-
-  private loadEmailTemplates(): void {
-    this.emailTemplatesService.getAllEmailTemplates({
-      paging: { first: 50 },
-      filter: {
-        status: { eq: 'ACTIVE' },
-        purpose: { eq: 'NOTIFICATION' },
-      } as any,
-      departmentIds: this.selectedDepartmentIds(),
-      sorting: [],
-    }).subscribe(
-      ({ data }: any) => {
-        this.emailTemplates = data.getAllEmailTemplates.edges.map((edge: any) => edge.node);
-        const selectedTemplateId = this.baseForm.get('mailTemplateId')?.value;
-        if (selectedTemplateId && !this.emailTemplates.some((template: any) => template.id === selectedTemplateId)) {
-          this.baseForm.patchValue({ mailTemplateId: null });
-        }
-        if (this.baseForm.get('emailNotificationsEnabled')?.value && !this.baseForm.get('mailTemplateId')?.value) {
-          this.baseForm.patchValue({ mailTemplateId: this.emailTemplates[0]?.id || null });
-        }
-      },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load email templates' })
-    );
   }
 
   private createQuestionnaireSearchFilter(searchString: string): any[] {

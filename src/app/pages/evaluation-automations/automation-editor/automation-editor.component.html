@@ -152,14 +152,71 @@
           </nz-form-control>
         </nz-form-item>
       </div>
-      <div nz-col nzSpan="8" *ngIf="isLastLoginTrigger()">
-        <nz-form-item>
-          <nz-form-label>Días desde login anterior</nz-form-label>
-          <nz-form-control>
-            <nz-input-number formControlName="lastLoginInactiveDays" [nzMin]="1"></nz-input-number>
-            <div class="field-help">Opcional. Si se completa, aplica solo cuando el login anterior fue hace al menos esa cantidad de días.</div>
-          </nz-form-control>
-        </nz-form-item>
+      <div nz-col nzSpan="24" *ngIf="isLastLoginTrigger()">
+        <div class="last-login-box">
+          <div class="last-login-header">
+            <strong>Condiciones de último login</strong>
+            <nz-radio-group formControlName="lastLoginConditionLogic" nzButtonStyle="solid">
+              <label nz-radio-button nzValue="AND">AND</label>
+              <label nz-radio-button nzValue="OR">OR</label>
+            </nz-radio-group>
+          </div>
+          <div formArrayName="lastLoginConditions">
+            <div
+              nz-row
+              [nzGutter]="12"
+              class="condition-row"
+              *ngFor="let condition of lastLoginConditions.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <div nz-col nzSpan="8">
+                <nz-form-item>
+                  <nz-form-label>Días desde login anterior</nz-form-label>
+                  <nz-form-control>
+                    <input nz-input value="inactiveDays" disabled />
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div nz-col nzSpan="7">
+                <nz-form-item>
+                  <nz-form-label nzRequired>Operador</nz-form-label>
+                  <nz-form-control>
+                    <nz-select formControlName="operator">
+                      <nz-option
+                        *ngFor="let operator of conditionOperators"
+                        [nzValue]="operator"
+                        [nzLabel]="conditionOperatorLabel[operator]"
+                      ></nz-option>
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div nz-col nzSpan="7">
+                <nz-form-item>
+                  <nz-form-label>Valor</nz-form-label>
+                  <nz-form-control>
+                    <input
+                      nz-input
+                      formControlName="value"
+                      placeholder="Ej. 30 o 7, 14, 30"
+                      [disabled]="!lastLoginConditionRequiresValue(i)"
+                    />
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div nz-col nzSpan="2" class="condition-actions">
+                <button nz-button type="button" nzDanger (click)="removeLastLoginCondition(i)" title="Eliminar condición">
+                  <i nz-icon nzType="delete"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <button nz-button type="button" (click)="addLastLoginCondition()">
+            <i nz-icon nzType="plus"></i>
+            Agregar condición
+          </button>
+          <div class="field-help">Para “pertenece” o “no pertenece”, ingresá valores separados por coma.</div>
+        </div>
       </div>
       <div nz-col nzSpan="8" *ngIf="usesReasonFilter()">
         <nz-form-item>
@@ -214,7 +271,7 @@
   <section class="editor-section">
     <h2>Configuración específica</h2>
     <div nz-row [nzGutter]="16">
-      <div nz-col nzSpan="8">
+      <div nz-col nzSpan="6">
         <nz-form-item>
           <nz-form-label nzRequired>Tiempo desde el Trigger Point</nz-form-label>
           <nz-form-control nzErrorTip="El tiempo desde el trigger es obligatorio">
@@ -222,7 +279,7 @@
           </nz-form-control>
         </nz-form-item>
       </div>
-      <div nz-col nzSpan="8">
+      <div nz-col nzSpan="4">
         <nz-form-item>
           <nz-form-label nzRequired>Unidad</nz-form-label>
           <nz-form-control nzErrorTip="La unidad es obligatoria">
@@ -232,12 +289,36 @@
           </nz-form-control>
         </nz-form-item>
       </div>
-      <div nz-col nzSpan="8" *ngIf="isFixedScheme">
+      <div nz-col nzSpan="6" *ngIf="isFixedScheme">
+        <nz-form-item>
+          <nz-form-label nzRequired>Fuente del esquema</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="fixedSelectionType" (ngModelChange)="onFixedSelectionTypeChange($event)">
+              <nz-option *ngFor="let type of fixedSelectionTypes" [nzValue]="type.value" [nzLabel]="type.label"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="8" *ngIf="isFixedScheme && form.get('fixedSelectionType')?.value === 'SCHEME'">
         <nz-form-item>
           <nz-form-label nzRequired>Esquema fijo asociado</nz-form-label>
           <nz-form-control nzErrorTip="Seleccioná un esquema fijo">
             <nz-select formControlName="schemeId" nzShowSearch nzPlaceHolder="Seleccionar esquema fijo">
               <nz-option *ngFor="let scheme of schemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+      <div nz-col nzSpan="8" *ngIf="isFixedScheme && form.get('fixedSelectionType')?.value === 'HIGH_LEVEL_RANDOMIZATION'">
+        <nz-form-item>
+          <nz-form-label nzRequired>Randomización de nivel alto</nz-form-label>
+          <nz-form-control nzErrorTip="Seleccioná una randomización de nivel alto">
+            <nz-select formControlName="schemeRandomizationRuleId" nzShowSearch nzPlaceHolder="Seleccionar randomización">
+              <nz-option
+                *ngFor="let randomization of highLevelRandomizations"
+                [nzValue]="randomization.id"
+                [nzLabel]="randomization.name"
+              ></nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
@@ -270,11 +351,12 @@
         </div>
         <div nz-col nzSpan="8">
           <nz-form-item>
-            <nz-form-label>Nombre de la evaluación</nz-form-label>
-            <nz-form-control>
-              <input nz-input formControlName="evaluationName" />
-            </nz-form-control>
-          </nz-form-item>
+          <nz-form-label>Nombre de la evaluación (opcional)</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="evaluationName" />
+            <div class="field-help">Si no se completa, se mostrará el tipo de evaluación.</div>
+          </nz-form-control>
+        </nz-form-item>
         </div>
       </div>
 
@@ -310,8 +392,12 @@
           <nz-form-item>
             <nz-form-label>Expiración</nz-form-label>
             <nz-form-control>
-              <nz-input-number formControlName="expirationMinutes" [nzMin]="1"></nz-input-number>
-              <span class="unit-label">minuto(s)</span>
+              <div class="unit-row">
+                <nz-input-number formControlName="expirationMinutes" [nzMin]="1"></nz-input-number>
+                <nz-select formControlName="expirationUnit">
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                </nz-select>
+              </div>
               <div class="field-help">Opcional. Se cuenta desde que la evaluación queda disponible y define hasta cuándo puede responderse.</div>
             </nz-form-control>
           </nz-form-item>
@@ -320,22 +406,13 @@
           <nz-form-item>
             <nz-form-label>Recordatorios</nz-form-label>
             <nz-form-control>
-              <input nz-input formControlName="reminderMinutesText" placeholder="10, 20, 25" />
-              <div class="field-help">Minutos desde la disponibilidad, separados por coma.</div>
-            </nz-form-control>
-          </nz-form-item>
-        </div>
-      </div>
-
-      <div nz-row [nzGutter]="16">
-        <div nz-col nzSpan="24">
-          <nz-form-item>
-            <nz-form-label>Email</nz-form-label>
-            <nz-form-control>
-              <label nz-checkbox formControlName="emailNotificationsEnabled">Enviar notificación por email</label>
-              <div class="field-help">
-                El template se resuelve automáticamente desde Notificaciones según departamento, evento y rol destinatario.
+              <div class="unit-row">
+                <input nz-input formControlName="reminderMinutesText" placeholder="10, 20, 25" />
+                <nz-select formControlName="reminderUnit">
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                </nz-select>
               </div>
+              <div class="field-help">Valores desde la disponibilidad, separados por coma.</div>
             </nz-form-control>
           </nz-form-item>
         </div>

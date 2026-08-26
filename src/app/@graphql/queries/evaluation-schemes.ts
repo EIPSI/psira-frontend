@@ -9,8 +9,6 @@ const evaluationSchemeFields = `
   defaultDurationMinutes
   durationDays
   active
-  emailNotificationsEnabled
-  mailTemplateId
   createdAt
   updatedAt
   departments {
@@ -28,6 +26,7 @@ const evaluationSchemeFields = `
       id
       resourceKind
       assessmentTypeId
+      name
       questionnaireIds
       questionnaireBundleIds
       randomizationRuleIds
@@ -40,12 +39,15 @@ const evaluationSchemeFields = `
       activationAnchor
       activationOffsetMinutes
       availabilityDurationMinutes
+      availabilityDurationUnit
       reminderMinutes
+      reminderUnit
     }
   }
   independentEvaluationTemplates {
     id
     assessmentTypeId
+    name
     questionnaireIds
     questionnaireBundleIds
     randomizationRuleIds
@@ -56,7 +58,9 @@ const evaluationSchemeFields = `
     endMinuteOfDay
     triggerMode
     availabilityDurationMinutes
+    availabilityDurationUnit
     reminderMinutes
+    reminderUnit
     required
     singleResponse
     seedOrder

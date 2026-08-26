@@ -47,10 +47,13 @@ const calendarOccurrenceFields = `
   }
   assessments {
     id
+    name
     questionnaireAssessmentId
     status
     deliveryDate
     expirationDate
+    reminderMinutes
+    reminderUnit
     schemeRelativeSessionNumber
     assessmentType {
       id

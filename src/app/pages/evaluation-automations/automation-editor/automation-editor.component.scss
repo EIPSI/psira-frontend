@@ -67,6 +67,35 @@
   margin-top: 12px;
 }
 
+.last-login-box {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.last-login-header,
+.unit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.last-login-header {
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.unit-row nz-input-number,
+.unit-row input {
+  flex: 1 1 auto;
+}
+
+.unit-row nz-select {
+  width: 132px;
+  flex: 0 0 132px;
+}
+
 .unit-label {
   display: inline-block;
   margin-left: 8px;
@@ -94,5 +123,16 @@
 
   .condition-actions {
     padding-bottom: 0;
+  }
+
+  .last-login-header,
+  .unit-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .unit-row nz-select {
+    width: 100%;
+    flex-basis: auto;
   }
 }

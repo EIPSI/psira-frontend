@@ -17,8 +17,6 @@ export interface EvaluationScheme {
   defaultDurationMinutes: number;
   durationDays?: number;
   active: boolean;
-  emailNotificationsEnabled?: boolean;
-  mailTemplateId?: number;
   departments?: Array<{ id: number; name: string }>;
   createdAt?: string;
   updatedAt?: string;

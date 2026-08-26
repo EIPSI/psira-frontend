@@ -8,14 +8,19 @@
             <nz-form-item>
                 <nz-form-control nzErrorTip="Please input your username!">
                     <nz-input-group class="input-class">
-                        <h5>{{ 'createAssessment.title' | translate }}</h5>
-                        <!--              <input formControlName="name" nz-input placeholder="Please enter a title" [readonly]="!editMode" />-->
+                        <h5>Tipo de evaluación</h5>
                         <nz-select [nzBorderless]="!editMode" class="input-class" [nzDisabled]="!editMode" [(ngModel)]="selectedAssessment" formControlName="assessmentTypeId">
                             <nz-option *ngFor="let a of assessmentAdministration" [nzLabel]="a.name" [nzValue]="a.id">{{
                 a.name
             }}</nz-option>
                         </nz-select>
                     </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+                <nz-form-control class="input-class">
+                    <h5>Nombre de la evaluación (opcional)</h5>
+                    <input [disableControl]="!editMode" formControlName="name" nz-input placeholder="Si se deja vacío se usará el tipo de evaluación" />
                 </nz-form-control>
             </nz-form-item>
             <nz-form-item>
@@ -117,77 +122,74 @@
             </nz-form-item>
             <nz-form-item>
                 <nz-input-group class="date-picker1">
-                <h5>Reminders after activation (minutes)</h5>
-                <input
-                    [disableControl]="!editMode"
-                    formControlName="reminderMinutes"
-                    nz-input
-                    placeholder="10, 15, 20"
-                />
+                <h5>Recordatorios después de la activación</h5>
+                <div class="unit-row">
+                    <input
+                        [disableControl]="!editMode"
+                        formControlName="reminderMinutes"
+                        nz-input
+                        placeholder="10, 15, 20"
+                    />
+                    <nz-select formControlName="reminderUnit" [nzDisabled]="!editMode">
+                        <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                    </nz-select>
+                </div>
                 </nz-input-group>
             </nz-form-item>
             </div>
             <!-- End Update -->
 
             <!-- Start -->
-            <div *ngIf="isUpdate === false">
-                <div *ngFor="let control of  datesFieldAsFormArray.controls ;let i = index;" formArrayName='dates' >
-                    <div [formGroupName]="i" >
-                        <div class="date-picker">
-                            <h5 class="evaluation-title">Evaluation {{ i + 1 }}</h5>
-                            <nz-form-item>
-                            <nz-input-group class="date-picker1">
-                                <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
-                                <nz-date-picker
-                                [nzBorderless]="!editMode"
-                                nzShowTime
-                                nzFormat="yyyy-MM-dd HH:mm"
-                                [nzDisabled]="!editMode"
-                                formControlName="deliveryDate"
-                                ></nz-date-picker>
-                            </nz-input-group>
-                            </nz-form-item>
-                            <nz-form-item>
-                            <nz-input-group class="date-picker1">
-                                <h5>{{ 'createAssessment.expirationDate' | translate }}</h5>
-                                <nz-date-picker
-                                [nzBorderless]="!editMode"
-                                nzShowTime
-                                nzFormat="yyyy-MM-dd HH:mm"
-                                [nzDisabled]="!editMode"
-                                formControlName="expirationDate"
-                                ></nz-date-picker>
-                            </nz-input-group>
-                            </nz-form-item>
-                            <nz-form-item>
-                            <nz-input-group class="date-picker1">
-                                <h5>Reminders after activation (minutes)</h5>
+            <div *ngIf="isUpdate === false && datesFieldAsFormArray.controls.length" formArrayName="dates">
+                <div [formGroupName]="0">
+                    <div class="date-picker">
+                        <nz-form-item>
+                        <nz-input-group class="date-picker1">
+                            <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
+                            <nz-date-picker
+                            [nzBorderless]="!editMode"
+                            nzShowTime
+                            nzFormat="yyyy-MM-dd HH:mm"
+                            [nzDisabled]="!editMode"
+                            formControlName="deliveryDate"
+                            ></nz-date-picker>
+                        </nz-input-group>
+                        </nz-form-item>
+                        <nz-form-item>
+                        <nz-input-group class="date-picker1">
+                            <h5>{{ 'createAssessment.expirationDate' | translate }}</h5>
+                            <nz-date-picker
+                            [nzBorderless]="!editMode"
+                            nzShowTime
+                            nzFormat="yyyy-MM-dd HH:mm"
+                            [nzDisabled]="!editMode"
+                            formControlName="expirationDate"
+                            ></nz-date-picker>
+                        </nz-input-group>
+                        </nz-form-item>
+                        <nz-form-item>
+                        <nz-input-group class="date-picker1">
+                            <h5>Recordatorios después de la activación</h5>
+                            <div class="unit-row">
                                 <input
                                 [disableControl]="!editMode"
                                 formControlName="reminderMinutes"
                                 nz-input
                                 placeholder="10, 15, 20"
                                 />
-                            </nz-input-group>
-                            </nz-form-item>
-                        <button *ngIf="i !== 0" type="button" (click)="remove(i)" nz-button nzShape="circle"><span nz-icon nzType="delete"></span></button>
-                        </div>
+                                <nz-select formControlName="reminderUnit" [nzDisabled]="!editMode">
+                                    <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                                </nz-select>
+                            </div>
+                        </nz-input-group>
+                        </nz-form-item>
                     </div>
-                    </div>
-                    <button (click)="addControl()" [disabled]="!editMode" type="button" nz-button>
-                        <span nz-icon nzType="plus"></span>
-                        Add another evaluation
-                    </button>
                 </div>
-            <!-- End -->
-            <div *ngIf="hasEmail">
-                <p class="field-help">Las notificaciones se resuelven automáticamente desde Notificaciones.</p>
-                <input *ngIf="isUpdate" formControlName="receiverEmail" type="hidden" [(ngModel)]="fullAssessment.receiverEmail" />
-                <input *ngIf="!isUpdate" formControlName="receiverEmail" type="hidden" [(ngModel)]="patientEmail" />
             </div>
+            <!-- End -->
             <nz-form-item>
                 <nz-input-group class="input-class">
-                    <h5>{{ 'createAssessment.notes' | translate }}</h5>
+                    <h5>Nota clínica de evaluación</h5>
                     <nz-textarea-count [nzMaxCharacterCount]="200" placeholder="Write notes">
                         <textarea [disableControl]="!editMode" formControlName="note" [(ngModel)]="noteValue" nz-input [disabled]="!editMode"></textarea>
                     </nz-textarea-count>

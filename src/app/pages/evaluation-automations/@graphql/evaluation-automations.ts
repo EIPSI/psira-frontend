@@ -11,6 +11,12 @@ const evaluationAutomationFields = `
   triggerReasonIds
   triggerReasonContexts
   lastLoginInactiveDays
+  lastLoginConditionLogic
+  lastLoginConditions {
+    field
+    operator
+    value
+  }
   delayAmount
   delayUnit
   priority
@@ -21,14 +27,15 @@ const evaluationAutomationFields = `
   }
   evaluationName
   schemeId
+  schemeRandomizationRuleId
   assessmentTypeId
   questionnaireIds
   questionnaireBundleIds
   randomizationRuleIds
   expirationMinutes
+  expirationUnit
   reminderMinutes
-  emailNotificationsEnabled
-  mailTemplateId
+  reminderUnit
   createdAt
   updatedAt
   departments {

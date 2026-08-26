@@ -68,6 +68,7 @@ enum FixedSchemeSelectionType {
 }
 
 type FixedSchemeApplySelection = { schemeId: number } | { randomizationRuleId: number };
+type AssessmentAvailabilityUnit = 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'MONTHS';
 
 @Component({
   selector: 'app-user-calendar',
@@ -115,7 +116,19 @@ export class UserCalendarComponent implements OnChanges {
   simpleQuestionnaireIds: string[] = [];
   simpleQuestionnaireBundleIds: string[] = [];
   simpleRandomizationRuleIds: number[] = [];
+  simpleAssessmentName = '';
   simpleAvailabilityMinutes = 60;
+  simpleAvailabilityUnit: AssessmentAvailabilityUnit = 'MINUTES';
+  simpleReminderMinutes = '';
+  simpleReminderUnit: AssessmentAvailabilityUnit = 'MINUTES';
+  simpleAssessmentNote = '';
+  availabilityUnits: Array<{ label: string; value: AssessmentAvailabilityUnit }> = [
+    { label: 'Minutos', value: 'MINUTES' },
+    { label: 'Horas', value: 'HOURS' },
+    { label: 'Días', value: 'DAYS' },
+    { label: 'Semanas', value: 'WEEKS' },
+    { label: 'Meses', value: 'MONTHS' },
+  ];
   assessmentTypes: any[] = [];
   foundQuestionnaires: QuestionnaireVersion[] = [];
   questionnaireBundles: any[] = [];
@@ -237,7 +250,12 @@ export class UserCalendarComponent implements OnChanges {
     this.simpleQuestionnaireIds = [];
     this.simpleQuestionnaireBundleIds = [];
     this.simpleRandomizationRuleIds = [];
+    this.simpleAssessmentName = '';
     this.simpleAvailabilityMinutes = 60;
+    this.simpleAvailabilityUnit = 'MINUTES';
+    this.simpleReminderMinutes = '';
+    this.simpleReminderUnit = 'MINUTES';
+    this.simpleAssessmentNote = '';
     this.createEventModalVisible = true;
   }
 
@@ -335,6 +353,17 @@ export class UserCalendarComponent implements OnChanges {
 
   allowDrop(event: DragEvent): void {
     this.eventUiService.allowDrop(event);
+  }
+
+  onCreateTypeChange(type: CalendarCreateType): void {
+    this.createType = type;
+    this.createTitle = this.defaultCreateTitle(type);
+  }
+
+  private defaultCreateTitle(type: CalendarCreateType): string {
+    if (type === CalendarCreateType.FIXED_SCHEME) return 'Evaluación - esquema fijo';
+    if (type === CalendarCreateType.SIMPLE_ASSESSMENT) return 'Evaluación - individual';
+    return 'Supervisión';
   }
 
   setEditDurationMinutes(minutes: number): void {
@@ -507,22 +536,31 @@ export class UserCalendarComponent implements OnChanges {
 
   private saveSimpleAssessment(): void {
     if (!this.user?.id || !this.simpleAssessmentTypeId) return;
-    const expirationDate = new Date(this.createStartAt.getTime() + this.simpleAvailabilityMinutes * 60000);
+    const expirationDate = this.simpleExpirationDate();
     const content = this.simpleAssessmentContentPayload();
     const responsibleUserIds = this.selectedResponsibleUserIds();
     const primaryResponsibleUserId = this.primaryResponsibleUserId() || this.currentUser?.id || this.user.id;
     this.creating = true;
     this.calendarService
       .createAssessmentOccurrence({
+        name: this.simpleAssessmentName?.trim() || null,
         assessmentTypeId: this.simpleAssessmentTypeId,
         targetUserId: this.user.id,
         responderUserId: this.user.id,
         clinicianId: primaryResponsibleUserId,
         responsibleUserIds,
         informantType: 'CLINICIAN',
+        note: this.simpleAssessmentNote,
         ...content,
-        dates: [{ deliveryDate: this.createStartAt, expirationDate }],
-        emailReminder: false,
+        dates: [
+          {
+            deliveryDate: this.createStartAt,
+            expirationDate,
+            reminderMinutes: this.parseReminderMinutes(this.simpleReminderMinutes, this.simpleReminderUnit),
+            reminderUnit: this.simpleReminderUnit,
+          },
+        ],
+        reminderUnit: this.simpleReminderUnit,
       })
       .pipe(finalize(() => (this.creating = false)))
       .subscribe(
@@ -532,6 +570,51 @@ export class UserCalendarComponent implements OnChanges {
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to create assessment' })
       );
+  }
+
+  private simpleExpirationDate(): Date {
+    const expirationDate = new Date(this.createStartAt);
+    const amount = Math.max(0, Number(this.simpleAvailabilityMinutes || 0));
+    switch (this.simpleAvailabilityUnit) {
+      case 'HOURS':
+        expirationDate.setHours(expirationDate.getHours() + amount);
+        break;
+      case 'DAYS':
+        expirationDate.setDate(expirationDate.getDate() + amount);
+        break;
+      case 'WEEKS':
+        expirationDate.setDate(expirationDate.getDate() + amount * 7);
+        break;
+      case 'MONTHS':
+        expirationDate.setMonth(expirationDate.getMonth() + amount);
+        break;
+      default:
+        expirationDate.setMinutes(expirationDate.getMinutes() + amount);
+    }
+    return expirationDate;
+  }
+
+  private parseReminderMinutes(value: string, unit: AssessmentAvailabilityUnit = 'MINUTES'): number[] {
+    return (value || '')
+      .split(',')
+      .map((entry) => Number(entry.trim()))
+      .filter((entry) => Number.isFinite(entry) && entry >= 0)
+      .map((entry) => this.unitAmountToMinutes(entry, unit));
+  }
+
+  private unitAmountToMinutes(value: number, unit: AssessmentAvailabilityUnit = 'MINUTES'): number {
+    switch (unit) {
+      case 'HOURS':
+        return value * 60;
+      case 'DAYS':
+        return value * 24 * 60;
+      case 'WEEKS':
+        return value * 7 * 24 * 60;
+      case 'MONTHS':
+        return value * 30 * 24 * 60;
+      default:
+        return value;
+    }
   }
 
   private discardSession(event: CalendarEvent): void {

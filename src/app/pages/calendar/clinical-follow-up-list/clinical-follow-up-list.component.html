@@ -5,6 +5,9 @@
       <nz-option nzValue="DESC" nzLabel="Mas recientes primero"></nz-option>
       <nz-option nzValue="ASC" nzLabel="Mas antiguas primero"></nz-option>
     </nz-select>
+    <label nz-checkbox [(ngModel)]="showFutureSessions" (ngModelChange)="applyFilters()">
+      Mostrar sesiones futuras
+    </label>
   </div>
   <div class="settings" *ngIf="settings">
     Ventana de edicion: {{ settings.editWindowDays }} dias
@@ -29,6 +32,7 @@
           <nz-tag [nzColor]="isNoShowCancelled(item.session) ? 'default' : 'processing'">
             {{ isNoShowCancelled(item.session) ? 'Cancelada por falta' : item.session.clinicalStatus }}
           </nz-tag>
+          <nz-tag *ngIf="isFutureSession(item.session)" nzColor="default">Futura</nz-tag>
           <button nz-button nzType="link" [disabled]="!canEdit(item.session)" (click)="openEdit(item.session)">
             Editar
           </button>

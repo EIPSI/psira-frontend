@@ -11,6 +11,12 @@ const evaluationAutomationFields = `
   triggerReasonIds
   triggerReasonContexts
   lastLoginInactiveDays
+  lastLoginConditionLogic
+  lastLoginConditions {
+    field
+    operator
+    value
+  }
   delayAmount
   delayUnit
   priority

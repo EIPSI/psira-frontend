@@ -24,7 +24,6 @@ import { AssessmentAdministration } from '@app/pages/administration/@types/asses
 import { AssessmentAdministrationService } from '@app/pages/administration/@services/assessment-administration.service';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { LocationStrategy } from '@angular/common';
-import { EmailTemplatesService } from '@app/pages/administration/@services/email-templates.service';
 import { QuestionnaireBundlesService } from '@app/pages/questionnaire-management/@services/questionnaire-bundles.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
@@ -101,12 +100,17 @@ export class CreateAssessmentComponent implements OnInit {
   public departments: Department[] = [];
   public editMode = true;
   public pageInfo: PageInfo;
-  public emailTemplates: any[] = [];
   public assessmentUrl: URL;
   public selectedQuestionnaires: QuestionnaireVersion[] = [];
   public checked = false;
   public isUpdate: boolean;
-  public hasEmail = false;
+  public timeUnits = [
+    { value: 'MINUTES', label: 'Minutos' },
+    { value: 'HOURS', label: 'Horas' },
+    { value: 'DAYS', label: 'Días' },
+    { value: 'WEEKS', label: 'Semanas' },
+    { value: 'MONTHS', label: 'Meses' },
+  ];
 
   get patientTitle(): string {
     const name = [this.patient?.firstName, this.patient?.middleName, this.patient?.lastName]
@@ -123,7 +127,6 @@ export class CreateAssessmentComponent implements OnInit {
     private assessmentAdministrationService: AssessmentAdministrationService,
     private errorService: ErrorHandlerService,
     private departmentsService: DepartmentsService,
-    private emailTemplatesService: EmailTemplatesService,
     private bundlesService: QuestionnaireBundlesService,
     private randomizationsService: RandomizationsService,
     private assessmentService: AssessmentService,
@@ -135,6 +138,7 @@ export class CreateAssessmentComponent implements OnInit {
   ngOnInit(): void {
     this.formGroup = this.formBuilder.group({
       assessmentTypeId: [null, Validators.required],
+      name: [null],
       clinicianId: [null, Validators.required],
       responsibleUserIds: [[]],
       targetUserId: [null, Validators.required],
@@ -145,10 +149,8 @@ export class CreateAssessmentComponent implements OnInit {
       informantType: [null],
       deliveryDate: [null],
       expirationDate: [null],
-      emailReminder: [true],
-      receiverEmail: [this.patient?.email],
-      mailTemplateId: [null],
       reminderMinutes: [''],
+      reminderUnit: ['MINUTES'],
       questionnaireBundles: [[]],
       randomizationRuleIds: [[]],
       note: [null],
@@ -157,6 +159,7 @@ export class CreateAssessmentComponent implements OnInit {
           expirationDate: [null],
           deliveryDate: [null],
           reminderMinutes: [''],
+          reminderUnit: ['MINUTES'],
         }),
       ]),
     });
@@ -170,7 +173,6 @@ export class CreateAssessmentComponent implements OnInit {
     this.getUserDepartments({ paging: { first: 50 } });
     if (this.patient?.id) {
     }
-    this.hasEmail = environment.email;
   }
 
   get datesFieldAsFormArray(): FormArray {
@@ -432,12 +434,13 @@ export class CreateAssessmentComponent implements OnInit {
       clinicianId: this.primaryResponsibleUserId(),
       responsibleUserIds: this.selectedResponsibleUserIds,
     };
-    newAssessmentData.dates = (newAssessmentData.dates || []).map((date: any) => ({
+    newAssessmentData.dates = (newAssessmentData.dates || []).slice(0, 1).map((date: any) => ({
       ...date,
-      reminderMinutes: this.parseReminderMinutes(date.reminderMinutes),
+      reminderMinutes: this.parseReminderMinutes(date.reminderMinutes, date.reminderUnit),
+      reminderUnit: date.reminderUnit || 'MINUTES',
     }));
-    newAssessmentData.reminderMinutes = this.parseReminderMinutes(newAssessmentData.reminderMinutes);
-
+    newAssessmentData.reminderMinutes = this.parseReminderMinutes(newAssessmentData.reminderMinutes, newAssessmentData.reminderUnit);
+    newAssessmentData.reminderUnit = newAssessmentData.reminderUnit || 'MINUTES';
     if (this.typeSelected === `OTHER_USER` || this.typeSelected === `CASE_MANAGER`) {
       newAssessmentData.informantCaregiverRelation = null;
       newAssessmentData.informantClinicianId = newAssessmentData.responderUserId;
@@ -500,17 +503,16 @@ export class CreateAssessmentComponent implements OnInit {
     this.editMode = this.embedded ? this.startEditing : false;
     this.formGroup.patchValue({
       assessmentTypeId: this.fullAssessment.assessmentType?.id,
+      name: this.fullAssessment.name || null,
       clinicianId: this.fullAssessment.clinician.id,
       responsibleUserIds: this.assessmentResponsibleUserIds(),
       deliveryDate: this.fullAssessment.deliveryDate,
       informantType: this.fullAssessment.informantType,
       targetUserId: this.fullAssessment.targetUserId,
       responderUserId: this.fullAssessment.responderUserId,
-      mailTemplateId: this.fullAssessment.mailTemplateId,
-      reminderMinutes: (this.fullAssessment.reminderMinutes || []).join(', '),
+      reminderMinutes: this.minutesListToUnitText(this.fullAssessment.reminderMinutes || [], this.fullAssessment.reminderUnit),
+      reminderUnit: this.fullAssessment.reminderUnit || 'MINUTES',
       informantPatient: this.fullAssessment.patient,
-      emailReminder: this.fullAssessment.emailReminder,
-      receiverEmail: this.fullAssessment.receiverEmail,
       informantClinicianId: this.fullAssessment.informantClinician?.id || null,
       informantCaregiverRelation: this.fullAssessment.informantCaregiverRelation,
       expirationDate: this.fullAssessment.expirationDate,
@@ -520,7 +522,8 @@ export class CreateAssessmentComponent implements OnInit {
       this.formBuilder.group({
         deliveryDate: this.fullAssessment.deliveryDate,
         expirationDate: this.fullAssessment.expirationDate,
-        reminderMinutes: (this.fullAssessment.reminderMinutes || []).join(', '),
+        reminderMinutes: this.minutesListToUnitText(this.fullAssessment.reminderMinutes || [], this.fullAssessment.reminderUnit),
+        reminderUnit: this.fullAssessment.reminderUnit || 'MINUTES',
       })
     );
     this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
@@ -656,15 +659,15 @@ export class CreateAssessmentComponent implements OnInit {
     return {
       questionnaires:
         this.assessmentContentType === AssessmentContentType.QUESTIONNAIRE
-          ? this.selectedQuestionnaires.map((q) => q._id)
+          ? this.selectedQuestionnaires.slice(0, 1).map((q) => q._id)
           : [],
       questionnaireBundles:
         this.assessmentContentType === AssessmentContentType.QUESTIONNAIRE_BUNDLE
-          ? this.selectedBundleIds()
+          ? this.selectedBundleIds().slice(0, 1)
           : [],
       randomizationRuleIds:
         this.assessmentContentType === AssessmentContentType.RANDOMIZATION
-          ? this.selectedRandomizationRuleIds()
+          ? this.selectedRandomizationRuleIds().slice(0, 1)
           : [],
     };
   }
@@ -737,14 +740,49 @@ export class CreateAssessmentComponent implements OnInit {
     this.patientEmail = responder?.email ?? '';
   }
 
-  private parseReminderMinutes(value: string | number[]): number[] {
+  private parseReminderMinutes(value: string | number[], unit = 'MINUTES'): number[] {
     if (Array.isArray(value)) {
       return value.filter((part) => Number.isFinite(part) && part >= 0);
     }
     return (value || '')
       .split(',')
       .map((part) => Number(part.trim()))
-      .filter((part) => Number.isFinite(part) && part >= 0);
+      .filter((part) => Number.isFinite(part) && part >= 0)
+      .map((part) => this.unitAmountToMinutes(part, unit));
+  }
+
+  private unitAmountToMinutes(value: number, unit = 'MINUTES'): number {
+    switch (unit) {
+      case 'HOURS':
+        return value * 60;
+      case 'DAYS':
+        return value * 24 * 60;
+      case 'WEEKS':
+        return value * 7 * 24 * 60;
+      case 'MONTHS':
+        return value * 30 * 24 * 60;
+      default:
+        return value;
+    }
+  }
+
+  private minutesToUnitAmount(minutes: number, unit = 'MINUTES'): number {
+    switch (unit) {
+      case 'HOURS':
+        return Number(minutes || 0) / 60;
+      case 'DAYS':
+        return Number(minutes || 0) / (24 * 60);
+      case 'WEEKS':
+        return Number(minutes || 0) / (7 * 24 * 60);
+      case 'MONTHS':
+        return Number(minutes || 0) / (30 * 24 * 60);
+      default:
+        return Number(minutes || 0);
+    }
+  }
+
+  private minutesListToUnitText(minutes: number[] = [], unit = 'MINUTES'): string {
+    return (minutes || []).map((minute) => this.minutesToUnitAmount(minute, unit)).join(', ');
   }
 
   public cancelEdit(): void {

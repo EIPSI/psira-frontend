@@ -64,7 +64,7 @@
   <div class="edit-form">
     <label>
       <span>Tipo</span>
-      <nz-select [(ngModel)]="createType">
+      <nz-select [(ngModel)]="createType" (ngModelChange)="onCreateTypeChange($event)">
         <nz-option [nzValue]="CT.SESSION" nzLabel="Sesión de supervisión"></nz-option>
         <nz-option [nzValue]="CT.FIXED_SCHEME" nzLabel="Evaluación - esquema fijo"></nz-option>
         <nz-option [nzValue]="CT.SIMPLE_ASSESSMENT" nzLabel="Evaluación - individual"></nz-option>
@@ -155,6 +155,11 @@
     </label>
 
     <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <span>Nombre de la evaluación (opcional)</span>
+      <input nz-input [(ngModel)]="simpleAssessmentName" placeholder="Si se deja vacío se usará el tipo de evaluación" />
+    </label>
+
+    <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
       <span>Contenido</span>
       <nz-select [(ngModel)]="simpleContentType" (ngModelChange)="onSimpleContentTypeChange($event)">
         <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
@@ -207,9 +212,43 @@
       </label>
     </div>
 
+    <div class="date-row" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <label>
+        <span>Vencimiento</span>
+        <input nz-input type="number" min="0" [(ngModel)]="simpleAvailabilityMinutes" />
+      </label>
+      <label>
+        <span>Unidad</span>
+        <nz-select [(ngModel)]="simpleAvailabilityUnit">
+          <nz-option
+            *ngFor="let unit of availabilityUnits"
+            [nzValue]="unit.value"
+            [nzLabel]="unit.label"
+          ></nz-option>
+        </nz-select>
+      </label>
+    </div>
+
+    <div class="date-row" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <label>
+        <span>Recordatorios después de la activación</span>
+        <input nz-input [(ngModel)]="simpleReminderMinutes" placeholder="10, 15, 20" />
+      </label>
+      <label>
+        <span>Unidad</span>
+        <nz-select [(ngModel)]="simpleReminderUnit">
+          <nz-option
+            *ngFor="let unit of availabilityUnits"
+            [nzValue]="unit.value"
+            [nzLabel]="unit.label"
+          ></nz-option>
+        </nz-select>
+      </label>
+    </div>
+
     <label *ngIf="createType === CT.SIMPLE_ASSESSMENT">
-      <span>Disponibilidad en minutos</span>
-      <input nz-input type="number" [(ngModel)]="simpleAvailabilityMinutes" />
+      <span>Nota de supervisión de evaluación</span>
+      <textarea nz-input [(ngModel)]="simpleAssessmentNote" rows="3"></textarea>
     </label>
   </div>
 </nz-modal>

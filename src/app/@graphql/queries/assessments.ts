@@ -8,6 +8,7 @@ const assessments = gql`
         node {
           id
           uuid
+          name
           date
           assessmentType {
             id
@@ -21,6 +22,7 @@ const assessments = gql`
           responderUserId
           mailTemplateId
           reminderMinutes
+          reminderUnit
           clinicianId
           submissionDate
           status
@@ -213,6 +215,7 @@ const patientAssessments = gql`
     patientAssessments(patientId: $patientId, includeArchived: $includeArchived) {
       id
       uuid
+      name
       date
       assessmentType {
         id
@@ -226,6 +229,7 @@ const patientAssessments = gql`
       responderUserId
       mailTemplateId
       reminderMinutes
+      reminderUnit
       clinicianId
       submissionDate
       status
@@ -444,6 +448,7 @@ const getFullAssessment = gql`
     getFullAssessment(id: $id) {
       id
       uuid
+      name
       isActive
       date
       assessmentType {
@@ -455,6 +460,7 @@ const getFullAssessment = gql`
       receiverEmail
       mailTemplateId
       reminderMinutes
+      reminderUnit
       status
       deliveryDate
       expirationDate

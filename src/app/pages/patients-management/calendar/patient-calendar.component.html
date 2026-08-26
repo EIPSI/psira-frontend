@@ -65,7 +65,7 @@
   <div class="edit-form">
     <div class="form-field">
       <span>Tipo</span>
-      <nz-select [(ngModel)]="createType">
+      <nz-select [(ngModel)]="createType" (ngModelChange)="onCreateTypeChange($event)">
         <nz-option [nzValue]="CT.SESSION" nzLabel="Sesión"></nz-option>
         <nz-option [nzValue]="CT.FIXED_SCHEME" nzLabel="Evaluación - esquema fijo"></nz-option>
         <nz-option [nzValue]="CT.SIMPLE_ASSESSMENT" nzLabel="Evaluación - individual"></nz-option>
@@ -135,6 +135,11 @@
       <nz-select [(ngModel)]="simpleAssessmentTypeId" nzShowSearch>
         <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
       </nz-select>
+    </div>
+
+    <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <span>Nombre de la evaluación (opcional)</span>
+      <input nz-input [(ngModel)]="simpleAssessmentName" placeholder="Si se deja vacío se usará el tipo de evaluación" />
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
@@ -215,9 +220,43 @@
       </div>
     </div>
 
+    <div class="date-row" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <div class="form-field">
+        <span>Vencimiento</span>
+        <input nz-input type="number" min="0" [(ngModel)]="simpleAvailabilityMinutes" />
+      </div>
+      <div class="form-field">
+        <span>Unidad</span>
+        <nz-select [(ngModel)]="simpleAvailabilityUnit">
+          <nz-option
+            *ngFor="let unit of availabilityUnits"
+            [nzValue]="unit.value"
+            [nzLabel]="unit.label"
+          ></nz-option>
+        </nz-select>
+      </div>
+    </div>
+
+    <div class="date-row" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
+      <div class="form-field">
+        <span>Recordatorios después de la activación</span>
+        <input nz-input [(ngModel)]="simpleReminderMinutes" placeholder="10, 15, 20" />
+      </div>
+      <div class="form-field">
+        <span>Unidad</span>
+        <nz-select [(ngModel)]="simpleReminderUnit">
+          <nz-option
+            *ngFor="let unit of availabilityUnits"
+            [nzValue]="unit.value"
+            [nzLabel]="unit.label"
+          ></nz-option>
+        </nz-select>
+      </div>
+    </div>
+
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
-      <span>{{ 'evaluationSchemes.availability' | translate }}</span>
-      <input nz-input type="number" [(ngModel)]="simpleAvailabilityMinutes" />
+      <span>Nota clínica de evaluación</span>
+      <textarea nz-input [(ngModel)]="simpleAssessmentNote" rows="3"></textarea>
     </div>
 
     <div class="form-field">

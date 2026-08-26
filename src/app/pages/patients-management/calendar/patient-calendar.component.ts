@@ -69,6 +69,7 @@ enum FixedSchemeSelectionType {
 }
 
 type FixedSchemeApplySelection = { schemeId: number } | { randomizationRuleId: number };
+type AssessmentAvailabilityUnit = 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'MONTHS';
 
 @Component({
   selector: 'app-patient-calendar',
@@ -150,7 +151,19 @@ export class PatientCalendarComponent implements OnChanges {
   simpleQuestionnaireIds: string[] = [];
   simpleQuestionnaireBundleIds: string[] = [];
   simpleRandomizationRuleIds: number[] = [];
+  simpleAssessmentName = '';
   simpleAvailabilityMinutes = 60;
+  simpleAvailabilityUnit: AssessmentAvailabilityUnit = 'MINUTES';
+  simpleReminderMinutes = '';
+  simpleReminderUnit: AssessmentAvailabilityUnit = 'MINUTES';
+  simpleAssessmentNote = '';
+  availabilityUnits: Array<{ label: string; value: AssessmentAvailabilityUnit }> = [
+    { label: 'Minutos', value: 'MINUTES' },
+    { label: 'Horas', value: 'HOURS' },
+    { label: 'Días', value: 'DAYS' },
+    { label: 'Semanas', value: 'WEEKS' },
+    { label: 'Meses', value: 'MONTHS' },
+  ];
   simpleResponderUserId?: number;
   simpleResponderKind: 'PATIENT' | 'CAREGIVER' = 'PATIENT';
   selectedCaregiverRelation?: string;
@@ -251,7 +264,12 @@ export class PatientCalendarComponent implements OnChanges {
     this.simpleQuestionnaireIds = [];
     this.simpleQuestionnaireBundleIds = [];
     this.simpleRandomizationRuleIds = [];
+    this.simpleAssessmentName = '';
     this.simpleAvailabilityMinutes = 60;
+    this.simpleAvailabilityUnit = 'MINUTES';
+    this.simpleReminderMinutes = '';
+    this.simpleReminderUnit = 'MINUTES';
+    this.simpleAssessmentNote = '';
     this.simpleResponderKind = 'PATIENT';
     this.simpleResponderUserId = this.patient?.userId;
     this.selectedCaregiverRelation = undefined;
@@ -318,6 +336,17 @@ export class PatientCalendarComponent implements OnChanges {
     this.fixedSchemeSelectionType = type;
     if (type !== FixedSchemeSelectionType.SCHEME) this.createFixedSchemeIds = [];
     if (type !== FixedSchemeSelectionType.RANDOMIZATION) this.createFixedRandomizationRuleIds = [];
+  }
+
+  onCreateTypeChange(type: CalendarCreateType): void {
+    this.createType = type;
+    this.createTitle = this.defaultCreateTitle(type);
+  }
+
+  private defaultCreateTitle(type: CalendarCreateType): string {
+    if (type === CalendarCreateType.FIXED_SCHEME) return 'Evaluación - esquema fijo';
+    if (type === CalendarCreateType.SIMPLE_ASSESSMENT) return 'Evaluación - individual';
+    return 'Sesión clínica';
   }
 
   private saveSession(): void {
@@ -423,13 +452,14 @@ export class PatientCalendarComponent implements OnChanges {
 
   private saveSimpleAssessment(): void {
     if (!this.patient?.id || !this.simpleAssessmentTypeId || !this.currentUser?.id || !this.simpleResponderUserId) return;
-    const expirationDate = new Date(this.createStartAt.getTime() + this.simpleAvailabilityMinutes * 60000);
+    const expirationDate = this.simpleExpirationDate();
     const content = this.simpleAssessmentContentPayload();
     const responsibleUserIds = this.selectedResponsibleUserIds();
     const primaryResponsibleUserId = this.primaryResponsibleUserId() || this.currentUser.id;
     this.creating = true;
     this.calendarService
       .createAssessmentOccurrence({
+        name: this.simpleAssessmentName?.trim() || null,
         assessmentTypeId: this.simpleAssessmentTypeId,
         patientId: this.patient.id,
         targetUserId: this.patient.userId,
@@ -438,14 +468,17 @@ export class PatientCalendarComponent implements OnChanges {
         responsibleUserIds,
         informantType: this.simpleResponderKind,
         informantCaregiverRelation: this.simpleResponderKind === 'CAREGIVER' ? this.selectedCaregiverRelation : null,
+        note: this.simpleAssessmentNote,
         ...content,
         dates: [
           {
             deliveryDate: this.createStartAt,
             expirationDate,
+            reminderMinutes: this.parseReminderMinutes(this.simpleReminderMinutes, this.simpleReminderUnit),
+            reminderUnit: this.simpleReminderUnit,
           },
         ],
-        emailReminder: false,
+        reminderUnit: this.simpleReminderUnit,
       })
       .pipe(finalize(() => (this.creating = false)))
       .subscribe(
@@ -455,6 +488,51 @@ export class PatientCalendarComponent implements OnChanges {
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to create assessment' })
       );
+  }
+
+  private simpleExpirationDate(): Date {
+    const expirationDate = new Date(this.createStartAt);
+    const amount = Math.max(0, Number(this.simpleAvailabilityMinutes || 0));
+    switch (this.simpleAvailabilityUnit) {
+      case 'HOURS':
+        expirationDate.setHours(expirationDate.getHours() + amount);
+        break;
+      case 'DAYS':
+        expirationDate.setDate(expirationDate.getDate() + amount);
+        break;
+      case 'WEEKS':
+        expirationDate.setDate(expirationDate.getDate() + amount * 7);
+        break;
+      case 'MONTHS':
+        expirationDate.setMonth(expirationDate.getMonth() + amount);
+        break;
+      default:
+        expirationDate.setMinutes(expirationDate.getMinutes() + amount);
+    }
+    return expirationDate;
+  }
+
+  private parseReminderMinutes(value: string, unit: AssessmentAvailabilityUnit = 'MINUTES'): number[] {
+    return (value || '')
+      .split(',')
+      .map((entry) => Number(entry.trim()))
+      .filter((entry) => Number.isFinite(entry) && entry >= 0)
+      .map((entry) => this.unitAmountToMinutes(entry, unit));
+  }
+
+  private unitAmountToMinutes(value: number, unit: AssessmentAvailabilityUnit = 'MINUTES'): number {
+    switch (unit) {
+      case 'HOURS':
+        return value * 60;
+      case 'DAYS':
+        return value * 24 * 60;
+      case 'WEEKS':
+        return value * 7 * 24 * 60;
+      case 'MONTHS':
+        return value * 30 * 24 * 60;
+      default:
+        return value;
+    }
   }
 
   openEdit(event: CalendarEvent): void {

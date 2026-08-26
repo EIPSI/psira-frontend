@@ -42,6 +42,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   rawAssessmentData = '';
   dateRange: Date[] = [];
   sortDirection: 'ASC' | 'DESC' = 'DESC';
+  showFutureSessions = false;
   historyEntries: CaseHistoryEntry[] = [];
   documentItems: Array<
     { type: 'SESSION'; date: string; session: ClinicalSession } |
@@ -188,6 +189,10 @@ export class ClinicalFollowUpListComponent implements OnChanges {
     );
   }
 
+  isFutureSession(session: ClinicalSession): boolean {
+    return new Date(this.sessionDate(session)).getTime() > Date.now();
+  }
+
   cancellationDetail(session: ClinicalSession): string {
     return session.cancellationReasonSnapshot || '';
   }
@@ -281,7 +286,10 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   }
 
   private shouldShowSession(session: ClinicalSession): boolean {
-    return session.clinicalStatus !== 'CANCELLED' || this.isNoShowCancelled(session);
+    const isVisibleCancellation = session.clinicalStatus !== 'CANCELLED' || this.isNoShowCancelled(session);
+    if (!isVisibleCancellation) return false;
+    if (!this.showFutureSessions && this.isFutureSession(session)) return false;
+    return true;
   }
 
   private startOfDay(date: Date): Date {

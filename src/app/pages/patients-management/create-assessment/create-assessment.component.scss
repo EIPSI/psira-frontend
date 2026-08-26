@@ -41,6 +41,21 @@ nz-select{
   min-width: 200px !important;
 }
 
+.unit-row {
+  display: flex;
+  gap: 8px;
+}
+
+.unit-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.unit-row nz-select {
+  flex: 0 0 132px;
+  min-width: 132px !important;
+}
+
 input[readonly] {
   border: 0;
   padding: 0;

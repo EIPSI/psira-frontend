@@ -79,6 +79,30 @@
   padding: 6px 8px;
 }
 
+.rule-subtitle {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 600;
+  grid-column: 1 / -1;
+  letter-spacing: 0;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.unit-row {
+  display: flex;
+  gap: 8px;
+}
+
+.unit-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.unit-row nz-select {
+  flex: 0 0 132px;
+}
+
 .resource-table tr {
   cursor: pointer;
 }

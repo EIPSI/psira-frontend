@@ -31,6 +31,8 @@ export enum EvaluationAutomationConditionOperator {
   LTE = 'LTE',
   CONTAINS = 'CONTAINS',
   NOT_CONTAINS = 'NOT_CONTAINS',
+  IN = 'IN',
+  NOT_IN = 'NOT_IN',
   IS_EMPTY = 'IS_EMPTY',
   IS_NOT_EMPTY = 'IS_NOT_EMPTY',
   BOOLEAN = 'BOOLEAN',
@@ -66,6 +68,8 @@ export const EvaluationAutomationConditionOperatorLabel: Record<EvaluationAutoma
   [EvaluationAutomationConditionOperator.LTE]: 'menor o igual que',
   [EvaluationAutomationConditionOperator.CONTAINS]: 'contiene',
   [EvaluationAutomationConditionOperator.NOT_CONTAINS]: 'no contiene',
+  [EvaluationAutomationConditionOperator.IN]: 'pertenece a',
+  [EvaluationAutomationConditionOperator.NOT_IN]: 'no pertenece a',
   [EvaluationAutomationConditionOperator.IS_EMPTY]: 'está vacío',
   [EvaluationAutomationConditionOperator.IS_NOT_EMPTY]: 'no está vacío',
   [EvaluationAutomationConditionOperator.BOOLEAN]: 'verdadero/falso',
@@ -88,20 +92,23 @@ export interface EvaluationAutomation {
   triggerReasonIds?: number[];
   triggerReasonContexts?: CaseEventReasonContext[];
   lastLoginInactiveDays?: number;
+  lastLoginConditionLogic?: 'AND' | 'OR';
+  lastLoginConditions?: EvaluationAutomationCondition[];
   delayAmount: number;
   delayUnit: EvaluationAutomationDelayUnit;
   priority: number;
   conditions?: EvaluationAutomationCondition[];
   evaluationName?: string;
   schemeId?: number;
+  schemeRandomizationRuleId?: number;
   assessmentTypeId?: number;
   questionnaireIds?: string[];
   questionnaireBundleIds?: string[];
   randomizationRuleIds?: number[];
   expirationMinutes?: number;
+  expirationUnit?: string;
   reminderMinutes?: number[];
-  emailNotificationsEnabled?: boolean;
-  mailTemplateId?: number;
+  reminderUnit?: string;
   createdAt?: string;
   updatedAt?: string;
   departments?: Array<{ id: number; name: string }>;

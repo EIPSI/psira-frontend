@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AssessmentAdministrationService } from '@app/pages/administration/@services/assessment-administration.service';
-import { EmailTemplatesService } from '@app/pages/administration/@services/email-templates.service';
 import { Department } from '@app/pages/administration/@types/department';
 import { Role } from '@app/pages/administration/@types/role';
 import { EvaluationSchemesService } from '@app/pages/evaluation-schemes/@services/evaluation-schemes.service';
@@ -32,6 +31,8 @@ import {
 } from '../@types/evaluation-automation';
 
 type TriggerReasonScope = 'CLINICAL' | 'SUPERVISION';
+type TimeUnit = 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'MONTHS';
+type FixedAutomationSelectionType = 'SCHEME' | 'HIGH_LEVEL_RANDOMIZATION';
 
 interface TriggerReasonGroup {
   label: string;
@@ -55,7 +56,7 @@ export class AutomationEditorComponent implements OnInit {
   public questionnaires: QuestionnaireVersion[] = [];
   public bundles: any[] = [];
   public randomizations: RandomizationRule[] = [];
-  public emailTemplates: any[] = [];
+  public highLevelRandomizations: RandomizationRule[] = [];
   public contentType = EvaluationAutomationContentType.QUESTIONNAIRE;
   public triggerReasonOptions: CaseEventReason[] = [];
   public triggerReasonGroups: TriggerReasonGroup[] = [];
@@ -77,6 +78,17 @@ export class AutomationEditorComponent implements OnInit {
   };
   public EAT = EvaluationAutomationType;
   public EACT = EvaluationAutomationContentType;
+  public fixedSelectionTypes: Array<{ value: FixedAutomationSelectionType; label: string }> = [
+    { value: 'SCHEME', label: 'Esquema fijo' },
+    { value: 'HIGH_LEVEL_RANDOMIZATION', label: 'Randomización de nivel alto' },
+  ];
+  public timeUnits: Array<{ value: TimeUnit; label: string }> = [
+    { value: 'MINUTES', label: 'Minutos' },
+    { value: 'HOURS', label: 'Horas' },
+    { value: 'DAYS', label: 'Días' },
+    { value: 'WEEKS', label: 'Semanas' },
+    { value: 'MONTHS', label: 'Meses' },
+  ];
   public triggerReasonScopeOptions: Array<{ value: TriggerReasonScope; label: string }> = [
     { value: 'CLINICAL', label: 'Tratamiento' },
     { value: 'SUPERVISION', label: 'Supervisión' },
@@ -92,7 +104,6 @@ export class AutomationEditorComponent implements OnInit {
     private questionnaireService: QuestionnaireManagementService,
     private bundlesService: QuestionnaireBundlesService,
     private randomizationsService: RandomizationsService,
-    private emailTemplatesService: EmailTemplatesService,
     private errorService: ErrorHandlerService,
     private message: NzMessageService
   ) {}
@@ -119,6 +130,10 @@ export class AutomationEditorComponent implements OnInit {
     return this.form.get('conditions') as FormArray;
   }
 
+  get lastLoginConditions(): FormArray {
+    return this.form.get('lastLoginConditions') as FormArray;
+  }
+
   get selectedDepartmentIds(): number[] {
     return this.form?.get('departmentIds')?.value || [];
   }
@@ -137,6 +152,20 @@ export class AutomationEditorComponent implements OnInit {
     this.conditions.removeAt(index);
   }
 
+  public addLastLoginCondition(condition?: any): void {
+    this.lastLoginConditions.push(
+      this.fb.group({
+        field: ['inactiveDays'],
+        operator: [condition?.operator || EvaluationAutomationConditionOperator.GTE, Validators.required],
+        value: [condition?.value || null, Validators.required],
+      })
+    );
+  }
+
+  public removeLastLoginCondition(index: number): void {
+    this.lastLoginConditions.removeAt(index);
+  }
+
   public onDepartmentsChange(): void {
     this.loadDepartmentScopedResources();
     this.loadTriggerReasons();
@@ -147,7 +176,10 @@ export class AutomationEditorComponent implements OnInit {
       this.form.patchValue({ triggerSessionNumber: null });
     }
     if (triggerPoint !== EvaluationAutomationTriggerPoint.LAST_LOGIN) {
-      this.form.patchValue({ lastLoginInactiveDays: null });
+      this.form.patchValue({ lastLoginInactiveDays: null, lastLoginConditionLogic: 'AND' });
+      this.lastLoginConditions.clear();
+    } else if (!this.lastLoginConditions.length) {
+      this.addLastLoginCondition();
     }
     if (!this.usesReasonFilter(triggerPoint)) {
       this.form.patchValue({ triggerReasonIds: [], triggerReasonScope: null });
@@ -181,12 +213,23 @@ export class AutomationEditorComponent implements OnInit {
   public onAutomationTypeChange(type: EvaluationAutomationType): void {
     this.form.patchValue({
       schemeId: null,
+      schemeRandomizationRuleId: null,
       assessmentTypeId: null,
       questionnaireIds: null,
       questionnaireBundleIds: null,
       randomizationRuleIds: null,
       expirationMinutes: null,
+      expirationUnit: 'MINUTES',
       reminderMinutesText: '',
+      reminderUnit: 'MINUTES',
+    });
+  }
+
+  public onFixedSelectionTypeChange(type: FixedAutomationSelectionType): void {
+    this.form.patchValue({
+      schemeId: type === 'SCHEME' ? this.form.get('schemeId')?.value : null,
+      schemeRandomizationRuleId:
+        type === 'HIGH_LEVEL_RANDOMIZATION' ? this.form.get('schemeRandomizationRuleId')?.value : null,
     });
   }
 
@@ -268,18 +311,22 @@ export class AutomationEditorComponent implements OnInit {
       triggerReasonScope: [null],
       triggerReasonIds: [[]],
       lastLoginInactiveDays: [null],
+      lastLoginConditionLogic: ['AND'],
+      lastLoginConditions: this.fb.array([]),
       delayAmount: [0, [Validators.required, Validators.min(0)]],
       delayUnit: [EvaluationAutomationDelayUnit.DAYS, Validators.required],
+      fixedSelectionType: ['SCHEME'],
       schemeId: [null],
+      schemeRandomizationRuleId: [null],
       assessmentTypeId: [null],
       questionnaireIds: [null],
       questionnaireBundleIds: [null],
       randomizationRuleIds: [null],
       evaluationName: [null],
       expirationMinutes: [null],
+      expirationUnit: ['MINUTES'],
       reminderMinutesText: [''],
-      emailNotificationsEnabled: [false],
-      mailTemplateId: [null],
+      reminderUnit: ['MINUTES'],
     });
   }
 
@@ -291,17 +338,13 @@ export class AutomationEditorComponent implements OnInit {
       assessmentTypes: this.assessmentAdministrationService
         .assessmentActive()
         .pipe(map((result: any) => result.data.activeAssessmentTypes)),
-      emailTemplates: this.emailTemplatesService
-        .getAllEmailTemplates({ paging: { first: 50 } })
-        .pipe(map((result: any) => result.data.getAllEmailTemplates.edges.map((edge: any) => edge.node))),
     })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
-        ({ departments, roles, assessmentTypes, emailTemplates }) => {
+        ({ departments, roles, assessmentTypes }) => {
           this.departments = this.filterAllowedDepartments(departments);
           this.roles = this.filterAssignableRoles(roles);
           this.assessmentTypes = assessmentTypes;
-          this.emailTemplates = emailTemplates;
           this.loadDepartmentScopedResources();
           this.loadTriggerReasons();
         },
@@ -421,6 +464,16 @@ export class AutomationEditorComponent implements OnInit {
         },
       })
       .subscribe(({ edges }) => (this.randomizations = edges.map((edge: any) => edge.node)));
+
+    this.randomizationsService
+      .getRandomizations({
+        paging: { first: 50 },
+        departmentIds,
+        filter: {
+          and: [{ type: { eq: RandomizationRuleType.HIGH_LEVEL } }, { active: { is: true } }],
+        },
+      })
+      .subscribe(({ edges }) => (this.highLevelRandomizations = edges.map((edge: any) => edge.node)));
   }
 
   private loadAutomation(id: number): void {
@@ -436,6 +489,7 @@ export class AutomationEditorComponent implements OnInit {
 
   private patchAutomation(automation: EvaluationAutomation): void {
     this.conditions.clear();
+    this.lastLoginConditions.clear();
     this.contentType = automation.questionnaireBundleIds?.length
       ? EvaluationAutomationContentType.QUESTIONNAIRE_BUNDLE
       : automation.randomizationRuleIds?.length
@@ -454,20 +508,30 @@ export class AutomationEditorComponent implements OnInit {
       triggerReasonScope: this.scopeForReasonContexts(automation.triggerReasonContexts || [], automation.triggerPoint),
       triggerReasonIds: automation.triggerReasonIds || [],
       lastLoginInactiveDays: automation.lastLoginInactiveDays,
+      lastLoginConditionLogic: automation.lastLoginConditionLogic || 'AND',
       delayAmount: automation.delayAmount,
       delayUnit: automation.delayUnit,
+      fixedSelectionType: automation.schemeRandomizationRuleId ? 'HIGH_LEVEL_RANDOMIZATION' : 'SCHEME',
       schemeId: automation.schemeId,
+      schemeRandomizationRuleId: automation.schemeRandomizationRuleId,
       assessmentTypeId: automation.assessmentTypeId,
       questionnaireIds: automation.questionnaireIds?.[0] || null,
       questionnaireBundleIds: automation.questionnaireBundleIds?.[0] || null,
       randomizationRuleIds: automation.randomizationRuleIds?.[0] || null,
       evaluationName: automation.evaluationName,
-      expirationMinutes: automation.expirationMinutes,
-      reminderMinutesText: (automation.reminderMinutes || []).join(', '),
-      emailNotificationsEnabled: automation.emailNotificationsEnabled !== false,
-      mailTemplateId: automation.mailTemplateId,
+      expirationMinutes: this.minutesToUnitAmount(automation.expirationMinutes, automation.expirationUnit as TimeUnit),
+      expirationUnit: automation.expirationUnit || 'MINUTES',
+      reminderMinutesText: this.minutesListToUnitText(automation.reminderMinutes || [], automation.reminderUnit as TimeUnit),
+      reminderUnit: automation.reminderUnit || 'MINUTES',
     });
     (automation.conditions || []).forEach((condition) => this.addCondition(condition));
+    (automation.lastLoginConditions || []).forEach((condition) => this.addLastLoginCondition(condition));
+    if (automation.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN && !this.lastLoginConditions.length && automation.lastLoginInactiveDays) {
+      this.addLastLoginCondition({
+        operator: EvaluationAutomationConditionOperator.GTE,
+        value: automation.lastLoginInactiveDays,
+      });
+    }
     this.loadDepartmentScopedResources();
     this.loadTriggerReasons();
   }
@@ -496,25 +560,35 @@ export class AutomationEditorComponent implements OnInit {
       lastLoginInactiveDays: value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN && value.lastLoginInactiveDays
         ? Number(value.lastLoginInactiveDays)
         : null,
+      lastLoginConditionLogic: value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN
+        ? value.lastLoginConditionLogic || 'AND'
+        : 'AND',
+      lastLoginConditions: value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN
+        ? this.normalizedLastLoginConditions(value.lastLoginConditions)
+        : [],
       delayAmount: Number(value.delayAmount),
       delayUnit: value.delayUnit,
     };
 
     if (value.automationType === EvaluationAutomationType.FIXED_SCHEME) {
-      payload.schemeId = value.schemeId;
+      payload.schemeId = value.fixedSelectionType === 'SCHEME' ? value.schemeId : null;
+      payload.schemeRandomizationRuleId = value.fixedSelectionType === 'HIGH_LEVEL_RANDOMIZATION'
+        ? value.schemeRandomizationRuleId
+        : null;
       payload.assessmentTypeId = null;
       payload.questionnaireIds = [];
       payload.questionnaireBundleIds = [];
       payload.randomizationRuleIds = [];
       payload.evaluationName = null;
       payload.expirationMinutes = null;
+      payload.expirationUnit = 'MINUTES';
       payload.reminderMinutes = [];
-      payload.emailNotificationsEnabled = false;
-      payload.mailTemplateId = null;
+      payload.reminderUnit = 'MINUTES';
       return payload;
     }
 
     payload.schemeId = null;
+    payload.schemeRandomizationRuleId = null;
     payload.assessmentTypeId = value.assessmentTypeId;
     payload.evaluationName = value.evaluationName;
     payload.questionnaireIds =
@@ -529,10 +603,12 @@ export class AutomationEditorComponent implements OnInit {
       this.contentType === EvaluationAutomationContentType.RANDOMIZATION && value.randomizationRuleIds
         ? [value.randomizationRuleIds]
         : [];
-    payload.expirationMinutes = value.expirationMinutes ? Number(value.expirationMinutes) : null;
-    payload.reminderMinutes = this.parseReminderMinutes(value.reminderMinutesText);
-    payload.emailNotificationsEnabled = !!value.emailNotificationsEnabled;
-    payload.mailTemplateId = null;
+    payload.expirationMinutes = value.expirationMinutes
+      ? this.unitAmountToMinutes(Number(value.expirationMinutes), value.expirationUnit)
+      : null;
+    payload.expirationUnit = value.expirationUnit || 'MINUTES';
+    payload.reminderMinutes = this.parseReminderMinutes(value.reminderMinutesText, value.reminderUnit);
+    payload.reminderUnit = value.reminderUnit || 'MINUTES';
     return payload;
   }
 
@@ -553,9 +629,14 @@ export class AutomationEditorComponent implements OnInit {
     }
 
     if (value.automationType === EvaluationAutomationType.FIXED_SCHEME) {
-      if (!value.schemeId) {
+      if (value.fixedSelectionType === 'SCHEME' && !value.schemeId) {
         this.markRequired('schemeId');
         this.message.error('Debe seleccionarse un esquema fijo');
+        return false;
+      }
+      if (value.fixedSelectionType === 'HIGH_LEVEL_RANDOMIZATION' && !value.schemeRandomizationRuleId) {
+        this.markRequired('schemeRandomizationRuleId');
+        this.message.error('Debe seleccionarse una randomización de nivel alto');
         return false;
       }
       return true;
@@ -593,6 +674,15 @@ export class AutomationEditorComponent implements OnInit {
     ].includes(operator);
   }
 
+  public lastLoginConditionRequiresValue(index: number): boolean {
+    const operator = this.lastLoginConditions.at(index)?.get('operator')?.value;
+    return ![
+      EvaluationAutomationConditionOperator.IS_EMPTY,
+      EvaluationAutomationConditionOperator.IS_NOT_EMPTY,
+      EvaluationAutomationConditionOperator.BOOLEAN,
+    ].includes(operator);
+  }
+
   private normalizedConditions(conditions: any[]): any[] {
     return (conditions || [])
       .map((condition) => ({
@@ -601,6 +691,16 @@ export class AutomationEditorComponent implements OnInit {
         value: this.conditionOperatorNeedsValue(condition.operator) ? condition.value : null,
       }))
       .filter((condition) => condition.field && condition.operator);
+  }
+
+  private normalizedLastLoginConditions(conditions: any[]): any[] {
+    return (conditions || [])
+      .map((condition) => ({
+        field: 'inactiveDays',
+        operator: condition.operator,
+        value: `${condition.value || ''}`.trim(),
+      }))
+      .filter((condition) => condition.operator && condition.value);
   }
 
   private conditionOperatorNeedsValue(operator: EvaluationAutomationConditionOperator): boolean {
@@ -622,11 +722,11 @@ export class AutomationEditorComponent implements OnInit {
     [
       'triggerSessionNumber',
       'schemeId',
+      'schemeRandomizationRuleId',
       'assessmentTypeId',
       'questionnaireIds',
       'questionnaireBundleIds',
       'randomizationRuleIds',
-      'mailTemplateId',
     ].forEach((controlName) => {
       const control = this.form.get(controlName);
       if (!control?.errors?.required) return;
@@ -782,11 +882,39 @@ export class AutomationEditorComponent implements OnInit {
     }
   }
 
-  private parseReminderMinutes(value: string): number[] {
+  private parseReminderMinutes(value: string, unit: TimeUnit = 'MINUTES'): number[] {
     return (value || '')
       .split(',')
       .map((part) => Number(part.trim()))
-      .filter((part) => Number.isFinite(part) && part >= 0);
+      .filter((part) => Number.isFinite(part) && part >= 0)
+      .map((part) => this.unitAmountToMinutes(part, unit));
+  }
+
+  private unitAmountToMinutes(value: number, unit: TimeUnit = 'MINUTES'): number {
+    switch (unit) {
+      case 'HOURS':
+        return value * 60;
+      case 'DAYS':
+        return value * 24 * 60;
+      case 'WEEKS':
+        return value * 7 * 24 * 60;
+      case 'MONTHS':
+        return value * 30 * 24 * 60;
+      default:
+        return value;
+    }
+  }
+
+  private minutesToUnitAmount(value?: number, unit: TimeUnit = 'MINUTES'): number {
+    if (value === undefined || value === null) return null;
+    const divisor = this.unitAmountToMinutes(1, unit);
+    return divisor ? value / divisor : value;
+  }
+
+  private minutesListToUnitText(values: number[], unit: TimeUnit = 'MINUTES'): string {
+    return (values || [])
+      .map((value) => this.minutesToUnitAmount(value, unit))
+      .join(', ');
   }
 
   private normalizeNumberArray(value: any): number[] {
