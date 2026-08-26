@@ -1,4 +1,4 @@
-<button nz-button routerLink="/psira/administration/email-templates" nzType="secondary">Go back</button>
+<button nz-button routerLink="/psira/notifications/email-templates" nzType="secondary">Go back</button>
 <div nz-row>
     <div nz-col nzSpan="24">
         <form nz-form [formGroup]="emailForm">
@@ -17,6 +17,9 @@
             <nz-form-item>
                 <nz-form-label [nzSpan]="6">{{'emailTemplates.body' | translate}}</nz-form-label>
                 <nz-form-control [nzSpan]="14">
+                  <div class="template-tools">
+                    <button nz-button nzSize="small" type="button" (click)="showShortcuts()">Variables disponibles</button>
+                  </div>
                   <angular-editor [config]="editorConfig" [placeholder]="'Enter email body here...'" formControlName="body"></angular-editor>
                 </nz-form-control>
             </nz-form-item >
@@ -57,18 +60,33 @@
                     </div>
                 </nz-form-control>
             </nz-form-item>
-            <nz-form-item>
-                <nz-form-label [nzSpan]="6">Module</nz-form-label>
-                <nz-form-control [nzSpan]="14">
-                    <nz-select formControlName="module" nzShowSearch nzAllowClear nzPlaceHolder="Select module">
-                        <nz-option nzLabel="Client" nzValue="CLIENT"></nz-option>
-                        <nz-option nzLabel="Assessment" nzValue="ASSESSMENT"></nz-option>
-                        <nz-option nzLabel="First login" nzValue="WELCOME"></nz-option>
-                    </nz-select>
-                </nz-form-control>
-            </nz-form-item >
             <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="submit" nzType="primary">Submit</button>
             <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button nzType="primary">Update</button>
         </form>
     </div>
 </div>
+
+<nz-modal
+  [(nzVisible)]="shortcutsVisible"
+  nzTitle="Variables disponibles"
+  nzOkText="Cerrar"
+  [nzCancelText]="null"
+  (nzOnOk)="shortcutsVisible = false"
+>
+  <div class="shortcut-groups">
+    <section *ngFor="let group of shortcutGroups" class="shortcut-group">
+      <h3>{{ group }}</h3>
+      <button
+        nz-button
+        type="button"
+        class="shortcut-row"
+        *ngFor="let shortcut of shortcutsForGroup(group)"
+        (click)="insertShortcut(shortcut.token)"
+      >
+        <strong>{{ shortcut.label }}</strong>
+        <code>{{ shortcut.token }}</code>
+        <span>{{ shortcut.description }}</span>
+      </button>
+    </section>
+  </div>
+</nz-modal>

@@ -28,6 +28,7 @@ import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
+import { NotificationPreferencesModule } from '../notifications/notification-preferences/notification-preferences.module';
 
 const antModules = [
   NzGridModule,
@@ -63,6 +64,7 @@ const antModules = [
     NzSwitchModule,
     MasterDataModule,
     CalendarWidgetModule,
+    NotificationPreferencesModule,
   ],
   declarations: [UsersListComponent, UserFormComponent, UserProfileTabsComponent],
 })

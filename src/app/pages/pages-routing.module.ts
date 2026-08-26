@@ -81,6 +81,13 @@ const routes: Routes = [
     loadChildren: () => import('./administration/administration.module').then((m) => m.AdministrationModule),
   },
   {
+    path: 'notifications',
+    data: {
+      breadcrumbI18nKey: 'Notificaciones',
+    },
+    loadChildren: () => import('./notifications/notifications.module').then((m) => m.NotificationsModule),
+  },
+  {
     path: 'reports',
     data: {
       breadcrumbI18nKey: 'menu.reports',

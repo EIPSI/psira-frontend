@@ -10,7 +10,6 @@ import { PermissionsComponent } from './permissions/permissions.component';
 import { RolesComponent } from './roles/roles.component';
 import { PermissionsService } from './@services/permissions.service';
 import { RolesService } from './@services/roles.service';
-import {EmailTemplatesService} from './@services/email-templates.service'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DepartmentsComponent } from './departments/departments.component';
 import { AppFormModule } from '../../@shared/components/form/app-form.module';
@@ -39,9 +38,6 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { DisclaimersComponent } from './disclaimers/disclaimers.component';
 import { AssessmentAdministrationComponent } from './assessment-administration/assessment-administration.component';
 import { VersionComponent } from './version/version.component';
-import { EmailTemplatesComponent } from './email-templates/email-templates.component';
-import { CreateEmailTemplateComponent } from './create-email-template/create-email-template.component';
-import { AngularEditorModule } from '@kolkov/angular-editor';
 
 const antModules = [
   NzGridModule,
@@ -79,7 +75,6 @@ const antModules = [
     NzSelectModule,
     NzRadioModule,
     NzFormModule,
-    AngularEditorModule,
   ],
   declarations: [
     RolesAndPermissionsComponent,
@@ -91,9 +86,7 @@ const antModules = [
     DisclaimersComponent,
     AssessmentAdministrationComponent,
     VersionComponent,
-    EmailTemplatesComponent,
-    CreateEmailTemplateComponent
   ],
-  providers: [PermissionsService, RolesService, EmailTemplatesService],
+  providers: [PermissionsService, RolesService],
 })
 export class AdministrationModule {}

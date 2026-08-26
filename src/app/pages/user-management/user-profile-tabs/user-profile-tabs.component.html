@@ -67,6 +67,9 @@
           </ng-template>
         </nz-list>
       </nz-tab>
+      <nz-tab *ngIf="isTherapist" nzTitle="Notificaciones">
+        <app-notification-preferences [therapistId]="user?.id"></app-notification-preferences>
+      </nz-tab>
     </nz-tabset>
   </nz-tab>
   <nz-tab nzTitle="Más">

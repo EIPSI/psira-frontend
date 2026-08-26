@@ -8,7 +8,7 @@ const createOneEmailTemplate = gql `
       subject
       body
       status
-      module
+      purpose
       isPublic
       departments{
         id
@@ -25,7 +25,7 @@ const updateOneEmailTemplate = gql `
       subject
       body
       status
-      module
+      purpose
       isPublic
       departments{
         id

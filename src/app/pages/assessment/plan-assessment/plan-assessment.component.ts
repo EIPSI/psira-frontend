@@ -526,8 +526,6 @@ export class PlanAssessmentComponent implements OnInit {
       this.populateResponderOptions();
     }
 
-    this.emailTemplates = [];
-    this.getPatientEmailTemplates(this.fullAssessment?.patientId || this.patient?.id);
   }
 
   goBack() {
@@ -564,15 +562,6 @@ export class PlanAssessmentComponent implements OnInit {
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
       );
-  }
-
-  getPatientEmailTemplates(id: number) {
-    this.emailTemplatesService.getPatientEmailTemplates(id).subscribe((data: any) => {
-      this.emailTemplates = data?.data?.getPatientEmailTemplates;
-      if (this.editMode === true) {
-        this.assessmentForm.patchValue({ mailTemplateId: this.emailTemplates[0]?.id });
-      }
-    });
   }
 
   getBundles() {
@@ -696,7 +685,7 @@ export class PlanAssessmentComponent implements OnInit {
         informantPatient: [null],
         informantClinicianId: [null],
         informantCaregiverRelation: [null],
-        emailReminder: [null],
+        emailReminder: [true],
         receiverEmail: [null],
         mailTemplateId: [null],
         reminderMinutes: [''],
@@ -720,7 +709,7 @@ export class PlanAssessmentComponent implements OnInit {
         informantPatient: [null],
         informantClinicianId: [null],
         informantCaregiverRelation: [null],
-        emailReminder: [null],
+        emailReminder: [true],
         receiverEmail: [null],
         mailTemplateId: [null],
         reminderMinutes: [''],

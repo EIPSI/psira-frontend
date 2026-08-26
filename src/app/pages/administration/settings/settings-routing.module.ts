@@ -4,7 +4,6 @@ import { SystemConfigurationComponent } from './system-configuration/system-conf
 import { PatientStatusesComponent } from '../patient-statuses/patient-statuses.component';
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { PermissionGuard } from '../../../permission.guard';
-import { AutomaticEmailSettingsComponent } from './automatic-email-settings/automatic-email-settings.component';
 import { FollowUpSettingsComponent } from './follow-up-settings/follow-up-settings.component';
 import { SessionCancellationReasonsComponent } from './session-cancellation-reasons/session-cancellation-reasons.component';
 
@@ -30,17 +29,6 @@ const routes: Routes = [
           breadcrumbI18nKey: 'menu.patientStatuses',
           permissions: {
             only: [PermissionKey.VIEW_SETTINGS],
-          },
-        },
-        canActivate: [PermissionGuard],
-      },
-      {
-        path: 'automatic-emails',
-        component: AutomaticEmailSettingsComponent,
-        data: {
-          breadcrumbI18nKey: 'menu.automaticEmails',
-          permissions: {
-            only: [PermissionKey.VIEW_SYSCONF],
           },
         },
         canActivate: [PermissionGuard],

@@ -90,6 +90,10 @@ export class UserFormComponent implements OnInit {
     return [this.user?.workID, name].filter((s) => !!s).join(' - ');
   }
 
+  get isOwnUserProfile(): boolean {
+    return !!this.user?.id && !!this.currentUser?.id && Number(this.user.id) === Number(this.currentUser.id);
+  }
+
   constructor(
     private modalService: NzModalService,
     private activatedRoute: ActivatedRoute,

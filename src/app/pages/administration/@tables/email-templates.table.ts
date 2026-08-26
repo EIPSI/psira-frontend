@@ -26,11 +26,6 @@ export const EmailTemplatesColumns: TableColumn<any>[] = [
     translationPath: 'emailTemplates.status',
   },
   {
-    title: 'Module',
-    name: 'module',
-    translationPath: 'emailTemplates.module',
-  },
-  {
     title: 'Departments',
     name: 'departmentNames',
   },

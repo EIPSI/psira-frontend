@@ -532,7 +532,7 @@ export class AutomationEditorComponent implements OnInit {
     payload.expirationMinutes = value.expirationMinutes ? Number(value.expirationMinutes) : null;
     payload.reminderMinutes = this.parseReminderMinutes(value.reminderMinutesText);
     payload.emailNotificationsEnabled = !!value.emailNotificationsEnabled;
-    payload.mailTemplateId = value.emailNotificationsEnabled ? value.mailTemplateId : null;
+    payload.mailTemplateId = null;
     return payload;
   }
 
@@ -579,11 +579,6 @@ export class AutomationEditorComponent implements OnInit {
     if (this.contentType === EvaluationAutomationContentType.RANDOMIZATION && !value.randomizationRuleIds) {
       this.markRequired('randomizationRuleIds');
       this.message.error('Debe seleccionarse una randomización');
-      return false;
-    }
-    if (value.emailNotificationsEnabled && !value.mailTemplateId) {
-      this.markRequired('mailTemplateId');
-      this.message.error('El template de email es obligatorio cuando el email está activo');
       return false;
     }
     return true;

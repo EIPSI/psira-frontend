@@ -9,8 +9,6 @@ export interface Setting {
   passwordReUseCutoffInDays: number;
   evaluationAutomationRunRetentionDays: number;
   patientCaseManagerAssignableHierarchyRank: number;
-  sendWelcomeEmails: boolean;
-  welcomeEmailTemplateId: number;
   googleCalendarEnabled?: boolean;
   googleCalendarClientId?: string;
   googleCalendarClientSecret?: string;

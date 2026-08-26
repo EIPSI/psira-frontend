@@ -328,21 +328,14 @@
       </div>
 
       <div nz-row [nzGutter]="16">
-        <div nz-col nzSpan="8">
+        <div nz-col nzSpan="24">
           <nz-form-item>
             <nz-form-label>Email</nz-form-label>
             <nz-form-control>
               <label nz-checkbox formControlName="emailNotificationsEnabled">Enviar notificación por email</label>
-            </nz-form-control>
-          </nz-form-item>
-        </div>
-        <div nz-col nzSpan="16" *ngIf="form.get('emailNotificationsEnabled')?.value">
-          <nz-form-item>
-            <nz-form-label nzRequired>Template de email</nz-form-label>
-            <nz-form-control nzErrorTip="Seleccioná un template de email">
-              <nz-select formControlName="mailTemplateId" nzShowSearch>
-                <nz-option *ngFor="let template of emailTemplates" [nzValue]="template.id" [nzLabel]="template.name"></nz-option>
-              </nz-select>
+              <div class="field-help">
+                El template se resuelve automáticamente desde Notificaciones según departamento, evento y rol destinatario.
+              </div>
             </nz-form-control>
           </nz-form-item>
         </div>

@@ -1573,7 +1573,7 @@ export class SchemeEditorComponent implements OnInit {
       paging: { first: 50 },
       filter: {
         status: { eq: 'ACTIVE' },
-        module: { eq: 'ASSESSMENT' },
+        purpose: { eq: 'NOTIFICATION' },
       } as any,
       departmentIds: this.selectedDepartmentIds(),
       sorting: [],

@@ -1,20 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ActionArgs, SortField, TableColumn, DEFAULT_PAGE_SIZE } from '@app/@shared/@modules/master-data/@types/list';
+import { Action, ActionArgs, SortField, TableColumn, DEFAULT_PAGE_SIZE } from '@app/@shared/@modules/master-data/@types/list';
 import { Filter } from '@app/@shared/@types/filter';
 import { PageInfo, Paging } from '@app/@shared/@types/paging';
 import { Sorting } from '@app/@shared/@types/sorting';
 import { Convert } from '@app/@shared/classes/convert';
 import { ErrorHandlerService } from '@app/@shared/services/error-handler.service';
 import { TranslateService } from '@ngx-translate/core';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { Action } from 'rxjs/internal/scheduler/Action';
 import { finalize } from 'rxjs/operators';
 import { EmailTemplatesService } from '../@services/email-templates.service';
 import { EmailTemplatesColumns } from '../@tables/email-templates.table';
 
 enum ActionKey {
-  EDIT
+  EDIT,
+  DUPLICATE,
+  DELETE,
 }
 
 @Component({
@@ -45,13 +47,18 @@ export class EmailTemplatesComponent implements OnInit {
     private emailTemplatesService: EmailTemplatesService,
     private errorService: ErrorHandlerService,
     private nzMessage: NzMessageService, 
+    private modalService: NzModalService,
     private router: Router,
     private translate: TranslateService
   ) { }
 
   ngOnInit(): void {
     this.getEmailTemplates();
-    this.actions = [{ key: ActionKey.EDIT, title: 'Edit Template'}];
+    this.actions = [
+      { key: ActionKey.EDIT, title: 'Editar' },
+      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
+      { key: ActionKey.DELETE, title: 'Eliminar' },
+    ];
   }
 
   public onPageChange(paging: Paging): void {
@@ -84,14 +91,39 @@ export class EmailTemplatesComponent implements OnInit {
     });
   }
 
-  deleteEmailTemplate(id: number){
-    this.emailTemplatesService.deleteEmailTemplate(id).subscribe(() => {
+  deleteEmailTemplate(template: any): void {
+    this.modalService.confirm({
+      nzTitle: 'Eliminar modelo de email',
+      nzContent: `Se eliminará "${template.name}".`,
+      nzOkText: 'Eliminar',
+      nzOkDanger: true,
+      nzOnOk: () => this.emailTemplatesService.deleteEmailTemplate(template.id).subscribe(() => {
       const message$ = this.translate.get('emailTemplates.deleted').subscribe((message) => {
         this.nzMessage.success(message, { nzDuration: 3000 });
       });
       message$.unsubscribe();
       this.getEmailTemplates();
+      }),
     });
+  }
+
+  duplicateEmailTemplate(template: any): void {
+    const departmentIds = template.isPublic ? [] : (template.departments || []).map((department: any) => Number(department.id));
+    this.emailTemplatesService.createEmailTemplate({
+      name: `${template.name} (copia)`,
+      subject: template.subject,
+      body: template.body,
+      status: template.status,
+      purpose: template.purpose || 'NOTIFICATION',
+      isPublic: template.isPublic,
+      departmentIds,
+    }).subscribe(
+      () => {
+        this.nzMessage.success('Modelo de email duplicado', { nzDuration: 3000 });
+        this.getEmailTemplates();
+      },
+      (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate email template' })
+    );
   }
 
   public onAction({
@@ -100,7 +132,13 @@ export class EmailTemplatesComponent implements OnInit {
   }: ActionArgs<any, ActionKey>): void {
     switch (action.key) {
       case ActionKey.EDIT:
-      this.router.navigate([`/psira/administration/create-template/${assessmentAdministration.id}`])
+      this.router.navigate([`/psira/notifications/email-templates/${assessmentAdministration.id}`])
+        return;
+      case ActionKey.DUPLICATE:
+        this.duplicateEmailTemplate(assessmentAdministration);
+        return;
+      case ActionKey.DELETE:
+        this.deleteEmailTemplate(assessmentAdministration);
         return;
     }
   }
@@ -108,6 +146,7 @@ export class EmailTemplatesComponent implements OnInit {
   private formatEmailTemplate(template: any): any {
     return {
       ...Convert.toAssessmentAdministration(template),
+      ...template,
       departmentNames: template.isPublic || !template.departments?.length
         ? 'All departments'
         : template.departments.map((department: any) => department.name || department.id).join(', '),

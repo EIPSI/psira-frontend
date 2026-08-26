@@ -17,6 +17,9 @@ export enum PermissionKey {
   VIEW_ALL_EVALUATION_AUTOMATIONS = 'view all evaluation automations',
   MANAGE_EVALUATION_AUTOMATIONS = 'manage evaluation automations',
   MANAGE_ALL_EVALUATION_AUTOMATIONS = 'manage all evaluation automations',
+  VIEW_NOTIFICATIONS = 'view notifications',
+  MANAGE_NOTIFICATIONS = 'manage notifications',
+  VIEW_NOTIFICATION_LOGS = 'view notification logs',
 
   VIEW_USERS = 'view users',
   MANAGE_USERS = 'manage users',

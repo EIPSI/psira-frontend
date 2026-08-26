@@ -153,7 +153,7 @@
           <nz-input-group class="date-picker1">
             <h5>Reminders after activation (minutes)</h5>
             <input
-              [disableControl]="!editMode || assessmentForm.controls.emailReminder.value !== true"
+              [disableControl]="!editMode"
               nz-input
               formControlName="reminderMinutes"
               placeholder="10, 15, 20"
@@ -173,7 +173,6 @@
                   <nz-input-group class="date-picker1">
                     <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
                     <nz-date-picker
-                      [required]="assessmentForm.controls.emailReminder.value === true"
                       [nzBorderless]="!editMode"
                       nzShowTime
                       nzFormat="yyyy-MM-dd HH:mm"
@@ -198,7 +197,7 @@
                   <nz-input-group class="date-picker1">
                     <h5>Reminders after activation (minutes)</h5>
                     <input
-                      [disableControl]="!editMode || assessmentForm.controls.emailReminder.value !== true"
+                      [disableControl]="!editMode"
                       nz-input
                       formControlName="reminderMinutes"
                       placeholder="10, 15, 20"
@@ -217,18 +216,8 @@
       <!-- End Create -->
 
       <ng-container *ngIf="hasEmail">
-        <h5 style="margin-top: 20px">Send Email</h5>
-        <div class="email-label-wrapper">
-          <label [disableControl]="!editMode" formControlName="emailReminder" [nzValue]="fullAssessment?.emailReminder" [nzTooltipPlacement]="['topLeft', 'leftTop']" nz-tooltip nzTooltipTitle="Email will be sent on the selected delivery date!" class="email-label" [(nzChecked)]="checked" nz-checkbox>Sent assessment via email</label>
-          <input [disableControl]="!editMode" style="width: 100%; height: min-content;" formControlName="receiverEmail" nz-input placeholder="youremail@domain.com" readonly />
-        </div>
-        <nz-form-item>
-          <nz-input-group *ngIf="assessmentForm.controls.emailReminder.value === true">
-            <nz-select [nzDisabled]="!editMode" formControlName="mailTemplateId" nzPlaceHolder="Please select the email template">
-              <nz-option *ngFor="let template of emailTemplates" [nzValue]="template.id" [nzLabel]="template.name"></nz-option>
-            </nz-select>
-          </nz-input-group>
-        </nz-form-item>
+        <p class="field-help">Las notificaciones se resuelven automáticamente desde Notificaciones.</p>
+        <input formControlName="receiverEmail" type="hidden" />
       </ng-container>
 
       <nz-form-item>

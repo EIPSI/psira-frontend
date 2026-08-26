@@ -9,7 +9,7 @@ const getAllEmailTemplates = gql `
                 name
                 status
                 subject
-                module
+                purpose
                 body
                 isPublic
                 departments{
@@ -36,7 +36,7 @@ query($patientId: ID) {
         subject
         body
         status
-        module
+        purpose
         createdAt
         updatedAt
         deletedAt
@@ -55,7 +55,7 @@ const getOneEmailTemplate = gql `
         name
         status
         subject
-        module
+        purpose
         body
         isPublic
         departments{

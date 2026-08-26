@@ -12,6 +12,8 @@ import { Paging } from '@app/@shared/@types/paging';
 import { Sorting } from '@app/@shared/@types/sorting';
 import { Convert } from '@app/@shared/classes/convert';
 import { ErrorHandlerService } from '@app/@shared/services/error-handler.service';
+import { NotificationsService } from '@app/pages/notifications/@services/notifications.service';
+import { NotificationTemplateShortcut } from '@app/pages/notifications/@types/notification';
 
 @Component({
   selector: 'app-create-email-template',
@@ -38,6 +40,9 @@ export class CreateEmailTemplateComponent implements OnInit {
     editable: true,
     sanitize: false
   }
+  shortcutsVisible = false;
+  templateShortcuts: NotificationTemplateShortcut[] = [];
+  shortcutGroups: string[] = [];
   emailForm = this.fb.group({
     name: '',
     subject: '',
@@ -51,7 +56,7 @@ export class CreateEmailTemplateComponent implements OnInit {
     <div><br></div>
     <div>{{link}}<br></div>`,
     status: '',
-    module: 'ASSESSMENT',
+    purpose: 'NOTIFICATION',
     isPublic: false,
     departmentIds: []
   });
@@ -65,10 +70,12 @@ export class CreateEmailTemplateComponent implements OnInit {
      private translate: TranslateService,
      private departmentsService: DepartmentsService,
      private errorService: ErrorHandlerService,
+     private notificationsService: NotificationsService,
   ) { }
 
   ngOnInit(): void {
     this.getDepartments();
+    this.loadTemplateShortcuts();
     this.route.params.subscribe((data) => {
       if(data.id){
         this.isUpdateMode = true;
@@ -84,7 +91,7 @@ export class CreateEmailTemplateComponent implements OnInit {
           this.emailForm.controls['subject'].setValue(this.emailTemplate?.subject);
           this.emailForm.controls['body'].setValue(this.emailTemplate?.body);
           this.emailForm.controls['status'].setValue(this.emailTemplate?.status);
-          this.emailForm.controls['module'].setValue(this.emailTemplate?.module);
+          this.emailForm.controls['purpose'].setValue(this.emailTemplate?.purpose || 'NOTIFICATION');
           this.emailForm.controls['isPublic'].setValue(this.emailTemplate?.isPublic);
           this.allDepartments = this.emailTemplate?.isPublic;
           this.selectedDepartments = this.filterAllowedDepartmentIds(
@@ -105,8 +112,7 @@ export class CreateEmailTemplateComponent implements OnInit {
       .subscribe(
         ({ data }: any) => {
           const departments = data.departments.edges
-            .map((department: any) => Convert.toDepartment(department.node))
-            .filter((department: any) => department.name !== 'Particular');
+            .map((department: any) => Convert.toDepartment(department.node));
           const allDepartments = [...accumulatedDepartments, ...departments];
           this.listOfDepartments = this.filterAllowedDepartments(allDepartments);
           this.selectedDepartments = this.filterAllowedDepartmentIds(this.selectedDepartments);
@@ -149,7 +155,7 @@ export class CreateEmailTemplateComponent implements OnInit {
         this.nzMessage.success(message, { nzDuration: 3000 });
       });
       message$.unsubscribe();
-      this.router.navigate(['/psira/administration/email-templates'])
+      this.router.navigate(['/psira/notifications/email-templates'])
     },
     (err) => {
       this.nzMessage.error(`${err}`, { nzDuration: 3000 });
@@ -164,11 +170,34 @@ export class CreateEmailTemplateComponent implements OnInit {
         this.nzMessage.success(message, { nzDuration: 3000 });
       });
       message$.unsubscribe();
-      this.router.navigate(['/psira/administration/email-templates']);
+      this.router.navigate(['/psira/notifications/email-templates']);
     },
     (err) => {
       this.nzMessage.error(`${err}`, { nzDuration: 3000 });
     })
+  }
+
+  showShortcuts(): void {
+    this.shortcutsVisible = true;
+  }
+
+  shortcutsForGroup(group: string): NotificationTemplateShortcut[] {
+    return this.templateShortcuts.filter((shortcut) => shortcut.group === group);
+  }
+
+  insertShortcut(token: string): void {
+    const currentBody = this.emailForm.controls['body'].value || '';
+    this.emailForm.controls['body'].setValue(`${currentBody} ${token}`);
+  }
+
+  private loadTemplateShortcuts(): void {
+    this.notificationsService.getTemplateShortcuts().subscribe(
+      (shortcuts) => {
+        this.templateShortcuts = shortcuts || [];
+        this.shortcutGroups = [...new Set(this.templateShortcuts.map((shortcut) => shortcut.group))];
+      },
+      (err) => this.errorService.handleError(err, { prefix: 'Unable to load template shortcuts' })
+    );
   }
 
   private filterAllowedDepartments(departments: any[]): any[] {

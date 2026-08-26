@@ -145,7 +145,7 @@ export class CreateAssessmentComponent implements OnInit {
       informantType: [null],
       deliveryDate: [null],
       expirationDate: [null],
-      emailReminder: [null],
+      emailReminder: [true],
       receiverEmail: [this.patient?.email],
       mailTemplateId: [null],
       reminderMinutes: [''],
@@ -169,7 +169,6 @@ export class CreateAssessmentComponent implements OnInit {
     this.getCaregivers();
     this.getUserDepartments({ paging: { first: 50 } });
     if (this.patient?.id) {
-      this.getPatientEmailTemplates(this.patient.id);
     }
     this.hasEmail = environment.email;
   }
@@ -300,15 +299,6 @@ export class CreateAssessmentComponent implements OnInit {
 
   public copyAssessmentLink(url: any) {
     this.clipboard.copy(url);
-  }
-
-  getPatientEmailTemplates(id: number) {
-    this.emailTemplatesService.getPatientEmailTemplates(id).subscribe((data: any) => {
-      this.emailTemplates = data?.data?.getPatientEmailTemplates;
-      if (this.editMode === true) {
-        this.formGroup.patchValue({ mailTemplateId: this.emailTemplates[0]?.id });
-      }
-    });
   }
 
   public getUserDepartments(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[] }) {

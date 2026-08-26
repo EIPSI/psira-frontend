@@ -12,8 +12,6 @@ import { DisclaimersComponent } from './disclaimers/disclaimers.component';
 import { PatientStatusesComponent } from './patient-statuses/patient-statuses.component';
 import { AssessmentAdministrationComponent } from './assessment-administration/assessment-administration.component';
 import { VersionComponent } from './version/version.component';
-import { EmailTemplatesComponent } from './email-templates/email-templates.component';
-import { CreateEmailTemplateComponent } from './create-email-template/create-email-template.component';
 
 const routes: Routes = [
   {
@@ -127,36 +125,15 @@ const routes: Routes = [
       },
       {
         path: 'email-templates',
-        component: EmailTemplatesComponent,
-        data: {
-          breadcrumbI18nKey: 'menu.emailTemplates',
-          permissions: {
-            only: [PermissionKey.VIEW_TEMPLATES],
-          },
-        },
-        canActivate: [PermissionGuard],
+        redirectTo: '/psira/notifications/email-templates',
       },
       {
         path: 'create-template',
-        component: CreateEmailTemplateComponent,
-        data: {
-          breadcrumbI18nKey: 'emailTemplates.createTemplate',
-          permissions: {
-            only: [PermissionKey.MANAGE_TEMPLATES],
-          },
-        },
-        canActivate: [PermissionGuard],
+        redirectTo: '/psira/notifications/email-templates/new',
       },
       {
         path: 'create-template/:id',
-        component: CreateEmailTemplateComponent,
-        data: {
-          breadcrumbI18nKey: 'emailTemplates.createTemplate',
-          permissions: {
-            only: [PermissionKey.MANAGE_TEMPLATES],
-          },
-        },
-        canActivate: [PermissionGuard],
+        redirectTo: '/psira/notifications/email-templates/:id',
       },
       {
         path: 'version',

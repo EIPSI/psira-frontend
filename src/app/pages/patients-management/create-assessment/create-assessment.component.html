@@ -119,7 +119,7 @@
                 <nz-input-group class="date-picker1">
                 <h5>Reminders after activation (minutes)</h5>
                 <input
-                    [disableControl]="!editMode || formGroup.controls.emailReminder.value !== true"
+                    [disableControl]="!editMode"
                     formControlName="reminderMinutes"
                     nz-input
                     placeholder="10, 15, 20"
@@ -139,7 +139,6 @@
                             <nz-input-group class="date-picker1">
                                 <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
                                 <nz-date-picker
-                                [required]="formGroup.controls.emailReminder.value === true"
                                 [nzBorderless]="!editMode"
                                 nzShowTime
                                 nzFormat="yyyy-MM-dd HH:mm"
@@ -164,7 +163,7 @@
                             <nz-input-group class="date-picker1">
                                 <h5>Reminders after activation (minutes)</h5>
                                 <input
-                                [disableControl]="!editMode || formGroup.controls.emailReminder.value !== true"
+                                [disableControl]="!editMode"
                                 formControlName="reminderMinutes"
                                 nz-input
                                 placeholder="10, 15, 20"
@@ -182,19 +181,9 @@
                 </div>
             <!-- End -->
             <div *ngIf="hasEmail">
-                <h5 style="margin-top: 20px">Send Email</h5>
-                <div class="email-label-wrapper">
-                    <label [disableControl]="!editMode" formControlName="emailReminder" [nzTooltipPlacement]="['topLeft', 'leftTop']" nz-tooltip nzTooltipTitle="Email will be sent on the selected delivery date!" class="email-label" [(nzChecked)]="checked" nz-checkbox>Sent assessment via email</label>
-                    <input *ngIf="isUpdate" [disableControl]="!editMode" formControlName="receiverEmail" style="width: 240px;" nz-input placeholder="patientemail@domain.com" [(ngModel)]="fullAssessment.receiverEmail" />
-                    <input *ngIf="!isUpdate" [disableControl]="!editMode" formControlName="receiverEmail" style="width: 240px;" nz-input placeholder="patientemail@domain.com" [(ngModel)]="patientEmail" />
-                </div>
-                <nz-form-item style="margin-bottom: 15px; min-width: 250px;">
-                    <nz-input-group *ngIf="formGroup.controls.emailReminder.value === true">
-                        <nz-select [nzDisabled]="!editMode" formControlName="mailTemplateId" nzPlaceHolder="Please select the email template">
-                        <nz-option *ngFor="let template of emailTemplates" [nzValue]="template.id" [nzLabel]="template.name"></nz-option>
-                        </nz-select>
-                    </nz-input-group>
-                </nz-form-item>
+                <p class="field-help">Las notificaciones se resuelven automáticamente desde Notificaciones.</p>
+                <input *ngIf="isUpdate" formControlName="receiverEmail" type="hidden" [(ngModel)]="fullAssessment.receiverEmail" />
+                <input *ngIf="!isUpdate" formControlName="receiverEmail" type="hidden" [(ngModel)]="patientEmail" />
             </div>
             <nz-form-item>
                 <nz-input-group class="input-class">

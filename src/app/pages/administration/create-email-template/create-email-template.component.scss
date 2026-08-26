@@ -3,3 +3,45 @@
   gap: 8px;
   margin-top: 8px;
 }
+.template-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.shortcut-groups {
+  display: grid;
+  gap: 16px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.shortcut-group {
+  display: grid;
+  gap: 8px;
+
+  h3 {
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+.shortcut-row {
+  display: grid;
+  gap: 2px;
+  height: auto;
+  justify-items: start;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: normal;
+  width: 100%;
+
+  code {
+    color: #1677ff;
+  }
+
+  span {
+    color: #667085;
+    font-size: 12px;
+  }
+}

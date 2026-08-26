@@ -54,6 +54,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { PatientCalendarComponent } from './calendar/patient-calendar.component';
 import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
+import { NotificationPreferencesModule } from '../notifications/notification-preferences/notification-preferences.module';
 
 const antModules = [
   NzGridModule,
@@ -98,6 +99,7 @@ const antModules = [
     NzDatePickerModule,
     AssessmentModule,
     CalendarWidgetModule,
+    NotificationPreferencesModule,
     QRCodeModule,
     CustomDirectivesModule
   ],

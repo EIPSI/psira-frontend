@@ -23,7 +23,6 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { AutomaticEmailSettingsComponent } from './automatic-email-settings/automatic-email-settings.component';
 import { FollowUpSettingsComponent } from './follow-up-settings/follow-up-settings.component';
 import { SessionCancellationReasonsComponent } from './session-cancellation-reasons/session-cancellation-reasons.component';
 
@@ -58,7 +57,6 @@ const antModules = [
   declarations: [
     PatientStatusesComponent,
     SystemConfigurationComponent,
-    AutomaticEmailSettingsComponent,
     FollowUpSettingsComponent,
     SessionCancellationReasonsComponent,
   ],

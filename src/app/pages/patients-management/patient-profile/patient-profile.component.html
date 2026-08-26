@@ -134,6 +134,9 @@
       <nz-tab [nzTitle]="'core.caregivers' | translate">
         <app-caregivers-patient [patient]="patient"></app-caregivers-patient>
       </nz-tab>
+      <nz-tab nzTitle="Notificaciones">
+        <app-notification-preferences [patientId]="patient?.id"></app-notification-preferences>
+      </nz-tab>
     </nz-tabset>
   </nz-tab>
   <nz-tab nzTitle="Más">
