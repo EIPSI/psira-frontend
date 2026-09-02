@@ -12,6 +12,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Disclaimers } from '@app/pages/administration/@types/disclaimers';
 import { finalize } from 'rxjs/operators';
 import { DisclaimersService } from '@app/pages/administration/@services/disclaimers.service';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-assessment-overview',
@@ -43,7 +44,9 @@ export class AssessmentOverviewComponent implements OnInit {
     private assessmentService: AssessmentService,
     private messageService: NzMessageService,
     private errorService: ErrorHandlerService,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   public ngOnInit(): void {
@@ -67,6 +70,17 @@ export class AssessmentOverviewComponent implements OnInit {
       }, []);
 
       this.cdr.detectChanges();
+      if (
+        [
+          AssessmentStatus.OPEN_FOR_COMPLETION,
+          AssessmentStatus.PARTIALLY_COMPLETED,
+        ].includes(AssessmentStatus[assessment.questionnaireAssessment.status])
+      ) {
+        this.router.navigate(['../questionnaire', 0], {
+          relativeTo: this.route,
+          queryParamsHandling: 'merge',
+        });
+      }
     });
     this.getDescription();
     console.log(this.completedDisclaimer);

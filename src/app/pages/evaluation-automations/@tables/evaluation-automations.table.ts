@@ -16,34 +16,41 @@ export const EvaluationAutomationsTable: TableColumn<EvaluationAutomation>[] = [
     name: 'formattedStatus',
     altName: 'active',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Trigger Point',
     name: 'formattedTriggerPoint',
     altName: 'triggerPoint',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Tipo',
     name: 'formattedAutomationType',
     altName: 'automationType',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Departamento/s',
     name: 'departmentNames',
+    sort: true,
   },
   {
     title: 'Rol',
     name: 'roleName',
+    sort: true,
   },
   {
     title: 'Recurso asociado',
     name: 'resourceName',
+    sort: true,
   },
   {
     title: 'Tiempo desde trigger',
     name: 'delayLabel',
+    sort: true,
   },
   {
     title: 'Prioridad',

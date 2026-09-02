@@ -7,6 +7,49 @@
   [form]="settingsForm"
 ></app-form>
 
+<nz-card class="integration-card" nzTitle="Funcionalidades globales">
+  <div class="integration-status">
+    <nz-tag [nzColor]="featureSettings.notificationsEnabled !== false ? 'green' : 'default'">
+      Notificaciones {{ featureSettings.notificationsEnabled !== false ? 'activas' : 'inactivas' }}
+    </nz-tag>
+    <nz-tag [nzColor]="featureSettings.informedConsentEnabled !== false ? 'green' : 'default'">
+      Consentimiento informado {{ featureSettings.informedConsentEnabled !== false ? 'activo' : 'inactivo' }}
+    </nz-tag>
+  </div>
+
+  <label class="integration-field">
+    <span>Notificaciones</span>
+    <div class="feature-toggle-control">
+      <nz-switch
+        [(ngModel)]="featureSettings.notificationsEnabled"
+        [nzDisabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      ></nz-switch>
+      <small>Si está apagado no se envían emails ni resúmenes, pero se conservan las configuraciones.</small>
+    </div>
+  </label>
+
+  <label class="integration-field">
+    <span>Consentimiento Informado</span>
+    <div class="feature-toggle-control">
+      <nz-switch
+        [(ngModel)]="featureSettings.informedConsentEnabled"
+        [nzDisabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      ></nz-switch>
+      <small>Si está apagado no bloquea el uso de PSIRA ni genera pendientes obligatorios.</small>
+    </div>
+  </label>
+
+  <button
+    nz-button
+    nzType="primary"
+    [nzLoading]="featureSaving"
+    [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+    (click)="saveFeatureSettings()"
+  >
+    Guardar funcionalidades
+  </button>
+</nz-card>
+
 <nz-card class="integration-card" nzTitle="Google Calendar">
   <div class="integration-status">
     <nz-tag [nzColor]="googleCalendarSettings.googleCalendarEnabled ? 'green' : 'default'">

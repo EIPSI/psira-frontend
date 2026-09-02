@@ -27,6 +27,7 @@ export class ReportsComponent implements OnInit {
       title: 'Description',
       name: 'description',
       translationPath: 'tables.reports.description',
+      sort: true,
     },
     {
       title: 'Report Type',

@@ -16,7 +16,12 @@ export class SystemConfigurationComponent implements OnInit {
   settingsForm: Form = settingsForms.general;
   isLoading = false;
   googleCalendarSaving = false;
+  featureSaving = false;
   settings: Setting;
+  featureSettings: Partial<Setting> = {
+    notificationsEnabled: true,
+    informedConsentEnabled: true,
+  };
   googleCalendarSettings: Partial<Setting> = {
     googleCalendarEnabled: false,
     googleCalendarClientId: '',
@@ -40,6 +45,10 @@ export class SystemConfigurationComponent implements OnInit {
     this.settingsService.settings().subscribe(
       async ({ data }) => {
         this.settings = Object.assign({}, data.settings);
+        this.featureSettings = {
+          notificationsEnabled: this.settings.notificationsEnabled !== false,
+          informedConsentEnabled: this.settings.informedConsentEnabled !== false,
+        };
         this.googleCalendarSettings = {
           googleCalendarEnabled: !!this.settings.googleCalendarEnabled,
           googleCalendarClientId: this.settings.googleCalendarClientId || '',
@@ -98,6 +107,24 @@ export class SystemConfigurationComponent implements OnInit {
         this.googleCalendarSaving = false;
       }
     );
+  }
+
+  saveFeatureSettings(): void {
+    this.featureSaving = true;
+    this.settingsService
+      .updateSetting({
+        notificationsEnabled: this.featureSettings.notificationsEnabled !== false,
+        informedConsentEnabled: this.featureSettings.informedConsentEnabled !== false,
+      } as Setting)
+      .subscribe(
+        () => {
+          this.featureSaving = false;
+          this.getSettings();
+        },
+        () => {
+          this.featureSaving = false;
+        }
+      );
   }
 
   private getLocales() {

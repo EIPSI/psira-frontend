@@ -60,6 +60,8 @@ export class PatientProfileComponent implements OnInit {
   cycleLoading = false;
   cycleSaving = false;
   selectedTabIndex = 0;
+  caseDataTabIndex = 0;
+  moreTabIndex = 0;
   activeTreatmentCycle?: TreatmentCycle;
   finalizeModalVisible = false;
   newTreatmentModalVisible = false;
@@ -128,7 +130,12 @@ export class PatientProfileComponent implements OnInit {
         this.loadPatientAccountUser();
         this.loadTreatmentCycle();
       }
-      this.selectedTabIndex = params.tab === 'sessions' ? 2 : 0;
+      if (params.tab === 'sessions') {
+        this.selectedTabIndex = 4;
+        this.moreTabIndex = 1;
+      } else {
+        this.selectedTabIndex = 0;
+      }
     });
   }
 
@@ -403,7 +410,7 @@ export class PatientProfileComponent implements OnInit {
   }
 
   loadPatientAccountUser(): void {
-    if (!this.patient?.userId) {
+    if (!this.patient?.userId || !this.canViewPatientAccount()) {
       this.patientAccountUser = null;
       return;
     }
@@ -420,6 +427,10 @@ export class PatientProfileComponent implements OnInit {
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load patient user account' })
       );
+  }
+
+  canViewPatientAccount(): boolean {
+    return this.perms.permissionsOnly([PermissionKey.VIEW_USERS, PermissionKey.MANAGE_USERS]);
   }
 
   canManagePatientAccount(): boolean {

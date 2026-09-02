@@ -254,6 +254,7 @@ const updateClinicalSessionFollowUpSettings = gql`
     updateClinicalSessionFollowUpSettings(settings: $settings) {
       id
       editWindowDays
+      dashboardLookaheadDays
       updatedAt
     }
   }

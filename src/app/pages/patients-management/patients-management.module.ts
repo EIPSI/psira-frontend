@@ -55,6 +55,7 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { PatientCalendarComponent } from './calendar/patient-calendar.component';
 import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
 import { NotificationPreferencesModule } from '../notifications/notification-preferences/notification-preferences.module';
+import { InformedConsentSharedModule } from '../informed-consent/informed-consent-shared.module';
 
 const antModules = [
   NzGridModule,
@@ -100,6 +101,7 @@ const antModules = [
     AssessmentModule,
     CalendarWidgetModule,
     NotificationPreferencesModule,
+    InformedConsentSharedModule,
     QRCodeModule,
     CustomDirectivesModule
   ],

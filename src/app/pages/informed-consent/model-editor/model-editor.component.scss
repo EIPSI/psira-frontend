@@ -1,0 +1,228 @@
+.ci-page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ci-form {
+  max-width: 980px;
+}
+
+.ci-switch-row,
+.ci-card__header,
+.ci-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ci-card__header {
+  justify-content: space-between;
+}
+
+.ci-card__header > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ci-card__header nz-select {
+  min-width: 120px;
+}
+
+.ci-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.block-actions,
+.department-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.department-actions {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.ci-card > * + *,
+.ci-option {
+  margin-top: 8px;
+}
+
+.text-block,
+.question-block {
+  display: grid;
+  gap: 10px;
+}
+
+.text-block__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.text-block__shortcuts {
+  font-size: 12px;
+  height: 24px;
+  padding: 0 8px;
+}
+
+.ci-option input,
+.ci-option nz-select {
+  flex: 1;
+}
+
+.ci-option__switch {
+  align-items: center;
+  display: flex;
+  flex: 0 0 220px;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.ci-shortcuts {
+  display: grid;
+  gap: 12px;
+}
+
+.ci-shortcuts__group {
+  display: grid;
+  gap: 8px;
+}
+
+.ci-shortcuts__row {
+  align-items: start;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  height: auto;
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 8px 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.ci-shortcuts__row:hover {
+  border-color: #1677ff;
+}
+
+.shortcut-variable,
+.shortcut-description {
+  white-space: normal;
+}
+
+.shortcut-variable {
+  display: grid;
+  gap: 2px;
+}
+
+.shortcut-token {
+  align-items: center;
+  cursor: text;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  user-select: text;
+}
+
+.shortcut-description {
+  color: #6b7280;
+}
+
+.ci-shortcuts__row code {
+  color: #1677ff;
+  user-select: text;
+  word-break: break-word;
+}
+
+.shortcut-copy {
+  flex: 0 0 auto;
+  height: 24px;
+  line-height: 22px;
+  min-width: 24px;
+  padding: 0;
+  user-select: none;
+}
+
+.ci-version-browser {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+}
+
+.ci-version-browser aside {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.ci-version-browser aside button {
+  height: auto;
+  white-space: normal;
+  text-align: left;
+}
+
+.ci-version-browser aside small {
+  display: block;
+  opacity: .7;
+}
+
+.ci-consent-preview,
+.ci-version-browser section {
+  color: #1f2937;
+  line-height: 1.55;
+}
+
+.ci-preview-block {
+  margin-bottom: 18px;
+}
+
+.ci-preview-block h4 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.ci-preview-text {
+  overflow-wrap: anywhere;
+}
+
+.ci-preview-question {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.ci-preview-kind {
+  color: #667085;
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.ci-preview-question ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.ci-preview-question li {
+  align-items: center;
+  border: 1px solid #eef2f7;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+
+.ci-preview-question small {
+  color: #667085;
+}

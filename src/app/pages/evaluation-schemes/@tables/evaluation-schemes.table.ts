@@ -18,11 +18,13 @@ export const EvaluationSchemesTable: TableColumn<EvaluationScheme>[] = [
     altName: 'schemeType',
     translationPath: 'evaluationSchemes.type',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Description',
     name: 'description',
     translationPath: 'evaluationSchemes.description',
+    sort: true,
   },
   {
     title: 'Status',
@@ -30,6 +32,7 @@ export const EvaluationSchemesTable: TableColumn<EvaluationScheme>[] = [
     altName: 'active',
     translationPath: 'evaluationSchemes.status',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Created At',

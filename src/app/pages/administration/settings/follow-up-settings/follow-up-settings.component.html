@@ -1,10 +1,15 @@
-<nz-card nzTitle="Seguimiento clinico" [nzLoading]="loading">
+<nz-card nzTitle="Ajustes clinicos" [nzLoading]="loading">
   <div class="setting-form" *ngIf="settings">
     <label>
       <span>Ventana de edicion por sesion</span>
       <input nz-input type="number" min="0" [(ngModel)]="settings.editWindowDays" />
     </label>
     <span>dias desde la fecha de la sesion</span>
+    <label>
+      <span>Anticipacion en panel de control</span>
+      <input nz-input type="number" min="0" [(ngModel)]="settings.dashboardLookaheadDays" />
+    </label>
+    <span>dias antes de que aparezcan sesiones y evaluaciones</span>
     <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveSettings()">
       Guardar
     </button>

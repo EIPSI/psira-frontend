@@ -17,6 +17,7 @@ export const AssessmentAdministrationColumns: TableColumn<Partial<FormattedAsses
     name: 'formattedStatus',
     translationPath: 'tables.department.formattedStatus',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,
@@ -30,5 +31,6 @@ export const AssessmentAdministrationColumns: TableColumn<Partial<FormattedAsses
     title: 'Last Update',
     name: 'updatedAt',
     translationPath: 'tables.assessmentAdministration.lastUpdate',
+    sort: true,
   },
 ];

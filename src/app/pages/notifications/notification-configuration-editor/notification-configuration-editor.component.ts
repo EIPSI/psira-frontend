@@ -118,6 +118,7 @@ export class NotificationConfigurationEditorComponent implements OnInit {
   }
 
   eventFamily(event: NotificationEvent): NotificationFamily {
+    if (event.startsWith('INFORMED_CONSENT_')) return NotificationFamily.INFORMED_CONSENT;
     if (event.startsWith('ASSESSMENT_')) return NotificationFamily.ASSESSMENT;
     if (event.startsWith('CASE_')) return NotificationFamily.CASE;
     return NotificationFamily.AUTOMATION;

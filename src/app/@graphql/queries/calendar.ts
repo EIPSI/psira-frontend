@@ -17,22 +17,35 @@ const calendarOccurrenceFields = `
   notes
   patient {
     id
+    userId
     medicalRecordNo
     firstName
     middleName
     lastName
+    departments {
+      id
+      name
+    }
   }
   therapist {
     id
     firstName
     middleName
     lastName
+    departments {
+      id
+      name
+    }
   }
   supervisor {
     id
     firstName
     middleName
     lastName
+    departments {
+      id
+      name
+    }
   }
   responsibleUsers {
     id
@@ -203,6 +216,7 @@ const clinicalSessionFollowUpSettings = gql`
     clinicalSessionFollowUpSettings {
       id
       editWindowDays
+      dashboardLookaheadDays
       updatedAt
     }
   }
@@ -214,7 +228,6 @@ const questionnaireAssessment = gql`
       _id
       status
       answers {
-        _id
         question
         occurrenceId
         valid
@@ -223,6 +236,23 @@ const questionnaireAssessment = gql`
         numberValue
         dateValue
         booleanValue
+      }
+      questionnaires(populate: true) {
+        _id
+        name
+        questionGroups {
+          label
+          questions {
+            _id
+            name
+            label
+            type
+            choices {
+              name
+              label
+            }
+          }
+        }
       }
     }
   }
@@ -346,6 +376,11 @@ const caseHistoryEntries = gql`
       title
       content
       reasonSnapshot
+      assessmentId
+      assessmentTypeId
+      questionnaireAssessmentId
+      assessmentName
+      assessmentTypeName
       createdAt
       updatedAt
     }

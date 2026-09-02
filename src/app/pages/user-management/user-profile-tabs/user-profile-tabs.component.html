@@ -2,19 +2,21 @@
   <h1>{{ userTitle }}</h1>
 </div>
 
-<nz-tabset *ngIf="user" nzSize="large">
+<nz-tabset *ngIf="user" nzSize="large" [(nzSelectedIndex)]="selectedTabIndex">
   <nz-tab *ngIf="isTherapist" [nzTitle]="'core.calendar' | translate">
-    <app-user-calendar [user]="user"></app-user-calendar>
+    <app-user-calendar *ngIf="selectedTabIndex === 0" [user]="user"></app-user-calendar>
   </nz-tab>
   <nz-tab *ngIf="isTherapist" nzTitle="Historia de supervision">
     <app-clinical-follow-up-list
+      *ngIf="selectedTabIndex === 1"
       [therapistId]="user?.id"
       [sessionKind]="CSK.SUPERVISION"
       title="Historia de supervision"
     ></app-clinical-follow-up-list>
   </nz-tab>
-  <nz-tab [nzTitle]="'core.reports' | translate">
+  <nz-tab *ngIf="hasReportsTab" [nzTitle]="'core.reports' | translate">
     <app-master-data-list
+      *ngIf="selectedTabIndex === reportsTabIndex"
       [columns]="reportColumns"
       [data]="reports"
       [loading]="reportsLoading"
@@ -22,9 +24,10 @@
     ></app-master-data-list>
   </nz-tab>
   <nz-tab nzTitle="Datos del perfil">
-    <nz-tabset nzSize="small">
+    <nz-tabset *ngIf="selectedTabIndex === profileTabIndex" nzSize="small" [(nzSelectedIndex)]="profileDataTabIndex">
       <nz-tab [nzTitle]="'core.profile' | translate">
         <app-user-form
+          *ngIf="profileDataTabIndex === 0"
           section="profile"
           [showTitle]="false"
           [userOverride]="user"
@@ -33,6 +36,7 @@
       </nz-tab>
       <nz-tab nzTitle="Settings">
         <app-user-form
+          *ngIf="profileDataTabIndex === 1"
           section="settings"
           [showTitle]="false"
           [userOverride]="user"
@@ -41,6 +45,7 @@
       </nz-tab>
       <nz-tab *ngIf="isTherapist" [nzTitle]="'menu.supervisors' | translate">
         <app-master-data-list
+          *ngIf="profileDataTabIndex === 2"
           [data]="supervisors"
           [columns]="supervisorColumns"
           [loading]="supervisorsLoading"
@@ -61,30 +66,41 @@
         </app-master-data-list>
       </nz-tab>
       <nz-tab [nzTitle]="'core.departments' | translate">
-        <nz-list [nzDataSource]="user?.departments || []" [nzRenderItem]="department">
+        <nz-list *ngIf="profileDataTabIndex === (isTherapist ? 3 : 2)" [nzDataSource]="user?.departments || []" [nzRenderItem]="department">
           <ng-template #department let-item>
             <nz-list-item>{{ item.name }}</nz-list-item>
           </ng-template>
         </nz-list>
       </nz-tab>
       <nz-tab *ngIf="isTherapist" nzTitle="Notificaciones">
-        <app-notification-preferences [therapistId]="user?.id"></app-notification-preferences>
+        <app-notification-preferences *ngIf="profileDataTabIndex === 4" [therapistId]="user?.id"></app-notification-preferences>
+      </nz-tab>
+      <nz-tab nzTitle="Consentimiento informado">
+        <app-informed-consent-responses-list
+          *ngIf="profileDataTabIndex === (isTherapist ? 5 : 3)"
+          [userId]="user?.id"
+        ></app-informed-consent-responses-list>
       </nz-tab>
     </nz-tabset>
   </nz-tab>
+  <nz-tab [nzTitle]="'core.assessments' | translate" (nzSelect)="getAssessments()">
+    <app-master-data-list
+      *ngIf="selectedTabIndex === assessmentsTabIndex"
+      [columns]="assessmentColumns"
+      [data]="assessments"
+      [loading]="assessmentsLoading"
+    ></app-master-data-list>
+  </nz-tab>
   <nz-tab nzTitle="Más">
-    <nz-tabset nzSize="small">
-      <nz-tab [nzTitle]="'core.assessments' | translate" (nzSelect)="getAssessments()">
-        <app-master-data-list [columns]="assessmentColumns" [data]="assessments" [loading]="assessmentsLoading"></app-master-data-list>
-      </nz-tab>
+    <nz-tabset *ngIf="selectedTabIndex === moreTopTabIndex" nzSize="small" [(nzSelectedIndex)]="moreTabIndex">
       <nz-tab *ngIf="isTherapist" nzTitle="Sesiones">
-        <app-sessions-list [therapistId]="user?.id" [sessionKind]="CSK.SUPERVISION"></app-sessions-list>
+        <app-sessions-list *ngIf="moreTabIndex === 0" [therapistId]="user?.id" [sessionKind]="CSK.SUPERVISION"></app-sessions-list>
       </nz-tab>
       <nz-tab *ngIf="isTherapist" nzTitle="Ciclos">
-        <app-cycles-list [therapistId]="user?.id" [cycleKind]="CSK.SUPERVISION"></app-cycles-list>
+        <app-cycles-list *ngIf="moreTabIndex === 1" [therapistId]="user?.id" [cycleKind]="CSK.SUPERVISION"></app-cycles-list>
       </nz-tab>
       <nz-tab nzTitle="Automatizaciones aplicadas">
-        <app-applied-automations-list [userId]="user?.id"></app-applied-automations-list>
+        <app-applied-automations-list *ngIf="moreTabIndex === (isTherapist ? 2 : 0)" [userId]="user?.id"></app-applied-automations-list>
       </nz-tab>
     </nz-tabset>
   </nz-tab>

@@ -6,6 +6,7 @@ const createOneEmailTemplate = gql `
       id
       name
       subject
+      senderName
       body
       status
       purpose
@@ -23,6 +24,7 @@ const updateOneEmailTemplate = gql `
       id
       name
       subject
+      senderName
       body
       status
       purpose

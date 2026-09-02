@@ -13,21 +13,21 @@
   >
     <nz-option *ngFor="let type of occurrenceTypes" [nzValue]="type" [nzLabel]="type"></nz-option>
   </nz-select>
-  <label class="calendar-filter">
+  <label class="calendar-filter" *ngIf="canUsePatientFilter()">
     <span>{{ 'calendar.patient' | translate }}</span>
     <app-patient-picker
       [selectedPatient]="selectedPatient"
       (selectPatient)="selectedPatient = $event; onFilterChange()"
     ></app-patient-picker>
   </label>
-  <label class="calendar-filter">
+  <label class="calendar-filter" *ngIf="canUseUserFilters()">
     <span>{{ 'calendar.therapist' | translate }}</span>
     <app-user-picker
       [selectedUser]="selectedTherapist"
       (selectUser)="selectedTherapist = $event; onFilterChange()"
     ></app-user-picker>
   </label>
-  <label class="calendar-filter">
+  <label class="calendar-filter" *ngIf="canUseUserFilters()">
     <span>{{ 'calendar.supervisor' | translate }}</span>
     <app-user-picker
       [selectedUser]="selectedSupervisor"

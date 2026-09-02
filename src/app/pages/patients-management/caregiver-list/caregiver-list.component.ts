@@ -139,6 +139,18 @@ export class CaregiverListComponent implements OnInit {
     this.deleteCaregiverPatient(context);
   }
 
+  public patientRelationNameSort = (a: PatientRelation, b: PatientRelation): number =>
+    this.compareText(this.patientRelationName(a), this.patientRelationName(b));
+
+  public patientRelationDateSort = (a: PatientRelation, b: PatientRelation): number =>
+    this.timeValue(this.patientRelationPatient(a)?.birthDate) - this.timeValue(this.patientRelationPatient(b)?.birthDate);
+
+  public patientRelationMedicalRecordSort = (a: PatientRelation, b: PatientRelation): number =>
+    this.compareText(this.patientRelationPatient(a)?.medicalRecordNo, this.patientRelationPatient(b)?.medicalRecordNo);
+
+  public patientRelationRelationSort = (a: PatientRelation, b: PatientRelation): number =>
+    this.compareText(a.relation, b.relation);
+
   public searchPatients(search: any): void {
     if (search.field.name !== 'patientId') return;
 
@@ -172,6 +184,24 @@ export class CaregiverListComponent implements OnInit {
   private createSearchFilter(searchString: string): Array<{ [K in keyof Partial<FormattedCaregiver>]: {} }> {
     if (!searchString) return [];
     return [{ firstName: { iLike: `%${searchString}%` } }, { lastName: { iLike: `%${searchString}%` } }];
+  }
+
+  private patientRelationName(relation: PatientRelation): string {
+    const patient = this.patientRelationPatient(relation);
+    return `${patient?.firstName || ''} ${patient?.lastName || ''}`;
+  }
+
+  private patientRelationPatient(relation: PatientRelation): any {
+    return relation?.patient as any;
+  }
+
+  private compareText(a: any, b: any): number {
+    return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  private timeValue(value: any): number {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
   }
 
   private populatePatientsDropDown(filter: any): void {

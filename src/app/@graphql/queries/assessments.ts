@@ -77,6 +77,10 @@ const assessments = gql`
               hierarchy
               code
             }
+            departments {
+              id
+              name
+            }
           }
           responderUser {
             id
@@ -143,6 +147,10 @@ const assessments = gql`
             nationality
             createdAt
             updatedAt
+            departments {
+              id
+              name
+            }
           }
           questionnaireAssessment {
             status
@@ -156,6 +164,15 @@ const assessments = gql`
               questionnaireId
               sourceBundleId
               path
+              screenId
+              screenLabel
+              screenHeaderHtml
+              screenFooterHtml
+              bundleHeaderHtml
+              bundleNoticeHtml
+              questionnaireDisplayTitle
+              showQuestionnaireTitle
+              screenIndex
               orderIndex
             }
             questionnaires(populate: true) {
@@ -374,6 +391,15 @@ const patientAssessments = gql`
           questionnaireId
           sourceBundleId
           path
+          screenId
+          screenLabel
+          screenHeaderHtml
+          screenFooterHtml
+          bundleHeaderHtml
+          bundleNoticeHtml
+          questionnaireDisplayTitle
+          showQuestionnaireTitle
+          screenIndex
           orderIndex
         }
         questionnaires(populate: true) {
@@ -556,6 +582,15 @@ const getFullAssessment = gql`
           questionnaireId
           sourceBundleId
           path
+          screenId
+          screenLabel
+          screenHeaderHtml
+          screenFooterHtml
+          bundleHeaderHtml
+          bundleNoticeHtml
+          questionnaireDisplayTitle
+          showQuestionnaireTitle
+          screenIndex
           orderIndex
         }
         questionnaires(populate: true) {
@@ -691,6 +726,15 @@ const getFullPublicAssessment = gql`
           questionnaireId
           sourceBundleId
           path
+          screenId
+          screenLabel
+          screenHeaderHtml
+          screenFooterHtml
+          bundleHeaderHtml
+          bundleNoticeHtml
+          questionnaireDisplayTitle
+          showQuestionnaireTitle
+          screenIndex
           orderIndex
         }
         questionnaires(populate: true) {

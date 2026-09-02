@@ -79,6 +79,16 @@
           {{ item.entry.reasonSnapshot }}
         </div>
         <p class="follow-up-text">{{ item.entry.content || 'Sin nota' }}</p>
+        <div class="assessment-strip" *ngIf="entryIsAssessmentNote(item.entry)">
+          <button
+            type="button"
+            class="assessment-pill assessment-pill--done"
+            [disabled]="!item.entry.questionnaireAssessmentId"
+            (click)="openRawAssessmentEntry(item.entry)"
+          >
+            {{ entryAssessmentLabel(item.entry) }}
+          </button>
+        </div>
       </ng-container>
     </section>
   </div>
@@ -148,7 +158,28 @@
 >
   <ng-container *nzModalContent>
     <nz-spin [nzSpinning]="rawAssessmentLoading">
-      <pre class="raw-assessment">{{ rawAssessmentData || 'Sin respuestas registradas' }}</pre>
+      <div class="assessment-answer-preview" *ngIf="renderedAssessmentQuestions.length; else rawAssessmentFallback">
+        <article class="assessment-answer-question" *ngFor="let item of renderedAssessmentQuestions">
+          <small>{{ item.questionnaireName }} <span *ngIf="item.groupLabel">- {{ item.groupLabel }}</span></small>
+          <h4>{{ item.question.label || item.question.name }}</h4>
+          <ul *ngIf="item.question.choices?.length; else scalarAnswer">
+            <li
+              *ngFor="let choice of item.question.choices"
+              [class.selected-answer]="choice.name === item.answer.textValue || item.answer.multipleChoiceValue?.includes(choice.name)"
+            >
+              {{ choice.label }}
+            </li>
+          </ul>
+          <ng-template #scalarAnswer>
+            <p class="selected-answer">
+              {{ item.answer.textValue || item.answer.numberValue || item.answer.dateValue || item.answer.booleanValue }}
+            </p>
+          </ng-template>
+        </article>
+      </div>
+      <ng-template #rawAssessmentFallback>
+        <pre class="raw-assessment">{{ rawAssessmentData || 'Sin respuestas registradas' }}</pre>
+      </ng-template>
     </nz-spin>
   </ng-container>
 </nz-modal>

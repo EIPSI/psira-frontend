@@ -51,6 +51,29 @@ export class CyclesListComponent implements OnChanges {
     return cycle.newTreatmentReasonSnapshot || '-';
   }
 
+  stringSort(field: keyof TreatmentCycle): (a: TreatmentCycle, b: TreatmentCycle) => number {
+    return (a, b) => String(a[field] || '').localeCompare(String(b[field] || ''), undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    });
+  }
+
+  numberSort(field: keyof TreatmentCycle): (a: TreatmentCycle, b: TreatmentCycle) => number {
+    return (a, b) => Number(a[field] || 0) - Number(b[field] || 0);
+  }
+
+  dateSort(field: keyof TreatmentCycle): (a: TreatmentCycle, b: TreatmentCycle) => number {
+    return (a, b) => this.timeValue(a[field]) - this.timeValue(b[field]);
+  }
+
+  reasonSort = (a: TreatmentCycle, b: TreatmentCycle): number =>
+    this.reasonLabel(a).localeCompare(this.reasonLabel(b), undefined, { numeric: true, sensitivity: 'base' });
+
+  private timeValue(value: any): number {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
   private loadCycles(): void {
     if (!this.patientId && !this.therapistId) return;
     this.loading = true;

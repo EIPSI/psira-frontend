@@ -42,10 +42,13 @@ export class UserProfileTabsComponent implements OnInit {
   public assessmentsLoaded = false;
   public showSupervisorAssignDrawer = false;
   public supervisorActions: Action<SupervisorActionKey>[] = [];
+  public selectedTabIndex = 0;
+  public profileDataTabIndex = 0;
+  public moreTabIndex = 0;
 
   public reportColumns: TableColumn<Partial<Reports>>[] = [
     { title: 'Name', name: 'name', translationPath: 'tables.reports.name', sort: true },
-    { title: 'Description', name: 'description', translationPath: 'tables.reports.description' },
+    { title: 'Description', name: 'description', translationPath: 'tables.reports.description', sort: true },
     { title: 'Report Type', name: 'resources', translationPath: 'tables.reports.resources', sort: true },
     { title: 'Shiny App', name: 'appName', translationPath: 'tables.reports.appName', sort: true },
   ];
@@ -70,8 +73,34 @@ export class UserProfileTabsComponent implements OnInit {
     return this.roleCode === 'THERAPIST' || this.user?.roles?.some((role) => role.code === 'THERAPIST');
   }
 
+  get isSupervisor(): boolean {
+    return this.roleCode === 'SUPERVISOR' || this.user?.roles?.some((role) => role.code === 'SUPERVISOR');
+  }
+
+  get hasReportsTab(): boolean {
+    return this.reportsLoading || this.reports.length > 0;
+  }
+
   get reportResource(): string {
-    return this.isTherapist ? 'Therapists' : 'Supervisors';
+    if (this.isTherapist) return 'Therapists';
+    if (this.isSupervisor) return 'Supervisors';
+    return 'Users';
+  }
+
+  get reportsTabIndex(): number {
+    return this.isTherapist ? 2 : 0;
+  }
+
+  get profileTabIndex(): number {
+    return (this.isTherapist ? 2 : 0) + (this.hasReportsTab ? 1 : 0);
+  }
+
+  get moreTopTabIndex(): number {
+    return this.assessmentsTabIndex + 1;
+  }
+
+  get assessmentsTabIndex(): number {
+    return this.profileTabIndex + 1;
   }
 
   constructor(
@@ -98,7 +127,11 @@ export class UserProfileTabsComponent implements OnInit {
   }
 
   public generateReport(report: Reports): void {
-    const queryParams = this.isTherapist ? { therapist_id: this.user.id } : { supervisor_id: this.user.id };
+    const queryParams = this.isTherapist
+      ? { therapist_id: this.user.id }
+      : this.isSupervisor
+      ? { supervisor_id: this.user.id }
+      : { user_id: this.user.id };
     this.router.navigate(['/psira/reports', report.id], { queryParams });
   }
 
@@ -171,7 +204,10 @@ export class UserProfileTabsComponent implements OnInit {
       .getAssessments({
         paging: { first: 50 },
         filter: {
-          and: [{ clinician: { id: { eq: this.user.id } } }, { deleted: { is: false } }],
+          and: [
+            { deleted: { is: false } },
+            { responderUserId: { eq: this.user.id } },
+          ],
         },
         sorting: [{ field: 'createdAt', direction: 'DESC' }],
       })
@@ -198,6 +234,7 @@ export class UserProfileTabsComponent implements OnInit {
 
   private getSupervisors(): void {
     if (!this.user || !this.isTherapist) return;
+    if (!this.perms.permissionsOnly([PermissionKey.VIEW_USERS, PermissionKey.MANAGE_USERS])) return;
 
     this.supervisorsLoading = true;
     this.usersService
@@ -210,6 +247,7 @@ export class UserProfileTabsComponent implements OnInit {
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
       );
 
+    if (!this.perms.permissionsOnly(PermissionKey.MANAGE_USERS)) return;
     this.usersService.getSupervisors({ first: 50 }).subscribe(
       ({ data }: any) => {
         this.availableSupervisors = data.supervisors.edges.map((edge: any) => edge.node);

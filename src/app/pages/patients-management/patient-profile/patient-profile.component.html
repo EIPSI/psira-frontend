@@ -58,27 +58,35 @@
 
 <nz-tabset *ngIf="patientTitle" nzSize="large" [(nzSelectedIndex)]="selectedTabIndex" [nzTabBarExtraContent]="cycleTabActions">
   <nz-tab [nzTitle]="'core.calendar' | translate">
-    <app-patient-calendar [patient]="patient"></app-patient-calendar>
+    <app-patient-calendar *ngIf="selectedTabIndex === 0" [patient]="patient"></app-patient-calendar>
   </nz-tab>
   <nz-tab nzTitle="Historia clinica">
     <app-clinical-follow-up-list
+      *ngIf="selectedTabIndex === 1"
       [patientId]="patient?.id"
       [sessionKind]="CSK.CLINICAL"
       title="Historia clinica"
     ></app-clinical-follow-up-list>
   </nz-tab>
   <nz-tab [nzTitle]="'core.reports' | translate">
-    <app-reports [patient]="patient"></app-reports>
+    <app-reports *ngIf="selectedTabIndex === 2" [patient]="patient"></app-reports>
   </nz-tab>
   <nz-tab nzTitle="Datos del caso">
-    <nz-tabset nzSize="small">
+    <nz-tabset *ngIf="selectedTabIndex === 3" nzSize="small" [(nzSelectedIndex)]="caseDataTabIndex">
       <nz-tab [nzTitle]="'core.profile' | translate">
-        <app-create-patient></app-create-patient>
+        <app-create-patient *ngIf="caseDataTabIndex === 0"></app-create-patient>
       </nz-tab>
       <nz-tab nzTitle="Settings">
-        <nz-spin [nzSpinning]="accountLoading">
+        <nz-spin *ngIf="caseDataTabIndex === 1" [nzSpinning]="accountLoading">
           <nz-alert
-            *ngIf="!patientAccountUser"
+            *ngIf="patient?.userId && !canViewPatientAccount()"
+            nzType="info"
+            nzShowIcon
+            nzMessage="No tenés permiso para ver la cuenta de usuario asociada."
+          ></nz-alert>
+
+          <nz-alert
+            *ngIf="!patientAccountUser && canViewPatientAccount()"
             nzType="warning"
             nzShowIcon
             nzMessage="No se encontró la cuenta de usuario asociada al paciente."
@@ -125,33 +133,40 @@
         </nz-spin>
       </nz-tab>
       <nz-tab [nzTitle]="'core.caseManagers' | translate">
-        <app-case-managers [managerType]="'caseManager'" [patient]="patient" [showAssignButton]="true" [filter]="filter">
+        <app-case-managers *ngIf="caseDataTabIndex === 2" [managerType]="'caseManager'" [patient]="patient" [showAssignButton]="true" [filter]="filter">
         </app-case-managers>
       </nz-tab>
       <nz-tab [nzTitle]="'core.departments' | translate">
-        <app-patient-departments [patient]="patient"></app-patient-departments>
+        <app-patient-departments *ngIf="caseDataTabIndex === 3" [patient]="patient"></app-patient-departments>
       </nz-tab>
       <nz-tab [nzTitle]="'core.caregivers' | translate">
-        <app-caregivers-patient [patient]="patient"></app-caregivers-patient>
+        <app-caregivers-patient *ngIf="caseDataTabIndex === 4" [patient]="patient"></app-caregivers-patient>
       </nz-tab>
       <nz-tab nzTitle="Notificaciones">
-        <app-notification-preferences [patientId]="patient?.id"></app-notification-preferences>
+        <app-notification-preferences *ngIf="caseDataTabIndex === 5" [patientId]="patient?.id"></app-notification-preferences>
+      </nz-tab>
+      <nz-tab nzTitle="Consentimiento informado">
+        <app-informed-consent-responses-list
+          *ngIf="caseDataTabIndex === 6"
+          [patientId]="patient?.id"
+          [userId]="patient?.userId"
+        ></app-informed-consent-responses-list>
       </nz-tab>
     </nz-tabset>
   </nz-tab>
   <nz-tab nzTitle="Más">
-    <nz-tabset nzSize="small">
+    <nz-tabset *ngIf="selectedTabIndex === 4" nzSize="small" [(nzSelectedIndex)]="moreTabIndex">
       <nz-tab [nzTitle]="'core.assessments' | translate">
-        <app-assessments [patient]="patient"></app-assessments>
+        <app-assessments *ngIf="moreTabIndex === 0" [patient]="patient"></app-assessments>
       </nz-tab>
       <nz-tab nzTitle="Sesiones">
-        <app-sessions-list [patientId]="patient?.id"></app-sessions-list>
+        <app-sessions-list *ngIf="moreTabIndex === 1" [patientId]="patient?.id"></app-sessions-list>
       </nz-tab>
       <nz-tab nzTitle="Ciclos">
-        <app-cycles-list [patientId]="patient?.id" [cycleKind]="CSK.CLINICAL"></app-cycles-list>
+        <app-cycles-list *ngIf="moreTabIndex === 2" [patientId]="patient?.id" [cycleKind]="CSK.CLINICAL"></app-cycles-list>
       </nz-tab>
       <nz-tab nzTitle="Automatizaciones aplicadas">
-        <app-applied-automations-list [userId]="patient?.userId"></app-applied-automations-list>
+        <app-applied-automations-list *ngIf="moreTabIndex === 3" [userId]="patient?.userId"></app-applied-automations-list>
       </nz-tab>
     </nz-tabset>
   </nz-tab>

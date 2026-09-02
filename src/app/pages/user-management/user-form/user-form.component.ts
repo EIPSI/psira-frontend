@@ -26,6 +26,7 @@ import { finalize } from 'rxjs/operators';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
 import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
+import { AuthService } from '@app/auth/auth.service';
 
 const CryptoJS = require('crypto-js');
 
@@ -104,7 +105,8 @@ export class UserFormComponent implements OnInit {
     private rolesService: RolesService,
     public perms: AppPermissionsService,
     private departmentsService: DepartmentsService,
-    private evaluationAutomationsService: EvaluationAutomationsService
+    private evaluationAutomationsService: EvaluationAutomationsService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -121,9 +123,22 @@ export class UserFormComponent implements OnInit {
       this.getUserFromUrl();
     }
     this.getUser();
-    this.getRoles({ paging: { first: 50 } });
-    this.getDepartments({paging: {first: 50}});
-    this.getParticularDepartment();
+    if (this.shouldLoadProfileOptions()) {
+      this.getRoles({ paging: { first: 50 } });
+      this.getDepartments({ paging: { first: 50 } });
+      this.getParticularDepartment();
+    }
+  }
+
+  private shouldLoadProfileOptions(): boolean {
+    if (this.section === 'settings') return false;
+    return this.perms.permissionsOnly([
+      PermissionKey.MANAGE_USERS,
+      PermissionKey.VIEW_ROLES_PERMISSIONS,
+      PermissionKey.MANAGE_ROLES_PERMISSIONS,
+      PermissionKey.VIEW_SETTINGS,
+      PermissionKey.MANAGE_SETTINGS,
+    ]);
   }
 
   getDepartments(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[] }) {
@@ -136,7 +151,7 @@ export class UserFormComponent implements OnInit {
           const page = data.departments;
           const departments = page.edges.map((departmentData: any) => Convert.toDepartment(departmentData.node));
           this.particularDepartment = departments.find((department: Department) => department.name === 'Particular');
-          this.departments = departments.filter((department: Department) => department.name !== 'Particular');
+          this.departments = departments;
 
           this.profileFields.groups.map((group) => {
             group.fields.map((field) => {
@@ -291,6 +306,8 @@ export class UserFormComponent implements OnInit {
         if (this.section !== 'settings') {
           this.loadAssignmentOptions();
         }
+      } else if (this.activatedRoute.snapshot.data?.ownProfile) {
+        this.loadOwnUserProfile();
       } else {
         this.defaultRoleCode = params.roleCode || this.activatedRoute.snapshot.data?.roleCode;
         this.user = { password: this.generateTemporaryPassword() } as User & { password: string };
@@ -307,6 +324,28 @@ export class UserFormComponent implements OnInit {
         this.refreshAutomationPreview();
       }
     });
+  }
+
+  private loadOwnUserProfile(): void {
+    this.isLoading = true;
+    this.authService
+      .getUserProfile()
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe(
+        ({ data }) => {
+          this.user = this.withProfileRelations(UserModel.fromJson(data.getUserProfile));
+          this.currentUser = this.user;
+          localStorage.setItem('user', JSON.stringify(data.getUserProfile));
+          this.defaultRoleCode = this.user.roles?.[0]?.code;
+          if (this.user.birthDate) this.user.birthDate = String(this.user.birthDate).slice(0, 10) as any;
+          this.newMode = false;
+          this.inputMode = false;
+          this.showCancelButton = true;
+          this.profileFields = userForms.userProfileEdit;
+          this.populateForm = true;
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load profile' })
+      );
   }
 
   public handleProfileInputChange(change: { name: string; value: any }): void {

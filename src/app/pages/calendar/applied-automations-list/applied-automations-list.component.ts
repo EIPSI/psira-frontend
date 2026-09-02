@@ -47,6 +47,22 @@ export class AppliedAutomationsListComponent implements OnChanges {
     return status ? colors[status] || 'default' : 'default';
   }
 
+  stringSort(field: keyof AppliedAutomationRun): (a: AppliedAutomationRun, b: AppliedAutomationRun) => number {
+    return (a, b) => String(a[field] || '').localeCompare(String(b[field] || ''), undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    });
+  }
+
+  dateSort(field: keyof AppliedAutomationRun): (a: AppliedAutomationRun, b: AppliedAutomationRun) => number {
+    return (a, b) => this.timeValue(a[field]) - this.timeValue(b[field]);
+  }
+
+  private timeValue(value: any): number {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
   private loadRuns(): void {
     if (!this.userId) {
       this.runs = [];

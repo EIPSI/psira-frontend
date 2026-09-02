@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Clipboard } from '@angular/cdk/clipboard';
 import { FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -41,11 +42,13 @@ export class CreateEmailTemplateComponent implements OnInit {
     sanitize: false
   }
   shortcutsVisible = false;
+  previewVisible = false;
   templateShortcuts: NotificationTemplateShortcut[] = [];
   shortcutGroups: string[] = [];
   emailForm = this.fb.group({
     name: '',
     subject: '',
+    senderName: '',
     body: `<div><span style="background-color: transparent; font-size: 1rem;">Greetings!</span><br></div>
     <div>PSIRA is sending you an assessment.&nbsp;<br></div>
     <div><span style="background-color: transparent; font-size: 1rem;">Please click the link below to start the assessment!&nbsp;</span><br></div>
@@ -71,6 +74,7 @@ export class CreateEmailTemplateComponent implements OnInit {
      private departmentsService: DepartmentsService,
      private errorService: ErrorHandlerService,
      private notificationsService: NotificationsService,
+     private clipboard: Clipboard,
   ) { }
 
   ngOnInit(): void {
@@ -89,6 +93,7 @@ export class CreateEmailTemplateComponent implements OnInit {
           this.emailTemplate = data.data.getEmailTemplate;
           this.emailForm.controls['name'].setValue(this.emailTemplate?.name);
           this.emailForm.controls['subject'].setValue(this.emailTemplate?.subject);
+          this.emailForm.controls['senderName'].setValue(this.emailTemplate?.senderName || '');
           this.emailForm.controls['body'].setValue(this.emailTemplate?.body);
           this.emailForm.controls['status'].setValue(this.emailTemplate?.status);
           this.emailForm.controls['purpose'].setValue(this.emailTemplate?.purpose || 'NOTIFICATION');
@@ -185,9 +190,39 @@ export class CreateEmailTemplateComponent implements OnInit {
     return this.templateShortcuts.filter((shortcut) => shortcut.group === group);
   }
 
+  shortcutGroupTitle(group: string): string {
+    const labels: Record<string, string> = {
+      user: 'Usuario',
+      patient: 'Paciente',
+      therapist: 'Terapeuta',
+      supervisor: 'Supervisor',
+      case: 'Caso',
+      assessment: 'Evaluación',
+      session: 'Sesión',
+      consent: 'Consentimiento informado',
+      system: 'Sistema',
+      notification: 'Notificación',
+    };
+    const normalized = String(group || '').trim();
+    const key = normalized.toLowerCase();
+    return labels[key] || normalized
+      .replace(/[_-]+/g, ' ')
+      .replace(/\w\S*/g, (word) => word[0].toUpperCase() + word.slice(1).toLowerCase());
+  }
+
+  copyShortcut(token: string, event?: Event): void {
+    event?.stopPropagation();
+    const copied = this.clipboard.copy(token);
+    copied ? this.nzMessage.success('Variable copiada') : this.nzMessage.error('No se pudo copiar la variable');
+  }
+
   insertShortcut(token: string): void {
     const currentBody = this.emailForm.controls['body'].value || '';
     this.emailForm.controls['body'].setValue(`${currentBody} ${token}`);
+  }
+
+  showPreview(): void {
+    this.previewVisible = true;
   }
 
   private loadTemplateShortcuts(): void {

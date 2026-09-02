@@ -78,6 +78,7 @@ export class EmailTemplatesService {
                         name: emailTemplate.name,
                         status: emailTemplate.status,
                         subject: emailTemplate.subject,
+                        senderName: emailTemplate.senderName,
                         purpose: emailTemplate.purpose,
                         body: emailTemplate.body,
                         isPublic: emailTemplate.isPublic,

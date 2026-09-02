@@ -1,39 +1,151 @@
-<nz-tabset nzSize="large">
-  <nz-tab nzTitle="General">
+<nz-tabset
+  nzSize="large"
+  [(nzSelectedIndex)]="selectedTabIndex"
+  [nzTabBarExtraContent]="dashboardFilters"
+  *ngIf="hasAnyVisibleTab(); else emptyDashboard"
+>
+  <nz-tab nzTitle="General" *ngIf="showGeneralTab()">
     <div class="container-fluid">
       <div class="row m-t-20">
-        <div *ngIf="assessmentsLoading" class="col-md-12 text-center">
+        <div *ngIf="consentsLoading" class="col-md-12 text-center">
           <nz-spin nzSize="large"></nz-spin>
         </div>
 
-        <div *ngIf="!assessmentsLoading && assessments.length === 0" class="col-md-12">
-          <nz-empty nzNotFoundContent="No pending assessments"></nz-empty>
+        <div
+          *ngFor="let consent of blockingConsents()"
+          class="col-md-12 m-b-16"
+        >
+          <section class="dashboard-consent-block">
+            <strong>{{ consent.title }}</strong>
+            <p>
+              Dadas las características de PSIRA, no es posible continuar usando el sitio sin esta aceptación.
+              Ante cualquier duda, comunicate con el responsable.
+            </p>
+            <p>
+              Si la respuesta fue un error o cambiaste de opinión, solicitá que rehabiliten el consentimiento para poder responderlo nuevamente.
+            </p>
+          </section>
         </div>
 
-        <div *ngFor="let assessment of assessments" class="col-md-4 m-b-20">
-          <nz-card [nzTitle]="assessment.name" [nzExtra]="extraTemplate">
-            <div class="assessment-details">
-              <p><strong>Date:</strong> {{ assessment.createdAt | date:'shortDate' }}</p>
-              <p><strong>Status:</strong>
-                <nz-tag [nzColor]="assessment.formattedStatus?.color">{{ assessment.status }}</nz-tag>
-              </p>
-              <p><strong>Type:</strong> {{ assessment.formattedAssessmentType }}</p>
-            </div>
-            <ng-template #extraTemplate>
-              <button nz-button nzType="primary" (click)="startAssessment(assessment)">Start</button>
-            </ng-template>
-          </nz-card>
+        <div
+          *ngFor="let consent of answerablePendingConsents()"
+          class="col-md-12 m-b-16"
+        >
+          <button class="dashboard-task dashboard-task--consent" type="button" (click)="openPendingConsent(consent)">
+            <span class="dashboard-task__marker"></span>
+            <span class="dashboard-task__content">
+              <strong>{{ consent.title }}</strong>
+              <small>Consentimiento informado pendiente de respuesta</small>
+            </span>
+            <span class="dashboard-task__action">Responder</span>
+          </button>
+        </div>
+
+        <div *ngIf="!hasBlockingInformedConsent() && (assessmentsLoading || sessionsLoading)" class="col-md-12 text-center">
+          <nz-spin nzSize="large"></nz-spin>
+        </div>
+
+        <div *ngIf="!hasBlockingInformedConsent() && !assessmentsLoading && !sessionsLoading && pendingItemsCount() === 0" class="col-md-12">
+          <nz-empty nzNotFoundContent="No hay novedades pendientes"></nz-empty>
+        </div>
+
+        <div *ngFor="let item of hasBlockingInformedConsent() || hasMandatoryPendingConsents() ? [] : visibleTimelineItems()" class="col-md-12 m-b-16">
+          <ng-container [ngSwitch]="item.itemType">
+            <ng-container *ngSwitchCase="'ASSESSMENT'">
+              <button
+                *ngIf="item.assessment as assessment"
+                class="dashboard-task dashboard-task--assessment"
+                [class.dashboard-task--locked]="!isAssessmentAvailable(assessment)"
+                type="button"
+                [disabled]="!isAssessmentAvailable(assessment)"
+                (click)="startAssessment(assessment)"
+              >
+                <span class="dashboard-task__departments" *ngIf="departmentBadges(item).length">
+                  <span
+                    class="dashboard-task__department"
+                    *ngFor="let department of departmentBadges(item)"
+                    [style.background]="department.background"
+                    [style.color]="department.color"
+                    [style.borderColor]="department.color"
+                  >
+                    {{ department.name }}
+                  </span>
+                </span>
+                <span class="dashboard-task__marker"></span>
+                <span class="dashboard-task__content">
+                  <strong>{{ assessment.name }}</strong>
+                  <small>
+                    {{ assessment.formattedAssessmentType }}
+                    <span> - {{ assessmentActivationLabel(assessment) }}</span>
+                    <span> - {{ assessmentExpirationLabel(assessment) }}</span>
+                  </small>
+                </span>
+                <span class="dashboard-task__action">{{ isAssessmentAvailable(assessment) ? 'Responder' : 'Proximamente' }}</span>
+              </button>
+            </ng-container>
+
+            <ng-container *ngSwitchCase="'SESSION'">
+              <button
+                *ngIf="item.session as session"
+                class="dashboard-task dashboard-task--session dashboard-task--locked"
+                type="button"
+                disabled
+              >
+                <span class="dashboard-task__departments" *ngIf="departmentBadges(item).length">
+                  <span
+                    class="dashboard-task__department"
+                    *ngFor="let department of departmentBadges(item)"
+                    [style.background]="department.background"
+                    [style.color]="department.color"
+                    [style.borderColor]="department.color"
+                  >
+                    {{ department.name }}
+                  </span>
+                </span>
+                <span class="dashboard-task__marker"></span>
+                <span class="dashboard-task__content">
+                <strong>{{ sessionTitle(session) }}</strong>
+                <small>
+                  {{ sessionKindLabel(session) }} - Activacion: {{ session.startAt | date:'short' }}
+                  <span *ngIf="session.endAt"> - Expiracion: {{ session.endAt | date:'short' }}</span>
+                </small>
+                </span>
+                <span class="dashboard-task__action">Proximamente</span>
+              </button>
+            </ng-container>
+          </ng-container>
         </div>
       </div>
     </div>
   </nz-tab>
-  <nz-tab nzTitle="Calendario">
-    <app-calendar></app-calendar>
+  <nz-tab nzTitle="Calendario" *ngIf="showCalendarTab()">
+    <app-calendar (contentChange)="onCalendarContentChange($event)"></app-calendar>
   </nz-tab>
-  <nz-tab nzTitle="Reports">
+  <nz-tab nzTitle="Reportes" *ngIf="showReportsTab()">
     <app-reports></app-reports>
   </nz-tab>
 </nz-tabset>
+
+<ng-template #dashboardFilters>
+  <nz-select
+    *ngIf="departmentFilters.length"
+    class="dashboard-department-filter"
+    nzMode="multiple"
+    nzAllowClear
+    nzPlaceHolder="Departamentos"
+    [(ngModel)]="selectedDepartmentIds"
+  >
+    <nz-option
+      *ngFor="let department of departmentFilters"
+      [nzValue]="department.id"
+      [nzLabel]="department.name"
+    ></nz-option>
+  </nz-select>
+</ng-template>
+
+<ng-template #emptyDashboard>
+  <nz-empty nzNotFoundContent="No hay contenido para mostrar"></nz-empty>
+</ng-template>
 
 <nz-modal [nzStyle]="{}" nzOkText="I accept" [(nzVisible)]="!acceptedTerm">
   <ng-container *nzModalContent>

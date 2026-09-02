@@ -37,7 +37,7 @@ const routes: Routes = [
         path: 'follow-up-settings',
         component: FollowUpSettingsComponent,
         data: {
-          breadcrumbI18nKey: 'Seguimiento clinico',
+          breadcrumbI18nKey: 'Ajustes clinicos',
           permissions: {
             only: [PermissionKey.VIEW_SETTINGS],
           },

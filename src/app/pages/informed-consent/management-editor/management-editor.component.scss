@@ -1,0 +1,22 @@
+.ci-page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ci-form {
+  max-width: 760px;
+}
+
+.ci-switch-row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.ci-inline-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}

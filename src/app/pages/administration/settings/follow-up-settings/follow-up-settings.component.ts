@@ -38,7 +38,10 @@ export class FollowUpSettingsComponent implements OnInit {
     if (!this.settings) return;
     this.saving = true;
     this.calendarService
-      .updateClinicalSessionFollowUpSettings(Number(this.settings.editWindowDays) || 0)
+      .updateClinicalSessionFollowUpSettings({
+        editWindowDays: Number(this.settings.editWindowDays) || 0,
+        dashboardLookaheadDays: Number(this.settings.dashboardLookaheadDays) || 0,
+      })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe(
         (settings: ClinicalSessionFollowUpSettings) => (this.settings = settings),

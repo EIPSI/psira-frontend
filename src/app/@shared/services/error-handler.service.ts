@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { ApolloError, isApolloError } from 'apollo-client';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SkipLogicError } from '../../assessment-form/skip-logic';
@@ -12,12 +13,20 @@ export interface ErrorHandlerOptions {
 }
 
 const isSkipLogicError = (error: AnyError): error is SkipLogicError => !!(error as SkipLogicError).isSkipLogicError;
+const informedConsentBlockMessage = 'Pending mandatory informed consent must be completed before using PSIRA.';
+const informedConsentDashboardPath = '/psira/dashboard';
+const informedConsentPendingPath = '/psira/informed-consent/pending';
 
 @Injectable({ providedIn: 'root' })
 export class ErrorHandlerService {
-  constructor(private messageService: NzMessageService) {}
+  constructor(private messageService: NzMessageService, private router: Router) {}
 
   public handleError(error: AnyError, options: ErrorHandlerOptions = {}): void {
+    if (this.isInformedConsentBlock(error)) {
+      this.redirectToPendingInformedConsents();
+      return;
+    }
+
     if (isApolloError(error)) {
       // show error directly if it has no graphQL Errors
       if (!error?.graphQLErrors?.length) {
@@ -47,5 +56,19 @@ export class ErrorHandlerService {
 
     // log error to console
     console.error(error);
+  }
+
+  private isInformedConsentBlock(error: AnyError): boolean {
+    if (isApolloError(error)) {
+      return error.graphQLErrors.some((e) => e.message === informedConsentBlockMessage);
+    }
+    return error?.message === informedConsentBlockMessage;
+  }
+
+  private redirectToPendingInformedConsents(): void {
+    if (this.router.url.startsWith(informedConsentPendingPath)) return;
+    if (this.router.url !== informedConsentDashboardPath) {
+      this.router.navigate([informedConsentDashboardPath]);
+    }
   }
 }

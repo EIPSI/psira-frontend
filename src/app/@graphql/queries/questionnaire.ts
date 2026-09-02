@@ -25,6 +25,19 @@ const getQuestionnaires = gql`
           language
           abbreviation
           departmentIds
+          questionGroups {
+            label
+            questions {
+              _id
+              name
+              label
+              type
+              choices {
+                name
+                label
+              }
+            }
+          }
         }
       }
     }
@@ -54,6 +67,19 @@ const getQuestionnairesVersion = gql`
           language
           abbreviation
           departmentIds
+          questionGroups {
+            label
+            questions {
+              _id
+              name
+              label
+              type
+              choices {
+                name
+                label
+              }
+            }
+          }
         }
       }
     }

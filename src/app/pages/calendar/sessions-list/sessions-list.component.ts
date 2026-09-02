@@ -107,6 +107,45 @@ export class SessionsListComponent implements OnChanges {
     return [person?.workID, name].filter(Boolean).join(' - ');
   }
 
+  stringSort(field: keyof ClinicalSession): (a: ClinicalSession, b: ClinicalSession) => number {
+    return (a, b) => this.compareText(a[field], b[field]);
+  }
+
+  numberSort(field: keyof ClinicalSession): (a: ClinicalSession, b: ClinicalSession) => number {
+    return (a, b) => Number(a[field] || 0) - Number(b[field] || 0);
+  }
+
+  sessionDateSort(field: 'startAt' | 'endAt'): (a: ClinicalSession, b: ClinicalSession) => number {
+    return (a, b) => this.timeValue(a.calendarOccurrence?.[field]) - this.timeValue(b.calendarOccurrence?.[field]);
+  }
+
+  personSort(field: 'patient' | 'therapist' | 'supervisor'): (a: ClinicalSession, b: ClinicalSession) => number {
+    return (a, b) => this.compareText(this.personName(a[field]), this.personName(b[field]));
+  }
+
+  resourceCountSort = (a: ClinicalSession, b: ClinicalSession): number =>
+    Number(a.resources?.length || 0) - Number(b.resources?.length || 0);
+
+  resourceStringSort(field: keyof ClinicalSessionResource): (a: ClinicalSessionResource, b: ClinicalSessionResource) => number {
+    return (a, b) => this.compareText(a[field], b[field]);
+  }
+
+  resourceDateSort(field: keyof ClinicalSessionResource): (a: ClinicalSessionResource, b: ClinicalSessionResource) => number {
+    return (a, b) => this.timeValue(a[field]) - this.timeValue(b[field]);
+  }
+
+  resourceAssessmentSort = (a: ClinicalSessionResource, b: ClinicalSessionResource): number =>
+    this.compareText(a.assessment?.assessmentType?.name, b.assessment?.assessmentType?.name);
+
+  private compareText(a: any, b: any): number {
+    return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  private timeValue(value: any): number {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
   sessionTitle(session: ClinicalSession): string {
     return session.sessionKind === ClinicalSessionKind.SUPERVISION ? 'Supervisión' : 'Sesión clínica';
   }

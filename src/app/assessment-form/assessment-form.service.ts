@@ -95,6 +95,38 @@ export class AssessmentFormService {
     );
   }
 
+  public addAnswerForQuestionnaire(
+    questionnaire: QuestionnaireVersion,
+    answerInput: Omit<AnswerAssessmentInput, 'assessmentId' | 'questionnaireVersionId'>
+  ) {
+    const occurrenceId = (questionnaire as any)?.occurrenceId || null;
+    return this.assessmentService
+      .addAnswer({
+        ...answerInput,
+        occurrenceId,
+        assessmentId: this._assessment.value.questionnaireAssessment._id,
+        questionnaireVersionId: questionnaire._id,
+      })
+      .pipe(
+        catchError((err: any) => {
+          if (isApolloError(err) && err.graphQLErrors.some((e) => e.extensions?.code === 'BAD_USER_INPUT')) {
+            const answers = this.assessmentSnapshot.questionnaireAssessment.answers;
+            const answer = answers.find(
+              (a) =>
+                a.question === answerInput.question &&
+                (a.occurrenceId || null) === occurrenceId
+            );
+            if (answer) {
+              answer.valid = false;
+              this.setAnswers(answers);
+            }
+          }
+          return throwError(err);
+        }),
+        tap((answers) => this.setAnswers(answers))
+      );
+  }
+
   private prepareAssessmentInfo(assessment: FullAssessment) {
     this._assessmentInfo.questions = assessment.questionnaireAssessment.questionnaires
       .map((q: any) => q.questionGroups.map((g: any) => g.questions).flat())

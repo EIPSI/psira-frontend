@@ -92,7 +92,7 @@
                     </div>
                   </a>
                 </li>
-                <li nz-menu-item>
+                <li *ngIf="!hasBlockingInformedConsent" nz-menu-item>
                   <a (click)="editUserProfile()" class="p-v-5 p-h-10">
                     <div nz-row>
                       <div nz-col>

@@ -42,7 +42,7 @@ interface ReasonTreeRow {
   nodeCount: number;
 }
 
-type ReasonPlace = 'SESSION_CANCELLATION' | 'FINALIZATION' | 'NEW_CYCLE';
+type ReasonPlace = 'SESSION_CANCELLATION' | 'FINALIZATION' | 'NEW_CYCLE' | 'INFORMED_CONSENT_REACTIVATION';
 type ReasonScope = 'CLINICAL' | 'SUPERVISION';
 
 enum TreeActionKey {
@@ -124,6 +124,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
     { value: 'SESSION_CANCELLATION', label: 'Cancelación por falta' },
     { value: 'FINALIZATION', label: 'Finalización' },
     { value: 'NEW_CYCLE', label: 'Nuevo ciclo' },
+    { value: 'INFORMED_CONSENT_REACTIVATION', label: 'Rehabilitación CI' },
   ];
   scopeOptions: Array<{ value: ReasonScope; label: string }> = [
     { value: 'CLINICAL', label: 'Tratamiento' },
@@ -151,6 +152,13 @@ export class SessionCancellationReasonsComponent implements OnInit {
     this.treeModalVisible = true;
   }
 
+  onTreePlaceChange(place?: ReasonPlace): void {
+    this.treePlace = place;
+    if (place === 'INFORMED_CONSENT_REACTIVATION') {
+      this.treeScope = undefined;
+    }
+  }
+
   openEditTreeModal(tree: ReasonTreeRow): void {
     this.editingTree = tree;
     this.treePlace = tree.place || this.placeForContext(tree.context);
@@ -170,8 +178,12 @@ export class SessionCancellationReasonsComponent implements OnInit {
   }
 
   saveTreeSelection(): void {
-    if (!this.treePlace || !this.treeScope) {
+    if (!this.treePlace) {
       this.message.warning('El lugar es obligatorio.');
+      return;
+    }
+    if (!this.isGlobalReactivationPlace(this.treePlace) && !this.treeScope) {
+      this.message.warning('El ámbito es obligatorio.');
       return;
     }
 
@@ -194,10 +206,11 @@ export class SessionCancellationReasonsComponent implements OnInit {
   }
 
   openTree(tree: ReasonTreeRow): void {
-    this.selectedTree = tree;
-    this.editingTree = tree;
-    this.treePlace = tree.place || this.placeForContext(tree.context);
-    this.treeScope = tree.scope || this.scopeForContext(tree.context);
+    const decoratedTree = this.decorateTree(tree);
+    this.selectedTree = decoratedTree;
+    this.editingTree = decoratedTree;
+    this.treePlace = decoratedTree.place || this.placeForContext(decoratedTree.context);
+    this.treeScope = decoratedTree.scope || this.scopeForContext(decoratedTree.context);
     this.treeDepartmentIds = tree.departmentId ? [tree.departmentId] : [];
     this.treeLevelLabels = this.normalizeLevelLabels(tree.levelLabels);
     this.loadReasons();
@@ -420,6 +433,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
   }
 
   scopeLabelForContext(context?: CaseEventReasonContext): string {
+    if (this.placeForContext(context) === 'INFORMED_CONSENT_REACTIVATION') return 'Todos los usuarios';
     return this.scopeOptions.find((option) => option.value === this.scopeForContext(context))?.label || '';
   }
 
@@ -430,11 +444,18 @@ export class SessionCancellationReasonsComponent implements OnInit {
 
   selectedTreeTitle(): string {
     if (!this.selectedTree) return '';
-    return `${this.placeLabel(this.selectedTree.place)} - ${this.scopeName(this.selectedTree.scope)} - ${this.scopeLabel(this.selectedTree.departmentId)}`;
+    const place = this.selectedTree.place || this.placeForContext(this.selectedTree.context);
+    const scope = this.selectedTree.scope || this.scopeForContext(this.selectedTree.context);
+    const scopeName = place === 'INFORMED_CONSENT_REACTIVATION' ? 'Todos los usuarios' : this.scopeName(scope);
+    return `${this.placeLabel(place)} - ${scopeName} - ${this.scopeLabel(this.selectedTree.departmentId)}`;
   }
 
   scopeName(scope?: ReasonScope): string {
     return this.scopeOptions.find((option) => option.value === scope)?.label || 'Ámbito';
+  }
+
+  isGlobalReactivationPlace(place?: ReasonPlace): boolean {
+    return place === 'INFORMED_CONSENT_REACTIVATION';
   }
 
   dropListId(parent?: CaseEventReason | ReasonTreeRow): string {
@@ -760,7 +781,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
       departmentIds: tree.departmentId ? [tree.departmentId] : [],
       contextName: this.contextLabel(tree.context),
       placeName: this.placeLabel(this.placeForContext(tree.context)),
-      scopeName: this.scopeName(this.scopeForContext(tree.context)),
+      scopeName: this.scopeLabelForContext(tree.context),
       departmentName: this.scopeLabel(tree.departmentId),
     };
   }
@@ -825,7 +846,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
     }
   }
 
-  private contextForPlaceAndScope(place: ReasonPlace, scope: ReasonScope): CaseEventReasonContext {
+  private contextForPlaceAndScope(place: ReasonPlace, scope?: ReasonScope): CaseEventReasonContext {
     if (place === 'SESSION_CANCELLATION') {
       return scope === 'SUPERVISION'
         ? CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION
@@ -836,37 +857,46 @@ export class SessionCancellationReasonsComponent implements OnInit {
         ? CaseEventReasonContext.SUPERVISION_FINALIZATION
         : CaseEventReasonContext.TREATMENT_FINALIZATION;
     }
+    if (place === 'INFORMED_CONSENT_REACTIVATION') {
+      return CaseEventReasonContext.INFORMED_CONSENT_REACTIVATION;
+    }
     return scope === 'SUPERVISION'
       ? CaseEventReasonContext.NEW_SUPERVISION
       : CaseEventReasonContext.NEW_TREATMENT;
   }
 
   private placeForContext(context?: CaseEventReasonContext): ReasonPlace | undefined {
-    switch (context) {
-      case CaseEventReasonContext.SESSION_CANCELLATION:
-      case CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION:
+    switch (String(context || '')) {
+      case 'SESSION_CANCELLATION':
+      case 'SUPERVISION_SESSION_CANCELLATION':
         return 'SESSION_CANCELLATION';
-      case CaseEventReasonContext.TREATMENT_FINALIZATION:
-      case CaseEventReasonContext.SUPERVISION_FINALIZATION:
+      case 'TREATMENT_FINALIZATION':
+      case 'SUPERVISION_FINALIZATION':
         return 'FINALIZATION';
-      case CaseEventReasonContext.NEW_TREATMENT:
-      case CaseEventReasonContext.NEW_SUPERVISION:
+      case 'NEW_TREATMENT':
+      case 'NEW_SUPERVISION':
         return 'NEW_CYCLE';
+      case 'INFORMED_CONSENT_REACTIVATION':
+      case 'SUPERVISION_INFORMED_CONSENT_REACTIVATION':
+        return 'INFORMED_CONSENT_REACTIVATION';
       default:
         return undefined;
     }
   }
 
   private scopeForContext(context?: CaseEventReasonContext): ReasonScope | undefined {
-    switch (context) {
-      case CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION:
-      case CaseEventReasonContext.SUPERVISION_FINALIZATION:
-      case CaseEventReasonContext.NEW_SUPERVISION:
+    switch (String(context || '')) {
+      case 'SUPERVISION_SESSION_CANCELLATION':
+      case 'SUPERVISION_FINALIZATION':
+      case 'NEW_SUPERVISION':
         return 'SUPERVISION';
-      case CaseEventReasonContext.SESSION_CANCELLATION:
-      case CaseEventReasonContext.TREATMENT_FINALIZATION:
-      case CaseEventReasonContext.NEW_TREATMENT:
+      case 'SESSION_CANCELLATION':
+      case 'TREATMENT_FINALIZATION':
+      case 'NEW_TREATMENT':
         return 'CLINICAL';
+      case 'INFORMED_CONSENT_REACTIVATION':
+      case 'SUPERVISION_INFORMED_CONSENT_REACTIVATION':
+        return undefined;
       default:
         return undefined;
     }

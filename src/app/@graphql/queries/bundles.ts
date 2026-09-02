@@ -10,6 +10,8 @@ const getQuestionnaireBundles = gql`
           active
           departmentIds
           structureJson
+          headerHtml
+          noticeHtml
           createdAt
           updatedAt
         }
@@ -32,6 +34,8 @@ const getQuestionnaireBundle = gql`
       active
       departmentIds
       structureJson
+      headerHtml
+      noticeHtml
       createdAt
       updatedAt
     }

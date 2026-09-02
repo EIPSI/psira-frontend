@@ -1,0 +1,83 @@
+.ci-page-header,
+.ci-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ci-toolbar input {
+  max-width: 360px;
+}
+
+.ci-response-document {
+  display: grid;
+  gap: 14px;
+}
+
+.ci-response-history {
+  border-bottom: 1px solid #edf0f3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+
+.ci-response-block {
+  border-bottom: 1px solid #edf0f3;
+  padding-bottom: 12px;
+}
+
+.ci-response-block:last-child {
+  border-bottom: 0;
+}
+
+.ci-response-text {
+  color: #2f3a45;
+}
+
+.ci-response-question h4 {
+  margin-bottom: 4px;
+}
+
+.ci-response-kind {
+  color: #667085;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.ci-response-question ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ci-response-question li {
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 10px;
+}
+
+.ci-response-question li.selected-answer {
+  background: #f0f9eb;
+  border-color: #52c41a;
+}
+
+.ci-response-question small {
+  color: #667085;
+}
+
+.ci-reactivation-form {
+  display: grid;
+  gap: 14px;
+}
+
+.ci-reactivation-form label {
+  display: grid;
+  gap: 6px;
+}

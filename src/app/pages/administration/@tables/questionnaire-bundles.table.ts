@@ -5,6 +5,7 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
     title: 'Name',
     name: 'name',
     translationPath: 'emailTemplates.name',
+    sort: true,
     filterField: {
       type: 'text',
       value: '',
@@ -14,6 +15,7 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
     title: 'Estado',
     name: 'activeStatus',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: '',
@@ -27,6 +29,7 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
   {
     title: 'Structure',
     name: 'summary',
+    sort: true,
     filterField: {
       type: 'text',
       value: '',
@@ -35,6 +38,7 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
   {
     title: 'Departments',
     name: 'departmentNames',
+    sort: true,
     filterField: {
       type: 'text',
       value: '',

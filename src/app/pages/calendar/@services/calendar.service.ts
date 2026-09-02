@@ -484,11 +484,14 @@ export class CalendarService {
       .pipe(map((result: any) => result.data.getAssessment));
   }
 
-  updateClinicalSessionFollowUpSettings(editWindowDays: number): Observable<ClinicalSessionFollowUpSettings> {
+  updateClinicalSessionFollowUpSettings(settings: {
+    editWindowDays: number;
+    dashboardLookaheadDays?: number;
+  }): Observable<ClinicalSessionFollowUpSettings> {
     return this.apollo
       .mutate({
         mutation: CalendarMutations.updateClinicalSessionFollowUpSettings,
-        variables: { settings: { editWindowDays } },
+        variables: { settings },
         fetchPolicy: 'no-cache',
       })
       .pipe(map((result: any) => result.data.updateClinicalSessionFollowUpSettings));

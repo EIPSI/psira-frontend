@@ -14,6 +14,8 @@ const settings = gql`
       evaluationAutomationRunRetentionDays
       treatmentFinalizationUndoWindowDays
       patientCaseManagerAssignableHierarchyRank
+      notificationsEnabled
+      informedConsentEnabled
       googleCalendarEnabled
       googleCalendarClientId
       googleCalendarRedirectUri

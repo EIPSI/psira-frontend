@@ -8,7 +8,10 @@ export interface Setting {
   passwordLifeTimeInDays: number;
   passwordReUseCutoffInDays: number;
   evaluationAutomationRunRetentionDays: number;
+  treatmentFinalizationUndoWindowDays: number;
   patientCaseManagerAssignableHierarchyRank: number;
+  notificationsEnabled?: boolean;
+  informedConsentEnabled?: boolean;
   googleCalendarEnabled?: boolean;
   googleCalendarClientId?: string;
   googleCalendarClientSecret?: string;

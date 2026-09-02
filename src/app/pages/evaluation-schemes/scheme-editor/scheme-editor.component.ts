@@ -498,6 +498,33 @@ export class SchemeEditorComponent implements OnInit {
       .join(', ');
   }
 
+  public resourceStringSort(field: string): (a: any, b: any) => number {
+    return (a, b) => this.compareText(a?.[field], b?.[field]);
+  }
+
+  public resourceNumberSort(field: string): (a: any, b: any) => number {
+    return (a, b) => Number(a?.[field] || 0) - Number(b?.[field] || 0);
+  }
+
+  public resourceContentSort = (a: any, b: any): number =>
+    this.compareText(this.resourceContentLabel(a), this.resourceContentLabel(b));
+
+  public resourceTargetSort = (a: any, b: any): number =>
+    this.compareText(this.resourceTargetLabel(a), this.resourceTargetLabel(b));
+
+  public resourceDurationSort = (a: any, b: any): number =>
+    Number(a?.availabilityDurationMinutes || 0) - Number(b?.availabilityDurationMinutes || 0);
+
+  public resourceResponderSort = (a: any, b: any): number =>
+    this.compareText(this.resourceResponderLabel(a), this.resourceResponderLabel(b));
+
+  public resourceReminderSort = (a: any, b: any): number =>
+    this.compareText(this.reminderLabel(a?.reminderMinutes, a?.reminderUnit), this.reminderLabel(b?.reminderMinutes, b?.reminderUnit));
+
+  private compareText(a: any, b: any): number {
+    return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+  }
+
   public openFixedSlotModal(day: number, minute: number, slot?: any): void {
     this.editingFixedSlotId = slot?.id;
     const endMinute = slot?.endMinuteOfDay || (minute + (slot?.durationMinutes || 60));

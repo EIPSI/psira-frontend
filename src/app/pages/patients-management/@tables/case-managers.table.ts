@@ -68,6 +68,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     translationPath: 'tables.casemanagers.roles',
     altName: 'roles',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Departments',
@@ -75,6 +76,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     translationPath: 'tables.casemanagers.username',
     altName: 'departments',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,

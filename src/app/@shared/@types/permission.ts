@@ -20,6 +20,12 @@ export enum PermissionKey {
   VIEW_NOTIFICATIONS = 'view notifications',
   MANAGE_NOTIFICATIONS = 'manage notifications',
   VIEW_NOTIFICATION_LOGS = 'view notification logs',
+  VIEW_INFORMED_CONSENT_MODELS = 'view informed consent models',
+  MANAGE_INFORMED_CONSENT_MODELS = 'manage informed consent models',
+  VIEW_INFORMED_CONSENT_MANAGEMENT = 'view informed consent management',
+  MANAGE_INFORMED_CONSENT_MANAGEMENT = 'manage informed consent management',
+  VIEW_INFORMED_CONSENT_RESPONSES = 'view informed consent responses',
+  REVIEW_INFORMED_CONSENT_RESPONSES = 'review informed consent responses',
 
   VIEW_USERS = 'view users',
   MANAGE_USERS = 'manage users',

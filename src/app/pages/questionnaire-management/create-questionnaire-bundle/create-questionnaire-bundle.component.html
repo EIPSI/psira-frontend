@@ -16,6 +16,28 @@
   </nz-form-item>
 
   <nz-form-item>
+    <nz-form-label [nzSpan]="6">Cabecera del paquete</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <angular-editor
+        [config]="editorConfig"
+        placeholder="Texto que aparece arriba de toda la evaluación..."
+        formControlName="headerHtml"
+      ></angular-editor>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">Aviso al pie</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <angular-editor
+        [config]="editorConfig"
+        placeholder="Texto que aparece al final de cada pantalla..."
+        formControlName="noticeHtml"
+      ></angular-editor>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
     <nz-form-label [nzSpan]="6">Departments</nz-form-label>
     <nz-form-control [nzSpan]="14">
       <button type="button" nz-button nzSize="small" class="department-action" (click)="selectAllDepartments()">
@@ -43,8 +65,9 @@
   <section class="structure-header">
     <div>
       <h3>Evaluation sequence structure</h3>
-      <p>{{ countQuestionnaires() }} questionnaires / {{ countGroups() }} groups</p>
+      <p>{{ countQuestionnaires() }} questionnaires / {{ countScreens() }} screens / {{ countGroups() }} groups</p>
     </div>
+    <button nz-button type="button" (click)="openPreview()">Previsualizar</button>
   </section>
 
   <section class="root-node" *ngIf="rootNode as root">
@@ -80,6 +103,7 @@
 
     <div class="child-toolbar">
       <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(root)">Add questionnaire</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildScreen(root)">Add screen</button>
       <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(root)">Add fixed group</button>
       <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(root)">Add randomized group</button>
     </div>
@@ -125,15 +149,40 @@
             <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
           </nz-select>
 
-          <input
-            *ngSwitchDefault
-            class="group-label"
-            nz-input
-            [(ngModel)]="node.label"
-            [ngModelOptions]="{ standalone: true }"
-            placeholder="Group label"
-          />
+          <ng-container *ngSwitchDefault>
+            <input
+              class="group-label"
+              nz-input
+              [(ngModel)]="node.label"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Nombre interno"
+            />
+            <input
+              class="group-label"
+              nz-input
+              [(ngModel)]="node.displayTitle"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Título visible"
+            />
+          </ng-container>
         </ng-container>
+
+        <input
+          *ngIf="node.type === 'QUESTIONNAIRE'"
+          class="group-label"
+          nz-input
+          [(ngModel)]="node.displayTitle"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Título visible opcional"
+        />
+        <label class="inline-toggle" *ngIf="node.type === 'QUESTIONNAIRE'">
+          <nz-switch
+            [(ngModel)]="node.showTitle"
+            [ngModelOptions]="{ standalone: true }"
+            nzCheckedChildren="Título"
+            nzUnCheckedChildren="Oculto"
+          ></nz-switch>
+        </label>
 
         <ng-container *ngIf="node.type === 'RANDOM_GROUP'">
           <nz-select class="mode-select" [(ngModel)]="node.randomizationMode" [ngModelOptions]="{ standalone: true }">
@@ -171,8 +220,30 @@
         </button>
       </div>
 
+      <div class="screen-rich-texts" *ngIf="node.type === 'SCREEN'">
+        <label>
+          <span>Cabecera de pantalla</span>
+          <angular-editor
+            [config]="editorConfig"
+            placeholder="Texto opcional arriba de esta pantalla..."
+            [(ngModel)]="node.headerHtml"
+            [ngModelOptions]="{ standalone: true }"
+          ></angular-editor>
+        </label>
+        <label>
+          <span>Pie de pantalla</span>
+          <angular-editor
+            [config]="editorConfig"
+            placeholder="Texto opcional debajo de esta pantalla..."
+            [(ngModel)]="node.footerHtml"
+            [ngModelOptions]="{ standalone: true }"
+          ></angular-editor>
+        </label>
+      </div>
+
       <div class="child-toolbar" *ngIf="node.type !== 'QUESTIONNAIRE'">
         <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(node)">Add child questionnaire</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildScreen(node)">Add child screen</button>
         <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(node)">Add child fixed group</button>
         <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(node)">Add child randomized group</button>
       </div>
@@ -191,4 +262,54 @@
       </ng-container>
     </div>
   </div>
+</ng-template>
+
+<nz-modal
+  [(nzVisible)]="previewVisible"
+  [nzTitle]="bundleForm.value.name || 'Previsualización del paquete'"
+  [nzFooter]="previewFooter"
+  [nzWidth]="900"
+  [nzClosable]="true"
+  (nzOnCancel)="previewVisible = false"
+>
+  <div *nzModalContent class="bundle-preview">
+    <section class="bundle-preview__header" *ngIf="bundleForm.value.headerHtml" [innerHTML]="bundleForm.value.headerHtml"></section>
+    <article class="bundle-preview__screen" *ngFor="let screen of previewScreenItems; let i = index">
+      <span class="screen-progress">{{ i + 1 }} / {{ previewScreenItems.length }}</span>
+      <h2 *ngIf="screen.title">{{ screen.title }}</h2>
+      <div class="bundle-preview__copy" *ngIf="screen.headerHtml" [innerHTML]="screen.headerHtml"></div>
+      <div class="bundle-preview__questionnaire" *ngFor="let questionnaire of screen.questionnaires">
+        <h3 *ngIf="questionnaire.title">{{ questionnaire.title }}</h3>
+        <section class="bundle-preview__group" *ngFor="let group of questionnaire.questionGroups">
+          <h4 *ngIf="group.label">{{ group.label }}</h4>
+          <article class="bundle-preview__question" *ngFor="let question of group.questions">
+            <strong>{{ question.label || question.name }}</strong>
+            <ng-container [ngSwitch]="question.type">
+              <nz-radio-group *ngSwitchCase="'select_one'" [ngModel]="null" [ngModelOptions]="{ standalone: true }">
+                <label nz-radio disabled *ngFor="let choice of question.choices" [nzValue]="choice.name">
+                  {{ choice.label || choice.name }}
+                </label>
+              </nz-radio-group>
+              <div *ngSwitchCase="'select_multiple'" class="bundle-preview__options">
+                <label nz-checkbox disabled *ngFor="let choice of question.choices">
+                  {{ choice.label || choice.name }}
+                </label>
+              </div>
+              <textarea *ngSwitchCase="'text'" nz-input disabled rows="3" placeholder="Respuesta"></textarea>
+              <nz-input-number *ngSwitchCase="'integer'" disabled></nz-input-number>
+              <nz-input-number *ngSwitchCase="'decimal'" disabled [nzStep]="0.1"></nz-input-number>
+              <nz-date-picker *ngSwitchCase="'date'" disabled></nz-date-picker>
+              <input *ngSwitchDefault nz-input disabled placeholder="Respuesta" />
+            </ng-container>
+          </article>
+        </section>
+      </div>
+      <div class="bundle-preview__copy" *ngIf="screen.footerHtml" [innerHTML]="screen.footerHtml"></div>
+      <div class="bundle-preview__notice" *ngIf="bundleForm.value.noticeHtml" [innerHTML]="bundleForm.value.noticeHtml"></div>
+    </article>
+  </div>
+</nz-modal>
+
+<ng-template #previewFooter>
+  <button nz-button type="button" (click)="previewVisible = false">Cerrar</button>
 </ng-template>

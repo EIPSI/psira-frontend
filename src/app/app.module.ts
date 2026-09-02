@@ -75,5 +75,10 @@ export class AppModule {
   constructor() {
     registerLocalCountry(require('i18n-iso-countries/langs/en.json'));
     registerLocaleLanguage(require('@cospired/i18n-iso-languages/langs/en.json'));
+    if (!environment.production && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
+      });
+    }
   }
 }

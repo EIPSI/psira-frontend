@@ -6,6 +6,7 @@ export enum NotificationFamily {
   ASSESSMENT = 'ASSESSMENT',
   CASE = 'CASE',
   AUTOMATION = 'AUTOMATION',
+  INFORMED_CONSENT = 'INFORMED_CONSENT',
 }
 
 export enum NotificationEvent {
@@ -22,6 +23,10 @@ export enum NotificationEvent {
   TREATMENT_FINALIZATION = 'TREATMENT_FINALIZATION',
   SESSION_NO_SHOW_CANCELLATION = 'SESSION_NO_SHOW_CANCELLATION',
   NEW_TREATMENT = 'NEW_TREATMENT',
+  INFORMED_CONSENT_PENDING = 'INFORMED_CONSENT_PENDING',
+  INFORMED_CONSENT_SUBMITTED = 'INFORMED_CONSENT_SUBMITTED',
+  INFORMED_CONSENT_REJECTED = 'INFORMED_CONSENT_REJECTED',
+  INFORMED_CONSENT_REACTIVATED = 'INFORMED_CONSENT_REACTIVATED',
 }
 
 export enum NotificationPeriodicUnit {
@@ -38,6 +43,7 @@ export const NotificationFamilyLabel: Record<NotificationFamily, string> = {
   [NotificationFamily.ASSESSMENT]: 'Evaluaciones',
   [NotificationFamily.CASE]: 'Caso',
   [NotificationFamily.AUTOMATION]: 'Automatizaciones',
+  [NotificationFamily.INFORMED_CONSENT]: 'Consentimiento informado',
 };
 
 export const NotificationEventLabel: Record<NotificationEvent, string> = {
@@ -54,6 +60,10 @@ export const NotificationEventLabel: Record<NotificationEvent, string> = {
   [NotificationEvent.TREATMENT_FINALIZATION]: 'Finalización de tratamiento',
   [NotificationEvent.SESSION_NO_SHOW_CANCELLATION]: 'Cancelación por falta',
   [NotificationEvent.NEW_TREATMENT]: 'Nuevo tratamiento',
+  [NotificationEvent.INFORMED_CONSENT_PENDING]: 'Consentimiento informado pendiente',
+  [NotificationEvent.INFORMED_CONSENT_SUBMITTED]: 'Consentimiento informado respondido',
+  [NotificationEvent.INFORMED_CONSENT_REJECTED]: 'Consentimiento informado rechazado',
+  [NotificationEvent.INFORMED_CONSENT_REACTIVATED]: 'Consentimiento informado reactivado',
 };
 
 export const NotificationEventDescription: Record<NotificationEvent, string> = {
@@ -83,6 +93,14 @@ export const NotificationEventDescription: Record<NotificationEvent, string> = {
     'Evento disponible cuando una sesión se cancela por falta.',
   [NotificationEvent.NEW_TREATMENT]:
     'Evento disponible cuando se registra un nuevo tratamiento o una nueva supervisión.',
+  [NotificationEvent.INFORMED_CONSENT_PENDING]:
+    'Aviso cuando un usuario tiene un consentimiento informado pendiente.',
+  [NotificationEvent.INFORMED_CONSENT_SUBMITTED]:
+    'Aviso cuando un consentimiento informado fue respondido.',
+  [NotificationEvent.INFORMED_CONSENT_REJECTED]:
+    'Aviso cuando un consentimiento informado obligatorio fue rechazado y bloquea el acceso.',
+  [NotificationEvent.INFORMED_CONSENT_REACTIVATED]:
+    'Aviso cuando se reactivó la posibilidad de responder un consentimiento informado.',
 };
 
 export const NotificationPeriodicUnitLabel: Record<NotificationPeriodicUnit, string> = {

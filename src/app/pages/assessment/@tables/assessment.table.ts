@@ -10,7 +10,7 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
     altName: 'assessmentType',
     title: 'Name',
     translationPath: 'plannedAssessments.name',
-    // sort: true,
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -28,22 +28,26 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
     name: 'patientMedicalRecordNo',
     title: 'ID',
     translationPath: 'plannedAssessments.patientMedicalRecordNo',
+    sort: true,
   },
   {
     name: 'formattedOrigin',
     altName: 'origin',
     title: 'Origen',
     render: 'tag',
+    sort: true,
   },
   {
     name: 'linkedSessionLabel',
     title: 'Sesión vinculada',
+    sort: true,
   },
   {
     name: 'formattedPatient',
     altName: 'patient',
     title: 'Patient',
     translationPath: 'plannedAssessments.formattedPatient',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -65,6 +69,7 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
     altName: 'clinician',
     title: 'Clinician',
     translationPath: 'plannedAssessments.formattedClinician',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -95,6 +100,7 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
     name: 'formatedQuestionnaires',
     title: 'Questionnaires',
     render: 'questAvatar',
+    sort: true,
     // filterField: {
     //   type: 'text',
     //   value: undefined,
@@ -124,7 +130,8 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
     name: 'submissionDate',
     title: 'Submission Date',
     translationPath: 'plannedAssessments.submissionDate',
-    render: 'date'
+    render: 'date',
+    sort: true,
   },
   {
     name: 'emailFormatedStatus',

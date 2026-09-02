@@ -23,7 +23,7 @@
           <nz-alert *ngFor="let error of errors" nzType="error" [nzDescription]="error" nzShowIcon></nz-alert>
         </div>
         <nz-form-item>
-          <nz-form-control nzErrorTip="Please input your username!">
+          <nz-form-control nzErrorTip="Please input your email or username!">
             <nz-input-group nzPrefixIcon="user">
               <input
                 readonly
@@ -32,7 +32,7 @@
                 type="text"
                 nz-input
                 formControlName="identifier"
-                placeholder="Username or email"
+                placeholder="Email o usuario"
               />
             </nz-input-group>
           </nz-form-control>

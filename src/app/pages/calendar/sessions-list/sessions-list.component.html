@@ -5,23 +5,23 @@
 </div>
 
 <nz-spin [nzSpinning]="loading">
-  <nz-table [nzData]="sessions" [nzFrontPagination]="false" nzSize="small">
+  <nz-table #sessionsTable [nzData]="sessions" [nzFrontPagination]="false" nzSize="small">
     <thead>
       <tr>
-        <th>Número</th>
-        <th>Inicio</th>
-        <th>Fin</th>
-        <th>Estado</th>
-        <th>Paciente</th>
-        <th>Terapeuta</th>
-        <th>Supervisor</th>
-        <th>Evaluaciones</th>
+        <th [nzSortFn]="numberSort('sessionNumber')">Número</th>
+        <th [nzSortFn]="sessionDateSort('startAt')">Inicio</th>
+        <th [nzSortFn]="sessionDateSort('endAt')">Fin</th>
+        <th [nzSortFn]="stringSort('clinicalStatus')">Estado</th>
+        <th [nzSortFn]="personSort('patient')">Paciente</th>
+        <th [nzSortFn]="personSort('therapist')">Terapeuta</th>
+        <th [nzSortFn]="personSort('supervisor')">Supervisor</th>
+        <th [nzSortFn]="resourceCountSort">Evaluaciones</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
       <tr
-        *ngFor="let session of sessions"
+        *ngFor="let session of sessionsTable.data"
         class="session-row"
         (click)="openEdit(session)"
         (contextmenu)="openContextMenu($event, sessionContextMenu, session)"
@@ -146,19 +146,19 @@
       <span>Propagar a sesiones futuras</span>
     </label>
 
-    <nz-table [nzData]="editingSession.resources || []" [nzFrontPagination]="false" nzSize="small">
+    <nz-table #resourcesTable [nzData]="editingSession.resources || []" [nzFrontPagination]="false" nzSize="small">
       <thead>
         <tr>
-          <th>Recurso</th>
-          <th>Evaluación</th>
-          <th>Habilita</th>
-          <th>Expira</th>
-          <th>Estado</th>
+          <th [nzSortFn]="resourceStringSort('resourceKind')">Recurso</th>
+          <th [nzSortFn]="resourceAssessmentSort">Evaluación</th>
+          <th [nzSortFn]="resourceDateSort('activationAt')">Habilita</th>
+          <th [nzSortFn]="resourceDateSort('expirationAt')">Expira</th>
+          <th [nzSortFn]="resourceStringSort('status')">Estado</th>
         </tr>
       </thead>
       <tbody>
         <tr
-          *ngFor="let resource of editingSession.resources || []"
+          *ngFor="let resource of resourcesTable.data"
           class="resource-row"
           (click)="canEditSession(editingSession) && openResourceEdit(resource, $event)"
         >

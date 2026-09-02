@@ -6,6 +6,7 @@ export const DisclaimersColumns: TableColumn<Partial<FormattedDisclaimer>>[] = [
     title: 'Type',
     name: 'formattedType',
     translationPath: 'tables.disclaimer.type',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -15,6 +16,7 @@ export const DisclaimersColumns: TableColumn<Partial<FormattedDisclaimer>>[] = [
     title: 'Text Information',
     name: 'description',
     translationPath: 'tables.disclaimer.textInformation',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -24,5 +26,6 @@ export const DisclaimersColumns: TableColumn<Partial<FormattedDisclaimer>>[] = [
     title: 'Last Update',
     name: 'updatedAt',
     translationPath: 'tables.disclaimer.lastUpdate',
+    sort: true,
   },
 ];

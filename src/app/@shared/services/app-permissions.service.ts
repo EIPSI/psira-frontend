@@ -11,11 +11,13 @@ export class AppPermissionsService {
   constructor() {}
 
   hasAccessLevelToRole(role: Role): boolean {
+    if (this.isSuperAdmin()) return true;
     const user = JSON.parse(localStorage.getItem('user')) as User;
     return !!user?.roles?.some?.((r) => r.hierarchy < role.hierarchy);
   }
 
   hasAccessLevelToUser(accessingUser: User): boolean {
+    if (this.isSuperAdmin()) return true;
     const user = JSON.parse(localStorage.getItem('user')) as User;
     return !!user?.roles?.some?.((r) => accessingUser?.roles?.every?.((ar) => r.hierarchy < ar.hierarchy));
   }
@@ -54,7 +56,10 @@ export class AppPermissionsService {
 
   isSuperAdmin(): boolean {
     const user = JSON.parse(localStorage.getItem('user')) as User;
-    return !!user?.roles?.find?.((role) => role.isSuperAdmin);
+    return !!(
+      user?.isSuperUser ||
+      user?.roles?.some?.((role) => role.isSuperAdmin || role.code === 'SUPER_ADMIN')
+    );
   }
 
   isPatient(): boolean {

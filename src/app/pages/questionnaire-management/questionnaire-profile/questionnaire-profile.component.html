@@ -1,4 +1,10 @@
-<h1 *ngIf="questionnaireTitle">{{ questionnaireTitle }}</h1>
+<div class="questionnaire-profile-header" *ngIf="questionnaireTitle">
+  <h1>{{ questionnaireTitle }}</h1>
+  <div class="questionnaire-profile-actions">
+    <button nz-button type="button" (click)="previewVisible = true">Previsualizar</button>
+    <button nz-button type="button" (click)="openVersions()">Versiones</button>
+  </div>
+</div>
 <nz-tabset nzSize="large">
   <nz-tab [nzTitle]="'core.questionnaire' | translate">
     <app-questionnaire-form></app-questionnaire-form>
@@ -7,3 +13,82 @@
     <app-questionnaire-script [questionnaire]="questionnaire"></app-questionnaire-script>
   </nz-tab>
 </nz-tabset>
+
+<nz-drawer
+  [nzVisible]="versionsVisible"
+  nzTitle="Versiones anteriores"
+  nzPlacement="right"
+  [nzWidth]="520"
+  (nzOnClose)="versionsVisible = false"
+>
+  <ng-container *nzDrawerContent>
+    <div class="questionnaire-versions">
+      <div class="questionnaire-version-empty" *ngIf="versionsLoading">Cargando versiones...</div>
+      <ng-container *ngIf="!versionsLoading">
+        <div class="questionnaire-version-empty" *ngIf="!oldVersions.length">Sin versiones anteriores</div>
+        <button
+          nz-button
+          type="button"
+          class="questionnaire-version-row"
+          *ngFor="let version of oldVersions"
+          (click)="selectVersion(version)"
+        >
+          <span>{{ version.name }}</span>
+          <small>{{ version.createdAt | date:'short' }}</small>
+        </button>
+
+        <section class="questionnaire-version-detail" *ngIf="selectedVersion">
+          <h3>{{ selectedVersion.name }}</h3>
+          <p><strong>Abreviatura:</strong> {{ versionAbbreviation(selectedVersion) }}</p>
+          <p><strong>Idioma:</strong> {{ versionLanguage(selectedVersion) }}</p>
+          <p><strong>Estado:</strong> {{ selectedVersion.status }}</p>
+          <p><strong>Tiempo estimado:</strong> {{ selectedVersion.timeToComplete || '-' }}</p>
+          <div [innerHTML]="selectedVersion.description || 'Sin descripcion'"></div>
+        </section>
+      </ng-container>
+    </div>
+  </ng-container>
+</nz-drawer>
+
+<nz-modal
+  [(nzVisible)]="previewVisible"
+  [nzTitle]="questionnaire?.name || 'Previsualización'"
+  [nzFooter]="previewFooter"
+  [nzWidth]="900"
+  [nzClosable]="true"
+  (nzOnCancel)="previewVisible = false"
+>
+  <div *nzModalContent class="questionnaire-preview">
+    <header class="questionnaire-preview__header" *ngIf="questionnaire?.description">
+      <p *ngIf="questionnaire?.description">{{ questionnaire.description }}</p>
+    </header>
+    <section class="questionnaire-preview-group" *ngFor="let group of previewQuestionGroups()">
+      <h3 *ngIf="group.label">{{ group.label }}</h3>
+      <article class="questionnaire-preview-question" *ngFor="let question of group.questions">
+        <h4>{{ question.label || question.name }}</h4>
+        <p *ngIf="question.hint">{{ question.hint }}</p>
+        <ng-container [ngSwitch]="question.type">
+          <nz-radio-group *ngSwitchCase="'select_one'" [ngModel]="null" [ngModelOptions]="{ standalone: true }">
+            <label nz-radio disabled *ngFor="let choice of question.choices" [nzValue]="choice.name">
+              {{ choice.label || choice.name }}
+            </label>
+          </nz-radio-group>
+          <div *ngSwitchCase="'select_multiple'" class="questionnaire-preview-options">
+            <label nz-checkbox disabled *ngFor="let choice of question.choices">
+              {{ choice.label || choice.name }}
+            </label>
+          </div>
+          <textarea *ngSwitchCase="'text'" nz-input disabled rows="3" placeholder="Respuesta"></textarea>
+          <nz-input-number *ngSwitchCase="'integer'" disabled></nz-input-number>
+          <nz-input-number *ngSwitchCase="'decimal'" disabled [nzStep]="0.1"></nz-input-number>
+          <nz-date-picker *ngSwitchCase="'date'" disabled></nz-date-picker>
+          <input *ngSwitchDefault nz-input disabled placeholder="Respuesta" />
+        </ng-container>
+      </article>
+    </section>
+  </div>
+</nz-modal>
+
+<ng-template #previewFooter>
+  <button nz-button type="button" (click)="previewVisible = false">Cerrar</button>
+</ng-template>

@@ -40,6 +40,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   rawAssessmentLoading = false;
   rawAssessmentTitle = '';
   rawAssessmentData = '';
+  renderedAssessmentQuestions: any[] = [];
   dateRange: Date[] = [];
   sortDirection: 'ASC' | 'DESC' = 'DESC';
   showFutureSessions = false;
@@ -230,11 +231,13 @@ export class ClinicalFollowUpListComponent implements OnChanges {
 
     this.rawAssessmentTitle = this.assessmentName(resource);
     this.rawAssessmentData = '';
+    this.renderedAssessmentQuestions = [];
     this.rawAssessmentLoading = true;
     this.rawAssessmentModalVisible = true;
     this.calendarService.getQuestionnaireAssessment(assessment.questionnaireAssessmentId).subscribe(
       (data: any) => {
         this.rawAssessmentData = JSON.stringify(data?.answers || [], null, 2);
+        this.renderedAssessmentQuestions = this.renderAssessment(data);
         this.rawAssessmentLoading = false;
       },
       (error: any) => {
@@ -242,6 +245,34 @@ export class ClinicalFollowUpListComponent implements OnChanges {
         this.errorService.handleError(error, { prefix: 'Unable to load assessment answers' });
       }
     );
+  }
+
+  entryIsAssessmentNote(entry: CaseHistoryEntry): boolean {
+    return !!entry.assessmentId;
+  }
+
+  openRawAssessmentEntry(entry: CaseHistoryEntry): void {
+    if (!entry.questionnaireAssessmentId) return;
+    this.rawAssessmentTitle = this.entryAssessmentLabel(entry);
+    this.rawAssessmentData = '';
+    this.renderedAssessmentQuestions = [];
+    this.rawAssessmentLoading = true;
+    this.rawAssessmentModalVisible = true;
+    this.calendarService.getQuestionnaireAssessment(entry.questionnaireAssessmentId).subscribe(
+      (data: any) => {
+        this.rawAssessmentData = JSON.stringify(data?.answers || [], null, 2);
+        this.renderedAssessmentQuestions = this.renderAssessment(data);
+        this.rawAssessmentLoading = false;
+      },
+      (error: any) => {
+        this.rawAssessmentLoading = false;
+        this.errorService.handleError(error, { prefix: 'Unable to load assessment answers' });
+      }
+    );
+  }
+
+  entryAssessmentLabel(entry: CaseHistoryEntry): string {
+    return entry.assessmentName || entry.assessmentTypeName || entry.title || `Evaluacion ${entry.assessmentId}`;
   }
 
   formatPerson(person: any): string {
@@ -302,5 +333,25 @@ export class ClinicalFollowUpListComponent implements OnChanges {
     const value = new Date(date);
     value.setHours(23, 59, 59, 999);
     return value;
+  }
+
+  private renderAssessment(data: any): any[] {
+    const answers = data?.answers || [];
+    return (data?.questionnaires || [])
+      .map((questionnaire: any) =>
+        (questionnaire.questionGroups || []).map((group: any) =>
+          (group.questions || []).map((question: any) => {
+            const answer = answers.find((candidate: any) => candidate.question === question._id);
+            return {
+              questionnaireName: questionnaire.name,
+              groupLabel: group.label,
+              question,
+              answer,
+            };
+          })
+        )
+      )
+      .flat(2)
+      .filter((item: any) => !!item.answer);
   }
 }

@@ -6,16 +6,19 @@ export const QuestionnaireVersionsColumns: TableColumn<FormattedQuestionnaireVer
     title: 'Abbreviation',
     name: 'abbreviation',
     translationPath: 'questionnaires.abbreviation',
+    sort: true,
   },
   {
     title: 'Language',
     name: 'language',
     translationPath: 'questionnaires.language',
+    sort: true,
   },
   {
     title: 'ID',
     name: '_id',
     translationPath: 'questionnaires.id',
+    sort: true,
   },
   {
     title: 'Name',
@@ -50,26 +53,31 @@ export const QuestionnaireVersionsColumns: TableColumn<FormattedQuestionnaireVer
     name: 'keywords',
     translationPath: 'questionnaires.keywords',
     render: 'array',
+    sort: true,
   },
   {
     title: 'Time to complete',
     name: 'timeToComplete',
     translationPath: 'questionnaires.timeToComplete',
+    sort: true,
   },
   {
     title: 'Copyright',
     name: 'copyright',
     translationPath: 'questionnaires.copyright',
+    sort: true,
   },
   {
     title: 'Website',
     name: 'website',
     translationPath: 'questionnaires.website',
+    sort: true,
   },
   {
     title: 'License',
     name: 'license',
     translationPath: 'questionnaires.license',
+    sort: true,
   },
   {
     title: 'Created at',

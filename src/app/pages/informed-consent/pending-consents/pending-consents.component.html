@@ -1,0 +1,50 @@
+<nz-spin [nzSpinning]="loading">
+  <div class="ci-pending">
+    <article class="ci-document ci-document--complete" *ngIf="submittedThankYouHtml; else pendingConsentList">
+      <div class="ci-rich-text" [innerHTML]="submittedThankYouHtml"></div>
+      <div class="ci-actions">
+        <button nz-button type="button" (click)="goHome()">Salir</button>
+      </div>
+    </article>
+
+    <ng-template #pendingConsentList>
+      <nz-empty *ngIf="!visiblePendingItems.length" nzNotFoundContent="No tenés consentimientos pendientes."></nz-empty>
+
+      <article class="ci-document" *ngFor="let item of visiblePendingItems">
+        <div class="ci-document-state" *ngIf="modelLoading[item.modelId]">
+          Cargando consentimiento informado...
+        </div>
+
+        <div class="ci-document-state ci-document-state--error" *ngIf="modelLoadError[item.modelId]">
+          No se pudo cargar este consentimiento informado.
+        </div>
+
+        <ng-container *ngIf="model(item) as modelData">
+          <ng-container *ngFor="let block of modelBlocks[item.modelId]">
+            <section *ngIf="block.blockType === 'TEXT'" class="ci-section">
+              <h3 *ngIf="block.title">{{ block.title }}</h3>
+              <div class="ci-rich-text" [innerHTML]="block.content"></div>
+            </section>
+
+            <div class="ci-question" *ngIf="block.blockType === 'QUESTION'">
+              <strong>{{ block.label }}</strong>
+              <p *ngIf="block.helpText">{{ block.helpText }}</p>
+              <nz-radio-group
+                [ngModel]="selectedAnswer(item, block.id)"
+                (ngModelChange)="setAnswer(item, block.id, $event)"
+              >
+                <label nz-radio *ngFor="let option of block.answerOptions" [nzValue]="option.id">{{ option.label }}</label>
+              </nz-radio-group>
+            </div>
+          </ng-container>
+
+          <div class="ci-actions">
+            <button nz-button nzType="primary" [nzLoading]="savingId === item.managementId" (click)="submit(item)">
+              {{ submitButtonLabel(modelData) }}
+            </button>
+          </div>
+        </ng-container>
+      </article>
+    </ng-template>
+  </div>
+</nz-spin>

@@ -57,6 +57,7 @@ export const CaregiverTable: TableColumn<Caregiver>[] = [
     name: 'patients',
     translationPath: 'tables.contact.patients',
     render: 'avatar',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,

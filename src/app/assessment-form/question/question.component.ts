@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { Question, QuestionType } from '@app/assessment-form/@types/question';
+import { QuestionnaireVersion } from '@app/pages/questionnaire-management/@types/questionnaire';
 import { Answer } from '../@types/answer';
 import { AssessmentFormService } from '../assessment-form.service';
 import { ErrorHandlerService } from '../../@shared/services/error-handler.service';
@@ -23,6 +24,9 @@ export class QuestionComponent {
 
   public QuestionType = QuestionType;
 
+  @Input()
+  public questionnaire: QuestionnaireVersion;
+
   public dateFormat: string;
 
   public answer: Answer;
@@ -42,8 +46,7 @@ export class QuestionComponent {
   }
 
   public addAnswer(answer: Answer): void {
-    this.assessmentFormService
-      .addAnswer({
+    const request = {
         question: answer.question,
         textValue: answer.textValue,
         multipleChoiceValue: answer.multipleChoiceValue,
@@ -53,7 +56,11 @@ export class QuestionComponent {
 
         dateValue: answer.dateValue,
         booleanValue: answer.booleanValue,
-      })
+      };
+    const save$ = this.questionnaire
+      ? this.assessmentFormService.addAnswerForQuestionnaire(this.questionnaire, request)
+      : this.assessmentFormService.addAnswer(request);
+    save$
       .subscribe(
         // override existing answer, but keep current values
         (answers) =>
@@ -104,6 +111,7 @@ export class QuestionComponent {
   }
 
   private get currentOccurrenceId(): string | null {
+    if (this.questionnaire) return (this.questionnaire as any)?.occurrenceId || null;
     return this.assessmentFormService.questionnaireSnapshot?.occurrenceId || null;
   }
 }

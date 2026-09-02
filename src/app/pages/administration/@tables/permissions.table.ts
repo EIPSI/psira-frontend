@@ -6,12 +6,14 @@ const columns: any[] = [
     name: 'name',
     translationPath: 'tables.permission.name',
     isFilterable: false,
+    sort: true,
   },
   {
     title: 'Created At',
     name: 'createdAt',
     translationPath: 'tables.permission.name',
     isFilterable: false,
+    sort: true,
   },
 ];
 

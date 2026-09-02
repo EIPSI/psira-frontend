@@ -32,6 +32,7 @@ export const ReportForm: Form = {
             { label: 'Patients', value: 'Patients' },
             { label: 'Therapists', value: 'Therapists' },
             { label: 'Supervisors', value: 'Supervisors' },
+            { label: 'Usuarios', value: 'Users' },
             { label: 'Dashboard', value: 'Dashboard' },
           ],
           validationMessage: 'please Enter Report resources',

@@ -80,6 +80,15 @@ export interface ResolvedQuestionnaire {
   questionnaireId: string;
   sourceBundleId?: string;
   path: string[];
+  screenId?: string;
+  screenLabel?: string;
+  screenHeaderHtml?: string;
+  screenFooterHtml?: string;
+  bundleHeaderHtml?: string;
+  bundleNoticeHtml?: string;
+  questionnaireDisplayTitle?: string;
+  showQuestionnaireTitle?: boolean;
+  screenIndex?: number;
   orderIndex: number;
 }
 

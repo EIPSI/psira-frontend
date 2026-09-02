@@ -173,18 +173,6 @@ const evaluationAutomationRuns = gql`
           resourceId
           createdAt
           updatedAt
-          automation {
-            id
-            title
-          }
-          user {
-            id
-            firstName
-            middleName
-            lastName
-            username
-            email
-          }
         }
       }
       pageInfo {

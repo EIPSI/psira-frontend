@@ -15,9 +15,16 @@
                 </nz-form-control>
             </nz-form-item >
             <nz-form-item>
+                <nz-form-label [nzSpan]="6">Emisor</nz-form-label>
+                <nz-form-control [nzSpan]="14">
+                  <input formControlName="senderName" nz-input name="senderName" type="text" id="senderName" placeholder="PSIRA">
+                </nz-form-control>
+            </nz-form-item >
+            <nz-form-item>
                 <nz-form-label [nzSpan]="6">{{'emailTemplates.body' | translate}}</nz-form-label>
                 <nz-form-control [nzSpan]="14">
                   <div class="template-tools">
+                    <button nz-button nzSize="small" type="button" (click)="showPreview()">Previsualizar</button>
                     <button nz-button nzSize="small" type="button" (click)="showShortcuts()">Variables disponibles</button>
                   </div>
                   <angular-editor [config]="editorConfig" [placeholder]="'Enter email body here...'" formControlName="body"></angular-editor>
@@ -71,22 +78,58 @@
   nzTitle="Variables disponibles"
   nzOkText="Cerrar"
   [nzCancelText]="null"
+  [nzWidth]="920"
+  (nzOnCancel)="shortcutsVisible = false"
   (nzOnOk)="shortcutsVisible = false"
 >
-  <div class="shortcut-groups">
+  <div *nzModalContent class="shortcut-groups">
     <section *ngFor="let group of shortcutGroups" class="shortcut-group">
-      <h3>{{ group }}</h3>
-      <button
-        nz-button
-        type="button"
+      <h3>{{ shortcutGroupTitle(group) }}</h3>
+      <div
         class="shortcut-row"
+        role="button"
+        tabindex="0"
         *ngFor="let shortcut of shortcutsForGroup(group)"
         (click)="insertShortcut(shortcut.token)"
+        (keydown.enter)="insertShortcut(shortcut.token)"
+        (keydown.space)="insertShortcut(shortcut.token); $event.preventDefault()"
       >
-        <strong>{{ shortcut.label }}</strong>
-        <code>{{ shortcut.token }}</code>
-        <span>{{ shortcut.description }}</span>
-      </button>
+        <span class="shortcut-variable">
+          <strong>{{ shortcut.label || shortcut.token }}</strong>
+          <span class="shortcut-token" (mousedown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+            <code>{{ shortcut.token }}</code>
+            <button
+              nz-button
+              nzSize="small"
+              nzShape="circle"
+              type="button"
+              class="shortcut-copy"
+              title="Copiar variable"
+              (mousedown)="$event.stopPropagation()"
+              (click)="copyShortcut(shortcut.token, $event)"
+            >
+              <span nz-icon nzType="copy" nzTheme="outline"></span>
+            </button>
+          </span>
+        </span>
+        <span class="shortcut-description">{{ shortcut.description }}</span>
+      </div>
     </section>
+  </div>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="previewVisible"
+  nzTitle="Previsualizacion del email"
+  nzOkText="Cerrar"
+  [nzCancelText]="null"
+  [nzWidth]="860"
+  (nzOnCancel)="previewVisible = false"
+  (nzOnOk)="previewVisible = false"
+>
+  <div *nzModalContent class="email-preview">
+    <p class="email-preview__sender">De: {{ emailForm.controls['senderName'].value || 'PSIRA' }}</p>
+    <h2>{{ emailForm.controls['subject'].value || 'Sin asunto' }}</h2>
+    <div class="email-preview__body" [innerHTML]="emailForm.controls['body'].value"></div>
   </div>
 </nz-modal>

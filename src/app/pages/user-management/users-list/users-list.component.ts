@@ -103,7 +103,7 @@ export class UsersListComponent {
 
   public onUserSelect(user: FormattedUser): void {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(user), environment.secretKey).toString();
-    this.router.navigate([this.roleCodeFilter ? '/psira/user-management/profile' : '/psira/user-management/user-form'], {
+    this.router.navigate(['/psira/user-management/profile'], {
       queryParams: {
         user: dataString,
         roleCode: this.roleCodeFilter,
@@ -163,9 +163,7 @@ export class UsersListComponent {
 
   private getDepartments(): void {
     this.departmentsService.departments({paging: {first: 50}}).subscribe(({ data }) => {
-      const departments: Department[] = data.departments.edges
-        .map((e: any) => e.node)
-        .filter((department: Department) => department.name !== 'Particular');
+      const departments: Department[] = data.departments.edges.map((e: any) => e.node);
       const column = this.columns.find((c) => c.name === 'formattedDepartments');
       column.filterField.options = departments.map((d) => ({ label: d.name, value: d.id }));
       this.columns = [...this.columns]; // trigger re-render

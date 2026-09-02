@@ -57,6 +57,14 @@ const routes: Routes = [
         canActivate: [PermissionGuard],
       },
       {
+        path: 'my-profile',
+        component: UserFormComponent,
+        data: {
+          breadcrumbI18nKey: 'card.profile',
+          ownProfile: true,
+        },
+      },
+      {
         path: 'therapist-form',
         component: UserFormComponent,
         data: {

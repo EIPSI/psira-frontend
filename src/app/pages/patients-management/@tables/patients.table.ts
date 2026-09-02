@@ -88,6 +88,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     name: 'formattedInformants',
     translationPath: 'tables.patients.informants',
     render: 'avatar',
+    sort: true,
   },
   {
     title: 'Case Manager',
@@ -95,6 +96,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     translationPath: 'tables.patients.caseManager',
     altName: 'caseManagers',
     render: 'avatar',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,

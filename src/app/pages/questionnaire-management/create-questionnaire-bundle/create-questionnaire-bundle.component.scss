@@ -100,6 +100,26 @@
   font-weight: 600;
 }
 
+.inline-toggle {
+  display: inline-flex;
+  align-items: center;
+}
+
+.screen-rich-texts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+  margin: 10px 0 8px 64px;
+}
+
+.screen-rich-texts label {
+  display: grid;
+  gap: 6px;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .number-field nz-input-number {
   width: 84px;
 }
@@ -138,4 +158,62 @@
 
 .cdk-drop-list-dragging .node:not(.cdk-drag-placeholder) {
   transition: transform 160ms ease;
+}
+
+.bundle-preview {
+  display: grid;
+  gap: 18px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.bundle-preview__header,
+.bundle-preview__notice {
+  background: #f8fafc;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.bundle-preview__screen {
+  display: grid;
+  gap: 14px;
+  padding-top: 8px;
+}
+
+.bundle-preview__questionnaire {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.bundle-preview__group {
+  margin-top: 12px;
+}
+
+.bundle-preview__question {
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.bundle-preview__options,
+.bundle-preview__question nz-radio-group {
+  display: grid;
+  gap: 8px;
+}
+
+.bundle-preview__empty-answer {
+  display: inline-block;
+  margin-top: 8px;
+  color: #697386;
+}
+
+.bundle-preview__copy {
+  color: #344054;
+  margin: 12px 0;
 }

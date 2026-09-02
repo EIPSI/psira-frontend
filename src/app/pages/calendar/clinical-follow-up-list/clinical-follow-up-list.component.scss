@@ -121,6 +121,41 @@
   white-space: pre-wrap;
 }
 
+.assessment-answer-preview {
+  display: grid;
+  gap: 14px;
+}
+
+.assessment-answer-question {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 12px;
+}
+
+.assessment-answer-question small {
+  color: #667085;
+}
+
+.assessment-answer-question ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.assessment-answer-question li,
+.assessment-answer-question p {
+  border: 1px solid #d0d5dd;
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.assessment-answer-question .selected-answer {
+  background: #f6ffed;
+  border-color: #95de64;
+  color: #237804;
+}
+
 .follow-up-editor {
   display: grid;
   gap: 12px;

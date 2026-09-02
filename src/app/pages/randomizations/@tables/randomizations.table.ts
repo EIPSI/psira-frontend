@@ -18,16 +18,19 @@ export const RandomizationsTable: TableColumn<RandomizationRule>[] = [
     altName: 'type',
     translationPath: 'randomizations.type',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Department',
     name: 'departmentNames',
     translationPath: 'randomizations.department',
+    sort: true,
   },
   {
     title: 'Items',
     name: 'itemCount',
     translationPath: 'randomizations.itemCount',
+    sort: true,
   },
   {
     title: 'Status',
@@ -35,6 +38,7 @@ export const RandomizationsTable: TableColumn<RandomizationRule>[] = [
     altName: 'active',
     translationPath: 'randomizations.status',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Created At',

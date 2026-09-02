@@ -88,6 +88,13 @@ const routes: Routes = [
     loadChildren: () => import('./notifications/notifications.module').then((m) => m.NotificationsModule),
   },
   {
+    path: 'informed-consent',
+    data: {
+      breadcrumbI18nKey: 'Consentimiento Informado',
+    },
+    loadChildren: () => import('./informed-consent/informed-consent.module').then((m) => m.InformedConsentModule),
+  },
+  {
     path: 'reports',
     data: {
       breadcrumbI18nKey: 'menu.reports',

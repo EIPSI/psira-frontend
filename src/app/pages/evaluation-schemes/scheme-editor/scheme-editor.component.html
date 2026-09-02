@@ -238,6 +238,7 @@
       </div>
 
       <nz-table
+        #sessionResourceTable
         class="resource-table"
         [nzData]="sessionResources()"
         [nzFrontPagination]="false"
@@ -245,18 +246,18 @@
       >
         <thead>
           <tr>
-            <th>Tipo</th>
-            <th>Evaluacion</th>
-            <th>Sesiones</th>
-            <th>Activacion</th>
-            <th>Vencimiento</th>
-            <th>Responde</th>
-            <th>Recordatorios</th>
+            <th [nzSortFn]="resourceStringSort('resourceKind')">Tipo</th>
+            <th [nzSortFn]="resourceContentSort">Evaluacion</th>
+            <th [nzSortFn]="resourceTargetSort">Sesiones</th>
+            <th [nzSortFn]="resourceNumberSort('activationOffsetMinutes')">Activacion</th>
+            <th [nzSortFn]="resourceDurationSort">Vencimiento</th>
+            <th [nzSortFn]="resourceResponderSort">Responde</th>
+            <th [nzSortFn]="resourceReminderSort">Recordatorios</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            *ngFor="let resource of sessionResources()"
+            *ngFor="let resource of sessionResourceTable.data"
             (click)="editSessionResource(resource)"
             (contextmenu)="openResourceContextMenu($event, resource, resourceMenu)"
           >

@@ -27,6 +27,7 @@ export const ReportsColumns: TableColumn<Partial<FormattedReport>>[] = [
     name: 'formattedRoles',
     translationPath: 'tables.users.formattedRoles',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,

@@ -84,6 +84,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     translationPath: 'tables.users.formattedRoles',
     altName: 'roles',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,
@@ -97,6 +98,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     translationPath: 'tables.users.formattedDepartments',
     altName: 'departments',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,

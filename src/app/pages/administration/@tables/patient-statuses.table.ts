@@ -29,12 +29,14 @@ const columns: any[] = [
     name: 'formattedCreatedAt',
     translationPath: 'tables.patientStatuses.formattedCreatedAt',
     isFilterable: false,
+    sort: true,
   },
   {
     title: 'Updated Date',
     name: 'formattedUpdatedAt',
     translationPath: 'tables.patientStatuses.formattedUpdatedAt',
     isFilterable: false,
+    sort: true,
   },
 ];
 

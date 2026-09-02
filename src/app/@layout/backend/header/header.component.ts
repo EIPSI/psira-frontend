@@ -12,6 +12,7 @@ import { FieldGroup } from '@shared/components/form/@types/field.group';
 import { TranslationCode, TranslationItem } from '@shared/@types/translation';
 import { TranslateService } from '@ngx-translate/core';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
+import { InformedConsentService } from '@app/pages/informed-consent/@services/informed-consent.service';
 
 const CryptoJS = require('crypto-js');
 import { translationList } from '../../../../translations/translation-list';
@@ -31,6 +32,7 @@ export class HeaderComponent implements OnInit {
   loadingMessage = '';
   changePasswordForm: Form = userForms.changeUserPassword;
   isLoading = false;
+  hasBlockingInformedConsent = false;
 
   constructor(
     private authService: AuthService,
@@ -38,11 +40,13 @@ export class HeaderComponent implements OnInit {
     private usersService: UsersService,
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
+    private informedConsentService: InformedConsentService,
     private translationService: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.getUser();
+    this.loadInformedConsentBlock();
   }
 
   getUser() {
@@ -65,8 +69,11 @@ export class HeaderComponent implements OnInit {
   }
 
   editUserProfile() {
+    if (this.hasBlockingInformedConsent) {
+      return;
+    }
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
-    this.router.navigate(['/psira/user-management/user-form'], {
+    this.router.navigate(['/psira/user-management/my-profile'], {
       state: {
         title: `${this.user.firstName} ${this.user.lastName}`,
       },
@@ -128,5 +135,16 @@ export class HeaderComponent implements OnInit {
 
   showChangePasswordModal() {
     this.changePasswordModal = true;
+  }
+
+  private loadInformedConsentBlock(): void {
+    this.informedConsentService.getPending().subscribe(
+      (pending) => {
+        this.hasBlockingInformedConsent = (pending || []).some((consent) => consent.blocking);
+      },
+      () => {
+        this.hasBlockingInformedConsent = false;
+      }
+    );
   }
 }

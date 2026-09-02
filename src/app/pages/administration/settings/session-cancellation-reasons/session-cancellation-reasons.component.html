@@ -31,7 +31,7 @@
     <nz-form-item>
       <nz-form-label [nzSpan]="6">Lugar</nz-form-label>
       <nz-form-control [nzSpan]="14">
-        <nz-select [(ngModel)]="treePlace" nzShowSearch>
+        <nz-select [(ngModel)]="treePlace" (ngModelChange)="onTreePlaceChange($event)" nzShowSearch>
           <nz-option *ngFor="let option of placeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
         </nz-select>
       </nz-form-control>
@@ -40,7 +40,12 @@
     <nz-form-item>
       <nz-form-label [nzSpan]="6">Ámbito</nz-form-label>
       <nz-form-control [nzSpan]="14">
-        <nz-select [(ngModel)]="treeScope" nzShowSearch>
+        <nz-select
+          [(ngModel)]="treeScope"
+          nzShowSearch
+          [nzDisabled]="isGlobalReactivationPlace(treePlace)"
+          [nzPlaceHolder]="isGlobalReactivationPlace(treePlace) ? 'Todos los usuarios' : 'Seleccionar ámbito'"
+        >
           <nz-option *ngFor="let option of scopeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
         </nz-select>
       </nz-form-control>
@@ -145,14 +150,19 @@
     <div class="reason-modal-form">
       <label>
         <span>Lugar</span>
-        <nz-select [(ngModel)]="treePlace" nzShowSearch nzPlaceHolder="Seleccionar lugar">
+        <nz-select [(ngModel)]="treePlace" (ngModelChange)="onTreePlaceChange($event)" nzShowSearch nzPlaceHolder="Seleccionar lugar">
           <nz-option *ngFor="let option of placeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
         </nz-select>
       </label>
 
       <label>
         <span>Ámbito</span>
-        <nz-select [(ngModel)]="treeScope" nzShowSearch nzPlaceHolder="Seleccionar ámbito">
+        <nz-select
+          [(ngModel)]="treeScope"
+          nzShowSearch
+          [nzDisabled]="isGlobalReactivationPlace(treePlace)"
+          [nzPlaceHolder]="isGlobalReactivationPlace(treePlace) ? 'Todos los usuarios' : 'Seleccionar ámbito'"
+        >
           <nz-option *ngFor="let option of scopeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
         </nz-select>
       </label>
@@ -185,7 +195,16 @@
     <div class="reason-modal-form">
       <label>
         <span>Lugar</span>
-        <input nz-input [ngModel]="contextLabel(selectedTree?.context)" disabled />
+        <input nz-input [ngModel]="placeLabel(selectedTree?.place)" disabled />
+      </label>
+
+      <label>
+        <span>Ámbito</span>
+        <input
+          nz-input
+          [ngModel]="isGlobalReactivationPlace(selectedTree?.place) ? 'Todos los usuarios' : scopeName(selectedTree?.scope)"
+          disabled
+        />
       </label>
 
       <label>

@@ -112,6 +112,7 @@ export class EmailTemplatesComponent implements OnInit {
     this.emailTemplatesService.createEmailTemplate({
       name: `${template.name} (copia)`,
       subject: template.subject,
+      senderName: template.senderName,
       body: template.body,
       status: template.status,
       purpose: template.purpose || 'NOTIFICATION',

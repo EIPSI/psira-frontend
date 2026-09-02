@@ -45,9 +45,11 @@ export interface CalendarPerson {
   firstName?: string;
   middleName?: string;
   lastName?: string;
+  departments?: Array<{ id: number; name: string }>;
 }
 
 export interface CalendarPatient extends CalendarPerson {
+  userId?: number;
   medicalRecordNo?: string;
 }
 
@@ -109,6 +111,8 @@ export enum CaseEventReasonContext {
   SUPERVISION_FINALIZATION = 'SUPERVISION_FINALIZATION',
   NEW_TREATMENT = 'NEW_TREATMENT',
   NEW_SUPERVISION = 'NEW_SUPERVISION',
+  INFORMED_CONSENT_REACTIVATION = 'INFORMED_CONSENT_REACTIVATION',
+  SUPERVISION_INFORMED_CONSENT_REACTIVATION = 'SUPERVISION_INFORMED_CONSENT_REACTIVATION',
 }
 
 export interface CaseEventReason {
@@ -171,6 +175,11 @@ export interface CaseHistoryEntry {
   title: string;
   content?: string;
   reasonSnapshot?: string;
+  assessmentId?: number;
+  assessmentTypeId?: number;
+  questionnaireAssessmentId?: string;
+  assessmentName?: string;
+  assessmentTypeName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -243,6 +252,7 @@ export interface ClinicalSessionFollowUpVersion {
 export interface ClinicalSessionFollowUpSettings {
   id: number;
   editWindowDays: number;
+  dashboardLookaheadDays: number;
   updatedAt: string;
 }
 

@@ -64,6 +64,8 @@ export class QuestionnaireBundlesService {
           active: bundle.active,
           structure: bundle.structure,
           structureJson: bundle.structureJson,
+          headerHtml: bundle.headerHtml,
+          noticeHtml: bundle.noticeHtml,
           departmentIds: bundle.departmentIds,
         },
       },
@@ -89,6 +91,8 @@ export class QuestionnaireBundlesService {
       departmentIds: bundle.departmentIds || [],
       structure,
       structureJson: JSON.stringify(structure),
+      headerHtml: bundle.headerHtml || '',
+      noticeHtml: bundle.noticeHtml || '',
     });
   }
 }

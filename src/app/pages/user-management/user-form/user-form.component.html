@@ -54,6 +54,13 @@
     <nz-tab nzTitle="Notificaciones" *ngIf="isOwnUserProfile">
       <app-notification-preferences [userId]="user.id" [accountMode]="true"></app-notification-preferences>
     </nz-tab>
+    <nz-tab nzTitle="Consentimientos firmados" *ngIf="isOwnUserProfile">
+      <app-informed-consent-responses-list
+        [ownOnlyInput]="true"
+        [latestOnly]="true"
+        [userView]="true"
+      ></app-informed-consent-responses-list>
+    </nz-tab>
   </nz-tabset>
 </ng-template>
 

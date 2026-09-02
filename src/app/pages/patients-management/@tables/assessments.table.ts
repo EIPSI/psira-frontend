@@ -9,7 +9,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     name: 'formattedAssessmentType',
     altName: 'assessmentType',
     translationPath: 'tables.assessmentsPatients.title',
-    // sort: true,
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -28,7 +28,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     name: 'formattedClinician',
     altName: 'clinician',
     translationPath: 'tables.assessmentsPatients.manager',
-    sort: false,
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -50,10 +50,12 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     name: 'formattedOrigin',
     altName: 'origin',
     render: 'tag',
+    sort: true,
   },
   {
     title: 'Sesión vinculada',
     name: 'linkedSessionLabel',
+    sort: true,
   },
   // {
   //   title: 'Informants',
@@ -69,6 +71,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     name: 'formatedQuestionnaires',
     title: 'Questionnaires',
     render: 'questAvatar',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -103,7 +106,8 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     name: 'submissionDate',
     title: 'Submission Date',
     translationPath: 'plannedAssessments.submissionDate',
-    render: 'date'
+    render: 'date',
+    sort: true,
   },
   {
     title: 'Email Status',

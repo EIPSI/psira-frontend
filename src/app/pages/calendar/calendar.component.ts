@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { addMonths, endOfMonth, format, isSameDay, startOfMonth, subMonths } from 'date-fns';
 import { finalize } from 'rxjs/operators';
 import {
@@ -10,6 +10,8 @@ import { CalendarService } from './@services/calendar.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { Patient } from '@app/pages/patients-management/@types/patient';
 import { User } from '@app/pages/user-management/@types/user';
+import { AppPermissionsService } from '@shared/services/app-permissions.service';
+import { PermissionKey } from '@shared/@types/permission';
 
 @Component({
   selector: 'app-calendar',
@@ -20,6 +22,7 @@ export class CalendarComponent implements OnChanges, OnInit {
   @Input() patientId?: number;
   @Input() therapistId?: number;
   @Input() supervisorId?: number;
+  @Output() contentChange = new EventEmitter<boolean>();
 
   occurrenceTypes = Object.values(CalendarOccurrenceType);
   selectedDate = new Date();
@@ -35,7 +38,11 @@ export class CalendarComponent implements OnChanges, OnInit {
   googleCalendarConfigured = false;
   private initialized = false;
 
-  constructor(private calendarService: CalendarService, private errorService: ErrorHandlerService) {}
+  constructor(
+    private calendarService: CalendarService,
+    private errorService: ErrorHandlerService,
+    private perms: AppPermissionsService
+  ) {}
 
   ngOnInit(): void {
     this.initialized = true;
@@ -101,6 +108,20 @@ export class CalendarComponent implements OnChanges, OnInit {
     this.detailModalVisible = true;
   }
 
+  canUsePatientFilter(): boolean {
+    if (this.perms.isPatient()) return false;
+    return this.perms.permissionsOnly([
+      PermissionKey.VIEW_PATIENTS,
+      PermissionKey.VIEW_ALL_PATIENTS,
+      PermissionKey.VIEW_DEPARTMENT_PATIENTS,
+      PermissionKey.VIEW_ASSIGNED_PATIENTS,
+    ]);
+  }
+
+  canUseUserFilters(): boolean {
+    return this.perms.permissionsOnly([PermissionKey.VIEW_USERS]);
+  }
+
   private loadOccurrences(): void {
     const filter: CalendarOccurrenceFilter = {
       from: startOfMonth(this.selectedDate),
@@ -116,8 +137,15 @@ export class CalendarComponent implements OnChanges, OnInit {
       .getOccurrences(filter)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
-        (occurrences) => (this.occurrences = occurrences),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load calendar' })
+        (occurrences) => {
+          this.occurrences = occurrences;
+          this.contentChange.emit(this.occurrences.length > 0);
+        },
+        (error) => {
+          this.occurrences = [];
+          this.contentChange.emit(false);
+          this.errorService.handleError(error, { prefix: 'Unable to load calendar' });
+        }
       );
   }
 
