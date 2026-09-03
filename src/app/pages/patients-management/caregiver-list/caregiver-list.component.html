@@ -18,8 +18,8 @@
       nz-button
       nzType="primary"
       nzShape="circle"
-      (click)="openCreatePanel()"
-      *ngIf="perms.permissionsOnly(PK.MANAGE_SETTINGS)"
+      routerLink="/psira/case-management/caregiver-form"
+      *ngIf="perms.permissionsOnly(PK.MANAGE_CAREGIVERS)"
     >
       <i nz-icon nzType="plus"></i>
     </button>

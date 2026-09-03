@@ -6,6 +6,7 @@
     <ng-template #plainTitle> {{ field?.title }} </ng-template>
     <span style="color: red" *ngIf="field?.isRequired && inputMode"> *</span>
   </b>
+  <small class="field-description" *ngIf="field.showDescription && field.description">{{ field.description }}</small>
 </label>
 <ng-container *ngIf="inputMode">
   <nz-input-group

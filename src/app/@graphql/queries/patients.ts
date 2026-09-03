@@ -40,8 +40,9 @@ const getPatients = gql`
             middleName
             lastName
             phone
-            email
-            createdAt
+        email
+        caregiverId
+        createdAt
             updatedAt
           }
           informants {

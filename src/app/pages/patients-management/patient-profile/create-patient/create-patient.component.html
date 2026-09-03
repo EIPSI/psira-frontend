@@ -40,16 +40,17 @@
 
     <div class="institutional-field">
       <label class="institutional-label">
-        <b><span translate>forms.patients.caseManager</span></b>
+        <b><span translate>forms.patients.caseManager</span> <span class="required-mark" *ngIf="inputMode">*</span></b>
       </label>
       <div class="institutional-control">
         <nz-select
           *ngIf="inputMode"
+          nzMode="multiple"
           nzShowSearch
           nzAllowClear
           nzPlaceHolder="Select Case Manager"
           [nzDisabled]="getAccessScope() === 'ASSIGNED'"
-          [(ngModel)]="selectedCaseManagerId"
+          [(ngModel)]="selectedCaseManagerIds"
         >
           <nz-option *ngFor="let option of caseManagerOptions" [nzValue]="option.value" [nzLabel]="option.label">
           </nz-option>

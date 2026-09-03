@@ -51,7 +51,7 @@ export class EmergencyContactsService {
     return this.apollo.mutate({
       mutation: EmergencyContactsMutations.updateOneEmergencyContact,
       variables: {
-        input: { emergencyContact },
+        input: emergencyContact,
       },
       fetchPolicy: 'no-cache',
     });

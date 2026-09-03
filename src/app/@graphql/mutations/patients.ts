@@ -31,6 +31,7 @@ const createPatient = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }
@@ -112,6 +113,7 @@ const archiveOnePatient = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }
@@ -193,6 +195,7 @@ const updatePatient = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }
@@ -274,6 +277,7 @@ const changePatientStatus = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }

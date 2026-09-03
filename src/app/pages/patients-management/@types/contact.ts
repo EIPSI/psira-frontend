@@ -1,6 +1,7 @@
 export interface Contact {
   id?: number;
   patientId?: number;
+  caregiverId?: number;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -9,6 +10,7 @@ export interface Contact {
   relation: string;
   emergency: boolean;
   note: string;
+  createCaregiver?: boolean;
 }
 
 export interface UpdateOneEmergencyContactInput {
@@ -17,7 +19,11 @@ export interface UpdateOneEmergencyContactInput {
 }
 
 export interface UpdateEmergencyContact {
-  firstName: string;
-  lastName: string;
-  relation: string;
+  patientId?: number;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
+  caregiverId?: number;
 }

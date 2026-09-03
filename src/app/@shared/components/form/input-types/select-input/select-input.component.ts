@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Field } from '@shared/components/form/@types/field';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
@@ -7,7 +7,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
   templateUrl: './select-input.component.html',
   styleUrls: ['./select-input.component.scss'],
 })
-export class SelectInputComponent implements OnInit {
+export class SelectInputComponent implements OnInit, OnChanges {
   @Input() field: Field;
   @Input() inputMode = false;
   @Input() autoFill = false;
@@ -20,6 +20,12 @@ export class SelectInputComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeInput();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.inputGroup && changes.field) {
+      this.inputGroup.controls[this.field.name]?.setValue(this.field.value, { emitEvent: false });
+    }
   }
 
   initializeInput() {
@@ -46,6 +52,7 @@ export class SelectInputComponent implements OnInit {
       }
     }
     this.inputGroup = new FormGroup({ [this.field.name]: control });
+    this.inputGroup.controls[this.field.name].setValue(this.field.value, { emitEvent: false });
   }
 
   inputIsValid(): boolean {
@@ -54,6 +61,8 @@ export class SelectInputComponent implements OnInit {
   }
 
   handleValueChange(input: any) {
+    this.field.value = input;
+    this.inputGroup.controls[this.field.name]?.setValue(input, { emitEvent: false });
     this.valueChange.emit(input);
   }
 

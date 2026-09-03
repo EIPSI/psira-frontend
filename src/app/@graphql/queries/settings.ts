@@ -11,6 +11,8 @@ const settings = gql`
       maxLoginAttempts
       passwordLifeTimeInDays
       passwordReUseCutoffInDays
+      notificationLogRetentionDays
+      accessTokenRetentionDays
       evaluationAutomationRunRetentionDays
       treatmentFinalizationUndoWindowDays
       patientCaseManagerAssignableHierarchyRank

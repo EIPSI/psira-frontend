@@ -5,7 +5,6 @@ import {
   addWeeks,
   endOfMonth,
   endOfWeek,
-  format,
   isSameDay,
   isSameMonth,
   startOfMonth,
@@ -20,6 +19,7 @@ import {
   CalendarView,
   ClinicalSessionCancellationType,
 } from '../@types/calendar';
+import { formatSystemDateTime, formatSystemTime, configuredMoment } from '@shared/utils/system-settings.util';
 
 @Component({
   selector: 'app-calendar-grid',
@@ -66,11 +66,11 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   }
 
   get title(): string {
-    if (this.view === CalendarView.DAY) return format(this.selectedDate, 'EEEE d MMMM yyyy');
+    if (this.view === CalendarView.DAY) return configuredMoment(this.selectedDate).format('dddd D MMMM YYYY');
     if (this.view === CalendarView.WEEK) {
-      return `${format(startOfWeek(this.selectedDate), 'd MMM')} - ${format(endOfWeek(this.selectedDate), 'd MMM yyyy')}`;
+      return `${configuredMoment(startOfWeek(this.selectedDate)).format('D MMM')} - ${configuredMoment(endOfWeek(this.selectedDate)).format('D MMM YYYY')}`;
     }
-    return format(this.selectedDate, 'MMMM yyyy');
+    return configuredMoment(this.selectedDate).format('MMMM YYYY');
   }
 
   get monthDays(): Date[] {
@@ -138,7 +138,23 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   }
 
   formatTime(value: string): string {
-    return format(new Date(value), 'HH:mm');
+    return formatSystemTime(value);
+  }
+
+  formatWeekday(value: Date, long = false): string {
+    return configuredMoment(value).format(long ? 'dddd' : 'ddd');
+  }
+
+  formatDay(value: Date): string {
+    return configuredMoment(value).format('D');
+  }
+
+  isToday(value: Date): boolean {
+    return isSameDay(value, this.today);
+  }
+
+  formatDateTime(value: string): string {
+    return formatSystemDateTime(value);
   }
 
   isMutedMonthDay(date: Date): boolean {

@@ -23,6 +23,7 @@ import { CalendarOccurrence, CalendarOccurrenceStatus, CalendarOccurrenceType } 
 import { CalendarService } from '../calendar/@services/calendar.service';
 import { DepartmentsService } from '../administration/@services/departments.service';
 import { Department } from '../administration/@types/department';
+import { formatSystemDateTime } from '@shared/utils/system-settings.util';
 
 const CryptoJS = require('crypto-js');
 
@@ -372,14 +373,18 @@ export class DashboardComponent implements OnInit {
 
   public assessmentActivationLabel(assessment: FormattedAssessment): string {
     return assessment.deliveryDate
-      ? `Activacion: ${new Date(assessment.deliveryDate).toLocaleString()}`
+      ? `Activacion: ${formatSystemDateTime(assessment.deliveryDate)}`
       : 'Activacion inmediata';
   }
 
   public assessmentExpirationLabel(assessment: FormattedAssessment): string {
     return assessment.expirationDate
-      ? `Expiracion: ${new Date(assessment.expirationDate).toLocaleString()}`
+      ? `Expiracion: ${formatSystemDateTime(assessment.expirationDate)}`
       : 'Sin expiracion';
+  }
+
+  public formatDashboardDateTime(date: string | Date): string {
+    return formatSystemDateTime(date);
   }
 
   public sessionTitle(session: CalendarOccurrence): string {

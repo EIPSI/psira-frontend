@@ -7,6 +7,7 @@ import { InformantsListComponent } from './informants-list/informants-list.compo
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { PermissionGuard } from '../../permission.guard';
 import { CaregiverListComponent } from './caregiver-list/caregiver-list.component';
+import { CaregiverFormComponent } from './caregiver-form/caregiver-form.component';
 import { CreateReportComponent } from '../administration/create-report/create-report.component';
 import { CreateAssessmentComponent } from './create-assessment/create-assessment.component';
 
@@ -50,6 +51,17 @@ const routes: Routes = [
           breadcrumbI18nKey: 'menu.caregiverList',
           permissions: {
             only: [PermissionKey.VIEW_PATIENTS],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'caregiver-form',
+        component: CaregiverFormComponent,
+        data: {
+          breadcrumbI18nKey: 'core.createCaregiver',
+          permissions: {
+            only: [PermissionKey.MANAGE_CAREGIVERS],
           },
         },
         canActivate: [PermissionGuard],

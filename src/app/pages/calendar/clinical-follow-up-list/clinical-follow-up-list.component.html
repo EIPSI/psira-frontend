@@ -26,7 +26,7 @@
       <header class="card-header" *ngIf="item.type === 'SESSION'">
         <div>
           <h3>Sesion {{ displaySessionNumber(item.session) || '-' }}</h3>
-          <span>{{ sessionDate(item.session) | date: 'short' }}</span>
+          <span>{{ sessionDate(item.session) | formatDateTime }}</span>
         </div>
         <div class="card-actions">
           <nz-tag [nzColor]="isNoShowCancelled(item.session) ? 'default' : 'processing'">
@@ -69,7 +69,7 @@
         <header class="card-header">
           <div>
             <h3>{{ item.entry.title }}</h3>
-            <span>{{ item.entry.occurredAt | date: 'short' }}</span>
+            <span>{{ item.entry.occurredAt | formatDateTime }}</span>
           </div>
           <nz-tag [nzColor]="entryColor(item.entry)">
             {{ item.entry.entryKind }}
@@ -114,7 +114,7 @@
     <div class="version-list" *ngIf="versions.length">
       <h4>Versiones anteriores</h4>
       <div class="version-row" *ngFor="let version of versions">
-        <strong>{{ version.createdAt | date: 'short' }}</strong>
+        <strong>{{ version.createdAt | formatDateTime }}</strong>
         <span *ngIf="version.editedBy">{{ formatPerson(version.editedBy) }}</span>
         <p>{{ version.previousText || 'Sin texto previo' }}</p>
       </div>

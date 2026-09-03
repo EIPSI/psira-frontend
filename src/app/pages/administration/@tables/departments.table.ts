@@ -39,6 +39,26 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
     },
   },
   {
+    title: 'Aplica a roles',
+    name: 'formattedAppliedRoles',
+    altName: 'appliedRoleCodes',
+    sort: false,
+    filterField: {
+      type: 'text',
+      value: undefined,
+    },
+  },
+  {
+    title: 'Por defecto para roles',
+    name: 'formattedDefaultRoles',
+    altName: 'defaultRoleCodes',
+    sort: false,
+    filterField: {
+      type: 'text',
+      value: undefined,
+    },
+  },
+  {
     title: 'Created At',
     name: 'createdAt',
     translationPath: 'tables.department.createdAt',

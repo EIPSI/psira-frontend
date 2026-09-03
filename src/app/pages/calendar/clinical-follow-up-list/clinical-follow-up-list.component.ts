@@ -14,6 +14,7 @@ import {
   ClinicalSessionKind,
   ClinicalSessionResource,
 } from '../@types/calendar';
+import { formatSystemDateTime } from '@shared/utils/system-settings.util';
 
 @Component({
   selector: 'app-clinical-follow-up-list',
@@ -172,7 +173,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
 
   sessionTitle(session: ClinicalSession): string {
     const number = this.displaySessionNumber(session) ? `Sesion ${this.displaySessionNumber(session)}` : 'Sesion';
-    return `${number} - ${new Date(session.calendarOccurrence.startAt).toLocaleString()}`;
+    return `${number} - ${formatSystemDateTime(session.calendarOccurrence.startAt)}`;
   }
 
   displaySessionNumber(session: ClinicalSession): number | undefined {

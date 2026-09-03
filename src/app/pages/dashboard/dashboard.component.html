@@ -106,8 +106,8 @@
                 <span class="dashboard-task__content">
                 <strong>{{ sessionTitle(session) }}</strong>
                 <small>
-                  {{ sessionKindLabel(session) }} - Activacion: {{ session.startAt | date:'short' }}
-                  <span *ngIf="session.endAt"> - Expiracion: {{ session.endAt | date:'short' }}</span>
+                  {{ sessionKindLabel(session) }} - Activacion: {{ formatDashboardDateTime(session.startAt) }}
+                  <span *ngIf="session.endAt"> - Expiracion: {{ formatDashboardDateTime(session.endAt) }}</span>
                 </small>
                 </span>
                 <span class="dashboard-task__action">Proximamente</span>

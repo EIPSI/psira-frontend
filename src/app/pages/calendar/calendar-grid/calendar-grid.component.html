@@ -22,21 +22,21 @@
 
   <nz-spin [nzSpinning]="loading">
     <section *ngIf="view === CV.MONTH" class="month-view">
-      <div class="weekday" *ngFor="let day of weekDays">{{ day | date:'EEE' }}</div>
+      <div class="weekday" *ngFor="let day of weekDays">{{ formatWeekday(day) }}</div>
       <div
         role="button"
         tabindex="0"
         class="month-day"
         *ngFor="let day of monthDays"
         [class.month-day--muted]="isMutedMonthDay(day)"
-        [class.month-day--today]="(day | date:'yyyyMMdd') === (today | date:'yyyyMMdd')"
+        [class.month-day--today]="isToday(day)"
         (mouseup)="onCellMouseUp($event, day)"
         (contextmenu)="onCellContextMenu($event)"
         (dragenter)="onDragOver($event)"
         (dragover)="onDragOver($event)"
         (drop)="onDrop($event, day)"
       >
-        <span class="day-number">{{ day | date:'d' }}</span>
+        <span class="day-number">{{ formatDay(day) }}</span>
         <div
           class="calendar-event"
           *ngFor="let event of eventsForDate(day) | slice:0:4"
@@ -61,8 +61,8 @@
     <section *ngIf="view === CV.WEEK" class="time-grid">
       <div class="time-corner"></div>
       <div class="time-day-header" *ngFor="let day of weekDays">
-        <strong>{{ day | date:'EEE' }}</strong>
-        <span>{{ day | date:'d' }}</span>
+        <strong>{{ formatWeekday(day) }}</strong>
+        <span>{{ formatDay(day) }}</span>
       </div>
 
       <ng-container *ngFor="let hour of hourSlots">
@@ -102,8 +102,8 @@
     <section *ngIf="view === CV.DAY" class="time-grid time-grid--day">
       <div class="time-corner"></div>
       <div class="time-day-header">
-        <strong>{{ selectedDate | date:'EEEE' }}</strong>
-        <span>{{ selectedDate | date:'d' }}</span>
+        <strong>{{ formatWeekday(selectedDate, true) }}</strong>
+        <span>{{ formatDay(selectedDate) }}</span>
       </div>
 
       <ng-container *ngFor="let hour of hourSlots">

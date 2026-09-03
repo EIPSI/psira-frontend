@@ -152,19 +152,7 @@ export class UserFormComponent implements OnInit {
           const departments = page.edges.map((departmentData: any) => Convert.toDepartment(departmentData.node));
           this.particularDepartment = departments.find((department: Department) => department.name === 'Particular');
           this.departments = departments;
-
-          this.profileFields.groups.map((group) => {
-            group.fields.map((field) => {
-              if (field.name === 'departmentId') {
-                field.options = this.departments.map((department: Department) => {
-                  return {
-                    value: department.id,
-                    label: `${department.name}`,
-                  };
-                });
-              }
-            });
-          });
+          this.updateDepartmentFieldForSelectedRoles();
         },
         (error) =>
           this.errorService.handleError(error, {
@@ -221,6 +209,7 @@ export class UserFormComponent implements OnInit {
           })
         );
         this.applyDefaultRole();
+        this.updateDepartmentFieldForSelectedRoles();
         if (this.section !== 'settings') {
           this.loadAssignmentOptions();
         }
@@ -310,7 +299,11 @@ export class UserFormComponent implements OnInit {
         this.loadOwnUserProfile();
       } else {
         this.defaultRoleCode = params.roleCode || this.activatedRoute.snapshot.data?.roleCode;
-        this.user = { password: this.generateTemporaryPassword() } as User & { password: string };
+        const draft = params.draft ? this.decryptDraft(params.draft) : {};
+        this.user = { password: this.generateTemporaryPassword(), ...draft } as User & { password: string };
+        if (draft.departmentIds) {
+          (this.user as any).departmentId = draft.departmentIds;
+        }
         this.resetForm = false;
         this.newMode = true;
         this.inputMode = true;
@@ -354,6 +347,7 @@ export class UserFormComponent implements OnInit {
     }
     if (change.name === 'roleId') {
       this.previewRoleIds = Array.isArray(change.value) ? change.value : [change.value].filter((id) => !!id);
+      this.updateDepartmentFieldForSelectedRoles();
     }
     if (change.name === 'departmentId') {
       this.previewDepartmentIds = Array.isArray(change.value) ? change.value : [change.value].filter((id) => !!id);
@@ -380,12 +374,15 @@ export class UserFormComponent implements OnInit {
   }
 
   createUser(formData: any) {
+    formData.username = formData.email.toLowerCase();
+    formData.roleCodes = this.getRoleCodes(formData.roleId ?? []);
+    if (!this.defaultRoleCode && this.redirectSpecialRoleCreation(formData)) {
+      return;
+    }
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    formData.username = formData.email.toLowerCase();
-    formData.roleCodes = this.getRoleCodes(formData.roleId ?? []);
-    formData.departmentIds = this.withRequiredSupervisorDepartment(formData.departmentId ?? [], formData.roleCodes);
+    formData.departmentIds = this.withDefaultDepartmentsForRoles(formData.departmentId ?? [], formData.roleCodes);
     formData.skippedAutomationIds = this.skippedAutomationIds;
     delete formData.roleId;
     delete formData.departmentId;
@@ -427,7 +424,7 @@ export class UserFormComponent implements OnInit {
       userUpdates.roleCodes = this.getRoleCodes(roleIds ?? []);
     }
     if (departmentIds !== undefined) {
-      userUpdates.departmentIds = this.withRequiredSupervisorDepartment(departmentIds ?? [], userUpdates.roleCodes);
+      userUpdates.departmentIds = this.withDefaultDepartmentsForRoles(departmentIds ?? [], userUpdates.roleCodes);
     }
     delete (userUpdates as any).roleId;
     delete (userUpdates as any).departmentId;
@@ -539,12 +536,10 @@ export class UserFormComponent implements OnInit {
     const nextRoleIds = [...new Set([...currentRoleIds, ...rolesIds])];
     const roleCodes = this.getRoleCodes(nextRoleIds);
     const update: any = { roleCodes };
-    if (roleCodes.includes('SUPERVISOR')) {
-      update.departmentIds = this.withRequiredSupervisorDepartment(
-        this.user.departments?.map((department) => department.id) ?? [],
-        roleCodes
-      );
-    }
+    update.departmentIds = this.withDefaultDepartmentsForRoles(
+      this.user.departments?.map((department) => Number(department.id)) ?? [],
+      roleCodes
+    );
     this.usersService
       .updateUser({
         id: this.user.id,
@@ -707,15 +702,50 @@ export class UserFormComponent implements OnInit {
       .map((role) => role.code);
   }
 
-  private withRequiredSupervisorDepartment(departmentIds: number[], roleCodes?: string[]): number[] {
-    const shouldAddParticular =
-      this.defaultRoleCode === 'SUPERVISOR' ||
-      (roleCodes ?? []).includes('SUPERVISOR') ||
-      this.user?.roles?.some((role) => role.code === 'SUPERVISOR');
+  private redirectSpecialRoleCreation(formData: any): boolean {
+    const routeByRole: Record<string, string> = {
+      PATIENT: '/psira/case-management/profile',
+      THERAPIST: '/psira/user-management/therapist-form',
+      CAREGIVER: '/psira/case-management/caregiver-form',
+      SUPERVISOR: '/psira/user-management/supervisor-form',
+    };
+    const roleCode = ['PATIENT', 'THERAPIST', 'CAREGIVER', 'SUPERVISOR']
+      .find((code) => (formData.roleCodes || []).includes(code));
+    const route = roleCode ? routeByRole[roleCode] : undefined;
+    if (!route) return false;
 
-    if (!shouldAddParticular || !this.particularDepartment?.id) return departmentIds;
+    const draft = {
+      ...formData,
+      departmentIds: formData.departmentId ?? [],
+      roleCodes: formData.roleCodes,
+    };
+    delete draft.roleId;
+    delete draft.departmentId;
+    const dataString = CryptoJS.AES.encrypt(JSON.stringify(draft), environment.secretKey).toString();
+    this.router.navigate([route], {
+      queryParams: {
+        draft: dataString,
+        roleCode,
+      },
+    });
+    return true;
+  }
 
-    return [...new Set([...(departmentIds ?? []), this.particularDepartment.id])];
+  private decryptDraft(value: string): any {
+    try {
+      const bytes = CryptoJS.AES.decrypt(value, environment.secretKey);
+      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  private withDefaultDepartmentsForRoles(departmentIds: number[], roleCodes?: string[]): number[] {
+    const defaults = this.departments
+      .filter((department) => this.departmentDefaultsForAnyRole(department, roleCodes || []))
+      .map((department) => Number(department.id))
+      .filter((id) => !!id);
+    return [...new Set([...(departmentIds ?? []).map(Number), ...defaults])];
   }
 
   private withProfileRelations(user: User): User {
@@ -782,9 +812,63 @@ export class UserFormComponent implements OnInit {
 
     (this.user as any).roleId = [defaultRole.id];
     this.previewRoleIds = [defaultRole.id];
+    this.updateDepartmentFieldForSelectedRoles();
     this.refreshAutomationPreview();
     this.populateForm = false;
     setTimeout(() => (this.populateForm = true));
+  }
+
+  private updateDepartmentFieldForSelectedRoles(): void {
+    const roleIds = this.previewRoleIds.length
+      ? this.previewRoleIds
+      : this.currentProfileFieldValue('roleId') || (this.user as any)?.roleId || [];
+    const normalizedRoleIds = Array.isArray(roleIds) ? roleIds : [roleIds].filter((id) => !!id);
+    const roleCodes = this.getRoleCodes(normalizedRoleIds.map(Number));
+    const departmentField = this.findProfileField('departmentId');
+    if (!departmentField) return;
+
+    const filteredDepartments = roleCodes.length
+      ? this.departments.filter((department) => this.departmentAppliesToAnyRole(department, roleCodes))
+      : this.departments;
+
+    departmentField.options = filteredDepartments.map((department: Department) => ({
+      value: department.id,
+      label: `${department.name}`,
+    }));
+    departmentField.isRequired = !roleCodes.includes('SUPER_ADMIN');
+
+    const currentValue = this.currentProfileFieldValue('departmentId') || (this.user as any)?.departmentId || [];
+    const currentDepartmentIds = Array.isArray(currentValue) ? currentValue.map(Number) : [Number(currentValue)].filter(Boolean);
+    const availableIds = filteredDepartments.map((department) => Number(department.id));
+    const retainedIds = currentDepartmentIds.filter((departmentId) => availableIds.includes(departmentId));
+    const defaultIds = filteredDepartments
+      .filter((department) => this.departmentDefaultsForAnyRole(department, roleCodes))
+      .map((department) => Number(department.id));
+
+    departmentField.value = [...new Set([...retainedIds, ...defaultIds])];
+    if (this.user) {
+      (this.user as any).departmentId = departmentField.value;
+    }
+    this.previewDepartmentIds = departmentField.value as number[];
+  }
+
+  private findProfileField(fieldName: string): any {
+    for (const group of this.profileFields.groups || []) {
+      const field = group.fields.find((item: any) => item.name === fieldName);
+      if (field) return field;
+    }
+    return undefined;
+  }
+
+  private departmentAppliesToAnyRole(department: Department, roleCodes: string[]): boolean {
+    const appliedRoleCodes = department.appliedRoleCodes || [];
+    if (!appliedRoleCodes.length) return true;
+    return roleCodes.some((roleCode) => appliedRoleCodes.includes(roleCode));
+  }
+
+  private departmentDefaultsForAnyRole(department: Department, roleCodes: string[]): boolean {
+    const defaultRoleCodes = department.defaultRoleCodes || [];
+    return roleCodes.some((roleCode) => defaultRoleCodes.includes(roleCode));
   }
 
   private assignInitialRelationship(): void {

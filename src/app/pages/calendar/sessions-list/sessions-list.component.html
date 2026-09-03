@@ -27,8 +27,8 @@
         (contextmenu)="openContextMenu($event, sessionContextMenu, session)"
       >
         <td>{{ session.sessionNumber || '-' }}</td>
-        <td>{{ session.calendarOccurrence?.startAt | date:'short' }}</td>
-        <td>{{ session.calendarOccurrence?.endAt | date:'short' }}</td>
+        <td>{{ session.calendarOccurrence?.startAt | formatDateTime }}</td>
+        <td>{{ session.calendarOccurrence?.endAt | formatDateTime }}</td>
         <td><nz-tag>{{ session.clinicalStatus }}</nz-tag></td>
         <td>{{ session.patient?.medicalRecordNo }} {{ personName(session.patient) }}</td>
         <td>{{ personName(session.therapist) }}</td>
@@ -164,8 +164,8 @@
         >
           <td>{{ resource.resourceKind }}</td>
           <td>{{ resource.assessment?.assessmentType?.name || '-' }}</td>
-          <td>{{ resource.activationAt | date:'short' }}</td>
-          <td>{{ resource.expirationAt | date:'short' }}</td>
+          <td>{{ resource.activationAt | formatDateTime }}</td>
+          <td>{{ resource.expirationAt | formatDateTime }}</td>
           <td><nz-tag>{{ resource.status }}</nz-tag></td>
         </tr>
       </tbody>

@@ -43,6 +43,7 @@ import { FormattedPatient } from '../@types/formatted-patient';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
+import { systemTimezone } from '@shared/utils/system-settings.util';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
@@ -392,7 +393,7 @@ export class PatientCalendarComponent implements OnChanges {
         responderUserId: patient.userId,
         clinicianId: primaryResponsibleUserId || this.currentUser?.id,
         startDate,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        timezone: systemTimezone(),
       })
     ))
       .pipe(finalize(() => (this.creating = false)))
@@ -418,7 +419,7 @@ export class PatientCalendarComponent implements OnChanges {
       startAt: occurrence.startAt,
       endAt: occurrence.endAt,
       sessionNumber: nextSessionNumber + index,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      timezone: systemTimezone(),
       schemeIds: this.createSessionSchemeIds,
       patientId: patient.id,
       targetUserId: patient.userId,
@@ -919,7 +920,7 @@ export class PatientCalendarComponent implements OnChanges {
         sessionKind: event.sessionKind || ClinicalSessionKind.CLINICAL,
         startAt,
         endAt,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        timezone: systemTimezone(),
         patientId: this.patient.id,
         targetUserId: this.patient.userId,
         therapistId: primaryResponsibleUserId,

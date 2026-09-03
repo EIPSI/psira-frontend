@@ -10,6 +10,7 @@
 <ng-container *ngIf="inputMode" [formGroup]="inputGroup">
   <nz-radio-group
     [(ngModel)]="field.value"
+    [nzDisabled]="field.disabled"
     [formControlName]="field.name"
     [attr.autocomplete]="autoFill"
     [ngClass]="{ 'has-error': inputIsValid() === false, 'has-success': inputIsValid() === true }"

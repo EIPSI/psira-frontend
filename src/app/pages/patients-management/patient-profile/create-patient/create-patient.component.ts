@@ -12,6 +12,7 @@ import { Contact } from '@app/pages/patients-management/@types/contact';
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { ErrorHandlerService } from '../../../../@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
 import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
 import { UsersService } from '@app/pages/user-management/@services/users.service';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
@@ -44,7 +45,7 @@ export class CreatePatientComponent implements OnInit {
   selectedDepartmentIds: number[] = [];
   departmentOptions: Array<{ label: string; value: number }> = [];
   caseManagerOptions: Array<{ label: string; value: number }> = [];
-  selectedCaseManagerId: number = null;
+  selectedCaseManagerIds: number[] = [];
   medicalRecordNo = '';
   private caseManagerHierarchyRankCutoff = 500;
 
@@ -73,12 +74,16 @@ export class CreatePatientComponent implements OnInit {
       this.message.error('Debe seleccionarse al menos una Institución');
       return;
     }
+    if (!this.selectedCaseManagerIds.length) {
+      this.message.error('Debe seleccionarse al menos un Administrador del Caso');
+      return;
+    }
 
     patientData.medicalRecordNo = this.medicalRecordNo;
     patientData.departmentIds = this.selectedDepartmentIds;
-    patientData.caseManagerIds = this.selectedCaseManagerId ? [this.selectedCaseManagerId] : [];
+    patientData.caseManagerIds = this.selectedCaseManagerIds;
 
-    if (this.patient) {
+    if (this.patient?.id) {
       patientData.id = this.patient.id;
       this.updatePatient(patientData);
     } else {
@@ -130,17 +135,22 @@ export class CreatePatientComponent implements OnInit {
   }
 
   public selectedCaseManagerLabel(): string {
-    if (!this.selectedCaseManagerId) return '-';
-    const patientCaseManager = (this.patient?.caseManagers || []).find(
-      (caseManager: any) => Number(caseManager.id) === Number(this.selectedCaseManagerId)
-    );
-    if (patientCaseManager) {
-      return [patientCaseManager.firstName, patientCaseManager.lastName].filter((name) => !!name).join(' ');
-    }
-    return (
-      this.caseManagerOptions.find((option) => Number(option.value) === Number(this.selectedCaseManagerId))?.label ||
-      String(this.selectedCaseManagerId)
-    );
+    if (!this.selectedCaseManagerIds.length) return '-';
+    const patientCaseManagers = this.patient?.caseManagers || [];
+    return this.selectedCaseManagerIds
+      .map((caseManagerId) => {
+        const patientCaseManager = patientCaseManagers.find(
+          (caseManager: any) => Number(caseManager.id) === Number(caseManagerId)
+        );
+        if (patientCaseManager) {
+          return [patientCaseManager.firstName, patientCaseManager.lastName].filter((name) => !!name).join(' ');
+        }
+        return (
+          this.caseManagerOptions.find((option) => Number(option.value) === Number(caseManagerId))?.label ||
+          String(caseManagerId)
+        );
+      })
+      .join(', ');
   }
 
   private getPatientFromUrl(): void {
@@ -153,6 +163,10 @@ export class CreatePatientComponent implements OnInit {
         const bytes = CryptoJS.AES.decrypt(params.profile, environment.secretKey);
         const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         this.patient = decryptedData;
+        this.patient.emergencyContacts = (this.patient.emergencyContacts || []).map((contact: Contact) => ({
+          ...contact,
+          createCaregiver: !!contact.caregiverId,
+        }));
         if (this.patient.birthDate) {
           this.patient.birthDate = decryptedData.birthDate.slice(0, 10);
         }
@@ -162,31 +176,51 @@ export class CreatePatientComponent implements OnInit {
           this.selectedDepartmentIds = this.patient.departmentIds || [];
         }
         if (this.patient.caseManagers) {
-          this.patient.caseManagerIds = (this.patient.caseManagers as any)[0]?.id;
-          this.selectedCaseManagerId = this.patient.caseManagerIds as any;
+          this.patient.caseManagerIds = (this.patient.caseManagers as any).map((caseManager: any) => caseManager.id);
+          this.selectedCaseManagerIds = this.patient.caseManagerIds as any;
         }
         this.populateForm = true;
       } else {
+        const draft = params.draft ? this.decryptDraft(params.draft) : {};
         this.inputMode = true;
         this.showCancelButton = false;
         this.resetForm = true;
+        this.patient = Object.keys(draft).length ? draft : undefined;
         this.medicalRecordNo = '';
-        this.selectedDepartmentIds = [];
-        this.selectedCaseManagerId = null;
+        this.selectedDepartmentIds = draft.departmentIds || [];
+        this.selectedCaseManagerIds = draft.caseManagerIds || [];
+        if (this.getAccessScope() === 'ASSIGNED') {
+          this.selectedCaseManagerIds = [JSON.parse(localStorage.getItem('user') || '{}').id].filter((id) => !!id);
+        }
+        this.populateForm = !!this.patient;
       }
     });
   }
 
-  private createEmergencyContacts(patientId: number, contacts: Contact[]) {
+  private decryptDraft(value: string): any {
+    try {
+      const bytes = CryptoJS.AES.decrypt(value, environment.secretKey);
+      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  private createEmergencyContacts(patientData: Patient, contacts: Contact[]) {
     if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
+      this.redirectAfterPatientCreation(patientData, contacts);
       return;
     }
     this.isLoading = true;
-    contacts.map((contact: Contact) => {
-      contact.patientId = patientId;
+    const emergencyContacts = contacts.map((contact: Contact) => {
+      const { createCaregiver, ...contactData } = contact as any;
+      return {
+        ...contactData,
+        patientId: patientData.id,
+      };
     });
     this.emergencyContactsService
-      .createManyEmergencyContacts(contacts)
+      .createManyEmergencyContacts(emergencyContacts)
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -194,11 +228,16 @@ export class CreatePatientComponent implements OnInit {
         })
       )
       .subscribe(
-        () => {
+        ({ data }: any) => {
+          const createdContacts = data?.createManyEmergencyContacts || [];
+          const contactsWithIds = contacts.map((contact, index) => ({
+            ...contact,
+            id: createdContacts[index]?.id || contact.id,
+          }));
           this.populateForm = false;
           this.resetForm = true;
           this.message.success('Emergency contacts have successfully been created');
-          this.router.navigate(['/psira/case-management/patients']);
+          this.redirectAfterPatientCreation(patientData, contactsWithIds);
         },
         (error) =>
           this.errorService.handleError(error, {
@@ -230,10 +269,9 @@ export class CreatePatientComponent implements OnInit {
       .subscribe(
         async ({ data }: any) => {
           const patientData = data.createOnePatient;
-          this.router.navigate(['/psira/case-management/patients']);
           this.message.success('Patient has successfully been created');
           patient.emergencyContacts = emergencyContacts;
-          this.createEmergencyContacts(patientData.id, emergencyContacts);
+          this.createEmergencyContacts(patientData, emergencyContacts);
         },
         (error) =>
           this.errorService.handleError(error, {
@@ -245,6 +283,7 @@ export class CreatePatientComponent implements OnInit {
   private updatePatient(patient: Patient) {
     this.isLoading = true;
     this.loadingMessage = `Updating patient ${patient.firstName} ${patient.lastName}`;
+    const emergencyContacts = patient.emergencyContacts || [];
     patient.emergencyContacts = undefined;
     this.patientsService
       .updatePatient(PatientModel.updateData(patient))
@@ -258,8 +297,16 @@ export class CreatePatientComponent implements OnInit {
         async ({ data }) => {
           const patientData = data.updateOnePatient;
           PatientModel.fromJson(patientData);
-          this.message.create('success', `Patient has successfully been updated`);
-          this.router.navigate(['/psira/case-management/patients']);
+          this.syncEmergencyContacts(patient.id, emergencyContacts).subscribe(
+            () => {
+              this.message.create('success', `Patient has successfully been updated`);
+              this.router.navigate(['/psira/case-management/patients']);
+            },
+            (error) =>
+              this.errorService.handleError(error, {
+                prefix: 'Unable to update emergency contacts',
+              })
+          );
         },
         (error) =>
           this.errorService.handleError(error, {
@@ -444,10 +491,90 @@ export class CreatePatientComponent implements OnInit {
           value: candidate.id,
         }));
       this.caseManagerOptions = options;
+      const currentUserIsAssignable = options.some(
+        (option: { label: string; value: number }) => Number(option.value) === Number(user.id)
+      );
       if (scope === 'ASSIGNED') {
-        this.selectedCaseManagerId = user.id;
+        this.selectedCaseManagerIds = [user.id];
+      } else if (!this.patient?.id && !this.selectedCaseManagerIds.length && currentUserIsAssignable) {
+        this.selectedCaseManagerIds = [user.id];
       }
     });
+  }
+
+  private redirectAfterPatientCreation(patient: Patient, contacts: Contact[] = []): void {
+    const caregiverContact = (contacts || []).find((contact) => !!contact.createCaregiver);
+    if (!caregiverContact) {
+      this.router.navigate(['/psira/case-management/patients']);
+      return;
+    }
+
+    const draft = this.encrypt({
+      firstName: caregiverContact.firstName,
+      middleName: caregiverContact.middleName,
+      lastName: caregiverContact.lastName,
+      email: caregiverContact.email,
+      phone: caregiverContact.phone,
+      relation: caregiverContact.relation,
+      emergency: true,
+      note: caregiverContact.note,
+      patientId: patient.id,
+      skipEmergencyContactCreation: true,
+      emergencyContactId: caregiverContact.id,
+    });
+    const patientParam = this.encrypt(patient);
+    this.router.navigate(['/psira/case-management/caregiver-form'], {
+      queryParams: { draft, patient: patientParam },
+    });
+  }
+
+  private encrypt(value: any): string {
+    return CryptoJS.AES.encrypt(JSON.stringify(value || {}), environment.secretKey).toString();
+  }
+
+  private syncEmergencyContacts(patientId: number, contacts: Contact[]) {
+    const submittedContacts = (contacts || [])
+      .filter((contact: Contact) => this.hasEmergencyContactData(contact))
+      .map((contact: Contact) => this.sanitizeEmergencyContact(patientId, contact));
+    const submittedIds = submittedContacts.filter((contact) => !!contact.id).map((contact) => Number(contact.id));
+    const existingIds = (this.patient?.emergencyContacts || [])
+      .filter((contact: Contact) => !!contact.id)
+      .map((contact: Contact) => Number(contact.id));
+    const removedIds = existingIds.filter((id) => !submittedIds.includes(id));
+
+    const requests = [
+      ...submittedContacts.map((contact: Contact) => {
+        if (contact.id) {
+          const { id, ...update } = contact as any;
+          return this.emergencyContactsService.updateEmergencyContact({ id, update });
+        }
+        const { id, ...create } = contact as any;
+        return this.emergencyContactsService.createEmergencyContact(create);
+      }),
+      ...removedIds.map((id) => this.emergencyContactsService.deleteEmergencyContact({ id } as Contact)),
+    ];
+
+    return requests.length ? forkJoin(requests) : of([]);
+  }
+
+  private hasEmergencyContactData(contact: Contact): boolean {
+    return !!(
+      contact?.id ||
+      contact?.firstName ||
+      contact?.middleName ||
+      contact?.lastName ||
+      contact?.email ||
+      contact?.phone
+    );
+  }
+
+  private sanitizeEmergencyContact(patientId: number, contact: Contact): Contact {
+    const { createCaregiver, __typename, ...contactData } = contact as any;
+    return {
+      ...contactData,
+      patientId,
+      caregiverId: contact.caregiverId ? Number(contact.caregiverId) : undefined,
+    };
   }
 
   private getCaseManagerSettings(): void {

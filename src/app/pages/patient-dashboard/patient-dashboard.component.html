@@ -18,7 +18,7 @@
     <div *ngFor="let assessment of assessments" class="col-md-4 m-b-20">
       <nz-card [nzTitle]="assessment.name" [nzExtra]="extraTemplate">
         <div class="assessment-details">
-          <p><strong>{{ 'patientDashboard.date' | translate }}:</strong> {{ assessment.createdAt | date:'shortDate' }}</p>
+          <p><strong>{{ 'patientDashboard.date' | translate }}:</strong> {{ assessment.createdAt | formatDate }}</p>
           <p><strong>{{ 'patientDashboard.status' | translate }}:</strong> 
             <nz-tag [nzColor]="assessment.formattedStatus?.color">{{ assessment.status }}</nz-tag>
           </p>

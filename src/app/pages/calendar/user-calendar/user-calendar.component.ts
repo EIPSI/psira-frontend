@@ -43,6 +43,7 @@ import { CalendarEventUiService } from '../@services/calendar-event-ui.service';
 import { CalendarService } from '../@services/calendar.service';
 import { CalendarRecurrenceService, RepeatEndMode, RepeatUnit } from '../@services/calendar-recurrence.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
+import { systemTimezone } from '@shared/utils/system-settings.util';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
 import {
@@ -478,7 +479,7 @@ export class UserCalendarComponent implements OnChanges {
       sessionKind: ClinicalSessionKind.SUPERVISION,
       startAt: occurrence.startAt,
       endAt: occurrence.endAt,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      timezone: systemTimezone(),
       schemeIds: this.createSessionSchemeIds,
       targetUserId: this.user.id,
       therapistId: this.user.id,
@@ -521,7 +522,7 @@ export class UserCalendarComponent implements OnChanges {
         responderUserId: userId,
         clinicianId: primaryResponsibleUserId || userId,
         startDate: this.createStartAt,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        timezone: systemTimezone(),
       })
     ))
       .pipe(finalize(() => (this.creating = false)))
@@ -779,7 +780,7 @@ export class UserCalendarComponent implements OnChanges {
         sessionKind: ClinicalSessionKind.SUPERVISION,
         startAt: new Date(event.startAt),
         endAt: new Date(event.endAt),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        timezone: systemTimezone(),
         targetUserId: this.user.id,
         therapistId: this.user.id,
         supervisorId: primaryResponsibleUserId,

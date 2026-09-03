@@ -20,6 +20,10 @@ import { AppPermissionsService } from '@app/@shared/services/app-permissions.ser
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { RolesService } from '../@services/roles.service';
+import { Role } from '../@types/role';
+import { FieldGroup } from '../../../@shared/components/form/@types/field.group';
+import { Field } from '../../../@shared/components/form/@types/field';
 
 enum ActionKey {
   EDIT_DEPARTMENT,
@@ -55,16 +59,19 @@ export class DepartmentsComponent implements OnInit {
   public populateForm = false;
   public resetForm = false;
   public department: Department;
-  public departmentForms = DepartmentForm;
+  public departmentForms = JSON.parse(JSON.stringify(DepartmentForm));
+  public roles: Role[] = [];
 
   constructor(
     private departmentsService: DepartmentsService,
+    private rolesService: RolesService,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
     public perms: AppPermissionsService
   ) {}
 
   public ngOnInit(): void {
+    this.getRoles();
     this.getDepartments();
 
     if (this.perms.permissionsOnly(PermissionKey.MANAGE_SETTINGS)) {
@@ -108,10 +115,30 @@ export class DepartmentsComponent implements OnInit {
   }
 
   public openCreatePanel(department?: Department): void {
-    if (department) this.department = department;
+    this.departmentForms.submitButtonText = department ? 'Edit Department' : 'Create Department';
+    if (department) {
+      this.department = {
+        ...department,
+        appliedRoleCodes: department.appliedRoleCodes?.length
+          ? department.appliedRoleCodes
+          : this.roles.map((role) => role.code),
+        defaultRoleCodes: department.defaultRoleCodes || [],
+      };
+    } else {
+      this.department = {
+        id: undefined,
+        name: '',
+        description: '',
+        active: true,
+        appliedRoleCodes: this.roles.map((role) => role.code),
+        defaultRoleCodes: [],
+        users: [],
+      };
+    }
+    this.setRoleFieldOptions();
     this.showCreateDepartment = true;
     this.populateForm = true;
-    this.resetForm = true;
+    this.resetForm = false;
   }
 
   public closeCreatePanel(): void {
@@ -193,11 +220,13 @@ export class DepartmentsComponent implements OnInit {
 
   private updateDepartment(department: Department): void {
     const updateOneDepartmentInput: UpdateOneDepartmentInput = {
-      id: department.id,
+      id: department.id as number,
       update: {
         name: department.name,
         description: department.description,
         active: department.active,
+        appliedRoleCodes: department.appliedRoleCodes,
+        defaultRoleCodes: department.defaultRoleCodes,
       },
     };
     this.isLoading = true;
@@ -215,5 +244,33 @@ export class DepartmentsComponent implements OnInit {
         },
         (err) => this.errorService.handleError(err, { prefix: 'Unable to update department' })
       );
+  }
+
+  private getRoles(): void {
+    this.rolesService.roles({ paging: { first: 50 } }).subscribe(
+      ({ data }: any) => {
+        this.roles = data.roles.edges.map((edge: any) => edge.node);
+        this.setRoleFieldOptions();
+      },
+      (err) => this.errorService.handleError(err, { prefix: 'Unable to load roles' })
+    );
+  }
+
+  private setRoleFieldOptions(): void {
+    const options = this.roles.map((role) => ({ label: role.name, value: role.code }));
+    if (this.department && !this.department.appliedRoleCodes?.length) {
+      this.department.appliedRoleCodes = options.map((option) => option.value);
+    }
+    this.departmentForms.groups.forEach((group: FieldGroup) =>
+      group.fields.forEach((field: Field) => {
+        if (field.name === 'appliedRoleCodes' || field.name === 'defaultRoleCodes') {
+          field.options = options;
+          const value = Array.isArray(field.value) ? field.value : [];
+          if (field.name === 'appliedRoleCodes' && !this.department?.id && !value.length) {
+            field.value = options.map((option) => option.value);
+          }
+        }
+      })
+    );
   }
 }

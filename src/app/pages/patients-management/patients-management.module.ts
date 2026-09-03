@@ -32,6 +32,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { CaregiverListComponent } from './caregiver-list/caregiver-list.component';
+import { CaregiverFormComponent } from './caregiver-form/caregiver-form.component';
 import { CaregiversPatientComponent } from './caregivers-patient/caregivers-patient.component';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -113,6 +114,7 @@ const antModules = [
     CreatePatientComponent,
     DepartmentsComponent,
     CaregiverListComponent,
+    CaregiverFormComponent,
     CaregiversPatientComponent,
     ReportsComponent,
     AssessmentsComponent,

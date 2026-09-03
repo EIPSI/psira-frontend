@@ -31,6 +31,11 @@ export enum PermissionKey {
   MANAGE_USERS = 'manage users',
   DELETE_USERS = 'delete users',
 
+  VIEW_CAREGIVERS = 'view caregivers',
+  VIEW_ALL_CAREGIVERS = 'view all caregivers',
+  MANAGE_CAREGIVERS = 'manage caregivers',
+  DELETE_CAREGIVERS = 'delete caregivers',
+
   VIEW_REPORTS = 'view reports',
   MANAGE_REPORTS = 'manage reports',
   DELETE_REPORTS = 'delete reports',

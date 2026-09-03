@@ -199,7 +199,7 @@
         (click)="selectVersion(version)"
       >
         v{{ version.versionNumber }} - {{ version.title }}
-        <small>{{ version.publishedAt | date:'short' }}</small>
+        <small>{{ version.publishedAt | formatDateTime }}</small>
       </button>
     </aside>
     <section *ngIf="selectedVersion">

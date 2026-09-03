@@ -34,7 +34,7 @@
           (click)="selectVersion(version)"
         >
           <span>{{ version.name }}</span>
-          <small>{{ version.createdAt | date:'short' }}</small>
+          <small>{{ version.createdAt | formatDateTime }}</small>
         </button>
 
         <section class="questionnaire-version-detail" *ngIf="selectedVersion">

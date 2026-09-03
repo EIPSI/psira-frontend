@@ -24,6 +24,10 @@ import { FormGroup } from '@angular/forms';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { CaregiversPatientForm } from '@app/pages/patients-management/@forms/caregivers-patient.form';
 import { CaregiversService } from '@app/pages/patients-management/@services/caregivers.service';
+import { Router } from '@angular/router';
+import { environment } from '@env/environment';
+
+const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   REMOVE_CAREGIVER,
@@ -70,6 +74,7 @@ export class CaregiversPatientComponent implements OnInit {
     private caregiversPatientService: CaregiversPatientService,
     private errorService: ErrorHandlerService,
     private caregiversService: CaregiversService,
+    private router: Router,
     public perms: AppPermissionsService
   ) {}
 
@@ -115,10 +120,14 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   public openAddPanel(caregiver?: Caregiver): void {
-    if (caregiver) this.caregiver = caregiver;
-    this.showAddCaregiver = true;
-    this.populateForm = true;
-    this.resetForm = true;
+    this.openCreateCaregiverPage();
+  }
+
+  public openCreateCaregiverPage(): void {
+    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
+    this.router.navigate(['/psira/case-management/caregiver-form'], {
+      queryParams: { patient: dataString },
+    });
   }
 
   public closeAddPanel(): void {

@@ -6,6 +6,7 @@ import { AssessmentFormService } from '../assessment-form.service';
 import { ErrorHandlerService } from '../../@shared/services/error-handler.service';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { toNzDateFormat } from '@shared/utils/system-settings.util';
 
 @Component({
   selector: 'app-question',
@@ -36,10 +37,7 @@ export class QuestionComponent {
   private _question: Question;
 
   constructor(private assessmentFormService: AssessmentFormService, private errorService: ErrorHandlerService) {
-    // get date format and convert to ng-zorro datepicker readable type
-    // this.dateFormat = JSON.parse(localStorage.getItem('settings'))?.dateFormat;
-    // this.dateFormat = this.dateFormat.replace(/[D]/g, 'd');
-    // this.dateFormat = this.dateFormat.replace(/[Y]/g, 'y');
+    this.dateFormat = toNzDateFormat();
 
     // debounce answer
     this.answerGiven.pipe(debounceTime(500)).subscribe((answer) => this.addAnswer(answer));

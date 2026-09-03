@@ -1,5 +1,4 @@
 import { Assessment } from '@app/pages/assessment/@types/assessment';
-import * as moment from 'moment';
 import { Permission } from '@app/pages/administration/@types/permission';
 import { Role } from '@app/pages/administration/@types/role';
 import { Department } from '@app/pages/administration/@types/department';
@@ -17,6 +16,7 @@ import {
   AssessmentAdministrationStatus,
   FormattedAssessmentAdministration,
 } from '@app/pages/administration/@types/assessment-administration';
+import { formatSystemDate, formatSystemDateTime } from '@shared/utils/system-settings.util';
 
 const STATUS_COLOR = {
   [QuestionnaireStatus.DRAFT]: 'blue',
@@ -37,12 +37,12 @@ const ASSESSMENT_STATUS_COLOR = {
 export class Convert {
   // Permission
   public static toPermission(json: any): Permission {
-    json.createdAt = json.createdAt ? moment(json.createdAt).format('DD-MM-YYYY HH:mm') : '';
+    json.createdAt = json.createdAt ? formatSystemDateTime(json.createdAt) : '';
     return json;
   }
 
   public static toReport(json: any): Reports {
-    json.createdAt = json.createdAt ? moment(json.createdAt).format('DD-MM-YYYY') : '';
+    json.createdAt = json.createdAt ? formatSystemDate(json.createdAt) : '';
     return json;
   }
 
@@ -57,13 +57,13 @@ export class Convert {
       color: json.status === AssessmentAdministrationStatus.ACTIVE ? 'green' : 'orange',
       title: json.status === AssessmentAdministrationStatus.ACTIVE ? 'ACTIVE' : 'INACTIVE',
     };
-    json.updatedAt = json.updatedAt ? moment(json.updatedAt).format('YYYY-MM-DD') : '';
+    json.updatedAt = json.updatedAt ? formatSystemDate(json.updatedAt) : '';
     return json;
   }
 
   // Role
   public static toRole(json: any): Role {
-    json.createdAt = json.createdAt ? moment(json.createdAt).format('DD-MM-YYYY HH:mm') : '';
+    json.createdAt = json.createdAt ? formatSystemDateTime(json.createdAt) : '';
     return json;
   }
 
@@ -83,6 +83,22 @@ export class Convert {
       color: json.active ? 'green' : 'orange',
       title: json.active ? 'ACTIVE' : 'INACTIVE',
     };
+    const roleLabel = (code: string): string =>
+      ({
+        SUPER_ADMIN: 'Super admin',
+        SUPERVISOR: 'Supervisor',
+        DEPARTMENT_ADMIN: 'Coordinador de departamento',
+        THERAPIST: 'Terapeuta',
+        CAREGIVER: 'Cuidador',
+        PATIENT: 'Paciente',
+        NO_ROLE: 'Sin rol',
+      }[code] || code);
+    json.formattedAppliedRoles = json.appliedRoleCodes?.length
+      ? json.appliedRoleCodes.map(roleLabel).join(', ')
+      : 'Todos';
+    json.formattedDefaultRoles = json.defaultRoleCodes?.length
+      ? json.defaultRoleCodes.map(roleLabel).join(', ')
+      : '-';
     return json;
   }
 
@@ -116,7 +132,7 @@ export class Convert {
   }
 
   public static toFormattedDisclaimer(json: Disclaimers): FormattedDisclaimer {
-    json.updatedAt = json.updatedAt ? moment(json.updatedAt).format('DD-MM-YYYY') : '';
+    json.updatedAt = json.updatedAt ? formatSystemDate(json.updatedAt) : '';
     const disclaimer: FormattedDisclaimer = json as FormattedDisclaimer;
     disclaimer.formattedType = DisclaimerEnum[disclaimer.type];
     return json;
@@ -177,12 +193,8 @@ export class Convert {
     assessment.patientMedicalRecordNo = assessment.patient?.medicalRecordNo || assessment.targetUser?.workID;
     assessment.clinicianWorkId = assessment.clinician?.workID;
 
-    assessment.formatedDeliveryDate = assessment.deliveryDate
-      ? moment(assessment.deliveryDate).format('YYYY-MM-DD')
-      : '';
-    assessment.formatedExpirationDate = assessment.expirationDate
-      ? moment(assessment.expirationDate).format('YYYY-MM-DD')
-      : '';
+    assessment.formatedDeliveryDate = assessment.deliveryDate ? formatSystemDate(assessment.deliveryDate) : '';
+    assessment.formatedExpirationDate = assessment.expirationDate ? formatSystemDate(assessment.expirationDate) : '';
 
     if (json.informantClinician) {
       assessment.informantType = json.informantClinician.firstName;
@@ -212,7 +224,7 @@ export class Convert {
           assessment.clinicalSession.sessionKind === 'SUPERVISION' ? 'Supervisión' : 'Sesión',
           assessment.clinicalSession.sessionNumber ? `#${assessment.clinicalSession.sessionNumber}` : '',
           assessment.clinicalSession.calendarOccurrence?.startAt
-            ? moment(assessment.clinicalSession.calendarOccurrence.startAt).format('YYYY-MM-DD HH:mm')
+            ? formatSystemDateTime(assessment.clinicalSession.calendarOccurrence.startAt)
             : '',
         ]
           .filter((s) => !!s)

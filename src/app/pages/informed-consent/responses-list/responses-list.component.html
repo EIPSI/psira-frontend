@@ -30,7 +30,7 @@
           [nzType]="historyItem.id === selectedResponse.id ? 'primary' : 'default'"
           (click)="selectHistoryResponse(historyItem)"
         >
-          {{ (historyItem.answeredAt || historyItem.createdAt) | date:'short' }} · {{ historyItem.status }}
+          {{ (historyItem.answeredAt || historyItem.createdAt) | formatDateTime }} · {{ historyItem.status }}
         </button>
       </div>
 

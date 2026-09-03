@@ -9,8 +9,9 @@ const createOneEmergencyContact = gql`
       middleName
       lastName
       phone
-      email
-      createdAt
+        email
+        caregiverId
+        createdAt
       updatedAt
       deletedAt
     }
@@ -26,8 +27,9 @@ const createManyEmergencyContacts = gql`
       middleName
       lastName
       phone
-      email
-      createdAt
+        email
+        caregiverId
+        createdAt
       updatedAt
       deletedAt
     }
@@ -43,8 +45,9 @@ const updateOneEmergencyContact = gql`
       middleName
       lastName
       phone
-      email
-      createdAt
+        email
+        caregiverId
+        createdAt
       updatedAt
       deletedAt
     }
@@ -60,8 +63,9 @@ const updateManyEmergencyContacts = gql`
       middleName
       lastName
       phone
-      email
-      createdAt
+        email
+        caregiverId
+        createdAt
       updatedAt
       deletedAt
     }
@@ -77,8 +81,9 @@ const deleteOneEmergencyContact = gql`
       middleName
       lastName
       phone
-      email
-      createdAt
+        email
+        caregiverId
+        createdAt
       updatedAt
       deletedAt
     }
@@ -124,6 +129,7 @@ const removeEmergencyContactsFromPatient = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }
@@ -198,6 +204,7 @@ const addEmergencyContactsToPatient = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }

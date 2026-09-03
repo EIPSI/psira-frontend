@@ -15,6 +15,7 @@
     [(ngModel)]="field.value"
     [attr.autocomplete]="autoFill"
     [nzShowArrow]="false"
+    [nzDisabled]="field.disabled"
     (ngModelChange)="handleValueChange($event)"
     (nzOnSearch)="optionsSearch.next($event)"
     [formControlName]="field.name"

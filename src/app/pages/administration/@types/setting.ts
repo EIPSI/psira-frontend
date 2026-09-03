@@ -7,6 +7,8 @@ export interface Setting {
   maxLoginAttempts: number;
   passwordLifeTimeInDays: number;
   passwordReUseCutoffInDays: number;
+  notificationLogRetentionDays: number;
+  accessTokenRetentionDays: number;
   evaluationAutomationRunRetentionDays: number;
   treatmentFinalizationUndoWindowDays: number;
   patientCaseManagerAssignableHierarchyRank: number;

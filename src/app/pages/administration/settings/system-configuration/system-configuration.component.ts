@@ -35,6 +35,7 @@ export class SystemConfigurationComponent implements OnInit {
   ngOnInit(): void {
     this.getFormat();
     this.getTimeFormarts();
+    this.getDateTimeFormats();
     this.getLocales();
     this.getZones();
     this.getSettings();
@@ -45,6 +46,7 @@ export class SystemConfigurationComponent implements OnInit {
     this.settingsService.settings().subscribe(
       async ({ data }) => {
         this.settings = Object.assign({}, data.settings);
+        localStorage.setItem('settings', JSON.stringify(this.settings));
         this.featureSettings = {
           notificationsEnabled: this.settings.notificationsEnabled !== false,
           informedConsentEnabled: this.settings.informedConsentEnabled !== false,
@@ -74,8 +76,8 @@ export class SystemConfigurationComponent implements OnInit {
     this.settingsService.updateSetting($event).subscribe(
       async ({ data }) => {
         if (data) {
-          console.log($event);
-          localStorage.setItem('settings', JSON.stringify($event));
+          this.settings = { ...this.settings, ...$event };
+          localStorage.setItem('settings', JSON.stringify(this.settings));
         }
 
         this.isLoading = false;
@@ -168,7 +170,7 @@ export class SystemConfigurationComponent implements OnInit {
       'YYYY/MM/DD',
       'YYYY/DD/MM',
       'DD/MM/YYYY',
-      'MM/DD/YYY',
+      'MM/DD/YYYY',
     ];
     this.settingsForm.groups.map((group) => {
       group.fields.map((field) => {
@@ -182,12 +184,33 @@ export class SystemConfigurationComponent implements OnInit {
   }
 
   private getTimeFormarts() {
-    const dateFormarts = ['LT', 'LTS', 'L', 'I', 'LL', 'II', 'LLL', 'III', 'LLLL', 'IIII'];
+    const dateFormarts = ['LT', 'LTS', 'HH:mm', 'HH:mm:ss', 'h:mm A', 'h:mm:ss A'];
     this.settingsForm.groups.map((group) => {
       group.fields.map((field) => {
         if (field.name === 'timeFormat') {
           field.options = dateFormarts.map((zone: string) => {
             return { value: zone, label: zone };
+          });
+        }
+      });
+    });
+  }
+
+  private getDateTimeFormats() {
+    const dateTimeFormats = [
+      'YYYY-MM-DD LT',
+      'YYYY-MM-DD HH:mm',
+      'DD/MM/YYYY LT',
+      'DD/MM/YYYY HH:mm',
+      'MM/DD/YYYY LT',
+      'LLL',
+      'LLLL',
+    ];
+    this.settingsForm.groups.map((group) => {
+      group.fields.map((field) => {
+        if (field.name === 'dateTimeFormat') {
+          field.options = dateTimeFormats.map((format: string) => {
+            return { value: format, label: format };
           });
         }
       });

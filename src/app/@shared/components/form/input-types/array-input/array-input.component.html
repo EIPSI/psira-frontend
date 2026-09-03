@@ -4,10 +4,10 @@
       <div class="array-card-header">
         <strong>{{ field.label }} {{ i + 1 }}</strong>
         <div class="array-card-actions">
-          <button nz-button nzType="primary" nzShape="circle" *ngIf="i === 0" (click)="addRow()">
+          <button nz-button nzType="primary" nzShape="circle" (click)="addRow()">
             <i nz-icon nzType="plus" nzTheme="outline"></i>
           </button>
-          <button nz-button nzType="primary" nzDanger nzShape="circle" *ngIf="i !== 0" (click)="removeRow(i)">
+          <button nz-button nzType="primary" nzDanger nzShape="circle" (click)="removeRow(i)">
             <i nz-icon nzType="minus" nzTheme="outline"></i>
           </button>
         </div>
@@ -118,10 +118,10 @@
         <nz-divider nzOrientation="left" nzText="{{ field.label }} {{ i + 1 }}"></nz-divider>
       </div>
       <div nz-col nzSpan="2" style="text-align: right">
-        <button nz-button nzType="primary" nzShape="circle" *ngIf="i === 0" (click)="addRow()">
+        <button nz-button nzType="primary" nzShape="circle" (click)="addRow()">
           <i nz-icon nzType="plus" nzTheme="outline"></i>
         </button>
-        <button nz-button nzType="primary" nzDanger nzShape="circle" *ngIf="i !== 0" (click)="removeRow(i)">
+        <button nz-button nzType="primary" nzDanger nzShape="circle" (click)="removeRow(i)">
           <i nz-icon nzType="minus" nzTheme="outline"></i>
         </button>
       </div>

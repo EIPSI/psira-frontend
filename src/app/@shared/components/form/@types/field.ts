@@ -4,6 +4,7 @@ export interface Field {
   displayLabel?: string;
   name?: string;
   description?: string;
+  showDescription?: boolean;
   label?: string;
   type:
     | 'text'

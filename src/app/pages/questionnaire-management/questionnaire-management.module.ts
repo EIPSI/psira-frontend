@@ -33,6 +33,7 @@ import { AngularEditorModule } from '@kolkov/angular-editor';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { SharedModule } from '@shared';
 
 @NgModule({
     declarations: [
@@ -71,6 +72,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
         DragDropModule,
         NzSwitchModule,
         NzModalModule,
+        SharedModule,
     ],
     // Needs to be provided in root, since it will be required by assessment and patient modules.
     // providers:[

@@ -22,8 +22,8 @@
       <td>
         <nz-tag [nzColor]="statusColor(cycle.status)">{{ statusLabel(cycle.status) }}</nz-tag>
       </td>
-      <td>{{ cycle.startedAt | date: 'short' }}</td>
-      <td>{{ cycle.finalizedAt ? (cycle.finalizedAt | date: 'short') : '-' }}</td>
+      <td>{{ cycle.startedAt | formatDateTime }}</td>
+      <td>{{ cycle.finalizedAt ? (cycle.finalizedAt | formatDateTime) : '-' }}</td>
       <td>{{ cycle.lastSessionNumber || '-' }}</td>
       <td>{{ reasonLabel(cycle) }}</td>
     </tr>

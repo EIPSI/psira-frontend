@@ -18,7 +18,7 @@
   </thead>
   <tbody>
     <tr *ngFor="let run of runsTable.data">
-      <td>{{ run.createdAt | date: 'short' }}</td>
+      <td>{{ run.createdAt | formatDateTime }}</td>
       <td>{{ run.automationTitle || 'Automatización eliminada' }}</td>
       <td>{{ triggerPointLabel[run.triggerPoint] || run.triggerPoint }}</td>
       <td><nz-tag [nzColor]="statusColor(run.status)">{{ run.status }}</nz-tag></td>
