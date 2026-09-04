@@ -24,14 +24,14 @@ export const MENU: SideNavInterface[] | any = [
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'audit',
-    permissions: [PK.VIEW_PATIENTS, PK.MANAGE_PATIENTS],
+    permissions: [PK.PATIENTS_VIEW_DEPARTMENT, PK.PATIENTS_EDIT_DEPARTMENT],
     submenu: [
       {
         path: 'case-management/patients',
         title: 'menu.patients',
         iconType: '',
         iconTheme: '',
-        permissions: [PK.VIEW_PATIENTS],
+        permissions: [PK.PATIENTS_VIEW_DEPARTMENT],
         submenu: [],
       },
       {
@@ -39,7 +39,7 @@ export const MENU: SideNavInterface[] | any = [
         title: 'menu.caregivers',
         iconType: '',
         iconTheme: '',
-        permissions: [PK.VIEW_PATIENTS],
+        permissions: [PK.PATIENTS_VIEW_DEPARTMENT],
         submenu: [],
       },
       {
@@ -47,7 +47,7 @@ export const MENU: SideNavInterface[] | any = [
         title: 'menu.therapists',
         iconType: '',
         iconTheme: '',
-        permissions: [PK.VIEW_USERS],
+        permissions: [PK.USERS_VIEW_DEPARTMENT],
         submenu: [],
       },
       {
@@ -55,7 +55,7 @@ export const MENU: SideNavInterface[] | any = [
         title: 'menu.supervisors',
         iconType: '',
         iconTheme: '',
-        permissions: [PK.VIEW_USERS],
+        permissions: [PK.USERS_VIEW_DEPARTMENT],
         submenu: [],
       },
     ],
@@ -63,7 +63,7 @@ export const MENU: SideNavInterface[] | any = [
   {
     path: 'assessments',
     title: 'menu.evaluationManagement',
-    permissions: [PK.VIEW_ASSESSMENTS, PK.MANAGE_ASSESSMENTS, PK.VIEW_QUESTIONNAIRES, PK.MANAGE_QUESTIONNAIRES],
+    permissions: [PK.ASSESSMENTS_VIEW_DEPARTMENT, PK.ASSESSMENTS_EDIT_DEPARTMENT, PK.QUESTIONNAIRES_VIEW_DEPARTMENT, PK.QUESTIONNAIRES_EDIT_DEPARTMENT],
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'edit',
@@ -71,7 +71,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'assessments',
         title: 'menu.assessments',
-        permissions: [PK.VIEW_ASSESSMENTS],
+        permissions: [PK.ASSESSMENTS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -79,7 +79,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'questionnaire-management/questionnaire-list',
         title: 'menu.questionnaires',
-        permissions: [PK.VIEW_QUESTIONNAIRES],
+        permissions: [PK.QUESTIONNAIRES_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -87,7 +87,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'questionnaire-management/questionnaire-bundles-list',
         title: 'menu.questionnaireBundles',
-        permissions: [PK.MANAGE_QUESTIONNAIRES],
+        permissions: [PK.QUESTIONNAIRES_EDIT_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -95,7 +95,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'evaluation-schemes',
         title: 'menu.evaluationSchemes',
-        permissions: [PK.VIEW_ASSESSMENTS, PK.MANAGE_ASSESSMENTS],
+        permissions: [PK.ASSESSMENTS_VIEW_DEPARTMENT, PK.ASSESSMENTS_EDIT_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -103,7 +103,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'randomizations',
         title: 'menu.randomizations',
-        permissions: [PK.VIEW_ASSESSMENTS, PK.MANAGE_ASSESSMENTS],
+        permissions: [PK.ASSESSMENTS_VIEW_DEPARTMENT, PK.ASSESSMENTS_EDIT_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -112,10 +112,10 @@ export const MENU: SideNavInterface[] | any = [
         path: 'evaluation-automations',
         title: 'menu.evaluationAutomations',
         permissions: [
-          PK.VIEW_EVALUATION_AUTOMATIONS,
-          PK.VIEW_ALL_EVALUATION_AUTOMATIONS,
-          PK.MANAGE_EVALUATION_AUTOMATIONS,
-          PK.MANAGE_ALL_EVALUATION_AUTOMATIONS,
+          PK.AUTOMATIONS_VIEW_DEPARTMENT,
+          PK.AUTOMATIONS_VIEW_ALL,
+          PK.AUTOMATIONS_EDIT_DEPARTMENT,
+          PK.AUTOMATIONS_EDIT_ALL,
         ],
         iconType: '',
         iconTheme: '',
@@ -126,7 +126,7 @@ export const MENU: SideNavInterface[] | any = [
   {
     path: 'user-management',
     title: 'menu.userManagement',
-    permissions: [PK.VIEW_USERS, PK.MANAGE_USERS],
+    permissions: [PK.USERS_VIEW_DEPARTMENT, PK.USERS_EDIT_DEPARTMENT],
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'user',
@@ -134,7 +134,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'user-management/users',
         title: 'menu.listUsers',
-        permissions: [PK.VIEW_USERS],
+        permissions: [PK.USERS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -142,7 +142,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'user-management/user-form',
         title: 'menu.newUser',
-        permissions: [PK.MANAGE_USERS],
+        permissions: [PK.USERS_EDIT_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -152,7 +152,7 @@ export const MENU: SideNavInterface[] | any = [
   {
     path: 'administration',
     title: 'menu.administration',
-    permissions: [PK.VIEW_ROLES_PERMISSIONS, PK.VIEW_SETTINGS, PK.VIEW_SYSCONF],
+    permissions: [PK.ROLES_VIEW_ALL, PK.SETTINGS_VIEW_ALL, PK.SYSTEM_VIEW_ALL],
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'setting',
@@ -160,7 +160,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/reports',
         title: 'menu.reports',
-        permissions: [PK.VIEW_REPORTS],
+        permissions: [PK.REPORTS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -168,15 +168,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/permission-matrix',
         title: 'menu.permissionMatrix',
-        permissions: [PK.VIEW_ROLES_PERMISSIONS],
-        iconType: '',
-        iconTheme: '',
-        submenu: [],
-      },
-      {
-        path: 'administration/permissions',
-        title: 'menu.permissions',
-        permissions: [PK.VIEW_ROLES_PERMISSIONS],
+        permissions: [PK.ROLES_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -184,7 +176,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/roles',
         title: 'menu.roles',
-        permissions: [PK.VIEW_ROLES_PERMISSIONS],
+        permissions: [PK.ROLES_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -192,7 +184,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/departments',
         title: 'menu.departments',
-        permissions: [PK.VIEW_SETTINGS],
+        permissions: [PK.SETTINGS_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         icon: '',
@@ -201,7 +193,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/disclaimers',
         title: 'menu.disclaimers',
-        permissions: [PK.VIEW_SETTINGS],
+        permissions: [PK.SETTINGS_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         icon: '',
@@ -210,7 +202,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/assessments',
         title: 'menu.assessments',
-        permissions: [PK.VIEW_SETTINGS],
+        permissions: [PK.SETTINGS_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         icon: '',
@@ -219,7 +211,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/patient-statuses',
         title: 'menu.patientStatuses',
-        permissions: [PK.VIEW_SETTINGS],
+        permissions: [PK.SETTINGS_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -227,7 +219,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/version',
         title: 'menu.version',
-        permissions: [PK.VIEW_SETTINGS],
+        permissions: [PK.SETTINGS_VIEW_ALL],
         iconType: 'nzIcon',
         iconTheme: 'outline',
         icon: 'code',
@@ -236,14 +228,14 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/settings',
         title: 'menu.settings',
-        permissions: [PK.VIEW_SETTINGS, PK.VIEW_SYSCONF],
+        permissions: [PK.SETTINGS_VIEW_ALL, PK.SYSTEM_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         submenu: [
           {
             path: 'administration/settings/system-configuration',
             title: 'menu.systemConfiguration',
-            permissions: [PK.VIEW_SYSCONF],
+            permissions: [PK.SYSTEM_VIEW_ALL],
             iconType: '',
             iconTheme: '',
             submenu: [],
@@ -251,7 +243,7 @@ export const MENU: SideNavInterface[] | any = [
           {
             path: 'administration/settings/follow-up-settings',
             title: 'Ajustes clinicos',
-            permissions: [PK.VIEW_SETTINGS],
+            permissions: [PK.SETTINGS_VIEW_ALL],
             iconType: '',
             iconTheme: '',
             submenu: [],
@@ -259,7 +251,7 @@ export const MENU: SideNavInterface[] | any = [
           {
             path: 'administration/settings/session-cancellation-reasons',
             title: 'Configuración Motivos',
-            permissions: [PK.VIEW_SETTINGS],
+            permissions: [PK.SETTINGS_VIEW_ALL],
             iconType: '',
             iconTheme: '',
             submenu: [],
@@ -272,10 +264,10 @@ export const MENU: SideNavInterface[] | any = [
     path: 'notifications',
     title: 'Notificaciones',
     permissions: [
-      PK.VIEW_NOTIFICATIONS,
-      PK.MANAGE_NOTIFICATIONS,
-      PK.VIEW_TEMPLATES,
-      PK.MANAGE_TEMPLATES,
+      PK.NOTIFICATIONS_VIEW_DEPARTMENT,
+      PK.NOTIFICATIONS_EDIT_DEPARTMENT,
+      PK.MAIL_TEMPLATES_VIEW_DEPARTMENT,
+      PK.MAIL_TEMPLATES_EDIT_DEPARTMENT,
     ],
     iconType: 'nzIcon',
     iconTheme: 'outline',
@@ -284,7 +276,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'notifications/email-templates',
         title: 'Modelos de Emails',
-        permissions: [PK.VIEW_TEMPLATES],
+        permissions: [PK.MAIL_TEMPLATES_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -292,7 +284,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'notifications/administration',
         title: 'Administración',
-        permissions: [PK.VIEW_NOTIFICATIONS, PK.MANAGE_NOTIFICATIONS, PK.VIEW_TEMPLATES],
+        permissions: [PK.NOTIFICATIONS_VIEW_DEPARTMENT, PK.NOTIFICATIONS_EDIT_DEPARTMENT, PK.MAIL_TEMPLATES_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -303,11 +295,11 @@ export const MENU: SideNavInterface[] | any = [
     path: 'informed-consent',
     title: 'Consentimiento Informado',
     permissions: [
-      PK.VIEW_INFORMED_CONSENT_MODELS,
-      PK.MANAGE_INFORMED_CONSENT_MODELS,
-      PK.VIEW_INFORMED_CONSENT_MANAGEMENT,
-      PK.MANAGE_INFORMED_CONSENT_MANAGEMENT,
-      PK.VIEW_INFORMED_CONSENT_RESPONSES,
+      PK.INFORMED_CONSENT_MODELS_VIEW_DEPARTMENT,
+      PK.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT,
+      PK.INFORMED_CONSENT_MANAGEMENT_VIEW_DEPARTMENT,
+      PK.INFORMED_CONSENT_MANAGEMENT_EDIT_DEPARTMENT,
+      PK.INFORMED_CONSENT_RESPONSES_VIEW_DEPARTMENT,
     ],
     iconType: 'nzIcon',
     iconTheme: 'outline',
@@ -316,7 +308,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'informed-consent/models',
         title: 'Modelos de CI',
-        permissions: [PK.VIEW_INFORMED_CONSENT_MODELS],
+        permissions: [PK.INFORMED_CONSENT_MODELS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -324,7 +316,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'informed-consent/management',
         title: 'Gestión',
-        permissions: [PK.VIEW_INFORMED_CONSENT_MANAGEMENT],
+        permissions: [PK.INFORMED_CONSENT_MANAGEMENT_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -332,7 +324,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'informed-consent/responses',
         title: 'Respuestas CI',
-        permissions: [PK.VIEW_INFORMED_CONSENT_RESPONSES],
+        permissions: [PK.INFORMED_CONSENT_RESPONSES_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],

@@ -292,7 +292,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private canViewReports(): boolean {
-    return this.perms.permissionsOnly([PermissionKey.VIEW_REPORTS]);
+    return this.perms.permissionsOnly([PermissionKey.REPORTS_VIEW_DEPARTMENT]);
   }
 
   private getDashboardReports(): void {

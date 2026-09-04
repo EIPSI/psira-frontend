@@ -10,7 +10,7 @@
       [resetForm]="resetForm"
       [inputMode]="inputMode"
       [showCancelButton]="false"
-      [showEditButton]="perms.permissionsOnly(PK.MANAGE_QUESTIONNAIRES)"
+      [showEditButton]="perms.permissionsOnly(PK.QUESTIONNAIRES_EDIT_DEPARTMENT)"
       (submitForm)="onSubmit($event)"
       (inputModeChanged)="inputMode = $event"
     ></app-form>

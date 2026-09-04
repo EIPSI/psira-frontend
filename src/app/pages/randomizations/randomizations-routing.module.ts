@@ -12,7 +12,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.randomizations',
       permissions: {
-        only: [PermissionKey.VIEW_ASSESSMENTS],
+            only: [PermissionKey.RANDOMIZATIONS_VIEW_ALL, PermissionKey.RANDOMIZATIONS_VIEW_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -23,7 +23,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'randomizations.create',
       permissions: {
-        only: [PermissionKey.MANAGE_ASSESSMENTS],
+            only: [PermissionKey.RANDOMIZATIONS_CREATE_ALL, PermissionKey.RANDOMIZATIONS_CREATE_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -34,7 +34,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'randomizations.edit',
       permissions: {
-        only: [PermissionKey.MANAGE_ASSESSMENTS],
+            only: [PermissionKey.RANDOMIZATIONS_EDIT_ALL, PermissionKey.RANDOMIZATIONS_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],

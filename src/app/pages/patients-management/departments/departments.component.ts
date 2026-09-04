@@ -197,7 +197,7 @@ export class DepartmentsComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
+    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
       this.actions = [
         ...this.actions,
         {

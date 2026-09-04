@@ -74,7 +74,7 @@ export class DepartmentsComponent implements OnInit {
     this.getRoles();
     this.getDepartments();
 
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_SETTINGS)) {
+    if (this.perms.permissionsOnly(PermissionKey.SETTINGS_EDIT_ALL)) {
       this.actions = [
         { key: ActionKey.EDIT_DEPARTMENT, title: 'Edit Department' },
         { key: ActionKey.DELETE_DEPARTMENT, title: 'Delete Department' },

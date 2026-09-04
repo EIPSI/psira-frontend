@@ -430,13 +430,13 @@ export class PatientProfileComponent implements OnInit {
   }
 
   canViewPatientAccount(): boolean {
-    return this.perms.permissionsOnly([PermissionKey.VIEW_USERS, PermissionKey.MANAGE_USERS]);
+    return this.perms.permissionsOnly([PermissionKey.USERS_VIEW_DEPARTMENT, PermissionKey.USERS_EDIT_DEPARTMENT]);
   }
 
   canManagePatientAccount(): boolean {
     return (
       !!this.patientAccountUser?.id &&
-      this.perms.permissionsOnly([PermissionKey.MANAGE_USERS]) &&
+      this.perms.permissionsOnly([PermissionKey.USERS_EDIT_DEPARTMENT]) &&
       this.perms.hasAccessLevelToUser(this.patientAccountUser)
     );
   }
@@ -444,7 +444,7 @@ export class PatientProfileComponent implements OnInit {
   canDeletePatientAccount(): boolean {
     return (
       !!this.patientAccountUser?.id &&
-      this.perms.permissionsOnly([PermissionKey.DELETE_USERS]) &&
+      this.perms.permissionsOnly([PermissionKey.USERS_DELETE_DEPARTMENT]) &&
       this.perms.hasAccessLevelToUser(this.patientAccountUser)
     );
   }

@@ -83,12 +83,12 @@ export class AssessmentsListComponent {
     constructor(private assessmentService : AssessmentService, private router : Router, private modalService : NzModalService, private errorService : ErrorHandlerService, private clipboardService : ClipboardService, private messageService : NzMessageService, private locationStrategy : LocationStrategy, public perms : AppPermissionsService) {
         this.getAssessments();
 
-        if (this.perms.permissionsOnly(PermissionKey.MANAGE_ASSESSMENTS)) {
+        if (this.perms.permissionsOnly(PermissionKey.ASSESSMENTS_EDIT_DEPARTMENT)) {
             this.actions.push({key: ActionKey.CANCEL_SESSION, title: 'Cancel Session'});
             this.actions.push({key: ActionKey.RESTORE_ASSESSMENT, title: 'Restore Assessment'});
             this.actions.push({key: ActionKey.ARCHIVE_ASSESSMENT, title: 'Archive Assessment'});
         }
-        if (this.perms.permissionsOnly(PermissionKey.DELETE_ASSESSMENTS)) {
+        if (this.perms.permissionsOnly(PermissionKey.ASSESSMENTS_DELETE_DEPARTMENT)) {
             this.actions.push({key: ActionKey.DELETE_ASSESSMENT, title: 'Delete Session'});
         }
         if(environment.email){

@@ -372,8 +372,8 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
 
   private canViewGlobalResponses(): boolean {
     return this.perms.permissionsOnly([
-      PermissionKey.VIEW_INFORMED_CONSENT_RESPONSES,
-      PermissionKey.REVIEW_INFORMED_CONSENT_RESPONSES,
+      PermissionKey.INFORMED_CONSENT_RESPONSES_VIEW_DEPARTMENT,
+      PermissionKey.INFORMED_CONSENT_RESPONSES_REVIEW_DEPARTMENT,
     ]);
   }
 

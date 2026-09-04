@@ -22,7 +22,7 @@ const routes: Routes = [
     canActivate: [PermissionGuard],
     data: {
       breadcrumbI18nKey: 'Modelos de CI',
-      permissions: { only: [PermissionKey.VIEW_INFORMED_CONSENT_MODELS] },
+      permissions: { only: [PermissionKey.INFORMED_CONSENT_MODELS_VIEW_DEPARTMENT] },
     },
   },
   {
@@ -31,7 +31,7 @@ const routes: Routes = [
     canActivate: [PermissionGuard],
     data: {
       breadcrumbI18nKey: 'Nuevo modelo CI',
-      permissions: { only: [PermissionKey.MANAGE_INFORMED_CONSENT_MODELS] },
+      permissions: { only: [PermissionKey.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT] },
     },
   },
   {
@@ -40,7 +40,7 @@ const routes: Routes = [
     canActivate: [PermissionGuard],
     data: {
       breadcrumbI18nKey: 'Editar modelo CI',
-      permissions: { only: [PermissionKey.MANAGE_INFORMED_CONSENT_MODELS] },
+      permissions: { only: [PermissionKey.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT] },
     },
   },
   {
@@ -49,7 +49,7 @@ const routes: Routes = [
     canActivate: [PermissionGuard],
     data: {
       breadcrumbI18nKey: 'Gestión CI',
-      permissions: { only: [PermissionKey.VIEW_INFORMED_CONSENT_MANAGEMENT] },
+      permissions: { only: [PermissionKey.INFORMED_CONSENT_MANAGEMENT_VIEW_DEPARTMENT] },
     },
   },
   {
@@ -58,7 +58,7 @@ const routes: Routes = [
     canActivate: [PermissionGuard],
     data: {
       breadcrumbI18nKey: 'Nueva gestión CI',
-      permissions: { only: [PermissionKey.MANAGE_INFORMED_CONSENT_MANAGEMENT] },
+      permissions: { only: [PermissionKey.INFORMED_CONSENT_MANAGEMENT_EDIT_DEPARTMENT] },
     },
   },
   {
@@ -67,7 +67,7 @@ const routes: Routes = [
     canActivate: [PermissionGuard],
     data: {
       breadcrumbI18nKey: 'Editar gestión CI',
-      permissions: { only: [PermissionKey.MANAGE_INFORMED_CONSENT_MANAGEMENT] },
+      permissions: { only: [PermissionKey.INFORMED_CONSENT_MANAGEMENT_EDIT_DEPARTMENT] },
     },
   },
   {
@@ -76,7 +76,7 @@ const routes: Routes = [
     canActivate: [PermissionGuard],
     data: {
       breadcrumbI18nKey: 'Respuestas CI',
-      permissions: { only: [PermissionKey.VIEW_INFORMED_CONSENT_RESPONSES] },
+      permissions: { only: [PermissionKey.INFORMED_CONSENT_RESPONSES_VIEW_DEPARTMENT] },
     },
   },
   {

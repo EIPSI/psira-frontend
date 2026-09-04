@@ -111,15 +111,15 @@ export class CalendarComponent implements OnChanges, OnInit {
   canUsePatientFilter(): boolean {
     if (this.perms.isPatient()) return false;
     return this.perms.permissionsOnly([
-      PermissionKey.VIEW_PATIENTS,
-      PermissionKey.VIEW_ALL_PATIENTS,
-      PermissionKey.VIEW_DEPARTMENT_PATIENTS,
-      PermissionKey.VIEW_ASSIGNED_PATIENTS,
+      PermissionKey.PATIENTS_VIEW_DEPARTMENT,
+      PermissionKey.PATIENTS_VIEW_ALL,
+      PermissionKey.PATIENTS_VIEW_DEPARTMENT,
+      PermissionKey.PATIENTS_VIEW_ASSIGNED,
     ]);
   }
 
   canUseUserFilters(): boolean {
-    return this.perms.permissionsOnly([PermissionKey.VIEW_USERS]);
+    return this.perms.permissionsOnly([PermissionKey.USERS_VIEW_DEPARTMENT]);
   }
 
   private loadOccurrences(): void {

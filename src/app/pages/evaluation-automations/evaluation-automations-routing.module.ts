@@ -13,8 +13,8 @@ const routes: Routes = [
       breadcrumbI18nKey: 'menu.evaluationAutomations',
       permissions: {
         only: [
-          PermissionKey.VIEW_EVALUATION_AUTOMATIONS,
-          PermissionKey.VIEW_ALL_EVALUATION_AUTOMATIONS,
+          PermissionKey.AUTOMATIONS_VIEW_DEPARTMENT,
+          PermissionKey.AUTOMATIONS_VIEW_ALL,
         ],
       },
     },
@@ -27,8 +27,8 @@ const routes: Routes = [
       breadcrumbI18nKey: 'evaluationAutomations.create',
       permissions: {
         only: [
-          PermissionKey.MANAGE_EVALUATION_AUTOMATIONS,
-          PermissionKey.MANAGE_ALL_EVALUATION_AUTOMATIONS,
+          PermissionKey.AUTOMATIONS_EDIT_DEPARTMENT,
+          PermissionKey.AUTOMATIONS_EDIT_ALL,
         ],
       },
     },
@@ -41,8 +41,8 @@ const routes: Routes = [
       breadcrumbI18nKey: 'evaluationAutomations.edit',
       permissions: {
         only: [
-          PermissionKey.MANAGE_EVALUATION_AUTOMATIONS,
-          PermissionKey.MANAGE_ALL_EVALUATION_AUTOMATIONS,
+          PermissionKey.AUTOMATIONS_EDIT_DEPARTMENT,
+          PermissionKey.AUTOMATIONS_EDIT_ALL,
         ],
       },
     },

@@ -852,9 +852,9 @@ export class PlanAssessmentComponent implements OnInit {
     const canAssignAnyAssessmentUser =
       currentUser?.isSuperUser ||
       currentUser?.roles?.some((role) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
-      currentUser?.permissions?.some((permission) => permission.name === PermissionKey.ASSIGN_ANY_ASSESSMENT_USER) ||
+      currentUser?.permissions?.some((permission) => permission.name === PermissionKey.ASSESSMENTS_ASSIGN_ALL) ||
       currentUser?.roles?.some((role) =>
-        role.permissions?.some((permission) => permission.name === PermissionKey.ASSIGN_ANY_ASSESSMENT_USER)
+        role.permissions?.some((permission) => permission.name === PermissionKey.ASSESSMENTS_ASSIGN_ALL)
       );
 
     this.rolesService.roles({ paging: { first: 50 } }).subscribe(

@@ -243,9 +243,9 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const canSeeAll = user?.isSuperUser ||
       user?.roles?.some((role: any) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
-      user?.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name)) ||
+      user?.permissions?.some((permission: any) => ['users.edit.all', 'assessments.assign.all'].includes(permission.name)) ||
       user?.roles?.some((role: any) =>
-        role.permissions?.some((permission: any) => ['MANAGE_USERS', 'ASSIGN_ANY_ASSESSMENT_USER'].includes(permission.name))
+        role.permissions?.some((permission: any) => ['users.edit.all', 'assessments.assign.all'].includes(permission.name))
       );
     if (canSeeAll) return departments;
     const allowedIds = (user?.departments || []).map((department: any) => Number(department.id));

@@ -73,7 +73,7 @@ export class CaregiverListComponent implements OnInit {
   ngOnInit(): void {
     this.getCaregiver();
     this.populatePatientsDropDown({});
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
+    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
       this.actions = [{ key: ActionKey.DELETE_CAREGIVER, title: 'Delete Caregiver' }];
     }
   }
@@ -106,7 +106,7 @@ export class CaregiverListComponent implements OnInit {
     this.showCreateCaregiver = true;
     this.populateForm = true;
     this.resetForm = true;
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
+    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
       this.actions = [{ key: ActionKey.DELETE_CAREGIVER, title: 'Delete Caregiver' }];
     }
   }
@@ -161,7 +161,7 @@ export class CaregiverListComponent implements OnInit {
   }
 
   public handleRowClick(event: any) {
-    if (!this.perms.permissionsOnly([PermissionKey.MANAGE_PATIENTS])) return;
+    if (!this.perms.permissionsOnly([PermissionKey.PATIENTS_EDIT_DEPARTMENT])) return;
     this.populateForm = true;
     this.openCreatePanel(event);
   }

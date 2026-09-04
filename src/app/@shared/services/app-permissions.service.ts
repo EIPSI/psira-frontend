@@ -30,10 +30,10 @@ export class AppPermissionsService {
     if (!permissions || !keys) return false;
 
     if (isPermissionKey(action)) {
-      return keys.includes(action);
+      return this.hasPermission(keys, action);
     }
     if (isPermissionKeyArray(action)) {
-      return keys.some((key) => action.indexOf(key) >= 0);
+      return action.some((permission) => this.hasPermission(keys, permission));
     }
 
     return false;
@@ -70,5 +70,26 @@ export class AppPermissionsService {
   getUserHierarchy(): number {
     const user = JSON.parse(localStorage.getItem('user')) as User;
     return user.roles[0].hierarchy;
+  }
+
+  private hasPermission(grants: string[], requiredPermission: PermissionKey): boolean {
+    if (grants.includes(requiredPermission)) return true;
+
+    const required = this.parsePermission(requiredPermission);
+    if (!required) return false;
+
+    return grants.some((grantName) => {
+      const grant = this.parsePermission(grantName);
+      return !!grant &&
+        grant.resource === required.resource &&
+        grant.action === required.action &&
+        grant.scope === 'all';
+    });
+  }
+
+  private parsePermission(permission: string): { resource: string; action: string; scope: string } | null {
+    const [resource, action, scope] = permission.split('.');
+    if (!resource || !action || !scope) return null;
+    return { resource, action, scope };
   }
 }

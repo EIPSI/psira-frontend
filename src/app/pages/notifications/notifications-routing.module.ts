@@ -19,7 +19,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'Administración de Notificaciones',
       permissions: {
-        only: [PermissionKey.VIEW_NOTIFICATIONS, PermissionKey.MANAGE_NOTIFICATIONS, PermissionKey.VIEW_TEMPLATES],
+        only: [PermissionKey.NOTIFICATIONS_VIEW_DEPARTMENT, PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT, PermissionKey.MAIL_TEMPLATES_VIEW_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -30,7 +30,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'Crear configuración',
       permissions: {
-        only: [PermissionKey.MANAGE_NOTIFICATIONS],
+        only: [PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -41,7 +41,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'Editar configuración',
       permissions: {
-        only: [PermissionKey.MANAGE_NOTIFICATIONS],
+        only: [PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -52,7 +52,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.emailTemplates',
       permissions: {
-        only: [PermissionKey.VIEW_TEMPLATES],
+        only: [PermissionKey.MAIL_TEMPLATES_VIEW_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -63,7 +63,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'emailTemplates.createTemplate',
       permissions: {
-        only: [PermissionKey.MANAGE_TEMPLATES],
+        only: [PermissionKey.MAIL_TEMPLATES_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -74,7 +74,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'emailTemplates.createTemplate',
       permissions: {
-        only: [PermissionKey.MANAGE_TEMPLATES],
+        only: [PermissionKey.MAIL_TEMPLATES_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],

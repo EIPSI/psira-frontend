@@ -76,7 +76,7 @@ export class UsersListComponent {
     this.getDepartments();
     this.getRoles();
 
-    if (this.perms.permissionsOnly(PermissionKey.DELETE_USERS)) {
+    if (this.perms.permissionsOnly(PermissionKey.USERS_DELETE_DEPARTMENT)) {
       this.actions = [{ key: ActionKey.DELETE_USER, title: 'Delete User' }];
     }
   }

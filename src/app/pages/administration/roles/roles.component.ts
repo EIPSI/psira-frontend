@@ -126,7 +126,7 @@ export class RolesComponent implements OnInit {
   }
 
   handleRowClick(event: any) {
-    if (!this.perms.permissionsOnly([PermissionKey.MANAGE_ROLES_PERMISSIONS])) return;
+    if (!this.perms.permissionsOnly([PermissionKey.ROLES_EDIT_ALL])) return;
 
     this.role = this.roles[event.index];
     this.populateForm = true;

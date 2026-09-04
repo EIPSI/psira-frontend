@@ -347,7 +347,7 @@ export class CreatePatientComponent implements OnInit {
     if (this.canSeeAllPatients()) {
       return 'ALL';
     }
-    if (this.perms.permissionsOnly(PermissionKey.VIEW_DEPARTMENT_PATIENTS)) {
+    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_VIEW_DEPARTMENT)) {
       return 'DEPARTMENT';
     }
     return 'ASSIGNED';
@@ -373,14 +373,14 @@ export class CreatePatientComponent implements OnInit {
         );
       }) ||
       permissions.some((permission: any) =>
-        [PermissionKey.VIEW_ALL_PATIENTS, PermissionKey.MANAGE_USERS, PermissionKey.MANAGE_SETTINGS].includes(
+        [PermissionKey.PATIENTS_VIEW_ALL, PermissionKey.USERS_EDIT_DEPARTMENT, PermissionKey.SETTINGS_EDIT_ALL].includes(
           permission?.name
         )
       ) ||
       this.perms.permissionsOnly([
-        PermissionKey.VIEW_ALL_PATIENTS,
-        PermissionKey.MANAGE_USERS,
-        PermissionKey.MANAGE_SETTINGS,
+        PermissionKey.PATIENTS_VIEW_ALL,
+        PermissionKey.USERS_EDIT_DEPARTMENT,
+        PermissionKey.SETTINGS_EDIT_ALL,
       ])
     );
   }

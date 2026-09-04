@@ -81,10 +81,10 @@ export class QuestionnaireListComponent {
   ) {
     this.getDepartments();
 
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_QUESTIONNAIRES)) {
+    if (this.perms.permissionsOnly(PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT)) {
       this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'Discard Questionnaire' });
     }
-    // if (this.perms.permissionsOnly(PermissionKey.DELETE_QUESTIONNAIRES)) {
+    // if (this.perms.permissionsOnly(PermissionKey.QUESTIONNAIRES_DELETE_DEPARTMENT)) {
     //   this.actions.push({ key: ActionKey.DELETE_QUESTIONNAIRE, title: 'Delete Questionnaire' });
     // }
   }

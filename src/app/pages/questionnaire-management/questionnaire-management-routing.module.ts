@@ -16,7 +16,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.questionnairesList',
       permissions: {
-        only: [PermissionKey.VIEW_QUESTIONNAIRES],
+        only: [PermissionKey.QUESTIONNAIRES_VIEW_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -27,7 +27,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.uploadQuestionnaire',
       permissions: {
-        only: [PermissionKey.MANAGE_QUESTIONNAIRES],
+        only: [PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -38,7 +38,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.questionnaireBundles',
       permissions: {
-        only: [PermissionKey.MANAGE_QUESTIONNAIRES],
+        only: [PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -51,7 +51,7 @@ const routes: Routes = [
       parentBreadcrumbUrl: '/psira/questionnaire-management/questionnaire-bundles-list',
       breadcrumbI18nKey: 'menu.createQuestionnaireBundle',
       permissions: {
-        only: [PermissionKey.MANAGE_QUESTIONNAIRES],
+        only: [PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -64,7 +64,7 @@ const routes: Routes = [
       parentBreadcrumbUrl: '/psira/questionnaire-management/questionnaire-bundles-list',
       breadcrumbI18nKey: 'menu.createQuestionnaireBundle',
       permissions: {
-        only: [PermissionKey.MANAGE_QUESTIONNAIRES],
+        only: [PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -75,7 +75,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.questionnairesVersionList',
       permissions: {
-        only: [PermissionKey.VIEW_QUESTIONNAIRES],
+        only: [PermissionKey.QUESTIONNAIRES_VIEW_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],

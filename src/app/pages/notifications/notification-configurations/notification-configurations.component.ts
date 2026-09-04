@@ -145,7 +145,7 @@ export class NotificationConfigurationsComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (!this.perms.permissionsOnly(PermissionKey.MANAGE_NOTIFICATIONS)) return;
+    if (!this.perms.permissionsOnly(PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT)) return;
     this.actions = [
       { key: ActionKey.EDIT, title: 'Ver / editar' },
       { key: ActionKey.DUPLICATE, title: 'Duplicar' },

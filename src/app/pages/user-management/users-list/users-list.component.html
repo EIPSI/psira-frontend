@@ -24,7 +24,7 @@
           ? '/psira/user-management/supervisor-form'
           : '/psira/user-management/user-form'"
       [queryParams]="roleCodeFilter ? { roleCode: roleCodeFilter } : null"
-      *ngIf="perms.permissionsOnly([PK.MANAGE_USERS])"
+      *ngIf="perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT])"
     >
       <i nz-icon nzType="plus"></i>
     </button>

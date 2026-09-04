@@ -21,7 +21,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.patientList',
           permissions: {
-            only: [PermissionKey.VIEW_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_VIEW_ALL,
+              PermissionKey.PATIENTS_VIEW_DEPARTMENT,
+              PermissionKey.PATIENTS_VIEW_ASSIGNED,
+            ],
           },
           canActivate: [PermissionGuard],
         },
@@ -39,7 +43,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.createPatient',
           permissions: {
-            only: [PermissionKey.VIEW_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_VIEW_ALL,
+              PermissionKey.PATIENTS_VIEW_DEPARTMENT,
+              PermissionKey.PATIENTS_VIEW_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -50,7 +58,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.caregiverList',
           permissions: {
-            only: [PermissionKey.VIEW_PATIENTS],
+            only: [
+              PermissionKey.CAREGIVERS_VIEW_ALL,
+              PermissionKey.CAREGIVERS_VIEW_DEPARTMENT,
+              PermissionKey.CAREGIVERS_VIEW_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -61,7 +73,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'core.createCaregiver',
           permissions: {
-            only: [PermissionKey.MANAGE_CAREGIVERS],
+            only: [
+              PermissionKey.CAREGIVERS_CREATE_ALL,
+              PermissionKey.CAREGIVERS_CREATE_DEPARTMENT,
+              PermissionKey.CAREGIVERS_CREATE_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -72,7 +88,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.caseManagers',
           permissions: {
-            only: [PermissionKey.MANAGE_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_EDIT_ALL,
+              PermissionKey.PATIENTS_EDIT_DEPARTMENT,
+              PermissionKey.PATIENTS_EDIT_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -83,7 +103,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.informants',
           permissions: {
-            only: [PermissionKey.MANAGE_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_EDIT_ALL,
+              PermissionKey.PATIENTS_EDIT_DEPARTMENT,
+              PermissionKey.PATIENTS_EDIT_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],

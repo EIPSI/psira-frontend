@@ -152,8 +152,8 @@ export class AutomationsListComponent implements OnInit {
 
   private setActions(): void {
     if (
-      !this.perms.permissionsOnly(PermissionKey.MANAGE_EVALUATION_AUTOMATIONS) &&
-      !this.perms.permissionsOnly(PermissionKey.MANAGE_ALL_EVALUATION_AUTOMATIONS)
+      !this.perms.permissionsOnly(PermissionKey.AUTOMATIONS_EDIT_DEPARTMENT) &&
+      !this.perms.permissionsOnly(PermissionKey.AUTOMATIONS_EDIT_ALL)
     ) {
       return;
     }

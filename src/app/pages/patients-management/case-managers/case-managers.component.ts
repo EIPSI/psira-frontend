@@ -122,7 +122,7 @@ export class CaseManagersComponent implements OnInit {
     this.drawerTitle = this.managerType === 'caseManager' ? 'Filter Case Managers' : 'Filter Informants';
     this.caseManagerNiceName = this.managerType === 'caseManager' ? 'Case Manager' : 'Informant';
     this.getDepartments();
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
+    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
       this.actions = [{ key: ActionKey.UNASSIGN_CASEMANAGER, title: 'Unasign casemanager' }];
     }
   }
@@ -150,12 +150,12 @@ export class CaseManagersComponent implements OnInit {
   }
 
   public checkIfManagerHasPermission(permissions: Permission[]): boolean {
-    return permissions.some((p: Permission) => p.name === this.PK.MANAGE_PATIENTS);
+    return permissions.some((p: Permission) => p.name === this.PK.PATIENTS_EDIT_DEPARTMENT);
   }
 
   public canRemoveCaseManager(manager: CaseManager): boolean {
     if (manager?.id !== this.currentUserId) return true;
-    return this.perms.permissionsOnly(PermissionKey.REMOVE_SELF_CASE_MANAGER);
+    return this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_ASSIGNED);
   }
 
   public getCaseManagerServiceProperty(property: any, params?: any) {

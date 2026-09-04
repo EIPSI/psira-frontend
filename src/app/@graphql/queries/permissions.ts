@@ -8,6 +8,7 @@ const permissions = gql`
         node {
           id
           name
+          group
           createdAt
           updatedAt
           users {
@@ -52,6 +53,7 @@ const userPermissionGrants = gql`
     userPermissionGrants {
       id
       name
+      group
       createdAt
       updatedAt
     }

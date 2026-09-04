@@ -16,7 +16,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.userManagement',
           permissions: {
-            only: [PermissionKey.VIEW_USERS],
+            only: [
+              PermissionKey.USERS_VIEW_ALL,
+              PermissionKey.USERS_VIEW_DEPARTMENT,
+              PermissionKey.USERS_VIEW_DEPARTMENT_HIERARCHY,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -28,7 +32,11 @@ const routes: Routes = [
           breadcrumbI18nKey: 'menu.therapistsList',
           roleCode: 'THERAPIST',
           permissions: {
-            only: [PermissionKey.VIEW_USERS],
+            only: [
+              PermissionKey.THERAPISTS_VIEW_ALL,
+              PermissionKey.THERAPISTS_VIEW_DEPARTMENT,
+              PermissionKey.THERAPISTS_VIEW_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -40,7 +48,7 @@ const routes: Routes = [
           breadcrumbI18nKey: 'menu.supervisorsList',
           roleCode: 'SUPERVISOR',
           permissions: {
-            only: [PermissionKey.VIEW_USERS],
+            only: [PermissionKey.SUPERVISORS_VIEW_ALL, PermissionKey.SUPERVISORS_VIEW_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],
@@ -51,7 +59,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.newUser',
           permissions: {
-            only: [PermissionKey.VIEW_USERS],
+            only: [
+              PermissionKey.USERS_CREATE_ALL,
+              PermissionKey.USERS_CREATE_DEPARTMENT,
+              PermissionKey.USERS_CREATE_DEPARTMENT_HIERARCHY,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -71,7 +83,11 @@ const routes: Routes = [
           breadcrumbI18nKey: 'menu.newTherapist',
           roleCode: 'THERAPIST',
           permissions: {
-            only: [PermissionKey.MANAGE_USERS],
+            only: [
+              PermissionKey.THERAPISTS_CREATE_ALL,
+              PermissionKey.THERAPISTS_CREATE_DEPARTMENT,
+              PermissionKey.THERAPISTS_CREATE_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -83,7 +99,7 @@ const routes: Routes = [
           breadcrumbI18nKey: 'menu.newSupervisor',
           roleCode: 'SUPERVISOR',
           permissions: {
-            only: [PermissionKey.MANAGE_USERS],
+            only: [PermissionKey.SUPERVISORS_CREATE_ALL, PermissionKey.SUPERVISORS_CREATE_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],
@@ -94,7 +110,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.userManagement',
           permissions: {
-            only: [PermissionKey.VIEW_USERS],
+            only: [
+              PermissionKey.USERS_VIEW_ALL,
+              PermissionKey.USERS_VIEW_DEPARTMENT,
+              PermissionKey.USERS_VIEW_DEPARTMENT_HIERARCHY,
+            ],
           },
         },
         canActivate: [PermissionGuard],

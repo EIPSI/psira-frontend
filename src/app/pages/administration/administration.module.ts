@@ -6,7 +6,6 @@ import { SharedModule } from '@shared';
 import { AdministrationRoutingModule } from './administration-routing.module';
 import { RolesAndPermissionsComponent } from './roles-and-permissions/roles-and-permissions.component';
 
-import { PermissionsComponent } from './permissions/permissions.component';
 import { RolesComponent } from './roles/roles.component';
 import { PermissionsService } from './@services/permissions.service';
 import { RolesService } from './@services/roles.service';
@@ -18,6 +17,7 @@ import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzCollapseModule } from 'ng-zorro-antd/collapse';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -57,6 +57,7 @@ const antModules = [
   NzDrawerModule,
   NzTableModule,
   NzCheckboxModule,
+  NzCollapseModule,
   NzSpinModule,
 ];
 
@@ -78,7 +79,6 @@ const antModules = [
   ],
   declarations: [
     RolesAndPermissionsComponent,
-    PermissionsComponent,
     RolesComponent,
     DepartmentsComponent,
     ReportsComponent,

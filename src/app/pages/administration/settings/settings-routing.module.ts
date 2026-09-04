@@ -17,7 +17,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.systemConfiguration',
           permissions: {
-            only: [PermissionKey.VIEW_SYSCONF],
+            only: [PermissionKey.SYSTEM_VIEW_ALL],
           },
         },
         canActivate: [PermissionGuard],
@@ -28,7 +28,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.patientStatuses',
           permissions: {
-            only: [PermissionKey.VIEW_SETTINGS],
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
           },
         },
         canActivate: [PermissionGuard],
@@ -39,7 +39,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'Ajustes clinicos',
           permissions: {
-            only: [PermissionKey.VIEW_SETTINGS],
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
           },
         },
         canActivate: [PermissionGuard],
@@ -50,7 +50,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'Configuración Motivos',
           permissions: {
-            only: [PermissionKey.VIEW_SETTINGS],
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
           },
         },
         canActivate: [PermissionGuard],

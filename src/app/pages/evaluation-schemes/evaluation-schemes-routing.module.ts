@@ -12,7 +12,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.evaluationSchemes',
       permissions: {
-        only: [PermissionKey.VIEW_ASSESSMENTS],
+            only: [PermissionKey.EVALUATION_SCHEMES_VIEW_ALL, PermissionKey.EVALUATION_SCHEMES_VIEW_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -23,7 +23,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'evaluationSchemes.create',
       permissions: {
-        only: [PermissionKey.MANAGE_ASSESSMENTS],
+            only: [PermissionKey.EVALUATION_SCHEMES_CREATE_ALL, PermissionKey.EVALUATION_SCHEMES_CREATE_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],
@@ -34,7 +34,7 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'evaluationSchemes.edit',
       permissions: {
-        only: [PermissionKey.MANAGE_ASSESSMENTS],
+            only: [PermissionKey.EVALUATION_SCHEMES_EDIT_ALL, PermissionKey.EVALUATION_SCHEMES_EDIT_DEPARTMENT],
       },
     },
     canActivate: [PermissionGuard],

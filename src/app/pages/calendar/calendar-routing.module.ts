@@ -12,7 +12,11 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.calendar',
       permissions: {
-        only: [PermissionKey.VIEW_ASSESSMENTS],
+            only: [
+              PermissionKey.CLINICAL_VIEW_ALL,
+              PermissionKey.CLINICAL_VIEW_DEPARTMENT,
+              PermissionKey.CLINICAL_VIEW_ASSIGNED,
+            ],
       },
     },
     canActivate: [PermissionGuard],
@@ -23,7 +27,11 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.calendar',
       permissions: {
-        only: [PermissionKey.VIEW_ASSESSMENTS],
+            only: [
+              PermissionKey.CLINICAL_VIEW_ALL,
+              PermissionKey.CLINICAL_VIEW_DEPARTMENT,
+              PermissionKey.CLINICAL_VIEW_ASSIGNED,
+            ],
       },
     },
     canActivate: [PermissionGuard],

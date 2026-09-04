@@ -241,7 +241,7 @@
             nz-button
             nzType="primary"
             type="button"
-            *ngIf="!editMode && perms.permissionsOnly(PK.MANAGE_ASSESSMENTS)"
+            *ngIf="!editMode && perms.permissionsOnly(PK.ASSESSMENTS_EDIT_DEPARTMENT)"
             (click)="editMode = !editMode"
           >
             Edit

@@ -148,7 +148,7 @@ export class RandomizationsListComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (!this.perms.permissionsOnly(PermissionKey.MANAGE_ASSESSMENTS)) return;
+    if (!this.perms.permissionsOnly(PermissionKey.RANDOMIZATIONS_EDIT_DEPARTMENT)) return;
 
     this.actions = [
       { key: ActionKey.EDIT, title: 'Ver / editar' },

@@ -18,7 +18,7 @@
       [loadingMessage]="loadingMessage"
       [inputMode]="inputMode"
       [showCancelButton]="showCancelButton"
-      [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
+      [showEditButton]="perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) && perms.hasAccessLevelToUser(user)"
       layoutMode="definition"
       (inputChange)="handleProfileInputChange($event)"
       (submitForm)="submitForm($event)"
@@ -74,7 +74,7 @@
     [loadingMessage]="loadingMessage"
     [inputMode]="inputMode"
     [showCancelButton]="showCancelButton"
-    [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
+    [showEditButton]="perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) && perms.hasAccessLevelToUser(user)"
     layoutMode="definition"
     (inputChange)="handleProfileInputChange($event)"
     (submitForm)="submitForm($event)"
@@ -99,7 +99,7 @@
       <nz-card style="width: 300px" nzTitle="Enable or Disable {{ user?.firstName }}">
         <p>To disable and Enable {{ user?.firstName }} toggle the switch below.</p>
         <nz-switch
-          [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
+          [disabled]="!perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) || !perms.hasAccessLevelToUser(user)"
           (ngModelChange)="activateUser(user)"
           [(ngModel)]="user.active"
         ></nz-switch>
@@ -109,7 +109,7 @@
       <nz-card style="width: 300px" nzTitle="Change {{ user?.firstName }}'s password">
         <p>To change password for {{ user.firstName }} toggle the button below.</p>
         <button
-          [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
+          [disabled]="!perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) || !perms.hasAccessLevelToUser(user)"
           (click)="showChangePasswordForm()"
           nz-button
           nzType="primary"
@@ -122,7 +122,7 @@
       <nz-card style="width: 300px" nzTitle="Delete User {{ user?.firstName }} ({{ user?.username }})">
         <p>To remove User {{ user?.firstName }} toggle the button below.</p>
         <button
-          [disabled]="!perms.permissionsOnly([PK.DELETE_USERS]) || !perms.hasAccessLevelToUser(user)"
+          [disabled]="!perms.permissionsOnly([PK.USERS_DELETE_DEPARTMENT]) || !perms.hasAccessLevelToUser(user)"
           (click)="handleDeleteAction(user)"
           nz-button
           nzType="danger"

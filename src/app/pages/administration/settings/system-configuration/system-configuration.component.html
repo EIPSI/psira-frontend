@@ -1,7 +1,7 @@
 <app-form
   [isLoading]="isLoading"
   [loadingMessage]="loadingMessage"
-  [inputMode]="perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+  [inputMode]="perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
   [showEditButton]="false"
   (submitForm)="saveSettings($event)"
   [form]="settingsForm"
@@ -22,7 +22,7 @@
     <div class="feature-toggle-control">
       <nz-switch
         [(ngModel)]="featureSettings.notificationsEnabled"
-        [nzDisabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+        [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       ></nz-switch>
       <small>Si está apagado no se envían emails ni resúmenes, pero se conservan las configuraciones.</small>
     </div>
@@ -33,7 +33,7 @@
     <div class="feature-toggle-control">
       <nz-switch
         [(ngModel)]="featureSettings.informedConsentEnabled"
-        [nzDisabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+        [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       ></nz-switch>
       <small>Si está apagado no bloquea el uso de PSIRA ni genera pendientes obligatorios.</small>
     </div>
@@ -43,7 +43,7 @@
     nz-button
     nzType="primary"
     [nzLoading]="featureSaving"
-    [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+    [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
     (click)="saveFeatureSettings()"
   >
     Guardar funcionalidades
@@ -64,7 +64,7 @@
     <span>Activar integración</span>
     <nz-switch
       [(ngModel)]="googleCalendarSettings.googleCalendarEnabled"
-      [nzDisabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
     ></nz-switch>
   </label>
 
@@ -73,7 +73,7 @@
     <input
       nz-input
       [(ngModel)]="googleCalendarSettings.googleCalendarClientId"
-      [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       placeholder="Google OAuth Client ID"
     />
   </label>
@@ -84,7 +84,7 @@
       nz-input
       type="password"
       [(ngModel)]="googleCalendarSettings.googleCalendarClientSecret"
-      [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       placeholder="Dejar vacío para conservar el valor actual"
     />
   </label>
@@ -94,7 +94,7 @@
     <input
       nz-input
       [(ngModel)]="googleCalendarSettings.googleCalendarRedirectUri"
-      [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+      [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       placeholder="https://tu-dominio/psira/calendar/google-callback"
     />
   </label>
@@ -103,7 +103,7 @@
     nz-button
     nzType="primary"
     [nzLoading]="googleCalendarSaving"
-    [disabled]="!perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+    [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
     (click)="saveGoogleCalendarSettings()"
   >
     Guardar Google Calendar

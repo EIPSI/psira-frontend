@@ -222,7 +222,7 @@ export class UserProfileTabsComponent implements OnInit {
   }
 
   private setSupervisorActions(): void {
-    this.supervisorActions = this.perms.permissionsOnly(PermissionKey.MANAGE_USERS)
+    this.supervisorActions = this.perms.permissionsOnly(PermissionKey.USERS_EDIT_DEPARTMENT)
       ? [
           {
             key: SupervisorActionKey.REMOVE_SUPERVISOR,
@@ -234,7 +234,7 @@ export class UserProfileTabsComponent implements OnInit {
 
   private getSupervisors(): void {
     if (!this.user || !this.isTherapist) return;
-    if (!this.perms.permissionsOnly([PermissionKey.VIEW_USERS, PermissionKey.MANAGE_USERS])) return;
+    if (!this.perms.permissionsOnly([PermissionKey.USERS_VIEW_DEPARTMENT, PermissionKey.USERS_EDIT_DEPARTMENT])) return;
 
     this.supervisorsLoading = true;
     this.usersService
@@ -247,7 +247,7 @@ export class UserProfileTabsComponent implements OnInit {
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
       );
 
-    if (!this.perms.permissionsOnly(PermissionKey.MANAGE_USERS)) return;
+    if (!this.perms.permissionsOnly(PermissionKey.USERS_EDIT_DEPARTMENT)) return;
     this.usersService.getSupervisors({ first: 50 }).subscribe(
       ({ data }: any) => {
         this.availableSupervisors = data.supervisors.edges.map((edge: any) => edge.node);

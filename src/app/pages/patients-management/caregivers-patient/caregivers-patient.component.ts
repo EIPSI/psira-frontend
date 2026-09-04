@@ -172,7 +172,7 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   public handleRowClick(event: any) {
-    if (!this.perms.permissionsOnly([PermissionKey.MANAGE_PATIENTS])) return;
+    if (!this.perms.permissionsOnly([PermissionKey.PATIENTS_EDIT_DEPARTMENT])) return;
     this.populateForm = true;
     this.openCreatePanel(event);
   }
@@ -244,7 +244,7 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
+    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
       this.actions = [
         ...this.actions,
         {

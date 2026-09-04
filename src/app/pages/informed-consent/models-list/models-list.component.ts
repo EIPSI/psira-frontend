@@ -116,7 +116,7 @@ export class InformedConsentModelsListComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (!this.perms.permissionsOnly(PermissionKey.MANAGE_INFORMED_CONSENT_MODELS)) return;
+    if (!this.perms.permissionsOnly(PermissionKey.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT)) return;
     this.actions = [
       { key: ActionKey.EDIT, title: 'Editar' },
       { key: ActionKey.DUPLICATE, title: 'Duplicar' },

@@ -133,11 +133,11 @@ export class UserFormComponent implements OnInit {
   private shouldLoadProfileOptions(): boolean {
     if (this.section === 'settings') return false;
     return this.perms.permissionsOnly([
-      PermissionKey.MANAGE_USERS,
-      PermissionKey.VIEW_ROLES_PERMISSIONS,
-      PermissionKey.MANAGE_ROLES_PERMISSIONS,
-      PermissionKey.VIEW_SETTINGS,
-      PermissionKey.MANAGE_SETTINGS,
+      PermissionKey.USERS_EDIT_DEPARTMENT,
+      PermissionKey.ROLES_VIEW_ALL,
+      PermissionKey.ROLES_EDIT_ALL,
+      PermissionKey.SETTINGS_VIEW_ALL,
+      PermissionKey.SETTINGS_EDIT_ALL,
     ]);
   }
 

@@ -99,12 +99,12 @@ export class ReportsComponent implements OnInit {
   public onAction({ action, context: report }: ActionArgs<FormattedReport, ActionKey>): void {
     switch (action.key) {
       case ActionKey.EDIT_REPORT:
-        if (this.perms.permissionsOnly(PermissionKey.MANAGE_REPORTS)) {
+        if (this.perms.permissionsOnly(PermissionKey.REPORTS_EDIT_DEPARTMENT)) {
           this.onReportSelect(report);
         }
         return;
       case ActionKey.DELETE_REPORT:
-        if (this.perms.permissionsOnly(PermissionKey.DELETE_REPORTS)) {
+        if (this.perms.permissionsOnly(PermissionKey.REPORTS_DELETE_DEPARTMENT)) {
           this.deleteReport(report);
         }
         return;

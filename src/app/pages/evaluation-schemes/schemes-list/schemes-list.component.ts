@@ -149,7 +149,7 @@ export class SchemesListComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (!this.perms.permissionsOnly(PermissionKey.MANAGE_ASSESSMENTS)) return;
+    if (!this.perms.permissionsOnly(PermissionKey.EVALUATION_SCHEMES_EDIT_DEPARTMENT)) return;
 
     this.actions = [
       { key: ActionKey.EDIT, title: 'Edit Scheme' },
