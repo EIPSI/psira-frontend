@@ -17,7 +17,7 @@
                 <div class="p-15 ph-25 border-bottom d-flex justify-content-between align-items-center">
                   <p class="text-dark font-weight-semibold m-b-0">
                     <i nz-icon nzType="translation" theme="outline"></i>
-                    <span class="m-l-10">Translations</span>
+                    <span class="m-l-10">{{ 'systemMessages.translations' | translate }}</span>
                   </p>
                 </div>
                 <perfect-scrollbar class="overflow-y-auto" style="max-height: 300px">
@@ -28,15 +28,22 @@
                     [nzItemLayout]="'horizontal'"
                   >
                     <ng-template #item let-item>
-                      <nz-list-item>
-                        <a (click)="onChangeTranslation(item)">
-                          <div class="d-flex">
-                            <!-- <nz-avatar [nzIcon]="item.icon" [ngClass]="item.color"></nz-avatar> -->
-                            <div class="m-l-15">
-                              <p class="m-b-0 text-dark">{{ item.name }}</p>
-                            </div>
+                      <nz-list-item
+                        class="translation-option"
+                        [class.translation-option--selected]="isCurrentLanguage(item)"
+                        (click)="onChangeTranslation(item)"
+                      >
+                        <div class="translation-option__content">
+                          <i
+                            nz-icon
+                            [nzType]="isCurrentLanguage(item) ? 'check-circle' : 'global'"
+                            [nzTheme]="isCurrentLanguage(item) ? 'fill' : 'outline'"
+                          ></i>
+                          <div>
+                            <p class="m-b-0 text-dark">{{ item.name }}</p>
+                            <small>{{ item.code }}</small>
                           </div>
-                        </a>
+                        </div>
                       </nz-list-item>
                     </ng-template>
                   </nz-list>
@@ -58,7 +65,7 @@
                 (<span *ngIf="user?.roles"
                   ><span *ngIf="user?.roles.length > 0"
                     ><span class="pl-3 roles" *ngFor="let role of user?.roles">{{ role?.name }}</span></span
-                  ><span *ngIf="user?.roles.length === 0">no role</span></span
+                  ><span *ngIf="user?.roles.length === 0">{{ 'systemMessages.noRole' | translate }}</span></span
                 >)
               </span>
             </div>
@@ -130,7 +137,7 @@
 
 <nz-modal
   [(nzVisible)]="changePasswordModal"
-  nzTitle="Change your password"
+  [nzTitle]="'systemMessages.changeYourPassword' | translate"
   (nzOnCancel)="handleCancel()"
   (nzOnOk)="clickChangePassword()"
 >
@@ -142,8 +149,4 @@
     (submitForm)="changePassword($event)"
     [form]="changePasswordForm"
   ></app-form>
-  <!--  <div class="button-div">-->
-  <!--    <button nz-button nzType="default" class="cancel-button" (click)="handleCancel()">Cancel</button>-->
-  <!--    <button nz-button nzType="primary" class="modal-button" (click)="clickChangePassword()">Change Password</button>-->
-  <!--  </div>-->
 </nz-modal>

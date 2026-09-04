@@ -9,7 +9,7 @@ export interface SystemDateSettings {
 }
 
 const fallbackSettings: Required<SystemDateSettings> = {
-  systemLocale: 'en',
+  systemLocale: '',
   systemTimezone: 'Africa/Dar_es_Salaam',
   dateFormat: 'YYYY-MM-DD',
   timeFormat: 'LT',
@@ -30,7 +30,7 @@ export function getSystemSettings(): Required<SystemDateSettings> {
 
 export function configuredMoment(date: string | Date): moment.Moment {
   const settings = getSystemSettings();
-  const locale = settings.systemLocale || fallbackSettings.systemLocale;
+  const locale = settings.systemLocale || localStorage.getItem('language') || 'en';
   const timezone = settings.systemTimezone || fallbackSettings.systemTimezone;
   const value = moment(date);
   return timezone && moment.tz.zone(timezone)

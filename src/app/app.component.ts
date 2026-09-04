@@ -7,9 +7,9 @@ import { filter, map, switchMap } from 'rxjs/operators';
 
 import { environment } from '@env/environment';
 import { Logger } from '@core';
-import { translationList } from '../translations/translation-list';
 import { TranslationCode } from './@shared/@types/translation';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { I18nService } from './i18n/i18n.service';
 
 const log = new Logger('App');
 
@@ -24,7 +24,8 @@ export class AppComponent implements OnInit {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private i18nService: I18nService
   ) {}
 
   ngOnInit() {
@@ -36,7 +37,12 @@ export class AppComponent implements OnInit {
     log.debug('init');
 
     // Setup translations
-    this.initStoredLang();
+    this.i18nService.init(TranslationCode.EN, [TranslationCode.EN]);
+    this.i18nService.loadActiveLanguages().subscribe((languages) => {
+      if (!languages.length) return;
+      this.i18nService.setSupportedLanguages(languages.map((language) => language.code));
+      this.i18nService.language = '';
+    });
 
     // Change page title on navigation or language change, based on route data
     merge(
@@ -60,18 +66,4 @@ export class AppComponent implements OnInit {
       .subscribe((key) => this.titleService.setTitle(this.translateService.instant(key) + ' | PSIRA'));
   }
 
-  private initStoredLang() {
-    const lang = localStorage.getItem('currentLang');
-    const browserLang = this.translateService.getBrowserLang();
-    if (lang) {
-      this.translateService.use(lang);
-    } else {
-      // using substr to move something like en_US to en
-      if (translationList.some((trans) => trans.code === browserLang.substr(0, trans.code.length))) {
-        this.translateService.use(browserLang);
-      } else {
-        this.translateService.use(TranslationCode.EN);
-      }
-    }
-  }
 }

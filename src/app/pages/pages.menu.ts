@@ -242,7 +242,7 @@ export const MENU: SideNavInterface[] | any = [
           },
           {
             path: 'administration/settings/follow-up-settings',
-            title: 'Ajustes clinicos',
+            title: 'clinicalSettings.title',
             permissions: [PK.SETTINGS_VIEW_ALL],
             iconType: '',
             iconTheme: '',
@@ -250,7 +250,15 @@ export const MENU: SideNavInterface[] | any = [
           },
           {
             path: 'administration/settings/session-cancellation-reasons',
-            title: 'Configuración Motivos',
+            title: 'menu.reasonConfiguration',
+            permissions: [PK.SETTINGS_VIEW_ALL],
+            iconType: '',
+            iconTheme: '',
+            submenu: [],
+          },
+          {
+            path: 'administration/settings/language',
+            title: 'menu.language',
             permissions: [PK.SETTINGS_VIEW_ALL],
             iconType: '',
             iconTheme: '',

@@ -21,7 +21,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { GraphQLModule } from '@app/graphql.module';
 import { AuthGuard } from '@app/auth/auth.guard';
 import { PermissionGuard } from './permission.guard';
-import { TypescriptTranslationLoader } from './@core/typescript-translation-loader';
+import { DynamicTranslationLoader } from './@core/dynamic-translation-loader';
 import { registerLocale as registerLocalCountry } from 'i18n-iso-countries';
 import { registerLocale as registerLocaleLanguage } from '@cospired/i18n-iso-languages';
 import { PsiraMissingTranslationHandler } from './@core/psira-missing-translation-handler';
@@ -34,7 +34,7 @@ const translationConfig: TranslateModuleConfig = {
   useDefaultLang: environment.production,
   loader: {
     provide: TranslateLoader,
-    useClass: TypescriptTranslationLoader,
+    useClass: DynamicTranslationLoader,
   },
   missingTranslationHandler: {
     provide: MissingTranslationHandler,

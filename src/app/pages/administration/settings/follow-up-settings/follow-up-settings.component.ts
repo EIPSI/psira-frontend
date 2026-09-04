@@ -3,6 +3,7 @@ import { finalize } from 'rxjs/operators';
 import { CalendarService } from '@app/pages/calendar/@services/calendar.service';
 import { ClinicalSessionFollowUpSettings } from '@app/pages/calendar/@types/calendar';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-follow-up-settings',
@@ -16,7 +17,8 @@ export class FollowUpSettingsComponent implements OnInit {
 
   constructor(
     private calendarService: CalendarService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -30,7 +32,7 @@ export class FollowUpSettingsComponent implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         (settings: ClinicalSessionFollowUpSettings) => (this.settings = settings),
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to load follow-up settings' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('clinicalSettings.unableLoad') })
       );
   }
 
@@ -45,7 +47,7 @@ export class FollowUpSettingsComponent implements OnInit {
       .pipe(finalize(() => (this.saving = false)))
       .subscribe(
         (settings: ClinicalSessionFollowUpSettings) => (this.settings = settings),
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to update follow-up settings' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('clinicalSettings.unableUpdate') })
       );
   }
 }

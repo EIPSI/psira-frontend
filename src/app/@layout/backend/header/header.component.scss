@@ -80,3 +80,40 @@ nz-breadcrumb {
     border: 0px solid !important;
   }
 }
+
+.translation-option {
+  cursor: pointer;
+  padding: 8px 16px !important;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: #f5f9ff;
+  }
+}
+
+.translation-option--selected {
+  background: #e6f4ff;
+  box-shadow: inset 3px 0 0 #1677ff;
+
+  i {
+    color: #1677ff;
+  }
+}
+
+.translation-option__content {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+
+  i {
+    font-size: 18px;
+  }
+
+  small {
+    color: #667085;
+    display: block;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+}

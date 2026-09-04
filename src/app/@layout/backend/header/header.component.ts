@@ -9,14 +9,14 @@ import { UserChangePasswordInput } from '@app/pages/user-management/user-form/us
 import { UsersService } from '@app/pages/user-management/@services/users.service';
 import { FormComponent } from '@shared/components/form/form.component';
 import { FieldGroup } from '@shared/components/form/@types/field.group';
-import { TranslationCode, TranslationItem } from '@shared/@types/translation';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslationItem } from '@shared/@types/translation';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { InformedConsentService } from '@app/pages/informed-consent/@services/informed-consent.service';
 
 const CryptoJS = require('crypto-js');
-import { translationList } from '../../../../translations/translation-list';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { I18nService } from '@app/i18n/i18n.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-header',
@@ -27,7 +27,7 @@ export class HeaderComponent implements OnInit {
   @ViewChild(FormComponent) child: FormComponent;
   isOkLoading = false;
   user: User;
-  translations = translationList;
+  translations: TranslationItem[] = [{ code: 'en', name: 'English' }];
   changePasswordModal = false;
   loadingMessage = '';
   changePasswordForm: Form = userForms.changeUserPassword;
@@ -41,12 +41,14 @@ export class HeaderComponent implements OnInit {
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
     private informedConsentService: InformedConsentService,
-    private translationService: TranslateService
+    private i18nService: I18nService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.getUser();
     this.loadInformedConsentBlock();
+    this.loadActiveLanguages();
   }
 
   getUser() {
@@ -56,7 +58,7 @@ export class HeaderComponent implements OnInit {
         this.user = data.getUserProfile;
         localStorage.setItem('user', JSON.stringify(data.getUserProfile));
       },
-      (err) => this.errorService.handleError(err, { prefix: 'Unable to get user profile' })
+      (err) => this.errorService.handleError(err, { prefix: this.translate.instant('systemMessages.unableGetUserProfile') })
     );
   }
 
@@ -64,8 +66,22 @@ export class HeaderComponent implements OnInit {
     this.child.handleSubmitForm(this.changePasswordForm);
   }
   onChangeTranslation(item: TranslationItem) {
-    localStorage.setItem('currentLang', item.code);
-    this.translationService.use(item.code);
+    this.i18nService.setLanguage(item.code);
+  }
+
+  isCurrentLanguage(item: TranslationItem): boolean {
+    return item?.code === this.i18nService.language;
+  }
+
+  private loadActiveLanguages(): void {
+    this.i18nService.loadActiveLanguages().subscribe((languages) => {
+      if (!languages.length) return;
+      this.translations = languages.map((language) => ({
+        code: language.code,
+        name: language.nativeName || language.name,
+      }));
+      this.i18nService.setSupportedLanguages(this.translations.map((language) => language.code));
+    });
   }
 
   editUserProfile() {
@@ -96,13 +112,13 @@ export class HeaderComponent implements OnInit {
         () => {
           this.isLoading = false;
           this.loadingMessage = '';
-          this.message.success('Password has successfully been changed');
+          this.message.success(this.translate.instant('systemMessages.passwordChanged'));
           this.handleCancel();
         },
         (error) => {
           this.isLoading = false;
           this.loadingMessage = '';
-          this.errorService.handleError(error, { prefix: 'Unable to change password' });
+          this.errorService.handleError(error, { prefix: this.translate.instant('systemMessages.unableChangePassword') });
         }
       );
     }

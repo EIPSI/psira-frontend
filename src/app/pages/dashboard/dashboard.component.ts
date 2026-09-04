@@ -24,6 +24,7 @@ import { CalendarService } from '../calendar/@services/calendar.service';
 import { DepartmentsService } from '../administration/@services/departments.service';
 import { Department } from '../administration/@types/department';
 import { formatSystemDateTime } from '@shared/utils/system-settings.util';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -75,7 +76,8 @@ export class DashboardComponent implements OnInit {
     private departmentsService: DepartmentsService,
     private perms: AppPermissionsService,
     private locationStrategy: LocationStrategy,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -373,14 +375,14 @@ export class DashboardComponent implements OnInit {
 
   public assessmentActivationLabel(assessment: FormattedAssessment): string {
     return assessment.deliveryDate
-      ? `Activacion: ${formatSystemDateTime(assessment.deliveryDate)}`
-      : 'Activacion inmediata';
+      ? this.translate.instant('dashboard.activation', { date: formatSystemDateTime(assessment.deliveryDate) })
+      : this.translate.instant('dashboard.immediateActivation');
   }
 
   public assessmentExpirationLabel(assessment: FormattedAssessment): string {
     return assessment.expirationDate
-      ? `Expiracion: ${formatSystemDateTime(assessment.expirationDate)}`
-      : 'Sin expiracion';
+      ? this.translate.instant('dashboard.expiration', { date: formatSystemDateTime(assessment.expirationDate) })
+      : this.translate.instant('dashboard.noExpiration');
   }
 
   public formatDashboardDateTime(date: string | Date): string {

@@ -25,6 +25,7 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { FollowUpSettingsComponent } from './follow-up-settings/follow-up-settings.component';
 import { SessionCancellationReasonsComponent } from './session-cancellation-reasons/session-cancellation-reasons.component';
+import { LanguageSettingsComponent } from './language/language-settings.component';
 
 const antModules = [
   NzAlertModule,
@@ -59,6 +60,7 @@ const antModules = [
     SystemConfigurationComponent,
     FollowUpSettingsComponent,
     SessionCancellationReasonsComponent,
+    LanguageSettingsComponent,
   ],
   providers: [PatientStatusesService],
 })

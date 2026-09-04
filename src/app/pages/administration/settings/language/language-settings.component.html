@@ -1,0 +1,205 @@
+<section class="language-page">
+  <div class="language-header">
+    <div>
+      <h2>{{ 'language.title' | translate }}</h2>
+      <p>{{ 'language.description' | translate }}</p>
+    </div>
+    <button
+      nz-button
+      nzType="primary"
+      nzShape="circle"
+      (click)="openCreateLanguage()"
+      [title]="'language.createLanguage' | translate"
+    >
+      <i nz-icon nzType="plus"></i>
+    </button>
+  </div>
+
+  <div class="language-layout">
+    <nz-card [nzTitle]="'language.languages' | translate" [nzLoading]="loading && !languages.length">
+      <nz-table
+        #languageTable
+        [nzData]="languages"
+        [nzFrontPagination]="false"
+        [nzShowPagination]="false"
+        nzSize="small"
+      >
+        <thead>
+          <tr>
+            <th>{{ 'language.language' | translate }}</th>
+            <th>{{ 'core.code' | translate }}</th>
+            <th>{{ 'core.status' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let language of languageTable.data"
+            class="language-row"
+            [class.selected]="selectedLanguage?.id === language.id"
+            (click)="selectLanguage(language)"
+          >
+            <td>
+              <strong>
+                <i *ngIf="selectedLanguage?.id === language.id" nz-icon nzType="check-circle" nzTheme="fill"></i>
+                {{ language.nativeName || language.name }}
+              </strong>
+              <small>{{ language.name }}</small>
+            </td>
+            <td>{{ language.code }}</td>
+            <td>
+              <nz-tag [nzColor]="language.active ? 'green' : 'default'">
+                {{ (language.active ? 'core.active' : 'core.inactive') | translate }}
+              </nz-tag>
+              <nz-tag *ngIf="language.isDefault" nzColor="blue">{{ 'core.default' | translate }}</nz-tag>
+            </td>
+            <td>
+              <button nz-button nzSize="small" (click)="openEditLanguage(language); $event.stopPropagation()">
+                {{ 'core.edit' | translate }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </nz-card>
+
+    <nz-card [nzTitle]="'language.translations' | translate" [nzLoading]="loading && !!selectedLanguage">
+      <div class="translation-toolbar">
+        <input
+          nz-input
+          [(ngModel)]="search"
+          [placeholder]="'core.search' | translate"
+        />
+        <nz-select [(ngModel)]="namespace" nzAllowClear [nzPlaceHolder]="'language.namespace' | translate">
+          <nz-option *ngFor="let item of namespaces" [nzValue]="item" [nzLabel]="item"></nz-option>
+        </nz-select>
+        <button nz-button nzSize="small" type="button" [disabled]="!hasShortcuts" (click)="showShortcuts()">
+          {{ 'language.availableVariables' | translate }}
+        </button>
+      </div>
+
+      <nz-table
+        #translationTable
+        [nzData]="filteredRows"
+        [nzFrontPagination]="true"
+        [nzPageSize]="25"
+        nzSize="small"
+      >
+        <thead>
+          <tr>
+            <th nzShowSort [nzSortFn]="sortByKey">{{ 'language.key' | translate }}</th>
+            <th nzShowSort [nzSortFn]="sortByDefault">{{ 'core.default' | translate }}</th>
+            <th>{{ 'language.text' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of translationTable.data">
+            <td>
+              <code>{{ row.key }}</code>
+              <small>{{ rowDescription(row) }}</small>
+            </td>
+            <td>{{ row.defaultText }}</td>
+            <td>
+              <textarea
+                nz-input
+                [(ngModel)]="row.value"
+                (ngModelChange)="markDirty(row)"
+                [placeholder]="row.defaultText"
+                rows="2"
+              ></textarea>
+            </td>
+            <td class="row-actions">
+              <button nz-button nzSize="small" (click)="restoreDefault(row)">
+                {{ 'language.restoreDefault' | translate }}
+              </button>
+              <button
+                nz-button
+                nzType="primary"
+                nzSize="small"
+                [disabled]="!row.dirty"
+                [nzLoading]="savingKey === row.key"
+                (click)="saveRow(row)"
+              >
+                {{ 'core.save' | translate }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </nz-card>
+  </div>
+</section>
+
+<nz-modal
+  [(nzVisible)]="languageModalVisible"
+  [nzTitle]="(languageDraft.id ? 'language.editLanguage' : 'language.createLanguage') | translate"
+  [nzOkText]="'core.save' | translate"
+  [nzCancelText]="'core.cancel' | translate"
+  (nzOnCancel)="closeLanguageModal()"
+  (nzOnOk)="saveLanguage()"
+>
+  <ng-container *nzModalContent>
+    <div class="language-form">
+      <label>
+        <span>{{ 'core.code' | translate }}</span>
+        <input nz-input [(ngModel)]="languageDraft.code" [placeholder]="'language.codePlaceholder' | translate" />
+      </label>
+      <label>
+        <span>{{ 'core.name' | translate }}</span>
+        <input nz-input [(ngModel)]="languageDraft.name" [placeholder]="'language.namePlaceholder' | translate" />
+      </label>
+      <label>
+        <span>{{ 'language.nativeName' | translate }}</span>
+        <input nz-input [(ngModel)]="languageDraft.nativeName" [placeholder]="'language.nativeNamePlaceholder' | translate" />
+      </label>
+      <label>
+        <span>{{ 'language.fallback' | translate }}</span>
+        <input nz-input [(ngModel)]="languageDraft.fallbackCode" [placeholder]="'language.fallbackPlaceholder' | translate" />
+      </label>
+      <label class="inline">
+        <nz-switch [(ngModel)]="languageDraft.active"></nz-switch>
+        <span>{{ 'core.active' | translate }}</span>
+      </label>
+      <label class="inline">
+        <nz-switch [(ngModel)]="languageDraft.isDefault"></nz-switch>
+        <span>{{ 'language.defaultLanguage' | translate }}</span>
+      </label>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="shortcutsVisible"
+  [nzTitle]="'language.availableVariables' | translate"
+  [nzOkText]="'core.close' | translate"
+  [nzCancelText]="null"
+  [nzWidth]="920"
+  (nzOnCancel)="shortcutsVisible = false"
+  (nzOnOk)="shortcutsVisible = false"
+>
+  <div *nzModalContent class="language-shortcuts">
+    <div class="language-shortcuts__header">
+      <span>{{ 'language.variable' | translate }}</span>
+      <span>{{ 'language.variableDescription' | translate }}</span>
+    </div>
+    <button
+      type="button"
+      class="language-shortcuts__row"
+      *ngFor="let shortcut of shortcuts; trackBy: trackShortcut"
+      (click)="copyShortcut(shortcut.token, $event)"
+    >
+      <span class="shortcut-variable">
+        <code>{{ shortcut.token }}</code>
+        <span
+          nz-icon
+          nzType="copy"
+          nzTheme="outline"
+          class="shortcut-copy"
+          [title]="'language.copyVariable' | translate"
+        ></span>
+      </span>
+      <span class="shortcut-description">{{ shortcut.description }}</span>
+    </button>
+  </div>
+</nz-modal>

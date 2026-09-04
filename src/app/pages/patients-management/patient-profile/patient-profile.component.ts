@@ -29,6 +29,7 @@ import { DeleteOneInput } from '@app/@shared/@types/delete-one-input';
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
+import { TranslateService } from '@ngx-translate/core';
 import {
   EvaluationAutomationTriggerPoint,
   EvaluationAutomationTriggerPointLabel,
@@ -110,7 +111,8 @@ export class PatientProfileComponent implements OnInit {
     private modalService: NzModalService,
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -491,9 +493,9 @@ export class PatientProfileComponent implements OnInit {
         () => {
           this.passwordModalVisible = false;
           this.resetPatientPasswordForm();
-          this.message.success('Password has successfully been changed');
+          this.message.success(this.translate.instant('systemMessages.passwordChanged'));
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to change password' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('systemMessages.unableChangePassword') })
       );
   }
 

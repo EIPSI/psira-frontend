@@ -7,35 +7,35 @@
   [form]="settingsForm"
 ></app-form>
 
-<nz-card class="integration-card" nzTitle="Funcionalidades globales">
+<nz-card class="integration-card" [nzTitle]="'systemSettings.globalFeatures' | translate">
   <div class="integration-status">
     <nz-tag [nzColor]="featureSettings.notificationsEnabled !== false ? 'green' : 'default'">
-      Notificaciones {{ featureSettings.notificationsEnabled !== false ? 'activas' : 'inactivas' }}
+      {{ (featureSettings.notificationsEnabled !== false ? 'systemSettings.notificationsActive' : 'systemSettings.notificationsInactive') | translate }}
     </nz-tag>
     <nz-tag [nzColor]="featureSettings.informedConsentEnabled !== false ? 'green' : 'default'">
-      Consentimiento informado {{ featureSettings.informedConsentEnabled !== false ? 'activo' : 'inactivo' }}
+      {{ (featureSettings.informedConsentEnabled !== false ? 'systemSettings.informedConsentActive' : 'systemSettings.informedConsentInactive') | translate }}
     </nz-tag>
   </div>
 
   <label class="integration-field">
-    <span>Notificaciones</span>
+    <span>{{ 'systemSettings.notifications' | translate }}</span>
     <div class="feature-toggle-control">
       <nz-switch
         [(ngModel)]="featureSettings.notificationsEnabled"
         [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       ></nz-switch>
-      <small>Si está apagado no se envían emails ni resúmenes, pero se conservan las configuraciones.</small>
+      <small>{{ 'systemSettings.notificationsDescription' | translate }}</small>
     </div>
   </label>
 
   <label class="integration-field">
-    <span>Consentimiento Informado</span>
+    <span>{{ 'systemSettings.informedConsent' | translate }}</span>
     <div class="feature-toggle-control">
       <nz-switch
         [(ngModel)]="featureSettings.informedConsentEnabled"
         [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       ></nz-switch>
-      <small>Si está apagado no bloquea el uso de PSIRA ni genera pendientes obligatorios.</small>
+      <small>{{ 'systemSettings.informedConsentDescription' | translate }}</small>
     </div>
   </label>
 
@@ -46,22 +46,22 @@
     [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
     (click)="saveFeatureSettings()"
   >
-    Guardar funcionalidades
+    {{ 'systemSettings.saveFeatures' | translate }}
   </button>
 </nz-card>
 
-<nz-card class="integration-card" nzTitle="Google Calendar">
+<nz-card class="integration-card" [nzTitle]="'systemSettings.googleCalendar' | translate">
   <div class="integration-status">
     <nz-tag [nzColor]="googleCalendarSettings.googleCalendarEnabled ? 'green' : 'default'">
-      {{ googleCalendarSettings.googleCalendarEnabled ? 'Activo' : 'Oculto' }}
+      {{ (googleCalendarSettings.googleCalendarEnabled ? 'core.active' : 'systemSettings.hidden') | translate }}
     </nz-tag>
     <span>
-      Configura la app OAuth oficial de PSIRA. Si queda inactivo o incompleto, los usuarios no verán el botón para conectar Google Calendar.
+      {{ 'systemSettings.googleCalendarDescription' | translate }}
     </span>
   </div>
 
   <label class="integration-field">
-    <span>Activar integración</span>
+    <span>{{ 'systemSettings.enableIntegration' | translate }}</span>
     <nz-switch
       [(ngModel)]="googleCalendarSettings.googleCalendarEnabled"
       [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
@@ -69,33 +69,33 @@
   </label>
 
   <label class="integration-field">
-    <span>Client ID</span>
+    <span>{{ 'systemSettings.clientId' | translate }}</span>
     <input
       nz-input
       [(ngModel)]="googleCalendarSettings.googleCalendarClientId"
       [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
-      placeholder="Google OAuth Client ID"
+      [placeholder]="'systemSettings.clientIdPlaceholder' | translate"
     />
   </label>
 
   <label class="integration-field">
-    <span>Client Secret</span>
+    <span>{{ 'systemSettings.clientSecret' | translate }}</span>
     <input
       nz-input
       type="password"
       [(ngModel)]="googleCalendarSettings.googleCalendarClientSecret"
       [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
-      placeholder="Dejar vacío para conservar el valor actual"
+      [placeholder]="'systemSettings.clientSecretPlaceholder' | translate"
     />
   </label>
 
   <label class="integration-field">
-    <span>Redirect URI</span>
+    <span>{{ 'systemSettings.redirectUri' | translate }}</span>
     <input
       nz-input
       [(ngModel)]="googleCalendarSettings.googleCalendarRedirectUri"
       [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
-      placeholder="https://tu-dominio/psira/calendar/google-callback"
+      [placeholder]="'systemSettings.redirectUriPlaceholder' | translate"
     />
   </label>
 
@@ -106,6 +106,6 @@
     [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
     (click)="saveGoogleCalendarSettings()"
   >
-    Guardar Google Calendar
+    {{ 'systemSettings.saveGoogleCalendar' | translate }}
   </button>
 </nz-card>

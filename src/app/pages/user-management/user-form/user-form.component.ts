@@ -27,6 +27,7 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
 import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 import { AuthService } from '@app/auth/auth.service';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -106,7 +107,8 @@ export class UserFormComponent implements OnInit {
     public perms: AppPermissionsService,
     private departmentsService: DepartmentsService,
     private evaluationAutomationsService: EvaluationAutomationsService,
-    private authService: AuthService
+    private authService: AuthService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -664,7 +666,7 @@ export class UserFormComponent implements OnInit {
         .subscribe(
           (_) => {
             this.showModal = false;
-            this.message.create('success', `Password has successfully been changed`);
+            this.message.create('success', this.translate.instant('systemMessages.passwordChanged'));
             this.updatePasswordForm.groups.map((group) => {
               group.fields.map((field) => {
                 field.value = '';
@@ -673,7 +675,7 @@ export class UserFormComponent implements OnInit {
           },
           (error) =>
             this.errorService.handleError(error, {
-              prefix: 'Unable to change password',
+              prefix: this.translate.instant('systemMessages.unableChangePassword'),
             })
         );
     }

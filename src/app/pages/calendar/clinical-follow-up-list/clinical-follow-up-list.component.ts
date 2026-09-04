@@ -15,6 +15,7 @@ import {
   ClinicalSessionResource,
 } from '../@types/calendar';
 import { formatSystemDateTime } from '@shared/utils/system-settings.util';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-clinical-follow-up-list',
@@ -57,7 +58,8 @@ export class ClinicalFollowUpListComponent implements OnChanges {
 
   constructor(
     private calendarService: CalendarService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnChanges(): void {
@@ -284,7 +286,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   private loadSettings(): void {
     this.calendarService.getClinicalSessionFollowUpSettings().subscribe(
       (settings: ClinicalSessionFollowUpSettings) => (this.settings = settings),
-      (error: any) => this.errorService.handleError(error, { prefix: 'Unable to load follow-up settings' })
+      (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('clinicalSettings.unableLoad') })
     );
   }
 

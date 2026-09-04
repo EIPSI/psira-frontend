@@ -1,0 +1,160 @@
+.language-page {
+  display: block;
+}
+
+.language-header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h2 {
+    margin-bottom: 4px;
+  }
+
+  p {
+    color: #6b7280;
+    margin: 0;
+  }
+}
+
+.language-layout {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+}
+
+.language-row {
+  cursor: pointer;
+  transition: background 120ms ease, box-shadow 120ms ease;
+
+  &:hover {
+    background: #f5f9ff;
+  }
+
+  &.selected {
+    background: #e6f4ff;
+    box-shadow: inset 3px 0 0 #1677ff;
+
+    strong {
+      color: #0958d9;
+    }
+
+    i {
+      color: #1677ff;
+      margin-right: 6px;
+    }
+  }
+}
+
+td {
+  vertical-align: top;
+
+  small {
+    color: #6b7280;
+    display: block;
+  }
+}
+
+.translation-toolbar {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(220px, 1fr) 220px auto;
+  margin-bottom: 12px;
+}
+
+.row-actions {
+  white-space: nowrap;
+
+  button + button {
+    margin-left: 6px;
+  }
+}
+
+.language-shortcuts {
+  display: grid;
+  gap: 8px;
+}
+
+.language-shortcuts__header,
+.language-shortcuts__row {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+}
+
+.language-shortcuts__header {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 10px;
+  text-transform: uppercase;
+}
+
+.language-shortcuts__row {
+  background: #fff;
+  border: 1px solid #eaedf3;
+  border-radius: 4px;
+  cursor: pointer;
+  height: auto;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: normal;
+  width: 100%;
+
+  &:hover {
+    border-color: #1677ff;
+  }
+}
+
+.shortcut-variable {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  user-select: text;
+
+  code {
+    color: #1677ff;
+    user-select: text;
+    word-break: break-word;
+  }
+}
+
+.shortcut-copy {
+  color: #667085;
+  flex: 0 0 auto;
+}
+
+.shortcut-description {
+  color: #667085;
+  font-size: 12px;
+  white-space: normal;
+}
+
+.language-form {
+  display: grid;
+  gap: 12px;
+
+  label {
+    display: grid;
+    gap: 4px;
+  }
+
+  .inline {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .language-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .translation-toolbar {
+    grid-template-columns: 1fr;
+  }
+}

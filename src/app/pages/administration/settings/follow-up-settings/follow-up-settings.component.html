@@ -1,17 +1,17 @@
-<nz-card nzTitle="Ajustes clinicos" [nzLoading]="loading">
+<nz-card [nzTitle]="'clinicalSettings.title' | translate" [nzLoading]="loading">
   <div class="setting-form" *ngIf="settings">
     <label>
-      <span>Ventana de edicion por sesion</span>
+      <span>{{ 'clinicalSettings.editWindow' | translate }}</span>
       <input nz-input type="number" min="0" [(ngModel)]="settings.editWindowDays" />
     </label>
-    <span>dias desde la fecha de la sesion</span>
+    <span>{{ 'clinicalSettings.daysFromSessionDate' | translate }}</span>
     <label>
-      <span>Anticipacion en panel de control</span>
+      <span>{{ 'clinicalSettings.dashboardLookahead' | translate }}</span>
       <input nz-input type="number" min="0" [(ngModel)]="settings.dashboardLookaheadDays" />
     </label>
-    <span>dias antes de que aparezcan sesiones y evaluaciones</span>
+    <span>{{ 'clinicalSettings.daysBeforeDashboard' | translate }}</span>
     <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveSettings()">
-      Guardar
+      {{ 'core.save' | translate }}
     </button>
   </div>
 </nz-card>

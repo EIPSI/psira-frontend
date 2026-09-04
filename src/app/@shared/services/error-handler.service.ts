@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ApolloError, isApolloError } from 'apollo-client';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SkipLogicError } from '../../assessment-form/skip-logic';
+import { TranslateService } from '@ngx-translate/core';
 
 type AnyError = ApolloError | SkipLogicError | Error;
 
@@ -19,7 +20,7 @@ const informedConsentPendingPath = '/psira/informed-consent/pending';
 
 @Injectable({ providedIn: 'root' })
 export class ErrorHandlerService {
-  constructor(private messageService: NzMessageService, private router: Router) {}
+  constructor(private messageService: NzMessageService, private router: Router, private translate: TranslateService) {}
 
   public handleError(error: AnyError, options: ErrorHandlerOptions = {}): void {
     if (this.isInformedConsentBlock(error)) {
@@ -30,7 +31,7 @@ export class ErrorHandlerService {
     if (isApolloError(error)) {
       // show error directly if it has no graphQL Errors
       if (!error?.graphQLErrors?.length) {
-        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${error.message}` : error.message;
+        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${this.translateMessage(error.message)}` : this.translateMessage(error.message);
         this.dispatchError(msg, error, options, 5000);
       }
 
@@ -38,14 +39,14 @@ export class ErrorHandlerService {
       for (const e of error.graphQLErrors) {
         // Use e.extensions.message if available, otherwise fallback to e.message
         const specificMessage = (e as any).extensions?.message || e.message;
-        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${specificMessage}` : specificMessage;
+        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${this.translateMessage(specificMessage)}` : this.translateMessage(specificMessage);
         this.dispatchError(msg, e, options, 5000);
       }
     } else if (isSkipLogicError(error)) {
-      const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${error.message}` : error.message;
+      const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${this.translateMessage(error.message)}` : this.translateMessage(error.message);
       this.dispatchError(msg, error, options, 5000);
     } else {
-      const msg = options.prefix ? `${options.prefix} - ${error}` : error.toString();
+      const msg = options.prefix ? `${options.prefix} - ${error}` : this.translateMessage(error.toString());
       this.dispatchError(msg, error, options);
     }
   }
@@ -56,6 +57,14 @@ export class ErrorHandlerService {
 
     // log error to console
     console.error(error);
+  }
+
+  private translateMessage(message: string): string {
+    const knownMessages: Record<string, string> = {
+      [informedConsentBlockMessage]: 'systemMessages.informedConsentBlocked',
+    };
+    const key = knownMessages[message];
+    return key ? this.translate.instant(key) : message;
   }
 
   private isInformedConsentBlock(error: AnyError): boolean {

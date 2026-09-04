@@ -3,10 +3,9 @@ import { AssessmentFormService } from './assessment-form.service';
 import { ActivatedRoute } from '@angular/router';
 import { map, filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { TranslateService } from '@ngx-translate/core';
 import { AssessmentStatus, FullAssessment } from '@app/pages/assessment/@types/assessment';
 import { TranslationCode } from '../@shared/@types/translation';
-import { translationList } from '../../translations/translation-list';
+import { I18nService } from '@app/i18n/i18n.service';
 
 @UntilDestroy()
 @Component({
@@ -21,7 +20,7 @@ export class AssessmentFormComponent implements OnInit {
   constructor(
     public assessmentFormService: AssessmentFormService,
     private activatedRoute: ActivatedRoute,
-    private translateService: TranslateService
+    private i18nService: I18nService
   ) {
     this.activatedRoute.data
       .pipe(
@@ -69,7 +68,8 @@ export class AssessmentFormComponent implements OnInit {
         const [lang] = assessment.questionnaireAssessment.questionnaires.map((q: any) => q.questionnaire?.language) ?? [
           TranslationCode.EN,
         ];
-        if (translationList.some((t) => t.code === lang)) this.translateService.use(lang);
+        this.i18nService.setSupportedLanguages([lang]);
+        this.i18nService.language = lang;
       });
   }
 

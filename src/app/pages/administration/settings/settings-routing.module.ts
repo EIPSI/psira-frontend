@@ -6,6 +6,7 @@ import { PermissionKey } from '@app/@shared/@types/permission';
 import { PermissionGuard } from '../../../permission.guard';
 import { FollowUpSettingsComponent } from './follow-up-settings/follow-up-settings.component';
 import { SessionCancellationReasonsComponent } from './session-cancellation-reasons/session-cancellation-reasons.component';
+import { LanguageSettingsComponent } from './language/language-settings.component';
 
 const routes: Routes = [
   {
@@ -37,7 +38,7 @@ const routes: Routes = [
         path: 'follow-up-settings',
         component: FollowUpSettingsComponent,
         data: {
-          breadcrumbI18nKey: 'Ajustes clinicos',
+          breadcrumbI18nKey: 'clinicalSettings.title',
           permissions: {
             only: [PermissionKey.SETTINGS_VIEW_ALL],
           },
@@ -48,7 +49,18 @@ const routes: Routes = [
         path: 'session-cancellation-reasons',
         component: SessionCancellationReasonsComponent,
         data: {
-          breadcrumbI18nKey: 'Configuración Motivos',
+          breadcrumbI18nKey: 'menu.reasonConfiguration',
+          permissions: {
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'language',
+        component: LanguageSettingsComponent,
+        data: {
+          breadcrumbI18nKey: 'menu.language',
           permissions: {
             only: [PermissionKey.SETTINGS_VIEW_ALL],
           },
