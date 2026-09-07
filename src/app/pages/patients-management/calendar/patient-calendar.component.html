@@ -58,11 +58,13 @@
   [(nzVisible)]="createEventModalVisible"
   [nzTitle]="'calendar.createEvent' | translate"
   [nzOkLoading]="creating"
+  [nzWidth]="720"
+  nzWrapClassName="patient-calendar-event-modal"
   (nzOnCancel)="createEventModalVisible = false"
   (nzOnOk)="saveCreateEvent()"
 >
   <ng-container *nzModalContent>
-  <div class="edit-form">
+  <div class="edit-form calendar-create-form">
     <div class="form-field">
       <span>Tipo</span>
       <nz-select [(ngModel)]="createType" (ngModelChange)="onCreateTypeChange($event)">
@@ -270,7 +272,7 @@
         nzNotFoundContent="No hay administradores asignados al caso."
       >
         <nz-option
-          *ngFor="let administrator of caseAdministratorOptions()"
+          *ngFor="let administrator of caseAdministrators"
           [nzValue]="administrator.id"
           [nzLabel]="userLabel(administrator)"
         ></nz-option>

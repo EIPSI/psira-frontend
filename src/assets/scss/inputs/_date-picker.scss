@@ -9,7 +9,7 @@
   height: $date-picker-height;
 
   &:hover,
-  .ant-picker-focused {
+  &.ant-picker-focused {
     border-color: $input-theme-color;
   }
 

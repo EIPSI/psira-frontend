@@ -3,7 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
-import { NzI18nService, en_US, es_ES, de_DE } from 'ng-zorro-antd/i18n';
+import { NzI18nService, en_US } from 'ng-zorro-antd/i18n';
 import * as moment from 'moment-timezone';
 import 'moment/locale/es';
 import 'moment/locale/de';
@@ -30,6 +30,7 @@ export function extract(s: string) {
 export class I18nService {
   defaultLanguage!: string;
   supportedLanguages!: string[];
+  private runtimeLocale = '';
 
   constructor(
     private translateService: TranslateService,
@@ -95,10 +96,17 @@ export class I18nService {
   set language(language: string) {
     const storedLanguage = localStorage.getItem(languageKey);
     language = this.resolveLanguage(language, storedLanguage);
+    if (language === this.translateService.currentLang && language === this.runtimeLocale) {
+      return;
+    }
 
     log.debug(`Language set to ${language}`);
-    this.applyRuntimeLocale(language);
-    this.translateService.use(language);
+    const languageChange = this.translateService.use(language);
+    if (languageChange && typeof (languageChange as any).subscribe === 'function') {
+      (languageChange as any).subscribe(() => this.applyRuntimeLocale(language));
+    } else {
+      this.applyRuntimeLocale(language);
+    }
   }
 
   /**
@@ -145,12 +153,12 @@ export class I18nService {
   }
 
   private applyRuntimeLocale(language: string): void {
+    if (language === this.runtimeLocale) {
+      return;
+    }
+    this.runtimeLocale = language;
     moment.locale(language || this.defaultLanguage || 'en');
-    const nzLocales: Record<string, any> = {
-      en: en_US,
-      es: es_ES,
-      de: de_DE,
-    };
-    this.nzI18nService.setLocale(nzLocales[language] || en_US);
+    // Keep ng-zorro widgets on a stable locale. The application text still uses ngx-translate.
+    this.nzI18nService.setLocale(en_US);
   }
 }

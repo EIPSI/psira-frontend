@@ -37,7 +37,13 @@ export class AppComponent implements OnInit {
     log.debug('init');
 
     // Setup translations
-    this.i18nService.init(TranslationCode.EN, [TranslationCode.EN]);
+    this.i18nService.init(TranslationCode.EN, [
+      TranslationCode.EN,
+      TranslationCode.ES,
+      TranslationCode.DE,
+      TranslationCode.NL,
+      ...(environment.supportedLanguages || []),
+    ]);
     this.i18nService.loadActiveLanguages().subscribe((languages) => {
       if (!languages.length) return;
       this.i18nService.setSupportedLanguages(languages.map((language) => language.code));

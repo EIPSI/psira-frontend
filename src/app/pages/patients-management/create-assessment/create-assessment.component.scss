@@ -56,13 +56,19 @@ nz-select{
   min-width: 132px !important;
 }
 
-input[readonly] {
+input[nz-input][readonly] {
   border: 0;
   padding: 0;
 }
 
-nz-date-picker [nzInputReadOnly] {
-  margin: 0 8px 12px 0;
+nz-date-picker {
+  max-width: 100%;
+  width: 100%;
+}
+
+nz-date-picker.ant-picker {
+  display: inline-flex;
+  min-width: 180px;
 }
 
 .buttons {
@@ -127,8 +133,11 @@ nz-date-picker [nzInputReadOnly] {
 :host-context(.assessment-edit-modal) .date-picker1,
 :host-context(.assessment-edit-modal) .questionnaire {
   max-width: 100% !important;
-  min-width: 0 !important;
   width: 100% !important;
+}
+
+:host-context(.assessment-edit-modal) nz-date-picker.ant-picker {
+  min-width: 180px !important;
 }
 
 :host-context(.assessment-edit-modal) .date-picker,

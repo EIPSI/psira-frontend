@@ -849,8 +849,8 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   private canManageUserCalendar(): boolean {
-    const currentUserId = this.currentUser?.id;
-    return !!currentUserId && this.supervisorOptions.some((user) => user.id === currentUserId);
+    const currentUserId = Number(this.currentUser?.id);
+    return !!currentUserId && this.supervisorOptions.some((user) => Number(user.id) === currentUserId);
   }
 
   userLabel(user: User): string {
@@ -860,7 +860,7 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   onResponsibleUsersChange(userIds: number[]): void {
-    this.createResponsibleUserIds = userIds || [];
+    this.createResponsibleUserIds = this.normalizeIds(userIds || []);
     this.createSupervisor = this.primaryResponsibleUser();
   }
 
@@ -1014,13 +1014,14 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   private defaultSupervisorIds(): number[] {
-    const currentUserId = this.currentUser?.id;
-    if (currentUserId && this.supervisorOptions.some((user) => user.id === currentUserId)) return [currentUserId];
-    return this.supervisorOptions[0]?.id ? [this.supervisorOptions[0].id] : [];
+    const currentUserId = Number(this.currentUser?.id);
+    if (currentUserId && this.supervisorOptions.some((user) => Number(user.id) === currentUserId)) return [currentUserId];
+    const firstSupervisorId = Number(this.supervisorOptions[0]?.id);
+    return firstSupervisorId ? [firstSupervisorId] : [];
   }
 
   private selectedResponsibleUserIds(): number[] {
-    return Array.from(new Set((this.createResponsibleUserIds || []).filter((id: number) => !!id)));
+    return this.normalizeIds(this.createResponsibleUserIds || []);
   }
 
   private primaryResponsibleUserId(): number | undefined {
@@ -1029,7 +1030,7 @@ export class UserCalendarComponent implements OnChanges {
 
   private primaryResponsibleUser(): User | undefined {
     const userId = this.primaryResponsibleUserId();
-    return this.supervisorOptions.find((user) => user.id === userId);
+    return this.supervisorOptions.find((user) => Number(user.id) === Number(userId));
   }
 
   private eventResponsibleUserIds(event: CalendarEvent): number[] {
@@ -1037,7 +1038,17 @@ export class UserCalendarComponent implements OnChanges {
     const fallbackIds = [event.supervisorId, this.primaryResponsibleUserId(), this.currentUser?.id].filter(
       (id: number | undefined) => !!id
     );
-    return Array.from(new Set([...(eventIds || []), ...(fallbackIds as number[])]));
+    return this.normalizeIds([...(eventIds || []), ...(fallbackIds as number[])]);
+  }
+
+  private normalizeIds(ids: Array<number | string>): number[] {
+    return Array.from(
+      new Set(
+        (ids || [])
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    );
   }
 
   contextDepartmentIds(): number[] {

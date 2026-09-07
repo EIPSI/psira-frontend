@@ -14,3 +14,18 @@ nz-content {
   max-width: 800px;
   margin: 0 auto;
 }
+
+@media (max-width: 767px) {
+  nz-header {
+    height: 48px;
+  }
+
+  nz-content {
+    margin-top: 48px;
+  }
+
+  .inner-content {
+    max-width: 100%;
+    padding: 12px;
+  }
+}

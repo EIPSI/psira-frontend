@@ -364,6 +364,7 @@ export default {
       lastName: 'Apellidos',
       workID: 'ID',
       phone: 'Teléfono',
+      email: 'Email',
       username: 'Email',
       formattedStatus: 'Estado',
       formattedRoles: 'Roles',

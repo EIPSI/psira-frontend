@@ -39,7 +39,7 @@
                         nzNotFoundContent="No hay administradores asignados al caso."
                     >
                         <nz-option
-                            *ngFor="let administrator of caseAdministratorOptions()"
+                            *ngFor="let administrator of caseAdministrators"
                             [nzLabel]="userLabel(administrator)"
                             [nzValue]="administrator.id"
                         ></nz-option>

@@ -240,6 +240,20 @@
   .form-field {
     display: grid;
     gap: 6px;
+    min-width: 0;
+  }
+}
+
+:host ::ng-deep .edit-form {
+  .ant-select,
+  .ant-picker,
+  .ant-input,
+  textarea {
+    width: 100%;
+  }
+
+  .ant-picker {
+    min-width: 180px;
   }
 }
 
@@ -296,8 +310,9 @@
 
 .event-summary,
 .date-row {
-  display: flex;
+  display: grid;
   gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .scheme-application-list {
@@ -324,7 +339,7 @@
 }
 
 .date-row .form-field {
-  flex: 1;
+  min-width: 0;
 }
 
 @media (max-width: 768px) {
@@ -348,5 +363,11 @@
   .time-grid--day {
     grid-template-columns: 48px minmax(0, 1fr);
     overflow-x: auto;
+  }
+
+  .event-summary,
+  .date-row,
+  .repeat-grid {
+    grid-template-columns: 1fr;
   }
 }

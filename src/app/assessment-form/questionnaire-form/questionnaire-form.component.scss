@@ -89,3 +89,40 @@ article {
     margin: 0 1em;
   }
 }
+
+@media (max-width: 767px) {
+  .head-row,
+  .controls {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  article {
+    section,
+    .group-title {
+      margin: 1.25rem 0;
+    }
+
+    .question {
+      margin: 2rem 0;
+    }
+  }
+
+  .package-header,
+  .package-notice {
+    padding: 12px;
+  }
+
+  .table-list {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-list nz-radio-group {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+}

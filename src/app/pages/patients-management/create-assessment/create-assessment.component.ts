@@ -86,6 +86,7 @@ export class CreateAssessmentComponent implements OnInit {
   public isLoading = false;
   public selectedClinician: User;
   public selectedResponsibleUserIds: number[] = [];
+  public caseAdministrators: User[] = [];
   public users: User[] = [];
   @Input() public patient: FormattedPatient;
   @Input() public assessment: FullAssessment;
@@ -290,12 +291,24 @@ export class CreateAssessmentComponent implements OnInit {
       .join(' ') || user?.username || user?.email || `Usuario ${user?.id}`;
   }
 
-  public caseAdministratorOptions(): User[] {
-    return this.patient?.caseManagers || [];
+  private buildCaseAdministratorOptions(): User[] {
+    const managers = [...(this.patient?.caseManagers || [])];
+    const managerIds = (this.patient?.caseManagerIds || []).map((id) => Number(id)).filter((id) => Number.isFinite(id));
+    const currentUser = JSON.parse(localStorage.getItem('user')) as User;
+    const currentUserId = Number(currentUser?.id);
+    if (currentUserId && managerIds.includes(currentUserId) && !managers.some((manager) => Number(manager.id) === currentUserId)) {
+      managers.push(currentUser);
+    }
+    managerIds.forEach((id) => {
+      if (!managers.some((manager) => Number(manager.id) === id)) {
+        managers.push({ id } as User);
+      }
+    });
+    return managers;
   }
 
   public onResponsibleUsersChange(userIds: number[]): void {
-    this.selectedResponsibleUserIds = userIds || [];
+    this.selectedResponsibleUserIds = this.normalizeIds(userIds || []);
     this.syncResponsibleUsers();
   }
 
@@ -334,18 +347,21 @@ export class CreateAssessmentComponent implements OnInit {
   }
 
   private initializeResponsibleUsers(): void {
+    this.caseAdministrators = this.buildCaseAdministratorOptions();
     if (this.isUpdate && this.fullAssessment) {
       this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
       this.syncResponsibleUsers();
       return;
     }
 
-    const administrators = this.caseAdministratorOptions();
+    const administrators = this.caseAdministrators;
     const currentUser = JSON.parse(localStorage.getItem('user')) as User;
-    if (currentUser?.id && administrators.some((user) => user.id === currentUser.id)) {
-      this.selectedResponsibleUserIds = [currentUser.id];
+    const currentUserId = Number(currentUser?.id);
+    if (currentUserId && administrators.some((user) => Number(user.id) === currentUserId)) {
+      this.selectedResponsibleUserIds = [currentUserId];
     } else {
-      this.selectedResponsibleUserIds = administrators[0]?.id ? [administrators[0].id] : [];
+      const firstAdministratorId = Number(administrators[0]?.id);
+      this.selectedResponsibleUserIds = firstAdministratorId ? [firstAdministratorId] : [];
     }
     this.syncResponsibleUsers();
   }
@@ -354,16 +370,16 @@ export class CreateAssessmentComponent implements OnInit {
     const responsibleUsers = (this.fullAssessment as any)?.responsibleUsers || [];
     const ids: number[] = responsibleUsers.map((user: User) => user.id);
     if (!ids.length && this.fullAssessment?.clinicianId) ids.push(this.fullAssessment.clinicianId);
-    return Array.from(new Set(ids.filter((id: number) => !!id)));
+    return this.normalizeIds(ids);
   }
 
   private syncResponsibleUsers(): void {
-    const allowedIds = this.caseAdministratorOptions().map((user) => user.id);
+    const allowedIds = this.normalizeIds(this.caseAdministrators.map((user) => user.id));
     const selectedIds = this.selectedResponsibleUserIds || [];
     const filteredIds = allowedIds.length
-      ? selectedIds.filter((id: number) => allowedIds.includes(id))
+      ? this.normalizeIds(selectedIds).filter((id: number) => allowedIds.includes(id))
       : this.patient?.id ? [] : selectedIds;
-    this.selectedResponsibleUserIds = Array.from(new Set(filteredIds));
+    this.selectedResponsibleUserIds = this.normalizeIds(filteredIds);
     const primaryUser = this.primaryResponsibleUser();
     this.selectedClinician = primaryUser || this.selectedClinician;
     this.formGroup.patchValue({
@@ -378,7 +394,17 @@ export class CreateAssessmentComponent implements OnInit {
 
   private primaryResponsibleUser(): User | undefined {
     const userId = this.primaryResponsibleUserId();
-    return this.caseAdministratorOptions().find((user) => user.id === userId);
+    return this.caseAdministrators.find((user) => Number(user.id) === Number(userId));
+  }
+
+  private normalizeIds(ids: Array<number | string>): number[] {
+    return Array.from(
+      new Set(
+        (ids || [])
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    );
   }
 
   public getPatient() {

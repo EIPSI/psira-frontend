@@ -16,7 +16,7 @@ form {
     width: 100%;
   }
 
-  input[readonly] {
+  input[nz-input][readonly] {
     border: 0;
     padding: 0;
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, EventEmitter, OnInit, Input, Output } from '@angular/core';
 import { MENU } from '@app/pages/pages.menu';
 import { ThemeConstantService } from '@shared/services/theme-constant.service';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
@@ -13,6 +13,7 @@ export class SideNavComponent implements OnInit {
   isSideNavDark: boolean;
   public menuItems: any[] = [];
   @Input() isCollapsed = false;
+  @Output() navigated = new EventEmitter<void>();
 
   constructor(private themeService: ThemeConstantService, public perms: AppPermissionsService) {}
 
@@ -40,5 +41,9 @@ export class SideNavComponent implements OnInit {
 
   toggleCollapsed(): void {
     this.isCollapsed = !this.isCollapsed;
+  }
+
+  emitNavigated(): void {
+    this.navigated.emit();
   }
 }

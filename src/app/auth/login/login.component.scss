@@ -67,3 +67,25 @@ nz-content {
 .version-text{
   color: white;
 }
+
+@media (max-width: 575px) {
+  nz-content {
+    .form-container {
+      left: 0;
+      padding: 24px 16px;
+      position: relative;
+      top: auto;
+      transform: none;
+    }
+  }
+
+  .app-logo {
+    img {
+      height: 64px;
+    }
+  }
+
+  .login-form {
+    max-width: 100%;
+  }
+}

@@ -1,5 +1,5 @@
 <article>
-  <section class="actions">
+  <section class="actions responsive-actions">
     <div>
       <ng-content select="[actions-left]"></ng-content>
     </div>
@@ -13,7 +13,7 @@
       </button>
     </div>
   </section>
-  <section class="list">
+  <section class="list responsive-table-shell">
     <app-master-data-table
       [data]="data"
       [columns]="columns"
@@ -25,7 +25,7 @@
     ></app-master-data-table>
   </section>
 
-  <section class="paging">
+  <section class="paging responsive-paging">
     <button
       nzShape="round"
       [disabled]="!this.pageInfo?.hasPreviousPage"

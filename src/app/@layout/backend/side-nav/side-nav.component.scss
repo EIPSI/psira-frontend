@@ -140,3 +140,24 @@ ul {
   color: white;
   margin-left: -10px;
 }
+
+@media (max-width: 767px) {
+  .side-nav {
+    margin-bottom: 24px;
+  }
+
+  ul {
+    li {
+      margin-bottom: 8px;
+      margin-top: 8px;
+
+      i {
+        font-size: 24px !important;
+      }
+    }
+  }
+
+  .big-div {
+    min-height: calc(100vh - 76px);
+  }
+}

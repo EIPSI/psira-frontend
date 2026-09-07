@@ -96,10 +96,6 @@ export class UserProfileTabsComponent implements OnInit {
   }
 
   get moreTopTabIndex(): number {
-    return this.assessmentsTabIndex + 1;
-  }
-
-  get assessmentsTabIndex(): number {
     return this.profileTabIndex + 1;
   }
 

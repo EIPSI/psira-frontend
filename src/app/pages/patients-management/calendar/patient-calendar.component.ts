@@ -97,6 +97,7 @@ export class PatientCalendarComponent implements OnChanges {
   sessionKinds = Object.values(ClinicalSessionKind);
   createTypes = Object.values(CalendarCreateType);
   createType = CalendarCreateType.SESSION;
+  caseAdministrators: User[] = [];
   therapist?: User;
   editingEvent?: CalendarEvent;
   editStartAt?: Date;
@@ -214,6 +215,7 @@ export class PatientCalendarComponent implements OnChanges {
   ngOnChanges(): void {
     if (this.patient?.id) {
       this.currentUser = JSON.parse(localStorage.getItem('user')) as User;
+      this.caseAdministrators = this.buildCaseAdministratorOptions();
       this.loadEvents();
       this.loadSchemes();
       this.loadAssessmentTypes();
@@ -935,8 +937,8 @@ export class PatientCalendarComponent implements OnChanges {
   }
 
   private canManagePatientCalendar(): boolean {
-    const currentUserId = this.currentUser?.id;
-    return !!currentUserId && this.caseAdministratorOptions().some((user) => user.id === currentUserId);
+    const currentUserId = Number(this.currentUser?.id);
+    return !!currentUserId && this.caseAdministrators.some((user) => Number(user.id) === currentUserId);
   }
 
   userLabel(user: User): string {
@@ -945,24 +947,36 @@ export class PatientCalendarComponent implements OnChanges {
       .join(' ') || user?.username || user?.email || `Usuario ${user?.id}`;
   }
 
-  caseAdministratorOptions(): User[] {
-    return this.patient?.caseManagers || [];
+  private buildCaseAdministratorOptions(): User[] {
+    const managers = [...(this.patient?.caseManagers || [])];
+    const managerIds = (this.patient?.caseManagerIds || []).map((id) => Number(id)).filter((id) => Number.isFinite(id));
+    const currentUserId = Number(this.currentUser?.id);
+    if (currentUserId && managerIds.includes(currentUserId) && !managers.some((manager) => Number(manager.id) === currentUserId)) {
+      managers.push(this.currentUser);
+    }
+    managerIds.forEach((id) => {
+      if (!managers.some((manager) => Number(manager.id) === id)) {
+        managers.push({ id } as User);
+      }
+    });
+    return managers;
   }
 
   onResponsibleUsersChange(userIds: number[]): void {
-    this.createResponsibleUserIds = userIds || [];
+    this.createResponsibleUserIds = this.normalizeIds(userIds || []);
     this.createTherapist = this.primaryResponsibleUser();
   }
 
   private defaultCaseAdministratorIds(): number[] {
-    const administrators = this.caseAdministratorOptions();
-    const currentUserId = this.currentUser?.id;
-    if (currentUserId && administrators.some((user) => user.id === currentUserId)) return [currentUserId];
-    return administrators[0]?.id ? [administrators[0].id] : [];
+    const administrators = this.caseAdministrators;
+    const currentUserId = Number(this.currentUser?.id);
+    if (currentUserId && administrators.some((user) => Number(user.id) === currentUserId)) return [currentUserId];
+    const firstAdministratorId = Number(administrators[0]?.id);
+    return firstAdministratorId ? [firstAdministratorId] : [];
   }
 
   private selectedResponsibleUserIds(): number[] {
-    return Array.from(new Set((this.createResponsibleUserIds || []).filter((id: number) => !!id)));
+    return this.normalizeIds(this.createResponsibleUserIds || []);
   }
 
   private primaryResponsibleUserId(): number | undefined {
@@ -971,7 +985,7 @@ export class PatientCalendarComponent implements OnChanges {
 
   private primaryResponsibleUser(): User | undefined {
     const userId = this.primaryResponsibleUserId();
-    return this.caseAdministratorOptions().find((user) => user.id === userId);
+    return this.caseAdministrators.find((user) => Number(user.id) === Number(userId));
   }
 
   private eventResponsibleUserIds(event: CalendarEvent): number[] {
@@ -979,7 +993,17 @@ export class PatientCalendarComponent implements OnChanges {
     const fallbackIds = [event.therapistId, this.primaryResponsibleUserId(), this.therapist?.id].filter(
       (id: number | undefined) => !!id
     );
-    return Array.from(new Set([...(eventIds || []), ...(fallbackIds as number[])]));
+    return this.normalizeIds([...(eventIds || []), ...(fallbackIds as number[])]);
+  }
+
+  private normalizeIds(ids: Array<number | string>): number[] {
+    return Array.from(
+      new Set(
+        (ids || [])
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    );
   }
 
   loadEvents(): void {
