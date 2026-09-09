@@ -4,7 +4,7 @@
   [nzTabBarExtraContent]="dashboardFilters"
   *ngIf="hasAnyVisibleTab(); else emptyDashboard"
 >
-  <nz-tab nzTitle="General" *ngIf="showGeneralTab()">
+  <nz-tab [nzTitle]="'dashboard.general' | translate" *ngIf="showGeneralTab()">
     <div class="container-fluid">
       <div class="row m-t-20">
         <div *ngIf="consentsLoading" class="col-md-12 text-center">
@@ -18,11 +18,10 @@
           <section class="dashboard-consent-block">
             <strong>{{ consent.title }}</strong>
             <p>
-              Dadas las características de PSIRA, no es posible continuar usando el sitio sin esta aceptación.
-              Ante cualquier duda, comunicate con el responsable.
+              {{ 'dashboard.informedConsentBlockedMessage' | translate }}
             </p>
             <p>
-              Si la respuesta fue un error o cambiaste de opinión, solicitá que rehabiliten el consentimiento para poder responderlo nuevamente.
+              {{ 'dashboard.informedConsentBlockedHelp' | translate }}
             </p>
           </section>
         </div>
@@ -35,9 +34,9 @@
             <span class="dashboard-task__marker"></span>
             <span class="dashboard-task__content">
               <strong>{{ consent.title }}</strong>
-              <small>Consentimiento informado pendiente de respuesta</small>
+              <small>{{ 'dashboard.pendingInformedConsent' | translate }}</small>
             </span>
-            <span class="dashboard-task__action">Responder</span>
+            <span class="dashboard-task__action">{{ 'dashboard.answer' | translate }}</span>
           </button>
         </div>
 
@@ -46,7 +45,7 @@
         </div>
 
         <div *ngIf="!hasBlockingInformedConsent() && !assessmentsLoading && !sessionsLoading && pendingItemsCount() === 0" class="col-md-12">
-          <nz-empty nzNotFoundContent="No hay novedades pendientes"></nz-empty>
+          <nz-empty [nzNotFoundContent]="'dashboard.noPendingItems' | translate"></nz-empty>
         </div>
 
         <div *ngFor="let item of hasBlockingInformedConsent() || hasMandatoryPendingConsents() ? [] : visibleTimelineItems()" class="col-md-12 m-b-16">
@@ -80,7 +79,9 @@
                     <span> - {{ assessmentExpirationLabel(assessment) }}</span>
                   </small>
                 </span>
-                <span class="dashboard-task__action">{{ isAssessmentAvailable(assessment) ? 'Responder' : 'Proximamente' }}</span>
+                <span class="dashboard-task__action">
+                  {{ (isAssessmentAvailable(assessment) ? 'dashboard.answer' : 'dashboard.comingSoon') | translate }}
+                </span>
               </button>
             </ng-container>
 
@@ -106,11 +107,11 @@
                 <span class="dashboard-task__content">
                 <strong>{{ sessionTitle(session) }}</strong>
                 <small>
-                  {{ sessionKindLabel(session) }} - Activacion: {{ formatDashboardDateTime(session.startAt) }}
-                  <span *ngIf="session.endAt"> - Expiracion: {{ formatDashboardDateTime(session.endAt) }}</span>
+                  {{ sessionKindLabel(session) }} - {{ 'dashboard.activation' | translate: { date: formatDashboardDateTime(session.startAt) } }}
+                  <span *ngIf="session.endAt"> - {{ 'dashboard.expiration' | translate: { date: formatDashboardDateTime(session.endAt) } }}</span>
                 </small>
                 </span>
-                <span class="dashboard-task__action">Proximamente</span>
+                <span class="dashboard-task__action">{{ 'dashboard.comingSoon' | translate }}</span>
               </button>
             </ng-container>
           </ng-container>
@@ -118,21 +119,21 @@
       </div>
     </div>
   </nz-tab>
-  <nz-tab nzTitle="Calendario" *ngIf="showCalendarTab()">
+  <nz-tab [nzTitle]="'core.calendar' | translate" *ngIf="showCalendarTab()">
     <app-calendar (contentChange)="onCalendarContentChange($event)"></app-calendar>
   </nz-tab>
-  <nz-tab nzTitle="Reportes" *ngIf="showReportsTab()">
+  <nz-tab [nzTitle]="'core.reports' | translate" *ngIf="showReportsTab()">
     <app-reports></app-reports>
   </nz-tab>
 </nz-tabset>
 
 <ng-template #dashboardFilters>
   <nz-select
-    *ngIf="departmentFilters.length"
+    *ngIf="showDashboardDepartmentFilter()"
     class="dashboard-department-filter"
     nzMode="multiple"
     nzAllowClear
-    nzPlaceHolder="Departamentos"
+    [nzPlaceHolder]="'core.departments' | translate"
     [(ngModel)]="selectedDepartmentIds"
   >
     <nz-option
@@ -144,19 +145,18 @@
 </ng-template>
 
 <ng-template #emptyDashboard>
-  <nz-empty nzNotFoundContent="No hay contenido para mostrar"></nz-empty>
+  <nz-empty [nzNotFoundContent]="'dashboard.noContent' | translate"></nz-empty>
 </ng-template>
 
-<nz-modal [nzStyle]="{}" nzOkText="I accept" [(nzVisible)]="!acceptedTerm">
+<nz-modal [nzStyle]="{}" [nzOkText]="'dashboard.accept' | translate" [(nzVisible)]="!acceptedTerm">
   <ng-container *nzModalContent>
     <p class="icon"><i class="fas fa-info-circle"></i></p>
-    <p class="title">Welcome to PSIRA</p>
+    <p class="title">{{ 'dashboard.welcome' | translate }}</p>
     <p class="description">{{ disclaimer?.description }}</p>
-    <!--    <div class="button-div" *nzModalFooter>-->
-    <!--      <button nz-button nzType="primary" class="modal-button" (click)="updateUser()">I Accept</button>-->
-    <!--    </div>-->
   </ng-container>
   <ng-container *nzModalFooter>
-    <button nz-button nzType="primary" style="" class="modal-button" (click)="updateUser()">I Accept</button>
+    <button nz-button nzType="primary" style="" class="modal-button" (click)="updateUser()">
+      {{ 'dashboard.accept' | translate }}
+    </button>
   </ng-container>
 </nz-modal>

@@ -1,8 +1,8 @@
 import { Form } from '@shared/components/form/@types/form';
 
 export const DepartmentForm: Form = {
-  submitButtonText: 'Create Department',
-  editButtonText: 'Edit Department',
+  submitButtonText: 'departments.createDepartment',
+  editButtonText: 'departments.editDepartment',
   submitButtonClass: 'full-width',
   groups: [
     {
@@ -10,12 +10,12 @@ export const DepartmentForm: Form = {
         {
           value: '',
           name: 'name',
-          title: 'Department Name',
-          label: 'Department Name',
-          description: 'enter permission name',
+          title: 'tables.department.departmentName',
+          label: 'tables.department.departmentName',
+          description: 'departments.departmentNameDescription',
           translationPath: 'tables.department.departmentName',
           type: 'text',
-          validationMessage: 'please enter permission name',
+          validationMessage: 'departments.departmentNameValidation',
           isRequired: true,
           span: 24,
           options: [],
@@ -23,8 +23,8 @@ export const DepartmentForm: Form = {
         {
           value: '',
           name: 'description',
-          title: 'description',
-          label: 'Description',
+          title: 'tables.department.description',
+          label: 'tables.department.description',
           description: '',
           translationPath: 'tables.department.description',
           type: 'text',
@@ -36,8 +36,8 @@ export const DepartmentForm: Form = {
         {
           value: '',
           name: 'active',
-          title: 'Status',
-          label: 'Status',
+          title: 'tables.department.status',
+          label: 'tables.department.status',
           description: '',
           translationPath: 'tables.department.status',
           type: 'select',
@@ -45,19 +45,19 @@ export const DepartmentForm: Form = {
           isRequired: false,
           span: 24,
           options: [
-            { label: 'Active', value: true },
-            { label: 'Inactive', value: false },
+            { label: 'core.active', value: true },
+            { label: 'core.inactive', value: false },
           ],
         },
         {
           value: [],
           name: 'appliedRoleCodes',
-          title: 'Aplica a roles',
-          label: 'Aplica a roles',
-          description: 'Seleccionar roles',
+          title: 'departments.appliesToRoles',
+          label: 'departments.appliesToRoles',
+          description: 'departments.selectRoles',
           type: 'select',
           mode: 'multiple',
-          validationMessage: 'Seleccione al menos un rol',
+          validationMessage: 'departments.selectAtLeastOneRole',
           isRequired: true,
           span: 24,
           options: [],
@@ -65,9 +65,9 @@ export const DepartmentForm: Form = {
         {
           value: [],
           name: 'defaultRoleCodes',
-          title: 'Por defecto para roles',
-          label: 'Por defecto para roles',
-          description: 'Seleccionar roles',
+          title: 'departments.defaultForRoles',
+          label: 'departments.defaultForRoles',
+          description: 'departments.selectRoles',
           type: 'select',
           mode: 'multiple',
           validationMessage: '',

@@ -22,6 +22,7 @@ import { Sorting } from '@shared/@types/sorting';
 import { Convert } from '@shared/classes/convert';
 import { ReportForm } from '@app/pages/administration/@forms/report.form';
 import { Field } from '@shared/components/form/@types/field';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -52,7 +53,8 @@ export class CreateReportComponent implements OnInit {
     private message: NzMessageService,
     private reportsService: ReportsService,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -143,7 +145,7 @@ export class CreateReportComponent implements OnInit {
     const reportInput: CreateOneReportInput = {
       report: { ...inputData, roles },
     };
-    this.loadingMessage = `Creating report ${inputData.name} `;
+    this.loadingMessage = this.translate.instant('reports.creatingReport', { name: inputData.name });
     this.reportsService
       .createReport(reportInput)
       .pipe(
@@ -154,7 +156,7 @@ export class CreateReportComponent implements OnInit {
       )
       .subscribe(
         ({ data }) => {
-          this.message.create('success', `Report has successfully been created`);
+          this.message.create('success', this.translate.instant('reports.reportCreated'));
           this.report = data.createOneReport;
           console.log(this.report);
           if (this.selectedRoles.length > 0) {
@@ -164,7 +166,7 @@ export class CreateReportComponent implements OnInit {
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: 'Unable to create report',
+            prefix: this.translate.instant('reports.unableCreateReport'),
           })
       );
   }
@@ -179,7 +181,7 @@ export class CreateReportComponent implements OnInit {
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    this.loadingMessage = `Updating report ${reportUpdates.name}`;
+    this.loadingMessage = this.translate.instant('reports.updatingReport', { name: reportUpdates.name });
     this.reportsService
       .updateReport(reportInput)
       .pipe(
@@ -190,7 +192,7 @@ export class CreateReportComponent implements OnInit {
       )
       .subscribe(
         async ({ data }) => {
-          this.message.create('success', `Report has successfully been updated`);
+          this.message.create('success', this.translate.instant('reports.reportUpdated'));
           this.report = data.updateOneReport;
           console.log(this.report);
           if (this.selectedRoles.length > 0) {
@@ -201,7 +203,7 @@ export class CreateReportComponent implements OnInit {
         (error) => {
           this.populateForm = true;
           this.errorService.handleError(error, { 
-            prefix: `Unable to update user "${reportUpdates.name}"`,
+            prefix: this.translate.instant('reports.unableUpdateReport', { name: reportUpdates.name }),
           });
         }
       );
@@ -213,7 +215,7 @@ export class CreateReportComponent implements OnInit {
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.report), environment.secretKey).toString();
     this.router.navigate(['/psira/administration/create-report'], {
       state: {
-        title: `${this.report.name} `,
+        title: this.report.name,
       },
       queryParams: {
         report: dataString,
@@ -233,7 +235,7 @@ export class CreateReportComponent implements OnInit {
           options.push({ label: _role.name, value: _role.id });
         });
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableLoadRoles') })
     );
   }
 
@@ -253,7 +255,7 @@ export class CreateReportComponent implements OnInit {
           this.setFieldValue('url', this.getUrlForApp(this.report.appName) || this.report.url);
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load Shiny apps' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reports.unableLoadShinyApps') })
     );
   }
 

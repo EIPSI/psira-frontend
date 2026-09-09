@@ -1,1 +1,10 @@
-<router-outlet></router-outlet>
+<ng-container *ngIf="i18nReady$ | async; else booting">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<ng-template #booting>
+  <main class="app-boot-screen">
+    <div class="app-boot-mark" aria-hidden="true"></div>
+    <div class="app-boot-spinner" aria-hidden="true"></div>
+  </main>
+</ng-template>

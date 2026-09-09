@@ -10,23 +10,23 @@ export const questions = [
     options: [
       {
         value: 1,
-        label: 'Choice One',
+        label: 'questionnaireRuntime.choiceOne',
       },
       {
         value: 2,
-        label: 'Choice Two',
+        label: 'questionnaireRuntime.choiceTwo',
       },
       {
         value: 3,
-        label: 'Choice Three',
+        label: 'questionnaireRuntime.choiceThree',
       },
       {
         value: 4,
-        label: 'Choice Four',
+        label: 'questionnaireRuntime.choiceFour',
       },
       {
         value: 5,
-        label: 'Choice Five',
+        label: 'questionnaireRuntime.choiceFive',
       },
     ],
     isPersonalInformation: false,
@@ -151,23 +151,23 @@ export const questions = [
     options: [
       {
         value: 1,
-        label: 'Choice One',
+        label: 'questionnaireRuntime.choiceOne',
       },
       {
         value: 2,
-        label: 'Choice Two',
+        label: 'questionnaireRuntime.choiceTwo',
       },
       {
         value: 3,
-        label: 'Choice Three',
+        label: 'questionnaireRuntime.choiceThree',
       },
       {
         value: 4,
-        label: 'Choice Four',
+        label: 'questionnaireRuntime.choiceFour',
       },
       {
         value: 5,
-        label: 'Choice Five',
+        label: 'questionnaireRuntime.choiceFive',
       },
     ],
     isPersonalInformation: false,

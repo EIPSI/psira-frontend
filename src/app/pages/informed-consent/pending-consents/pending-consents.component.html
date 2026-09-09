@@ -3,20 +3,20 @@
     <article class="ci-document ci-document--complete" *ngIf="submittedThankYouHtml; else pendingConsentList">
       <div class="ci-rich-text" [innerHTML]="submittedThankYouHtml"></div>
       <div class="ci-actions">
-        <button nz-button type="button" (click)="goHome()">Salir</button>
+        <button nz-button type="button" (click)="goHome()">{{ 'core.exit' | translate }}</button>
       </div>
     </article>
 
     <ng-template #pendingConsentList>
-      <nz-empty *ngIf="!visiblePendingItems.length" nzNotFoundContent="No tenés consentimientos pendientes."></nz-empty>
+      <nz-empty *ngIf="!visiblePendingItems.length" [nzNotFoundContent]="'informedConsent.noPendingConsents' | translate"></nz-empty>
 
       <article class="ci-document" *ngFor="let item of visiblePendingItems">
         <div class="ci-document-state" *ngIf="modelLoading[item.modelId]">
-          Cargando consentimiento informado...
+          {{ 'informedConsent.loadingConsent' | translate }}
         </div>
 
         <div class="ci-document-state ci-document-state--error" *ngIf="modelLoadError[item.modelId]">
-          No se pudo cargar este consentimiento informado.
+          {{ 'informedConsent.unableLoadThisConsent' | translate }}
         </div>
 
         <ng-container *ngIf="model(item) as modelData">

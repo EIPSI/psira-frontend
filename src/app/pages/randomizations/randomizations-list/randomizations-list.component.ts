@@ -14,6 +14,7 @@ import { Sorting } from '@shared/@types/sorting';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 import { RandomizationRuleModel } from '../@models/randomization.model';
 import { RandomizationsTable } from '../@tables/randomizations.table';
@@ -50,6 +51,7 @@ export class RandomizationsListComponent implements OnInit {
     private randomizationsService: RandomizationsService,
     private errorService: ErrorHandlerService,
     private modalService: NzModalService,
+    private translate: TranslateService,
     public perms: AppPermissionsService
   ) {}
 
@@ -121,9 +123,9 @@ export class RandomizationsListComponent implements OnInit {
 
   private deleteRandomization(randomization: RandomizationRule): void {
     this.modalService.confirm({
-      nzTitle: 'Eliminar randomización',
-      nzContent: `La randomización "${randomization.name}" se eliminará.`,
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('randomizations.delete'),
+      nzContent: this.translate.instant('randomizations.deleteMessage', { name: randomization.name }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () =>
         this.randomizationsService.deleteRandomization(randomization.id).subscribe(
@@ -151,10 +153,10 @@ export class RandomizationsListComponent implements OnInit {
     if (!this.perms.permissionsOnly(PermissionKey.RANDOMIZATIONS_EDIT_DEPARTMENT)) return;
 
     this.actions = [
-      { key: ActionKey.EDIT, title: 'Ver / editar' },
-      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
-      { key: ActionKey.TOGGLE_ACTIVE, title: 'Activar / desactivar' },
-      { key: ActionKey.DELETE, title: 'Eliminar' },
+      { key: ActionKey.EDIT, title: this.translate.instant('core.viewEdit') },
+      { key: ActionKey.DUPLICATE, title: this.translate.instant('core.duplicate') },
+      { key: ActionKey.TOGGLE_ACTIVE, title: this.translate.instant('core.toggleActive') },
+      { key: ActionKey.DELETE, title: this.translate.instant('core.delete') },
     ];
   }
 }

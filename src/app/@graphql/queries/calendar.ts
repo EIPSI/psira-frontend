@@ -126,6 +126,62 @@ const calendarEvents = gql`
       assessmentId
       clinicalSessionResourceId
       assessmentOrigin
+      patient {
+        id
+        userId
+        medicalRecordNo
+        firstName
+        middleName
+        lastName
+        departments {
+          id
+          name
+        }
+      }
+      therapist {
+        id
+        firstName
+        middleName
+        lastName
+        departments {
+          id
+          name
+        }
+      }
+      supervisor {
+        id
+        firstName
+        middleName
+        lastName
+        departments {
+          id
+          name
+        }
+      }
+      targetUser {
+        id
+        firstName
+        middleName
+        lastName
+        departments {
+          id
+          name
+        }
+      }
+      responderUser {
+        id
+        firstName
+        middleName
+        lastName
+        departments {
+          id
+          name
+        }
+      }
+      departments {
+        id
+        name
+      }
     }
   }
 `;

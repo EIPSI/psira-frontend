@@ -3,7 +3,7 @@ import { RandomizationRule } from '../@types/randomization';
 
 export const RandomizationsTable: TableColumn<RandomizationRule>[] = [
   {
-    title: 'Name',
+    title: 'randomizations.name',
     name: 'name',
     translationPath: 'randomizations.name',
     sort: true,
@@ -13,7 +13,7 @@ export const RandomizationsTable: TableColumn<RandomizationRule>[] = [
     },
   },
   {
-    title: 'Type',
+    title: 'randomizations.type',
     name: 'formattedType',
     altName: 'type',
     translationPath: 'randomizations.type',
@@ -21,19 +21,19 @@ export const RandomizationsTable: TableColumn<RandomizationRule>[] = [
     sort: true,
   },
   {
-    title: 'Department',
+    title: 'randomizations.department',
     name: 'departmentNames',
     translationPath: 'randomizations.department',
     sort: true,
   },
   {
-    title: 'Items',
+    title: 'randomizations.itemCount',
     name: 'itemCount',
     translationPath: 'randomizations.itemCount',
     sort: true,
   },
   {
-    title: 'Status',
+    title: 'randomizations.status',
     name: 'formattedStatus',
     altName: 'active',
     translationPath: 'randomizations.status',
@@ -41,14 +41,14 @@ export const RandomizationsTable: TableColumn<RandomizationRule>[] = [
     sort: true,
   },
   {
-    title: 'Created At',
+    title: 'randomizations.createdAt',
     name: 'createdAt',
     translationPath: 'randomizations.createdAt',
     render: 'date',
     sort: true,
   },
   {
-    title: 'Updated At',
+    title: 'randomizations.updatedAt',
     name: 'updatedAt',
     translationPath: 'randomizations.updatedAt',
     render: 'date',

@@ -270,7 +270,7 @@ export const MENU: SideNavInterface[] | any = [
   },
   {
     path: 'notifications',
-    title: 'Notificaciones',
+    title: 'menu.notifications',
     permissions: [
       PK.NOTIFICATIONS_VIEW_DEPARTMENT,
       PK.NOTIFICATIONS_EDIT_DEPARTMENT,
@@ -283,7 +283,7 @@ export const MENU: SideNavInterface[] | any = [
     submenu: [
       {
         path: 'notifications/email-templates',
-        title: 'Modelos de Emails',
+        title: 'menu.emailTemplates',
         permissions: [PK.MAIL_TEMPLATES_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
@@ -291,7 +291,7 @@ export const MENU: SideNavInterface[] | any = [
       },
       {
         path: 'notifications/administration',
-        title: 'Administración',
+        title: 'menu.notificationAdministration',
         permissions: [PK.NOTIFICATIONS_VIEW_DEPARTMENT, PK.NOTIFICATIONS_EDIT_DEPARTMENT, PK.MAIL_TEMPLATES_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
@@ -301,7 +301,7 @@ export const MENU: SideNavInterface[] | any = [
   },
   {
     path: 'informed-consent',
-    title: 'Consentimiento Informado',
+    title: 'menu.informedConsent',
     permissions: [
       PK.INFORMED_CONSENT_MODELS_VIEW_DEPARTMENT,
       PK.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT,
@@ -315,7 +315,7 @@ export const MENU: SideNavInterface[] | any = [
     submenu: [
       {
         path: 'informed-consent/models',
-        title: 'Modelos de CI',
+        title: 'menu.informedConsentModels',
         permissions: [PK.INFORMED_CONSENT_MODELS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
@@ -323,7 +323,7 @@ export const MENU: SideNavInterface[] | any = [
       },
       {
         path: 'informed-consent/management',
-        title: 'Gestión',
+        title: 'menu.informedConsentManagement',
         permissions: [PK.INFORMED_CONSENT_MANAGEMENT_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
@@ -331,7 +331,7 @@ export const MENU: SideNavInterface[] | any = [
       },
       {
         path: 'informed-consent/responses',
-        title: 'Respuestas CI',
+        title: 'menu.informedConsentResponses',
         permissions: [PK.INFORMED_CONSENT_RESPONSES_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',

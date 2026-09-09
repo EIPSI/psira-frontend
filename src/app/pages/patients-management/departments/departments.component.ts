@@ -19,6 +19,7 @@ import { DepartmentsColumns } from '../@tables/departments.table';
 import { DepartmentsService } from '../@services/departments.service';
 import { FormattedPatient } from '../@types/formatted-patient';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
+import { TranslateService } from '@ngx-translate/core';
 
 enum ActionKey {
   REMOVE_DEPARTMENT,
@@ -66,7 +67,8 @@ export class DepartmentsComponent implements OnInit {
     private departmentsService: DepartmentsService,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit() {
@@ -110,14 +112,16 @@ export class DepartmentsComponent implements OnInit {
 
   public async updatePatientDepartment(action: ActionKey, selectedDepartment?: Department): Promise<void> {
     const modal = this.modalService.create<SelectModalComponent<Department>>({
-      nzTitle: `Add ${this.patient.firstName} ${this.patient.lastName} to department`,
+      nzTitle: this.translate.instant('patientsManagement.addPatientToDepartment', {
+        patient: `${this.patient.firstName} ${this.patient.lastName}`,
+      }),
       nzContent: SelectModalComponent,
       nzComponentParams: {
         options: this.departments,
         titleField: 'name',
       },
       nzOnOk: (m) => m.selected,
-      nzOnCancel: () => console.log('Cancel'),
+      nzOnCancel: () => undefined,
     });
 
     const state: Department = await modal.afterClose.toPromise();
@@ -202,7 +206,7 @@ export class DepartmentsComponent implements OnInit {
         ...this.actions,
         {
           key: ActionKey.REMOVE_DEPARTMENT,
-          title: 'Remove patient from deparment',
+          title: 'patientsManagement.removePatientFromDepartment',
         },
       ];
     }

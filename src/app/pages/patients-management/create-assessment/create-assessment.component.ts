@@ -57,28 +57,28 @@ export class CreateAssessmentComponent implements OnInit {
   noteValue: any = '';
   patientEmail = '';
   options = [
-    { label: 'Mother', value: 'Mother' },
-    { label: 'Father', value: 'Father' },
-    { label: 'Grandparent', value: 'Grandparent' },
-    { label: 'Uncle/Aunt', value: 'Uncle/Aunt' },
-    { label: 'Extended Family', value: 'Extended Family' },
-    { label: 'Legal Guardian', value: 'Legal Guardian' },
-    { label: 'Family Doctor', value: 'Family Doctor' },
-    { label: 'External Paediatrician', value: 'External Paediatrician' },
-    { label: 'External Psychotherapist', value: 'External Psychotherapist' },
-    { label: 'External Psychologist', value: 'External Psychologist' },
-    { label: 'External Social Worker', value: 'External Social Worker' },
-    { label: 'External Nurse', value: 'External Nurse' },
-    { label: 'Emergency Department', value: 'Emergency Department' },
-    { label: 'Friend', value: 'Friend' },
-    { label: 'Neighbour', value: 'Neighbour' },
-    { label: 'Teacher', value: 'Teacher' },
-    { label: 'School Representative', value: 'School Representative' },
-    { label: 'Advisor', value: 'Advisor' },
-    { label: 'Legal Advisor', value: 'Legal Advisor' },
-    { label: 'Assistance', value: 'Assistance' },
-    { label: 'Supervisor', value: 'Supervisor' },
-    { label: 'Other', value: 'Other' },
+    { label: 'planAssessment.relations.mother', value: 'Mother' },
+    { label: 'planAssessment.relations.father', value: 'Father' },
+    { label: 'planAssessment.relations.grandparent', value: 'Grandparent' },
+    { label: 'planAssessment.relations.uncleAunt', value: 'Uncle/Aunt' },
+    { label: 'planAssessment.relations.extendedFamily', value: 'Extended Family' },
+    { label: 'planAssessment.relations.legalGuardian', value: 'Legal Guardian' },
+    { label: 'planAssessment.relations.familyDoctor', value: 'Family Doctor' },
+    { label: 'planAssessment.relations.externalPaediatrician', value: 'External Paediatrician' },
+    { label: 'planAssessment.relations.externalPsychotherapist', value: 'External Psychotherapist' },
+    { label: 'planAssessment.relations.externalPsychologist', value: 'External Psychologist' },
+    { label: 'planAssessment.relations.externalSocialWorker', value: 'External Social Worker' },
+    { label: 'planAssessment.relations.externalNurse', value: 'External Nurse' },
+    { label: 'planAssessment.relations.emergencyDepartment', value: 'Emergency Department' },
+    { label: 'planAssessment.relations.friend', value: 'Friend' },
+    { label: 'planAssessment.relations.neighbour', value: 'Neighbour' },
+    { label: 'planAssessment.relations.teacher', value: 'Teacher' },
+    { label: 'planAssessment.relations.schoolRepresentative', value: 'School Representative' },
+    { label: 'planAssessment.relations.advisor', value: 'Advisor' },
+    { label: 'planAssessment.relations.legalAdvisor', value: 'Legal Advisor' },
+    { label: 'planAssessment.relations.assistance', value: 'Assistance' },
+    { label: 'planAssessment.relations.supervisor', value: 'Supervisor' },
+    { label: 'planAssessment.relations.other', value: 'Other' },
   ];
   public selectedAssessment: any = null;
   public assessmentAdministration: Partial<AssessmentAdministration>[];
@@ -106,11 +106,11 @@ export class CreateAssessmentComponent implements OnInit {
   public checked = false;
   public isUpdate: boolean;
   public timeUnits = [
-    { value: 'MINUTES', label: 'Minutos' },
-    { value: 'HOURS', label: 'Horas' },
-    { value: 'DAYS', label: 'Días' },
-    { value: 'WEEKS', label: 'Semanas' },
-    { value: 'MONTHS', label: 'Meses' },
+    { value: 'MINUTES', label: 'time.minutes' },
+    { value: 'HOURS', label: 'time.hours' },
+    { value: 'DAYS', label: 'time.days' },
+    { value: 'WEEKS', label: 'time.weeks' },
+    { value: 'MONTHS', label: 'time.months' },
   ];
 
   get patientTitle(): string {

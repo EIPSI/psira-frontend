@@ -2,9 +2,9 @@ import { TableColumn } from '../../../@shared/@modules/master-data/@types/list';
 
 export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
   {
-    title: 'Name',
+    title: 'core.name',
     name: 'name',
-    translationPath: 'emailTemplates.name',
+    translationPath: 'core.name',
     sort: true,
     filterField: {
       type: 'text',
@@ -12,23 +12,25 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
     },
   },
   {
-    title: 'Estado',
+    title: 'core.status',
     name: 'activeStatus',
+    translationPath: 'core.status',
     render: 'tag',
     sort: true,
     filterField: {
       type: 'select',
       value: '',
       options: [
-        { value: true, label: 'Activa' },
-        { value: false, label: 'Inactiva' },
+        { value: true, label: 'core.active' },
+        { value: false, label: 'core.inactive' },
       ],
     },
     altName: 'active',
   },
   {
-    title: 'Structure',
+    title: 'questionnaireBundles.structure',
     name: 'summary',
+    translationPath: 'questionnaireBundles.structure',
     sort: true,
     filterField: {
       type: 'text',
@@ -36,8 +38,9 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
     },
   },
   {
-    title: 'Departments',
+    title: 'core.departments',
     name: 'departmentNames',
+    translationPath: 'core.departments',
     sort: true,
     filterField: {
       type: 'text',
@@ -45,8 +48,9 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
     },
   },
   {
-    title: 'Fecha de creación',
+    title: 'questionnaireBundles.createdAt',
     name: 'createdAt',
+    translationPath: 'questionnaireBundles.createdAt',
     render: 'date',
     sort: true,
     filterField: {
@@ -55,8 +59,9 @@ export const QuestionnaireBundlesColumns: TableColumn<any>[] = [
     },
   },
   {
-    title: 'Última actualización',
+    title: 'questionnaireBundles.updatedAt',
     name: 'updatedAt',
+    translationPath: 'questionnaireBundles.updatedAt',
     render: 'date',
     sort: true,
     filterField: {

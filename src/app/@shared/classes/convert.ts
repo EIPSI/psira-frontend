@@ -125,7 +125,8 @@ export class Convert {
 
     questionnaire.formattedStatus = {
       color: ASSESSMENT_STATUS_COLOR[AssessmentStatus.PLANNED],
-      title: 'OLD VERSION',
+      title: '',
+      translationPath: 'questionnaires.oldVersion',
     };
 
     return questionnaire;

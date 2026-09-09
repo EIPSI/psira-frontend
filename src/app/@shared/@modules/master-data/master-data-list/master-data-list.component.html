@@ -51,11 +51,11 @@
 
   <nz-dropdown-menu #contextMenu="nzDropdownMenu">
     <ul nz-menu *ngIf="actions?.length">
-      <li nz-menu-item *ngFor="let action of actions" (click)="onSelectAction(action)">{{ action.title }}</li>
+      <li nz-menu-item *ngFor="let action of actions" (click)="onSelectAction(action)">{{ action.title | translate }}</li>
     </ul>
   </nz-dropdown-menu>
 
-  <nz-drawer #drawer [nzClosable]="true" nzTitle="Filter" (nzOnClose)="drawer.close()">
+  <nz-drawer #drawer [nzClosable]="true" [nzTitle]="'core.filter' | translate" (nzOnClose)="drawer.close()">
     <app-master-data-filter-form
       [drawer]="drawer"
       [columns]="columns"

@@ -28,7 +28,7 @@
   [nzClosable]="true"
   [nzVisible]="showFilter"
   nzPlacement="right"
-  [nzTitle]="drawerTitle"
+  [nzTitle]="drawerTitle | translate"
   (nzOnClose)="toggleFilterDrawer()"
 >
   <app-custom-filter
@@ -43,14 +43,14 @@
 <nz-modal
   [nzWidth]="600"
   [(nzVisible)]="showAssignModal"
-  nzTitle="Assign {{ caseManagerNiceName }} to {{ patient?.firstName }} {{ patient?.lastName }}"
+  [nzTitle]="'patientsManagement.assignManagerToPatient' | translate:{ manager: (caseManagerNiceName | translate), patient: patient?.firstName + ' ' + patient?.lastName }"
   (nzOnCancel)="toggleAssignModal()"
   (nzOnOk)="toggleAssignModal()"
   [nzOkLoading]="loading"
 >
   <app-master-data-search
     style="width: 100%"
-    placeholder="Search {{ caseManagerNiceName }} name"
+    [placeholder]="'patientsManagement.searchManagerName' | translate:{ manager: (caseManagerNiceName | translate) }"
     (search)="searchCaseManagers($event)"
   ></app-master-data-search>
   <ng-template #suffixTemplate>
@@ -71,7 +71,7 @@
             nzSize="small"
             nzShape="round"
           >
-            Assign
+            {{ 'patientsManagement.assign' | translate }}
           </button>
         </div>
       </div>
@@ -83,7 +83,7 @@
   *ngIf="manager"
   [nzWidth]="600"
   [(nzVisible)]="showAssignDepartmentModal"
-  nzTitle="Assign one of these departments to {{ patient?.firstName }} {{ patient?.lastName }}"
+  [nzTitle]="'patientsManagement.assignDepartmentToPatient' | translate:{ patient: patient?.firstName + ' ' + patient?.lastName }"
   (nzOnCancel)="toggleAssignDetapartmentModal()"
   (nzOnOk)="toggleAssignDetapartmentModal()"
   [nzOkLoading]="loading"

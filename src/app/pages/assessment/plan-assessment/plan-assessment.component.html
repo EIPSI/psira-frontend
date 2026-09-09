@@ -1,10 +1,10 @@
-<button style="margin-bottom: 16px" nz-button nzType="primary" (click)="goBack()">Back</button>
+<button style="margin-bottom: 16px" nz-button nzType="primary" (click)="goBack()">{{ 'core.back' | translate }}</button>
 
 <article nz-row [nzGutter]="20">
   <section nz-col nzSpan="10">
     <form nz-form [formGroup]="assessmentForm" (submit)="onSubmitAssessment()">
       <nz-form-item>
-        <nz-form-label>Objetivo de la Evaluación</nz-form-label>
+        <nz-form-label>{{ 'planAssessment.target' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-select
             [(ngModel)]="targetRoleCode"
@@ -27,13 +27,13 @@
         </nz-form-control>
       </nz-form-item>
       <nz-form-item *ngIf="targetType === 'user'">
-        <nz-form-label nzFor="user">Usuario</nz-form-label>
+        <nz-form-label nzFor="user">{{ 'planAssessment.user' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-select
             nzShowSearch
             nzServerSearch
             nzAllowClear
-            nzPlaceHolder="Search..."
+            [nzPlaceHolder]="'core.searchPlaceholder' | translate"
             [nzShowArrow]="false"
             [nzDisabled]="!editMode"
             formControlName="targetUserId"
@@ -49,7 +49,7 @@
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
-        <nz-form-label>Tipo de evaluación</nz-form-label>
+        <nz-form-label>{{ 'planAssessment.assessmentType' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-select
             [nzBorderless]="!editMode"
@@ -63,14 +63,14 @@
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
-        <nz-form-label>Nombre de la evaluación (opcional)</nz-form-label>
+        <nz-form-label>{{ 'planAssessment.assessmentNameOptional' | translate }}</nz-form-label>
         <nz-form-control>
-          <input nz-input formControlName="name" [readonly]="!editMode" placeholder="Si se deja vacío se usará el tipo de evaluación" />
+          <input nz-input formControlName="name" [readonly]="!editMode" [placeholder]="'planAssessment.assessmentNameFallbackPlaceholder' | translate" />
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
         <nz-form-label nzFor="clinician">
-          {{ targetType === 'patient' ? 'Administradores del caso' : 'Supervisores' }}
+          {{ (targetType === 'patient' ? 'planAssessment.caseManagers' : 'planAssessment.supervisors') | translate }}
         </nz-form-label>
         <nz-form-control>
           <nz-select
@@ -82,7 +82,7 @@
             nzMode="multiple"
             nzAllowClear
             nzShowSearch
-            nzNotFoundContent="No hay responsables disponibles para el objetivo seleccionado."
+            [nzNotFoundContent]="'planAssessment.noResponsibleUsers' | translate"
           >
             <nz-option
               *ngFor="let user of responsibleUserOptions"
@@ -94,7 +94,7 @@
       </nz-form-item>
       <nz-form-item style="margin-bottom: 15px">
         <nz-input-group>
-          <h5>¿Quién Responde?</h5>
+          <h5>{{ 'planAssessment.whoResponds' | translate }}</h5>
           <nz-select
             formControlName="informantType"
             [nzDisabled]="!editMode"
@@ -107,7 +107,7 @@
       </nz-form-item>
       <nz-form-item>
         <nz-input-group>
-          <h5>Usuario que responde</h5>
+          <h5>{{ 'planAssessment.responderUser' | translate }}</h5>
           <nz-select
             [nzBorderless]="!editMode"
             class="input-class"
@@ -125,7 +125,7 @@
 
       <!-- Start Update -->
       <div *ngIf="isUpdate" class="date-picker">
-        <h5 class="evaluation-title">Evaluation</h5>
+        <h5 class="evaluation-title">{{ 'planAssessment.evaluation' | translate }}</h5>
         <nz-form-item style="margin-top: 14px">
           <nz-input-group class="date-picker1">
             <h5>{{ 'createAssessment.deliveryDate' | translate }}</h5>
@@ -156,7 +156,7 @@
         </nz-form-item>
         <nz-form-item>
           <nz-input-group class="date-picker1">
-            <h5>Recordatorios después de la activación</h5>
+            <h5>{{ 'planAssessment.remindersAfterActivation' | translate }}</h5>
             <div class="unit-row">
               <input
                 [disableControl]="!editMode"
@@ -165,7 +165,7 @@
                 placeholder="10, 15, 20"
               />
               <nz-select formControlName="reminderUnit" [nzDisabled]="!editMode">
-                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
               </nz-select>
             </div>
           </nz-input-group>
@@ -203,7 +203,7 @@
                 </nz-form-item>
                 <nz-form-item>
                   <nz-input-group class="date-picker1">
-                    <h5>Recordatorios después de la activación</h5>
+                    <h5>{{ 'planAssessment.remindersAfterActivation' | translate }}</h5>
                     <div class="unit-row">
                       <input
                         [disableControl]="!editMode"
@@ -212,7 +212,7 @@
                         placeholder="10, 15, 20"
                       />
                       <nz-select formControlName="reminderUnit" [nzDisabled]="!editMode">
-                        <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                        <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
                       </nz-select>
                     </div>
                   </nz-input-group>
@@ -224,9 +224,9 @@
 
       <nz-form-item>
         <nz-input-group>
-          <h5>{{ targetType === 'patient' ? 'Nota clínica de evaluación' : 'Nota de supervisión de evaluación' }}</h5>
-          <nz-textarea-count [nzMaxCharacterCount]="200" placeholder="Write notes">
-            <textarea formControlName="note" nz-input [disableControl]="!editMode"></textarea>
+          <h5>{{ (targetType === 'patient' ? 'planAssessment.clinicalEvaluationNote' : 'planAssessment.supervisionEvaluationNote') | translate }}</h5>
+          <nz-textarea-count [nzMaxCharacterCount]="200">
+            <textarea formControlName="note" nz-input [disableControl]="!editMode" [placeholder]="'planAssessment.writeNotes' | translate"></textarea>
           </nz-textarea-count>
         </nz-input-group>
       </nz-form-item>
@@ -234,8 +234,8 @@
       <nz-form-item>
         <nz-form-control>
           <ng-container *ngIf="editMode">
-            <button nz-button nzType="primary" [disabled]="!assessmentForm.valid">Submit</button>
-            <button nz-button type="button" (click)="editMode = !editMode">Cancel</button>
+            <button nz-button nzType="primary" [disabled]="!assessmentForm.valid">{{ 'core.submit' | translate }}</button>
+            <button nz-button type="button" (click)="editMode = !editMode">{{ 'core.cancel' | translate }}</button>
           </ng-container>
           <button
             nz-button
@@ -244,30 +244,30 @@
             *ngIf="!editMode && perms.permissionsOnly(PK.ASSESSMENTS_EDIT_DEPARTMENT)"
             (click)="editMode = !editMode"
           >
-            Edit
+            {{ 'core.edit' | translate }}
           </button>
         </nz-form-control>
       </nz-form-item>
     </form>
   </section>
   <section nz-col nzSpan="14" class="questionnaires">
-    <h4>Contenido de evaluación</h4>
+    <h4>{{ 'planAssessment.assessmentContent' | translate }}</h4>
     <nz-select
       style="width: 100%; margin-bottom: 12px;"
       [nzDisabled]="!editMode"
       [(ngModel)]="assessmentContentType"
       (ngModelChange)="onAssessmentContentTypeChange($event)"
     >
-      <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
-      <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de cuestionarios"></nz-option>
-      <nz-option [nzValue]="ACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+      <nz-option [nzValue]="ACT.QUESTIONNAIRE" [nzLabel]="'core.questionnaire' | translate"></nz-option>
+      <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" [nzLabel]="'planAssessment.questionnaireBundle' | translate"></nz-option>
+      <nz-option [nzValue]="ACT.RANDOMIZATION" [nzLabel]="'planAssessment.randomization' | translate"></nz-option>
     </nz-select>
     <app-questionnaire-selection
       *ngIf="assessmentContentType === ACT.QUESTIONNAIRE"
       [readonly]="!editMode"
       [singleSelection]="true"
       [departmentIds]="targetDepartmentIds()"
-      [disabledMessage]="hasContentTarget() ? '' : contentTargetMessage"
+      [disabledMessage]="hasContentTarget() ? '' : (contentTargetMessage | translate)"
       [selectedQuestionnaires]="selectedQuestionnaires"
       (selectionChange)="onQuestionnaireSelected($event)"
     ></app-questionnaire-selection>
@@ -275,14 +275,14 @@
       *ngIf="assessmentContentType !== ACT.QUESTIONNAIRE && !hasContentTarget()"
       nzType="info"
       nzShowIcon
-      [nzMessage]="contentTargetMessage"
+      [nzMessage]="contentTargetMessage | translate"
       style="margin-bottom: 12px;"
     ></nz-alert>
     <nz-select
       *ngIf="assessmentContentType === ACT.QUESTIONNAIRE_BUNDLE && hasContentTarget()"
       style="width: 100%;"
-      nzPlaceHolder="Select your bundle..."
-      nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados."
+      [nzPlaceHolder]="'planAssessment.selectBundle' | translate"
+      [nzNotFoundContent]="'planAssessment.noContentForDepartments' | translate"
       [nzDisabled]="!editMode"
       [ngModel]="listOfSelectedBundles && listOfSelectedBundles[0]"
       (ngModelChange)="onBundleSelection($event)"
@@ -293,8 +293,8 @@
       *ngIf="assessmentContentType === ACT.RANDOMIZATION && hasContentTarget()"
       style="width: 100%;"
       nzShowSearch
-      nzPlaceHolder="Seleccionar randomización..."
-      nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados."
+      [nzPlaceHolder]="'planAssessment.selectRandomization' | translate"
+      [nzNotFoundContent]="'planAssessment.noContentForDepartments' | translate"
       [nzDisabled]="!editMode"
       [ngModel]="listOfSelectedRandomizations && listOfSelectedRandomizations[0]"
       (ngModelChange)="onRandomizationSelection($event)"
@@ -307,7 +307,7 @@
 </article>
 <hr>
 <div style="margin-top: 15px; margin-bottom: 15px;">
-  <h5 *ngIf="fullAssessment?.uuid !== null && fullAssessment?.uuid !== undefined"><span nz-icon nzType="link" nzTheme="outline"></span> Questionnaire Link</h5>
+  <h5 *ngIf="fullAssessment?.uuid !== null && fullAssessment?.uuid !== undefined"><span nz-icon nzType="link" nzTheme="outline"></span> {{ 'planAssessment.questionnaireLink' | translate }}</h5>
   <br />
 </div>
 <div class="link-container" *ngIf="fullAssessment?.uuid !== null && fullAssessment?.uuid !== undefined">

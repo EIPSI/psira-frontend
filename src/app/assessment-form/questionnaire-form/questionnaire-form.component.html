@@ -69,9 +69,9 @@
         nzShape="circle"
         nzSize="small"
         [nzType]="index === currentScreenIdx ? 'primary' : 'default'"
+        [attr.aria-label]="('assessmentForm.screenNumber' | translate: { number: index + 1 })"
         (click)="goToScreen(index)"
       >
-        &nbsp;
       </button>
     </div>
     <button nz-button nzType="primary" (click)="next()">

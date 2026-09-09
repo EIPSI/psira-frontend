@@ -2,19 +2,19 @@
   <div class="notification-editor">
     <div class="notification-editor__header">
       <div>
-        <h2>{{ configurationId ? 'Editar configuración' : 'Crear configuración' }}</h2>
-        <p>Definí qué template se usa para cada evento, departamento y rol destinatario.</p>
+        <h2>{{ (configurationId ? 'notifications.editConfiguration' : 'notifications.createConfiguration') | translate }}</h2>
+        <p>{{ 'notifications.configurationHelp' | translate }}</p>
       </div>
       <div class="notification-editor__actions">
-        <button nz-button type="button" routerLink="/psira/notifications/administration">Cancelar</button>
-        <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="save()">Guardar</button>
+        <button nz-button type="button" routerLink="/psira/notifications/administration">{{ 'core.cancel' | translate }}</button>
+        <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="save()">{{ 'core.save' | translate }}</button>
       </div>
     </div>
 
     <form nz-form [formGroup]="form" class="notification-form">
       <nz-form-item>
-        <nz-form-label nzRequired>Evento</nz-form-label>
-        <nz-form-control nzErrorTip="Seleccioná un evento.">
+        <nz-form-label nzRequired>{{ 'notifications.event' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="'notifications.eventRequired' | translate">
           <nz-select formControlName="event" (ngModelChange)="onEventChange($event)">
             <nz-option *ngFor="let event of events" [nzValue]="event" [nzLabel]="eventLabel[event]"></nz-option>
           </nz-select>
@@ -25,13 +25,13 @@
             class="event-description-link"
             (click)="showEventDescription(form.controls.event.value)"
           >
-            Qué significa este evento
+            {{ 'notifications.eventMeaning' | translate }}
           </button>
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzRequired>Canal</nz-form-label>
+        <nz-form-label nzRequired>{{ 'notifications.channel' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-select formControlName="channel">
             <nz-option *ngFor="let channel of channels" [nzValue]="channel" [nzLabel]="channelLabel[channel]"></nz-option>
@@ -40,21 +40,21 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label>Departamento</nz-form-label>
+        <nz-form-label>{{ 'notifications.department' | translate }}</nz-form-label>
         <nz-form-control>
-          <nz-select formControlName="departmentIds" nzMode="multiple" nzAllowClear nzShowSearch nzPlaceHolder="Default">
+          <nz-select formControlName="departmentIds" nzMode="multiple" nzAllowClear nzShowSearch [nzPlaceHolder]="'core.default' | translate">
             <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
           </nz-select>
           <div class="department-actions">
-            <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">Seleccionar todos</button>
-            <button nz-button nzSize="small" type="button" (click)="clearDepartments()">Quitar todos</button>
+            <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">{{ 'core.selectAll' | translate }}</button>
+            <button nz-button nzSize="small" type="button" (click)="clearDepartments()">{{ 'core.clearAll' | translate }}</button>
           </div>
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzRequired>Rol destinatario</nz-form-label>
-        <nz-form-control nzErrorTip="Seleccioná un rol destinatario.">
+        <nz-form-label nzRequired>{{ 'notifications.recipientRole' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="'notifications.recipientRoleRequired' | translate">
           <nz-select formControlName="recipientRoleId" nzShowSearch>
             <nz-option *ngFor="let role of roles" [nzValue]="role.id" [nzLabel]="role.name"></nz-option>
           </nz-select>
@@ -62,8 +62,8 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzRequired>Template de email</nz-form-label>
-        <nz-form-control nzErrorTip="Seleccioná un template.">
+        <nz-form-label nzRequired>{{ 'notifications.emailTemplate' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="'notifications.emailTemplateRequired' | translate">
           <nz-select formControlName="mailTemplateId" nzShowSearch>
             <nz-option *ngFor="let template of templates" [nzValue]="template.id" [nzLabel]="template.name"></nz-option>
           </nz-select>
@@ -71,14 +71,14 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label>Activa</nz-form-label>
+        <nz-form-label>{{ 'core.active' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-switch formControlName="active"></nz-switch>
         </nz-form-control>
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label>Notas</nz-form-label>
+        <nz-form-label>{{ 'core.notes' | translate }}</nz-form-label>
         <nz-form-control>
           <textarea nz-input rows="3" formControlName="notes"></textarea>
         </nz-form-control>

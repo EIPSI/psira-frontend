@@ -5,6 +5,7 @@ import { Action, ActionArgs, SortField, TableColumn } from '@shared/@modules/mas
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 import { InformedConsentService } from '../@services/informed-consent.service';
 import { InformedConsentKindLabel, InformedConsentModel } from '../@types/informed-consent';
@@ -30,10 +31,10 @@ export class InformedConsentModelsListComponent implements OnInit {
   sortFields: SortField<any>[] = [];
   actions: Action<ActionKey>[] = [];
   columns: TableColumn<any>[] = [
-    { title: 'Nombre', name: 'name', sort: true, filterField: { type: 'text', value: undefined } as any },
-    { title: 'Versión vigente', name: 'currentVersionTitle', sort: true },
-    { title: 'Departamentos', name: 'departmentNames', sort: true },
-    { title: 'Estado', name: 'formattedStatus', render: 'tag', sort: true },
+    { title: 'core.name', translationPath: 'core.name', name: 'name', sort: true, filterField: { type: 'text', value: undefined } as any },
+    { title: 'informedConsent.currentVersion', translationPath: 'informedConsent.currentVersion', name: 'currentVersionTitle', sort: true },
+    { title: 'departments.departments', translationPath: 'departments.departments', name: 'departmentNames', sort: true },
+    { title: 'core.status', translationPath: 'core.status', name: 'formattedStatus', render: 'tag', sort: true },
   ];
 
   constructor(
@@ -41,7 +42,8 @@ export class InformedConsentModelsListComponent implements OnInit {
     private router: Router,
     private modal: NzModalService,
     private errorService: ErrorHandlerService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -56,7 +58,7 @@ export class InformedConsentModelsListComponent implements OnInit {
         this.models = models || [];
         this.applyLocalFilters();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load informed consent models' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadModels') })
     );
   }
 
@@ -71,18 +73,18 @@ export class InformedConsentModelsListComponent implements OnInit {
   departmentNames(model: InformedConsentModel): string {
     return model.departments?.length
       ? model.departments.map((department) => department.name).join(', ')
-      : 'General';
+      : this.translate.instant('dashboard.general');
   }
 
   delete(model: InformedConsentModel): void {
     this.modal.confirm({
-      nzTitle: 'Eliminar modelo',
-      nzContent: 'Se eliminará el modelo y sus versiones. Usalo solo si no tiene respuestas relevantes.',
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('informedConsent.deleteModel'),
+      nzContent: this.translate.instant('informedConsent.deleteModelConfirm'),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () => this.service.deleteModel(model.id).subscribe(
         () => this.load(),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to delete informed consent model' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableDeleteModel') })
       ),
     });
   }
@@ -90,7 +92,7 @@ export class InformedConsentModelsListComponent implements OnInit {
   duplicate(model: InformedConsentModel): void {
     this.service.duplicateModel(model.id).subscribe(
       (copy) => this.router.navigate(['/psira/informed-consent/models', copy.id]),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate informed consent model' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableDuplicateModel') })
     );
   }
 
@@ -118,9 +120,9 @@ export class InformedConsentModelsListComponent implements OnInit {
   private setActions(): void {
     if (!this.perms.permissionsOnly(PermissionKey.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT)) return;
     this.actions = [
-      { key: ActionKey.EDIT, title: 'Editar' },
-      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
-      { key: ActionKey.DELETE, title: 'Eliminar' },
+      { key: ActionKey.EDIT, title: this.translate.instant('core.edit') },
+      { key: ActionKey.DUPLICATE, title: this.translate.instant('core.duplicate') },
+      { key: ActionKey.DELETE, title: this.translate.instant('core.delete') },
     ];
   }
 
@@ -130,11 +132,11 @@ export class InformedConsentModelsListComponent implements OnInit {
       .map((model) => ({
         ...model,
         source: model,
-        currentVersionTitle: model.currentPublishedVersion?.title || 'Sin publicar',
+        currentVersionTitle: model.currentPublishedVersion?.title || this.translate.instant('informedConsent.unpublished'),
         departmentNames: this.departmentNames(model),
         formattedStatus: {
           color: model.active ? 'green' : 'default',
-          title: model.active ? 'Activo' : 'Inactivo',
+          title: this.translate.instant(model.active ? 'core.active' : 'core.inactive'),
         },
       }))
       .filter((model) => !search || [

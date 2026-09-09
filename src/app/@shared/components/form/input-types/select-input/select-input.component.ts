@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Field } from '@shared/components/form/@types/field';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-select-input',
@@ -16,7 +17,7 @@ export class SelectInputComponent implements OnInit, OnChanges {
   @Output() valueChange: EventEmitter<any> = new EventEmitter<any>();
   inputGroup: FormGroup;
 
-  constructor() {}
+  constructor(private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.initializeInput();
@@ -75,7 +76,7 @@ export class SelectInputComponent implements OnInit, OnChanges {
     }
     const findLabel = (val: any) => {
       const option = this.field.options.find((opt: any) => opt.value === val);
-      return option ? option.label : val;
+      return option ? this.translate.instant(option.label) : val;
     };
     if (Array.isArray(this.field.value)) {
       return (this.field.value as any[]).map((val: any) => findLabel(val)).join(', ');

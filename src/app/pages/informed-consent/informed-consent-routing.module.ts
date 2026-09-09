@@ -14,14 +14,14 @@ const routes: Routes = [
   {
     path: 'pending',
     component: PendingInformedConsentsComponent,
-    data: { breadcrumbI18nKey: 'Consentimientos pendientes' },
+    data: { breadcrumbI18nKey: 'informedConsent.pendingConsents' },
   },
   {
     path: 'models',
     component: InformedConsentModelsListComponent,
     canActivate: [PermissionGuard],
     data: {
-      breadcrumbI18nKey: 'Modelos de CI',
+      breadcrumbI18nKey: 'menu.informedConsentModels',
       permissions: { only: [PermissionKey.INFORMED_CONSENT_MODELS_VIEW_DEPARTMENT] },
     },
   },
@@ -30,7 +30,7 @@ const routes: Routes = [
     component: InformedConsentModelEditorComponent,
     canActivate: [PermissionGuard],
     data: {
-      breadcrumbI18nKey: 'Nuevo modelo CI',
+      breadcrumbI18nKey: 'informedConsent.newModel',
       permissions: { only: [PermissionKey.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT] },
     },
   },
@@ -39,7 +39,7 @@ const routes: Routes = [
     component: InformedConsentModelEditorComponent,
     canActivate: [PermissionGuard],
     data: {
-      breadcrumbI18nKey: 'Editar modelo CI',
+      breadcrumbI18nKey: 'informedConsent.editModel',
       permissions: { only: [PermissionKey.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT] },
     },
   },
@@ -48,7 +48,7 @@ const routes: Routes = [
     component: InformedConsentManagementListComponent,
     canActivate: [PermissionGuard],
     data: {
-      breadcrumbI18nKey: 'Gestión CI',
+      breadcrumbI18nKey: 'menu.informedConsentManagement',
       permissions: { only: [PermissionKey.INFORMED_CONSENT_MANAGEMENT_VIEW_DEPARTMENT] },
     },
   },
@@ -57,7 +57,7 @@ const routes: Routes = [
     component: InformedConsentManagementEditorComponent,
     canActivate: [PermissionGuard],
     data: {
-      breadcrumbI18nKey: 'Nueva gestión CI',
+      breadcrumbI18nKey: 'informedConsent.newManagement',
       permissions: { only: [PermissionKey.INFORMED_CONSENT_MANAGEMENT_EDIT_DEPARTMENT] },
     },
   },
@@ -66,7 +66,7 @@ const routes: Routes = [
     component: InformedConsentManagementEditorComponent,
     canActivate: [PermissionGuard],
     data: {
-      breadcrumbI18nKey: 'Editar gestión CI',
+      breadcrumbI18nKey: 'informedConsent.editManagement',
       permissions: { only: [PermissionKey.INFORMED_CONSENT_MANAGEMENT_EDIT_DEPARTMENT] },
     },
   },
@@ -75,14 +75,14 @@ const routes: Routes = [
     component: InformedConsentResponsesListComponent,
     canActivate: [PermissionGuard],
     data: {
-      breadcrumbI18nKey: 'Respuestas CI',
+      breadcrumbI18nKey: 'menu.informedConsentResponses',
       permissions: { only: [PermissionKey.INFORMED_CONSENT_RESPONSES_VIEW_DEPARTMENT] },
     },
   },
   {
     path: 'my-responses',
     component: InformedConsentResponsesListComponent,
-    data: { breadcrumbI18nKey: 'Mis consentimientos firmados', ownOnly: true },
+    data: { breadcrumbI18nKey: 'informedConsent.mySignedConsents', ownOnly: true },
   },
 ];
 

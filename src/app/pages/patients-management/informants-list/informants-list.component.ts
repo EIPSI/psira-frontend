@@ -12,6 +12,7 @@ import { PatientsService } from '@app/pages/patients-management/@services/patien
 import { Patient } from '@app/pages/patients-management/@types/patient';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-informants-list',
@@ -34,7 +35,7 @@ export class InformantsListComponent implements OnInit {
   actions = InformantsTable.actions;
 
   showCreateInformant = false;
-  panelTitle = 'Create Informant';
+  panelTitle = 'patientsManagement.createInformant';
   loadingMessage = '';
   informantForms = InformantForm;
   hasErrors = false;
@@ -50,7 +51,8 @@ export class InformantsListComponent implements OnInit {
     private modalService: NzModalService,
     private message: NzMessageService,
     private router: Router,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -95,7 +97,7 @@ export class InformantsListComponent implements OnInit {
     this.patientService.patients({ filter }).subscribe(
       async ({ data }) => {
         data.patients.edges.map((patient: any) => {
-          const option = { value: patient.node.id, label: `${patient.node.firstName} ${patient.node.lastName}` };
+          const option = { value: patient.node.id, label: [patient.node.firstName, patient.node.lastName].filter(Boolean).join(' ') };
           if (options.indexOf(option) === -1) {
             options.push(option);
           }
@@ -137,7 +139,7 @@ export class InformantsListComponent implements OnInit {
   toggleCreatePanel(create: boolean = true) {
     this.isCreateAction = create;
     this.showCreateInformant = !this.showCreateInformant;
-    this.panelTitle = this.isCreateAction ? 'Create Informant' : 'Update Informant';
+    this.panelTitle = this.isCreateAction ? 'patientsManagement.createInformant' : 'patientsManagement.updateInformant';
     if (create) {
       this.resetForm();
     }
@@ -165,13 +167,14 @@ export class InformantsListComponent implements OnInit {
         break;
       case 'Delete Informant':
         this.modalService.confirm({
-          nzTitle: 'Confirm',
-          nzContent: `Are you sure you want to delete informant for
-               <b>${this.informants[event.index].firstName}</b>`,
-          nzOkText: 'Delete',
+          nzTitle: this.translate.instant('patientsManagement.confirm'),
+          nzContent: this.translate.instant('patientsManagement.deleteInformantConfirm', {
+            name: this.informants[event.index].firstName,
+          }),
+          nzOkText: this.translate.instant('core.delete'),
           nzOnOk: () => this.deleteInformant(this.informants[event.index]),
           nzOkDisabled: this.modalLoading,
-          nzCancelText: 'Cancel',
+          nzCancelText: this.translate.instant('core.cancel'),
         });
         break;
     }
@@ -181,7 +184,7 @@ export class InformantsListComponent implements OnInit {
     this.isLoading = true;
     this.hasErrors = false;
     this.errors = [];
-    this.loadingMessage = `Creating informant ${informant.firstName}`;
+    this.loadingMessage = this.translate.instant('patientsManagement.creatingInformant', { name: informant.firstName });
     this.informantsService.createInformant(informant).subscribe(
       async ({ data }) => {
         this.informants.unshift(InformantModel.fromJson(data.createOneInformant));
@@ -189,7 +192,7 @@ export class InformantsListComponent implements OnInit {
         this.isLoading = false;
         this.loadingMessage = '';
         this.toggleCreatePanel();
-        this.message.create('success', `Informant has successfully been created`);
+        this.message.create('success', this.translate.instant('patientsManagement.informantCreated'));
       },
       (error) => {
         this.hasErrors = true;
@@ -209,7 +212,7 @@ export class InformantsListComponent implements OnInit {
         this.informants[this.selectedIndex] = InformantModel.fromJson(newInformant);
         this.isLoading = false;
         this.toggleCreatePanel();
-        this.message.success('Informant has been successfully edited', {
+        this.message.success(this.translate.instant('patientsManagement.informantUpdated'), {
           nzDuration: 3000,
         });
       },
@@ -226,11 +229,11 @@ export class InformantsListComponent implements OnInit {
       async ({ data }: any) => {
         this.informants.splice(this.selectedIndex, 1);
         this.modalLoading = false;
-        this.message.create('success', `informant has been successfully deleted`);
+        this.message.create('success', this.translate.instant('patientsManagement.informantDeleted'));
       },
       (error: any) => {
         this.modalLoading = false;
-        this.message.create('error', `could not remove informant for ${informant.firstName}`);
+        this.message.create('error', this.translate.instant('patientsManagement.unableRemoveInformant', { name: informant.firstName }));
       }
     );
   }

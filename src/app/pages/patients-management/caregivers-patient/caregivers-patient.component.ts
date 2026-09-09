@@ -249,7 +249,7 @@ export class CaregiversPatientComponent implements OnInit {
         ...this.actions,
         {
           key: ActionKey.REMOVE_CAREGIVER,
-          title: 'Remove patient from Caregiver',
+          title: 'patientsManagement.removePatientFromCaregiver',
         },
       ];
     }

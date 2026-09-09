@@ -4,8 +4,8 @@ export enum EvaluationSchemeType {
 }
 
 export const EvaluationSchemeTypeLabel: Record<EvaluationSchemeType, string> = {
-  [EvaluationSchemeType.SESSION_BASED]: 'Session based',
-  [EvaluationSchemeType.INDEPENDENT_EVALUATION]: 'Esquema fijo',
+  [EvaluationSchemeType.SESSION_BASED]: 'evaluationSchemes.sessionBased',
+  [EvaluationSchemeType.INDEPENDENT_EVALUATION]: 'evaluationSchemes.fixedScheme',
 };
 
 export interface EvaluationScheme {

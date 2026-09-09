@@ -51,10 +51,10 @@ export class QuestionnaireBundlesListComponent implements OnInit {
   ngOnInit(): void {
     this.getDepartments();
     this.actions = [
-      { key: ActionKey.EDIT, title: 'Edit Bundle' },
-      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
-      { key: ActionKey.TOGGLE_ACTIVE, title: 'Activar / desactivar' },
-      { key: ActionKey.DELETE, title: 'Delete Bundle' },
+      { key: ActionKey.EDIT, title: 'questionnaireBundles.editBundle' },
+      { key: ActionKey.DUPLICATE, title: 'core.duplicate' },
+      { key: ActionKey.TOGGLE_ACTIVE, title: 'core.toggleActive' },
+      { key: ActionKey.DELETE, title: 'questionnaireBundles.deleteBundle' },
     ];
   }
 
@@ -151,7 +151,7 @@ export class QuestionnaireBundlesListComponent implements OnInit {
 
   private duplicateQuestionnaireBundle(bundle: any): void {
     this.bundlesService.duplicateQuestionnaireBundle(bundle).subscribe(() => {
-      this.nzMessage.success('Paquete duplicado', { nzDuration: 3000 });
+      this.nzMessage.success(this.translate.instant('questionnaireBundles.bundleDuplicated'), { nzDuration: 3000 });
       this.getQuestionnaireBundles();
     });
   }
@@ -165,7 +165,7 @@ export class QuestionnaireBundlesListComponent implements OnInit {
       structureJson: JSON.stringify(structure),
       departmentIds: bundle.departmentIds || [],
     }).subscribe(() => {
-      this.nzMessage.success('Estado actualizado', { nzDuration: 3000 });
+      this.nzMessage.success(this.translate.instant('questionnaireBundles.statusUpdated'), { nzDuration: 3000 });
       this.getQuestionnaireBundles();
     });
   }
@@ -178,9 +178,9 @@ export class QuestionnaireBundlesListComponent implements OnInit {
       ...bundle,
       active: bundle.active !== false,
       activeStatus: bundle.active !== false
-        ? { color: 'green', title: 'Activa' }
-        : { color: 'red', title: 'Inactiva' },
-      summary: `${questionnaires} questionnaires / ${groups} groups`,
+        ? { color: 'green', title: this.translate.instant('core.active') }
+        : { color: 'red', title: this.translate.instant('core.inactive') },
+      summary: this.translate.instant('questionnaireBundles.compactSummary', { questionnaires, groups }),
       departmentNames: this.departmentNames(bundle.departmentIds),
     };
   }

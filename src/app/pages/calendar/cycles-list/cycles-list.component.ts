@@ -3,6 +3,7 @@ import { CalendarService } from '../@services/calendar.service';
 import { ClinicalSessionKind, TreatmentCycle } from '../@types/calendar';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cycles-list',
@@ -19,7 +20,8 @@ export class CyclesListComponent implements OnChanges {
 
   constructor(
     private calendarService: CalendarService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnChanges(): void {
@@ -28,9 +30,9 @@ export class CyclesListComponent implements OnChanges {
 
   statusLabel(status?: string): string {
     const labels: Record<string, string> = {
-      ACTIVE: 'Activo',
-      FINALIZED: 'Finalizado',
-      FINALIZATION_CANCELLED: 'Finalización anulada',
+      ACTIVE: this.translate.instant('calendar.cycleActive'),
+      FINALIZED: this.translate.instant('calendar.cycleFinalized'),
+      FINALIZATION_CANCELLED: this.translate.instant('calendar.finalizationCancelled'),
     };
     return status ? labels[status] || status : '';
   }
@@ -86,7 +88,7 @@ export class CyclesListComponent implements OnChanges {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         (cycles) => (this.cycles = cycles || []),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load cycles' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadCycles') })
       );
   }
 }

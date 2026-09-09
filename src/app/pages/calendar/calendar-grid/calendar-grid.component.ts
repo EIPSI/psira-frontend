@@ -210,6 +210,7 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
       return;
     }
     if (domEvent.button !== 0) return;
+    if (!event.editable) return;
     this.pointerDragCandidate = event;
     this.pointerDragStart = { x: domEvent.clientX, y: domEvent.clientY };
     this.dragPreviewX = domEvent.clientX;
@@ -218,6 +219,10 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
 
   onEventDragStart(domEvent: DragEvent, event: CalendarEvent): void {
     domEvent.stopPropagation();
+    if (!event.editable) {
+      domEvent.preventDefault();
+      return;
+    }
     this.draggingEvent = true;
     this.pointerDraggedEvent = event;
     this.dragPreviewEvent = event;
@@ -329,6 +334,7 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
     this.dragPreviewX = domEvent.clientX;
     this.dragPreviewY = domEvent.clientY;
     if (!this.pointerDragCandidate || !this.pointerDragStart) return;
+    if (!this.pointerDragCandidate.editable) return;
     const distanceX = Math.abs(domEvent.clientX - this.pointerDragStart.x);
     const distanceY = Math.abs(domEvent.clientY - this.pointerDragStart.y);
     if (distanceX < 6 && distanceY < 6) return;

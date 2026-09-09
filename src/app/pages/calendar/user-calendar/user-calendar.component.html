@@ -1,4 +1,5 @@
 <app-calendar-grid
+  *ngIf="!hideGrid"
   [(selectedDate)]="selectedDate"
   [(view)]="view"
   [events]="events"
@@ -14,10 +15,12 @@
 
 <nz-dropdown-menu #calendarEventContextMenu="nzDropdownMenu">
   <ul nz-menu>
-    <li nz-menu-item (click)="openContextEvent()">Abrir</li>
-    <li nz-menu-item *ngIf="contextEvent?.editable && contextEvent?.clinicalSessionId" (click)="duplicateContextEvent()">Duplicar</li>
+    <li nz-menu-item (click)="openContextEvent()">{{ 'core.open' | translate }}</li>
+    <li nz-menu-item *ngIf="contextEvent?.editable && contextEvent?.clinicalSessionId" (click)="duplicateContextEvent()">
+      {{ 'core.duplicate' | translate }}
+    </li>
     <li nz-menu-item *ngIf="contextEvent?.deletable" (click)="discardContextEvent()">
-      {{ contextEvent?.type === 'ASSESSMENT' ? 'Descartar' : 'Cancelación' }}
+      {{ (contextEvent?.type === 'ASSESSMENT' ? 'patientsManagement.discard' : 'patientsManagement.cancellation') | translate }}
     </li>
   </ul>
 </nz-dropdown-menu>
@@ -55,8 +58,9 @@
 ></app-event-edit-modal>
 
 <nz-modal
+  *ngIf="!embeddedCreateMode"
   [(nzVisible)]="createEventModalVisible"
-  nzTitle="Crear evento"
+  [nzTitle]="'calendar.createEvent' | translate"
   [nzOkLoading]="creating"
   [nzWidth]="720"
   nzWrapClassName="patient-calendar-event-modal"
@@ -64,30 +68,43 @@
   (nzOnOk)="saveCreateEvent()"
 >
   <ng-container *nzModalContent>
+    <ng-container *ngTemplateOutlet="userCreateEventContent"></ng-container>
+  </ng-container>
+</nz-modal>
+
+<section *ngIf="embeddedCreateMode && createEventModalVisible" class="embedded-calendar-create">
+  <ng-container *ngTemplateOutlet="userCreateEventContent"></ng-container>
+  <div class="embedded-calendar-create__actions">
+    <button nz-button (click)="createEventModalVisible = false">{{ 'core.cancel' | translate }}</button>
+    <button nz-button nzType="primary" [nzLoading]="creating" (click)="saveCreateEvent()">{{ 'core.save' | translate }}</button>
+  </div>
+</section>
+
+<ng-template #userCreateEventContent>
   <div class="edit-form calendar-create-form">
     <div class="form-field">
-      <span>Tipo</span>
+      <span>{{ 'calendar.type' | translate }}</span>
       <nz-select [(ngModel)]="createType" (ngModelChange)="onCreateTypeChange($event)">
-        <nz-option [nzValue]="CT.SESSION" nzLabel="Sesión de supervisión"></nz-option>
-        <nz-option [nzValue]="CT.FIXED_SCHEME" nzLabel="Evaluación - esquema fijo"></nz-option>
-        <nz-option [nzValue]="CT.SIMPLE_ASSESSMENT" nzLabel="Evaluación - individual"></nz-option>
+        <nz-option [nzValue]="CT.SESSION" [nzLabel]="'calendar.supervisionSession' | translate"></nz-option>
+        <nz-option [nzValue]="CT.FIXED_SCHEME" [nzLabel]="'calendar.fixedSchemeAssessment' | translate"></nz-option>
+        <nz-option [nzValue]="CT.SIMPLE_ASSESSMENT" [nzLabel]="'calendar.individualAssessment' | translate"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field">
-      <span>Descripción</span>
+      <span>{{ 'core.description' | translate }}</span>
       <input nz-input [(ngModel)]="createTitle" />
     </div>
 
     <div class="form-field">
-      <span>Supervisores</span>
+      <span>{{ 'calendar.supervisors' | translate }}</span>
       <nz-select
         [(ngModel)]="createResponsibleUserIds"
         (ngModelChange)="onResponsibleUsersChange($event)"
         nzMode="multiple"
         nzAllowClear
         nzShowSearch
-        nzNotFoundContent="No hay supervisores asignados a este terapeuta."
+        [nzNotFoundContent]="'calendar.noSupervisorsAssigned' | translate"
       >
         <nz-option
           *ngFor="let supervisor of supervisorOptions"
@@ -98,19 +115,19 @@
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SESSION">
-      <span>Esquemas session-based</span>
+      <span>{{ 'calendar.sessionBasedSchemes' | translate }}</span>
       <nz-select [(ngModel)]="createSessionSchemeIds" nzMode="multiple" nzAllowClear>
         <nz-option *ngFor="let scheme of sessionSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SESSION">
-      <span>Modalidad</span>
+      <span>{{ 'patientsManagement.modality' | translate }}</span>
       <nz-select [(ngModel)]="createModality">
         <nz-option
           *ngFor="let option of modalityOptions"
           [nzValue]="option.value"
-          [nzLabel]="option.label"
+          [nzLabel]="option.label | translate"
         ></nz-option>
       </nz-select>
     </div>
@@ -129,57 +146,57 @@
     ></app-recurrence-form>
 
     <div class="form-field" *ngIf="createType === CT.FIXED_SCHEME">
-      <span>Tipo de selección</span>
+      <span>{{ 'calendar.selectionType' | translate }}</span>
       <nz-select [(ngModel)]="fixedSchemeSelectionType" (ngModelChange)="onFixedSchemeSelectionTypeChange($event)">
-        <nz-option [nzValue]="FST.SCHEME" nzLabel="Esquema fijo"></nz-option>
-        <nz-option [nzValue]="FST.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+        <nz-option [nzValue]="FST.SCHEME" [nzLabel]="'evaluationSchemes.fixedScheme' | translate"></nz-option>
+        <nz-option [nzValue]="FST.RANDOMIZATION" [nzLabel]="'randomizations.randomization' | translate"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.FIXED_SCHEME && fixedSchemeSelectionType === FST.SCHEME">
-      <span>Esquema fijo</span>
+      <span>{{ 'evaluationSchemes.fixedScheme' | translate }}</span>
       <nz-select [(ngModel)]="createFixedSchemeIds" nzMode="multiple" nzShowSearch>
         <nz-option *ngFor="let scheme of fixedSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.FIXED_SCHEME && fixedSchemeSelectionType === FST.RANDOMIZATION">
-      <span>Randomización</span>
+      <span>{{ 'randomizations.randomization' | translate }}</span>
       <nz-select [(ngModel)]="createFixedRandomizationRuleIds" nzMode="multiple" nzShowSearch>
         <nz-option *ngFor="let randomization of highLevelRandomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
-      <span>Tipo de evaluación</span>
+      <span>{{ 'plannedAssessments.assessmentType' | translate }}</span>
       <nz-select [(ngModel)]="simpleAssessmentTypeId" nzShowSearch>
         <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
-      <span>Nombre de la evaluación (opcional)</span>
-      <input nz-input [(ngModel)]="simpleAssessmentName" placeholder="Si se deja vacío se usará el tipo de evaluación" />
+      <span>{{ 'calendar.assessmentNameOptional' | translate }}</span>
+      <input nz-input [(ngModel)]="simpleAssessmentName" [placeholder]="'calendar.assessmentNameFallbackHint' | translate" />
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
-      <span>Contenido</span>
+      <span>{{ 'calendar.content' | translate }}</span>
       <nz-select [(ngModel)]="simpleContentType" (ngModelChange)="onSimpleContentTypeChange($event)">
-        <nz-option [nzValue]="ACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
-        <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de cuestionarios"></nz-option>
-        <nz-option [nzValue]="ACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+        <nz-option [nzValue]="ACT.QUESTIONNAIRE" [nzLabel]="'questionnaires.questionnaire' | translate"></nz-option>
+        <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" [nzLabel]="'questionnaireBundles.bundle' | translate"></nz-option>
+        <nz-option [nzValue]="ACT.RANDOMIZATION" [nzLabel]="'randomizations.randomization' | translate"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT && simpleContentType === ACT.QUESTIONNAIRE">
-      <span>Cuestionarios</span>
+      <span>{{ 'questionnaires.questionnaires' | translate }}</span>
       <nz-select
         [ngModel]="simpleQuestionnaireIds && simpleQuestionnaireIds[0]"
         (ngModelChange)="simpleQuestionnaireIds = $event ? [$event] : []"
         nzShowSearch
         nzServerSearch
         nzAllowClear
-        nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados."
+        [nzNotFoundContent]="'calendar.noContentForDepartments' | translate"
         (nzOnSearch)="searchQuestionnaires($event)"
       >
         <nz-option
@@ -191,42 +208,42 @@
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT && simpleContentType === ACT.QUESTIONNAIRE_BUNDLE">
-      <span>Paquetes</span>
-      <nz-select [ngModel]="simpleQuestionnaireBundleIds && simpleQuestionnaireBundleIds[0]" (ngModelChange)="simpleQuestionnaireBundleIds = $event ? [$event] : []" nzShowSearch nzAllowClear nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados.">
+      <span>{{ 'questionnaireBundles.bundles' | translate }}</span>
+      <nz-select [ngModel]="simpleQuestionnaireBundleIds && simpleQuestionnaireBundleIds[0]" (ngModelChange)="simpleQuestionnaireBundleIds = $event ? [$event] : []" nzShowSearch nzAllowClear [nzNotFoundContent]="'calendar.noContentForDepartments' | translate">
         <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
       </nz-select>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT && simpleContentType === ACT.RANDOMIZATION">
-      <span>Randomización</span>
-      <nz-select [ngModel]="simpleRandomizationRuleIds && simpleRandomizationRuleIds[0]" (ngModelChange)="simpleRandomizationRuleIds = $event ? [$event] : []" nzShowSearch nzAllowClear nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados.">
+      <span>{{ 'randomizations.randomization' | translate }}</span>
+      <nz-select [ngModel]="simpleRandomizationRuleIds && simpleRandomizationRuleIds[0]" (ngModelChange)="simpleRandomizationRuleIds = $event ? [$event] : []" nzShowSearch nzAllowClear [nzNotFoundContent]="'calendar.noContentForDepartments' | translate">
         <nz-option *ngFor="let randomization of lowLevelRandomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
       </nz-select>
     </div>
 
     <div class="date-row">
       <div class="form-field">
-        <span>Inicio</span>
+        <span>{{ 'calendar.startAt' | translate }}</span>
         <nz-date-picker [(ngModel)]="createStartAt" nzShowTime></nz-date-picker>
       </div>
       <div class="form-field" *ngIf="createType === CT.SESSION">
-        <span>Finalización</span>
+        <span>{{ 'calendar.endAt' | translate }}</span>
         <nz-date-picker [(ngModel)]="createEndAt" nzShowTime></nz-date-picker>
       </div>
     </div>
 
     <div class="date-row" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
       <div class="form-field">
-        <span>Vencimiento</span>
+        <span>{{ 'plannedAssessments.expiration' | translate }}</span>
         <input nz-input type="number" min="0" [(ngModel)]="simpleAvailabilityMinutes" />
       </div>
       <div class="form-field">
-        <span>Unidad</span>
+        <span>{{ 'patientsManagement.unit' | translate }}</span>
         <nz-select [(ngModel)]="simpleAvailabilityUnit">
           <nz-option
             *ngFor="let unit of availabilityUnits"
             [nzValue]="unit.value"
-            [nzLabel]="unit.label"
+            [nzLabel]="unit.label | translate"
           ></nz-option>
         </nz-select>
       </div>
@@ -234,45 +251,44 @@
 
     <div class="date-row" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
       <div class="form-field">
-        <span>Recordatorios después de la activación</span>
-        <input nz-input [(ngModel)]="simpleReminderMinutes" placeholder="10, 15, 20" />
+        <span>{{ 'calendar.remindersAfterActivation' | translate }}</span>
+        <input nz-input [(ngModel)]="simpleReminderMinutes" [placeholder]="'calendar.remindersPlaceholder' | translate" />
       </div>
       <div class="form-field">
-        <span>Unidad</span>
+        <span>{{ 'patientsManagement.unit' | translate }}</span>
         <nz-select [(ngModel)]="simpleReminderUnit">
           <nz-option
             *ngFor="let unit of availabilityUnits"
             [nzValue]="unit.value"
-            [nzLabel]="unit.label"
+            [nzLabel]="unit.label | translate"
           ></nz-option>
         </nz-select>
       </div>
     </div>
 
     <div class="form-field" *ngIf="createType === CT.SIMPLE_ASSESSMENT">
-      <span>Nota de supervisión de evaluación</span>
+      <span>{{ 'calendar.supervisionEvaluationNote' | translate }}</span>
       <textarea nz-input [(ngModel)]="simpleAssessmentNote" rows="3"></textarea>
     </div>
   </div>
-  </ng-container>
-</nz-modal>
+</ng-template>
 
 <nz-modal
   [(nzVisible)]="cancelModalVisible"
-  nzTitle="Cancelación"
+  [nzTitle]="'patientsManagement.cancellation' | translate"
   [nzOkLoading]="saving"
-  nzOkText="Confirmar"
-  nzCancelText="Volver"
+  [nzOkText]="'core.confirm' | translate"
+  [nzCancelText]="'core.back' | translate"
   (nzOnCancel)="cancelModalVisible = false"
   (nzOnOk)="confirmCancellation()"
 >
   <ng-container *nzModalContent>
     <div class="edit-form">
       <label>
-        <span>Tipo</span>
+        <span>{{ 'calendar.type' | translate }}</span>
         <nz-select [ngModel]="cancelType" (ngModelChange)="onCancelTypeChange($event)">
-          <nz-option nzValue="RESCHEDULED" nzLabel="Cancelación por reprogramación"></nz-option>
-          <nz-option nzValue="NO_SHOW" nzLabel="Cancelación por falta"></nz-option>
+          <nz-option nzValue="RESCHEDULED" [nzLabel]="'calendar.rescheduledCancellation' | translate"></nz-option>
+          <nz-option nzValue="NO_SHOW" [nzLabel]="'calendar.noShowCancellation' | translate"></nz-option>
         </nz-select>
       </label>
 
@@ -296,18 +312,18 @@
       </label>
 
       <label *ngIf="cancelType === 'NO_SHOW' && showCancellationOtherReason">
-        <span>Otro motivo</span>
+        <span>{{ 'reasonTrees.otherReason' | translate }}</span>
         <textarea nz-input rows="3" [(ngModel)]="cancelOtherReason"></textarea>
       </label>
 
       <label>
-        <span>Nota de supervisión</span>
+        <span>{{ 'calendar.supervisionNote' | translate }}</span>
         <textarea nz-input rows="3" [(ngModel)]="cancelClinicalNote"></textarea>
       </label>
 
       <nz-spin [nzSpinning]="automationPreviewLoading">
         <div class="automation-preview" *ngIf="automationPreview.length">
-          <h3>Automatizaciones que se aplicarán</h3>
+          <h3>{{ 'calendar.automationsToApply' | translate }}</h3>
           <label
             class="automation-preview-item"
             *ngFor="let automation of automationPreview"

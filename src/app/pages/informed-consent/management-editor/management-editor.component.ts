@@ -5,6 +5,7 @@ import { DepartmentsService } from '@app/pages/administration/@services/departme
 import { RolesService } from '@app/pages/administration/@services/roles.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { InformedConsentService } from '../@services/informed-consent.service';
@@ -55,7 +56,8 @@ export class InformedConsentManagementEditorComponent implements OnInit {
     private departmentsService: DepartmentsService,
     private rolesService: RolesService,
     private message: NzMessageService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -76,7 +78,7 @@ export class InformedConsentManagementEditorComponent implements OnInit {
         this.departments = departments.data.departments.edges.map((edge: any) => edge.node);
         this.roles = roles.data.roles.edges.map((edge: any) => edge.node);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load informed consent references' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadReferences') })
     );
   }
 
@@ -97,14 +99,14 @@ export class InformedConsentManagementEditorComponent implements OnInit {
         priority: item.priority,
         active: item.active,
       }),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load informed consent management' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadManagement') })
     );
   }
 
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.message.warning('Completá los campos obligatorios.');
+      this.message.warning(this.translate.instant('forms.common.requiredField'));
       return;
     }
     const value = this.form.value;
@@ -123,10 +125,10 @@ export class InformedConsentManagementEditorComponent implements OnInit {
       : this.service.createManagement(payload);
     request.pipe(finalize(() => (this.saving = false))).subscribe(
       () => {
-        this.message.success('Gestión guardada');
+        this.message.success(this.translate.instant('informedConsent.managementSaved'));
         this.router.navigate(['/psira/informed-consent/management']);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to save informed consent management' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableSaveManagement') })
     );
   }
 

@@ -1,31 +1,31 @@
 const actions: any[] = [
   {
-    type: 'Edit Role',
-    name: 'Edit Role',
+    type: 'roles.editRole',
+    name: 'roles.editRole',
   },
   {
-    type: 'Delete Role',
-    name: 'Delete Role',
+    type: 'roles.deleteRole',
+    name: 'roles.deleteRole',
   },
 ];
 
 const columns: any[] = [
   {
-    title: 'Role Name',
+    title: 'tables.roles.name',
     name: 'name',
     translationPath: 'tables.roles.name',
     sort: true,
     isFilterable: false,
   },
   {
-    title: 'Role Hierarchy',
+    title: 'tables.roles.hierarchy',
     name: 'hierarchy',
     sort: true,
     translationPath: 'tables.roles.hierarchy',
     isFilterable: false,
   },
   {
-    title: 'Created At',
+    title: 'tables.roles.createdAt',
     name: 'createdAt',
     sort: true,
     translationPath: 'tables.roles.createdAt',

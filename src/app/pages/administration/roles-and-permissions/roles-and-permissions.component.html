@@ -49,32 +49,32 @@
     <div class="permission-detail">
       <div class="detail-grid">
         <div>
-          <span>Recurso</span>
+          <span>{{ 'rolesPermissions.resource' | translate }}</span>
           <strong>{{ selectedPermissionDetail.resource }}</strong>
         </div>
         <div>
-          <span>Accion</span>
+          <span>{{ 'rolesPermissions.action' | translate }}</span>
           <strong>{{ selectedPermissionDetail.action }}</strong>
         </div>
         <div>
-          <span>Alcance</span>
+          <span>{{ 'rolesPermissions.scope' | translate }}</span>
           <strong>{{ selectedPermissionDetail.scope }}</strong>
         </div>
       </div>
 
       <p>{{ selectedPermissionDetail.description }}</p>
 
-      <h4>Que habilita</h4>
+      <h4>{{ 'rolesPermissions.enabledByPermission' | translate }}</h4>
       <ul>
         <li *ngFor="let item of selectedPermissionDetail.enabled">{{ item }}</li>
       </ul>
 
-      <h4>Limites</h4>
+      <h4>{{ 'rolesPermissions.limits' | translate }}</h4>
       <ul>
         <li *ngFor="let item of selectedPermissionDetail.limits">{{ item }}</li>
       </ul>
 
-      <h4>Ejemplos De Alcance</h4>
+      <h4>{{ 'rolesPermissions.scopeExamples' | translate }}</h4>
       <ul>
         <li *ngFor="let item of selectedPermissionDetail.examples">{{ item }}</li>
       </ul>

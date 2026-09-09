@@ -3,7 +3,7 @@ import { Caregiver } from '../@types/caregiver';
 
 export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
   {
-    title: 'First name',
+    title: 'tables.patients.firstName',
     name: 'firstName',
     translationPath: 'tables.contact.firstName',
     sort: true,
@@ -13,7 +13,7 @@ export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Middle name',
+    title: 'tables.patients.middleName',
     name: 'middleName',
     translationPath: 'tables.contact.middleName',
     sort: true,
@@ -23,7 +23,7 @@ export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Last name',
+    title: 'tables.patients.lastName',
     name: 'lastName',
     translationPath: 'tables.contact.lastName',
     sort: true,
@@ -33,7 +33,7 @@ export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'E-mail',
+    title: 'tables.contact.email',
     name: 'email',
     sort: true,
     filterField: {
@@ -42,7 +42,7 @@ export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Phone',
+    title: 'forms.patients.phone',
     name: 'phone',
     translationPath: 'tables.contact.phone',
     sort: true,
@@ -52,7 +52,7 @@ export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Relation',
+    title: 'forms.patients.relation',
     name: 'relation',
     translationPath: 'tables.contact.relation',
     sort: true,
@@ -62,7 +62,7 @@ export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Emergency',
+    title: 'forms.patients.emergency',
     name: 'emergency',
     translationPath: 'tables.contact.emergency',
     sort: true,
@@ -72,7 +72,7 @@ export const CaregiversPatientTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Note',
+    title: 'forms.patients.note',
     name: 'note',
     translationPath: 'tables.contact.note',
     sort: true,

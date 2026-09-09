@@ -23,6 +23,7 @@ import {
   ResourceActivationAnchor,
 } from '../../evaluation-schemes/@types/evaluation-scheme';
 import { User } from '@app/pages/user-management/@types/user';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sessions-list',
@@ -78,8 +79,8 @@ export class SessionsListComponent implements OnChanges {
   ];
   resourceStatuses = ['PENDING', 'OPEN', 'COMPLETED', 'DETACHED', 'CANCELLED'];
   addSchemeApplicationModeOptions = [
-    { label: 'Desde esta sesión', value: AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION },
-    { label: 'Estructura original', value: AddClinicalSessionSchemesApplicationMode.ORIGINAL_SESSION_NUMBER },
+    { label: 'patientsManagement.fromThisSession', value: AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION },
+    { label: 'patientsManagement.originalStructure', value: AddClinicalSessionSchemesApplicationMode.ORIGINAL_SESSION_NUMBER },
   ];
   private currentUser?: User;
 
@@ -88,7 +89,8 @@ export class SessionsListComponent implements OnChanges {
     private contextMenuService: NzContextMenuService,
     private errorService: ErrorHandlerService,
     private schemesService: EvaluationSchemesService,
-    private modalService: NzModalService
+    private modalService: NzModalService,
+    private translate: TranslateService
   ) {}
 
   ngOnChanges(): void {
@@ -147,7 +149,7 @@ export class SessionsListComponent implements OnChanges {
   }
 
   sessionTitle(session: ClinicalSession): string {
-    return session.sessionKind === ClinicalSessionKind.SUPERVISION ? 'Supervisión' : 'Sesión clínica';
+    return this.translate.instant(session.sessionKind === ClinicalSessionKind.SUPERVISION ? 'dashboard.supervision' : 'dashboard.clinicalSession');
   }
 
   openEdit(session: ClinicalSession): void {
@@ -202,11 +204,11 @@ export class SessionsListComponent implements OnChanges {
   confirmDiscard(session: ClinicalSession): void {
     if (!this.canEditSession(session)) return;
     this.modalService.confirm({
-      nzTitle: 'Cancelación',
-      nzContent: 'La sesión quedará cancelada y se ocultará por defecto del listado.',
-      nzOkText: 'Cancelación',
+      nzTitle: this.translate.instant('patientsManagement.cancellation'),
+      nzContent: this.translate.instant('calendar.sessionWillBeCancelled'),
+      nzOkText: this.translate.instant('patientsManagement.cancellation'),
       nzOkDanger: true,
-      nzCancelText: 'Cancelar',
+      nzCancelText: this.translate.instant('core.cancel'),
       nzOnOk: () => {
         if (session.sessionNumber) {
           this.confirmRenumber(session);
@@ -219,10 +221,10 @@ export class SessionsListComponent implements OnChanges {
 
   private confirmRenumber(session: ClinicalSession): void {
     this.modalService.confirm({
-      nzTitle: 'Renumerar sesiones futuras',
-      nzContent: '¿Querés que las sesiones posteriores ocupen el número de sesión descartado?',
-      nzOkText: 'Sí, renumerar',
-      nzCancelText: 'No renumerar',
+      nzTitle: this.translate.instant('calendar.renumberFutureSessions'),
+      nzContent: this.translate.instant('calendar.renumberFutureSessionsConfirm'),
+      nzOkText: this.translate.instant('calendar.yesRenumber'),
+      nzCancelText: this.translate.instant('calendar.doNotRenumber'),
       nzOnOk: () => this.discardSession(session, true),
       nzOnCancel: () => this.discardSession(session, false),
     });
@@ -261,7 +263,7 @@ export class SessionsListComponent implements OnChanges {
           this.editModalVisible = false;
           this.loadSessions();
         },
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to update session' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableUpdateSession') })
       );
   }
 
@@ -295,7 +297,7 @@ export class SessionsListComponent implements OnChanges {
           this.editModalVisible = false;
           this.loadSessions();
         },
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to update session resource' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableUpdateSessionResource') })
       );
   }
 
@@ -320,7 +322,7 @@ export class SessionsListComponent implements OnChanges {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         (sessions: ClinicalSession[]) => (this.sessions = sessions),
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to load sessions' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadSessions') })
       );
   }
 
@@ -333,7 +335,7 @@ export class SessionsListComponent implements OnChanges {
             scheme.active && scheme.schemeType === EvaluationSchemeType.SESSION_BASED
           );
       },
-      (error: any) => this.errorService.handleError(error, { prefix: 'Unable to load session schemes' })
+      (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadSessionSchemes') })
     );
   }
 
@@ -341,11 +343,11 @@ export class SessionsListComponent implements OnChanges {
     if (!this.canEditSession(session)) return;
     this.loading = true;
     this.calendarService
-      .cancelClinicalSession(session.id, renumberFutureSessions, 'Discarded from sessions list')
+      .cancelClinicalSession(session.id, renumberFutureSessions, this.translate.instant('calendar.discardedFromSessionsList'))
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         () => this.loadSessions(),
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to discard session' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableDiscardSession') })
       );
   }
 
@@ -375,11 +377,11 @@ export class SessionsListComponent implements OnChanges {
     if (!this.editingSession?.id) return;
     const clinicalSessionId = this.editingSession.id;
     this.modalService.confirm({
-      nzTitle: 'Detener esquema',
-      nzContent: 'Se cancelarán evaluaciones pendientes de este esquema desde esta sesión en adelante.',
-      nzOkText: 'Detener',
+      nzTitle: this.translate.instant('patientsManagement.stopScheme'),
+      nzContent: this.translate.instant('calendar.stopSchemeConfirmLong'),
+      nzOkText: this.translate.instant('patientsManagement.stop'),
       nzOkDanger: true,
-      nzCancelText: 'Volver',
+      nzCancelText: this.translate.instant('core.back'),
       nzOnOk: () => {
         this.saving = true;
         this.calendarService
@@ -390,7 +392,7 @@ export class SessionsListComponent implements OnChanges {
               this.loadActiveSchemeApplications(clinicalSessionId);
               this.loadSessions();
             },
-            (error) => this.errorService.handleError(error, { prefix: 'Unable to stop evaluation scheme' })
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableStopEvaluationScheme') })
           );
       },
     });
@@ -399,7 +401,7 @@ export class SessionsListComponent implements OnChanges {
   private loadActiveSchemeApplications(clinicalSessionId: number): void {
     this.calendarService.getClinicalSessionSchemeApplications(clinicalSessionId).subscribe(
       (applications) => (this.activeSchemeApplications = applications || []),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load active evaluation schemes' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableLoadActiveEvaluationSchemes') })
     );
   }
 }

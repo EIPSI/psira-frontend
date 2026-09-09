@@ -6,7 +6,7 @@
     <ng-template #plainTitle> {{ field?.title }} </ng-template>
     <span style="color: red" *ngIf="field?.isRequired && inputMode"> *</span>
   </b>
-  <small class="field-description" *ngIf="field.showDescription && field.description">{{ field.description }}</small>
+  <small class="field-description" *ngIf="field.showDescription && field.description">{{ field.description | translate }}</small>
 </label>
 <ng-container *ngIf="inputMode">
   <nz-input-group
@@ -23,7 +23,7 @@
       [attr.autocomplete]="autoFill"
       (change)="handleValueChange($event)"
       nz-input
-      [attr.placeholder]="field.description"
+      [attr.placeholder]="field.description | translate"
       [formControlName]="field.name"
     ></nz-input-number>
   </nz-input-group>
@@ -38,5 +38,5 @@
   *ngIf="this.inputGroup.controls[this.field.name].dirty && this.inputGroup.controls[this.field.name].invalid"
   translate
 >
-  {{ field.validationMessage }}
+  {{ field.validationMessage | translate }}
 </p>

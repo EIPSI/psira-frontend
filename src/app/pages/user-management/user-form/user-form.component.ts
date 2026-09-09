@@ -51,7 +51,7 @@ export class UserFormComponent implements OnInit {
   modalType: ModalType;
   updatePasswordForm: Form = userForms.updateUserPassword;
   changePasswordModal: ModalType = {
-    title: 'Change Password',
+    title: 'userManagement.changePassword',
     type: 'changePassword',
   };
   newMode = false;
@@ -90,6 +90,11 @@ export class UserFormComponent implements OnInit {
   get userTitle(): string {
     const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
     return [this.user?.workID, name].filter((s) => !!s).join(' - ');
+  }
+
+  get userDisplayName(): string {
+    const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
+    return name || this.user?.email || this.user?.username || '';
   }
 
   get isOwnUserProfile(): boolean {
@@ -158,7 +163,7 @@ export class UserFormComponent implements OnInit {
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: 'Unable to load departments',
+            prefix: this.translate.instant('departments.unableLoadDepartments'),
           })
       );
   }
@@ -175,7 +180,7 @@ export class UserFormComponent implements OnInit {
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: 'Unable to load default Particular department',
+            prefix: this.translate.instant('departments.unableLoadParticularDepartment'),
           })
       );
   }
@@ -191,7 +196,10 @@ export class UserFormComponent implements OnInit {
   showChangePasswordForm() {
     this.showModal = true;
     this.modalType = Object.assign({}, this.changePasswordModal);
-    this.modalType.title = `${this.modalType.title} for ${this.user.username}: ${this.user.firstName} ${this.user.lastName}`;
+    this.modalType.title = this.translate.instant('userManagement.changePasswordForUser', {
+      username: this.user.username,
+      name: this.formatFullName(this.user),
+    });
   }
 
   getRoles(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting }) {
@@ -216,7 +224,7 @@ export class UserFormComponent implements OnInit {
           this.loadAssignmentOptions();
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableLoadRoles') })
     );
   }
 
@@ -226,11 +234,11 @@ export class UserFormComponent implements OnInit {
 
   handleDeleteAction(user: User) {
     this.modalService.confirm({
-      nzTitle: 'Confirm',
-      nzContent: `Are you sure you want to delete ${this.user.firstName} ${this.user.lastName}`,
-      nzOkText: 'Delete',
+      nzTitle: this.translate.instant('core.confirm'),
+      nzContent: this.translate.instant('userManagement.deleteUserConfirm', { name: this.formatFullName(this.user) }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOnOk: () => this.deleteUser(user),
-      nzCancelText: 'Cancel',
+      nzCancelText: this.translate.instant('core.cancel'),
     });
   }
 
@@ -244,7 +252,7 @@ export class UserFormComponent implements OnInit {
         () => this.router.navigate(['/psira/user-management/users']),
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to delete user "${user.firstName} ${user.lastName}"`,
+            prefix: this.translate.instant('userManagement.unableDeleteUser', { name: this.formatFullName(user) }),
           })
       );
   }
@@ -392,7 +400,7 @@ export class UserFormComponent implements OnInit {
     const userInput: CreateOneUserInput = {
       user: inputData,
     };
-    this.loadingMessage = `Creating user ${inputData.firstName} ${inputData.lastName}`;
+    this.loadingMessage = this.translate.instant('userManagement.creatingUser', { name: this.formatFullName(inputData as any) });
     this.usersService
       .createUser(userInput)
       .pipe(
@@ -404,7 +412,7 @@ export class UserFormComponent implements OnInit {
       .subscribe(
         ({ data }) => {
           this._child.toggleEdit();
-          this.message.create('success', `User has successfully been created`);
+          this.message.create('success', this.translate.instant('userManagement.userCreated'));
 
           this.user = UserModel.fromJson(data.createOneUser);
           this.user = this.withProfileRelations(this.user);
@@ -413,7 +421,7 @@ export class UserFormComponent implements OnInit {
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: 'Unable to create user',
+            prefix: this.translate.instant('userManagement.unableCreateUser'),
           })
       );
   }
@@ -438,7 +446,7 @@ export class UserFormComponent implements OnInit {
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    this.loadingMessage = `Updating user ${userUpdates.firstName} ${userUpdates.lastName}`;
+    this.loadingMessage = this.translate.instant('userManagement.updatingUser', { name: this.formatFullName(userUpdates as any) });
     this.usersService
       .updateUser(userInput)
       .pipe(
@@ -452,12 +460,12 @@ export class UserFormComponent implements OnInit {
           this.user = UserModel.fromJson(data.updateOneUser);
           this.user = this.withProfileRelations(this.user);
           this._child.toggleEdit();
-          this.message.create('success', `User has successfully been updated`);
+          this.message.create('success', this.translate.instant('userManagement.userUpdated'));
         },
         (error) => {
           this.populateForm = true;
           this.errorService.handleError(error, {
-            prefix: `Unable to update user "${userUpdates.firstName} ${userUpdates.lastName}"`,
+            prefix: this.translate.instant('userManagement.unableUpdateUser', { name: this.formatFullName(userUpdates as any) }),
           });
         }
       );
@@ -488,9 +496,7 @@ export class UserFormComponent implements OnInit {
     this.resetForm = false;
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
     this.router.navigate([this.defaultRoleCode ? '/psira/user-management/profile' : '/psira/user-management/user-form'], {
-      state: {
-        title: `${this.user.firstName} ${this.user.lastName}`,
-      },
+      state: { title: this.formatFullName(this.user) },
       queryParams: {
         user: dataString,
         roleCode: this.defaultRoleCode,
@@ -511,7 +517,7 @@ export class UserFormComponent implements OnInit {
           this.selectedSupervisorId = null;
           this.loadAssignedSupervisors();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to assign supervisor' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignSupervisor') })
       );
   }
 
@@ -527,7 +533,7 @@ export class UserFormComponent implements OnInit {
           this.selectedTherapistId = null;
           this.loadAssignedTherapists();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to assign therapist' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignTherapist') })
       );
   }
 
@@ -552,11 +558,11 @@ export class UserFormComponent implements OnInit {
         ({ data }) => {
           this.user = UserModel.fromJson(data.updateOneUser);
           this.user = this.withProfileRelations(this.user);
-          this.message.create('success', `the role(s) have been successful assigned to ${this.user.firstName}`);
+          this.message.create('success', this.translate.instant('userManagement.rolesAssigned'));
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to assign role(s) to ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableAssignRoles'),
           })
       );
   }
@@ -576,11 +582,11 @@ export class UserFormComponent implements OnInit {
         ({ data }) => {
           this.user = UserModel.fromJson(data.updateOneUser);
           this.user = this.withProfileRelations(this.user);
-          this.message.create('success', `the role(s) have been successful removed from ${this.user.firstName}`);
+          this.message.create('success', this.translate.instant('userManagement.rolesRemoved'));
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to remove role(s) to ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableRemoveRoles'),
           })
       );
   }
@@ -601,12 +607,12 @@ export class UserFormComponent implements OnInit {
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         () => {
-          this.message.create('success', `the department(s) have been successful assigned to ${this.user.firstName}`);
+          this.message.create('success', this.translate.instant('userManagement.departmentsAssigned'));
           this.user.departments.push(department);
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to assign department(s) to ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableAssignDepartments'),
           })
       );
   }
@@ -618,10 +624,10 @@ export class UserFormComponent implements OnInit {
       .removeDepartmentsFromUser(this.user.id, departmentsIds)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
-        () => this.message.success(`the department(s) have been successful removed from ${this.user.firstName}`),
+        () => this.message.success(this.translate.instant('userManagement.departmentsRemoved')),
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to remove department(s) from ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableRemoveDepartments'),
           })
       );
   }
@@ -649,7 +655,7 @@ export class UserFormComponent implements OnInit {
   updateUserPassword(form: any) {
     if (this.user.id) {
       this.isLoading = true;
-      this.loadingMessage = `Updating user ${this.user.firstName} ${this.user.lastName}`;
+      this.loadingMessage = this.translate.instant('userManagement.updatingUser', { name: this.formatFullName(this.user) });
       const inputs: UserUpdatePasswordInput = {
         id: this.user.id,
         newPassword: form.newPassword,
@@ -696,6 +702,10 @@ export class UserFormComponent implements OnInit {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     return password;
+  }
+
+  private formatFullName(user: Partial<User> | Partial<CreateUserInput>): string {
+    return [user?.firstName, (user as any)?.middleName, user?.lastName].filter((part) => !!part).join(' ');
   }
 
   private getRoleCodes(roleIds: number[]): string[] {
@@ -835,7 +845,7 @@ export class UserFormComponent implements OnInit {
 
     departmentField.options = filteredDepartments.map((department: Department) => ({
       value: department.id,
-      label: `${department.name}`,
+      label: department.name,
     }));
     departmentField.isRequired = !roleCodes.includes('SUPER_ADMIN');
 
@@ -879,7 +889,7 @@ export class UserFormComponent implements OnInit {
         .assignTherapistSupervisor({ therapistId: this.user.id, supervisorId: this.selectedSupervisorId })
         .subscribe(
           () => undefined,
-          (error) => this.errorService.handleError(error, { prefix: 'Unable to assign supervisor' })
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignSupervisor') })
         );
     }
 
@@ -888,7 +898,7 @@ export class UserFormComponent implements OnInit {
         .assignTherapistSupervisor({ therapistId: this.selectedTherapistId, supervisorId: this.user.id })
         .subscribe(
           () => undefined,
-          (error) => this.errorService.handleError(error, { prefix: 'Unable to assign therapist' })
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignTherapist') })
         );
     }
   }
@@ -899,7 +909,7 @@ export class UserFormComponent implements OnInit {
         ({ data }: any) => {
           this.availableSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadSupervisors') })
       );
       this.loadAssignedSupervisors();
     }
@@ -909,7 +919,7 @@ export class UserFormComponent implements OnInit {
         ({ data }: any) => {
           this.availableTherapists = data.therapists.edges.map((edge: any) => edge.node);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load therapists' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadTherapists') })
       );
       this.loadAssignedTherapists();
     }
@@ -926,7 +936,7 @@ export class UserFormComponent implements OnInit {
         ({ data }: any) => {
           this.assignedSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assigned supervisors' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadAssignedSupervisors') })
       );
   }
 
@@ -941,7 +951,7 @@ export class UserFormComponent implements OnInit {
         ({ data }: any) => {
           this.assignedTherapists = data.therapists.edges.map((edge: any) => edge.node);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assigned therapists' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadAssignedTherapists') })
       );
   }
 }

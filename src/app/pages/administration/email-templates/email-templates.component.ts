@@ -55,9 +55,9 @@ export class EmailTemplatesComponent implements OnInit {
   ngOnInit(): void {
     this.getEmailTemplates();
     this.actions = [
-      { key: ActionKey.EDIT, title: 'Editar' },
-      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
-      { key: ActionKey.DELETE, title: 'Eliminar' },
+      { key: ActionKey.EDIT, title: this.translate.instant('core.edit') },
+      { key: ActionKey.DUPLICATE, title: this.translate.instant('core.duplicate') },
+      { key: ActionKey.DELETE, title: this.translate.instant('core.delete') },
     ];
   }
 
@@ -93,9 +93,9 @@ export class EmailTemplatesComponent implements OnInit {
 
   deleteEmailTemplate(template: any): void {
     this.modalService.confirm({
-      nzTitle: 'Eliminar modelo de email',
-      nzContent: `Se eliminará "${template.name}".`,
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('emailTemplates.deleteTemplate'),
+      nzContent: this.translate.instant('emailTemplates.deleteTemplateConfirm', { name: template.name }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () => this.emailTemplatesService.deleteEmailTemplate(template.id).subscribe(() => {
       const message$ = this.translate.get('emailTemplates.deleted').subscribe((message) => {
@@ -110,7 +110,7 @@ export class EmailTemplatesComponent implements OnInit {
   duplicateEmailTemplate(template: any): void {
     const departmentIds = template.isPublic ? [] : (template.departments || []).map((department: any) => Number(department.id));
     this.emailTemplatesService.createEmailTemplate({
-      name: `${template.name} (copia)`,
+      name: `${template.name} (${this.translate.instant('core.copySuffix')})`,
       subject: template.subject,
       senderName: template.senderName,
       body: template.body,
@@ -120,10 +120,10 @@ export class EmailTemplatesComponent implements OnInit {
       departmentIds,
     }).subscribe(
       () => {
-        this.nzMessage.success('Modelo de email duplicado', { nzDuration: 3000 });
+        this.nzMessage.success(this.translate.instant('emailTemplates.duplicated'), { nzDuration: 3000 });
         this.getEmailTemplates();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate email template' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('emailTemplates.unableDuplicateTemplate') })
     );
   }
 
@@ -149,7 +149,7 @@ export class EmailTemplatesComponent implements OnInit {
       ...Convert.toAssessmentAdministration(template),
       ...template,
       departmentNames: template.isPublic || !template.departments?.length
-        ? 'All departments'
+        ? this.translate.instant('emailTemplates.allDepartments')
         : template.departments.map((department: any) => department.name || department.id).join(', '),
     };
   }

@@ -89,9 +89,10 @@ export class HeaderComponent implements OnInit {
       return;
     }
     const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
+    const title = [this.user.firstName, this.user.lastName].filter(Boolean).join(' ');
     this.router.navigate(['/psira/user-management/my-profile'], {
       state: {
-        title: `${this.user.firstName} ${this.user.lastName}`,
+        title,
       },
       queryParams: {
         user: dataString,

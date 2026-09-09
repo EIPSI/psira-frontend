@@ -1,46 +1,50 @@
 <form class="automation-editor" nz-form [formGroup]="form" (ngSubmit)="save()">
   <div class="editor-header">
     <div>
-      <h1>{{ automationId ? 'Editar Automatización' : 'Crear Automatización' }}</h1>
-      <p>Gestión de Evaluaciones</p>
+      <h1>{{ (automationId ? 'evaluationAutomations.edit' : 'evaluationAutomations.create') | translate }}</h1>
+      <p>{{ 'menu.evaluationManagement' | translate }}</p>
     </div>
     <div class="header-actions">
-      <button nz-button type="button" routerLink="/psira/evaluation-automations">Cancelar</button>
-      <button nz-button nzType="primary" [nzLoading]="saving">Guardar</button>
+      <button nz-button type="button" routerLink="/psira/evaluation-automations">{{ 'core.cancel' | translate }}</button>
+      <button nz-button nzType="primary" [nzLoading]="saving">{{ 'core.save' | translate }}</button>
     </div>
   </div>
 
   <section class="editor-section">
-    <h2>Datos generales</h2>
+    <h2>{{ 'evaluationAutomations.generalData' | translate }}</h2>
     <div nz-row [nzGutter]="16">
       <div nz-col nzSpan="12">
         <nz-form-item>
-          <nz-form-label nzRequired>Título</nz-form-label>
-          <nz-form-control nzErrorTip="El título es obligatorio">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.title' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.titleRequired' | translate">
             <input nz-input formControlName="title" />
           </nz-form-control>
         </nz-form-item>
       </div>
       <div nz-col nzSpan="4">
         <nz-form-item>
-          <nz-form-label nzRequired>Estado</nz-form-label>
+          <nz-form-label nzRequired>{{ 'core.status' | translate }}</nz-form-label>
           <nz-form-control>
-            <nz-switch formControlName="active" nzCheckedChildren="Activa" nzUnCheckedChildren="Inactiva"></nz-switch>
+            <nz-switch
+              formControlName="active"
+              [nzCheckedChildren]="'core.active' | translate"
+              [nzUnCheckedChildren]="'core.inactive' | translate"
+            ></nz-switch>
           </nz-form-control>
         </nz-form-item>
       </div>
       <div nz-col nzSpan="4">
         <nz-form-item>
-          <nz-form-label nzRequired>Prioridad</nz-form-label>
-          <nz-form-control nzErrorTip="La prioridad es obligatoria y debe ser mayor a cero">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.priority' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.priorityRequired' | translate">
             <nz-input-number formControlName="priority" [nzMin]="1"></nz-input-number>
           </nz-form-control>
         </nz-form-item>
       </div>
       <div nz-col nzSpan="24">
         <nz-form-item>
-          <nz-form-label>Descripción</nz-form-label>
-          <nz-form-control nzErrorTip="Seleccioná al menos un departamento">
+          <nz-form-label>{{ 'evaluationAutomations.description' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.departmentRequired' | translate">
             <textarea nz-input formControlName="description" rows="3"></textarea>
           </nz-form-control>
         </nz-form-item>
@@ -49,15 +53,15 @@
   </section>
 
   <section class="editor-section">
-    <h2>Población objetivo</h2>
+    <h2>{{ 'evaluationAutomations.targetPopulation' | translate }}</h2>
     <div nz-row [nzGutter]="16">
       <div nz-col nzSpan="12">
         <nz-form-item>
-          <nz-form-label nzRequired>Departamento/s</nz-form-label>
-          <nz-form-control nzErrorTip="Seleccioná un rol">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.departments' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.roleRequired' | translate">
             <div class="department-actions">
-              <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">Seleccionar todos</button>
-              <button nz-button nzSize="small" type="button" (click)="removeAllDepartments()">Quitar todos</button>
+              <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">{{ 'core.selectAll' | translate }}</button>
+              <button nz-button nzSize="small" type="button" (click)="removeAllDepartments()">{{ 'core.clearAll' | translate }}</button>
             </div>
             <nz-select formControlName="departmentIds" nzMode="multiple" nzShowSearch (ngModelChange)="onDepartmentsChange()">
               <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
@@ -67,7 +71,7 @@
       </div>
       <div nz-col nzSpan="12">
         <nz-form-item>
-          <nz-form-label nzRequired>Rol único</nz-form-label>
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.singleRole' | translate }}</nz-form-label>
           <nz-form-control>
             <nz-select formControlName="roleId" nzShowSearch>
               <nz-option *ngFor="let role of roles" [nzValue]="role.id" [nzLabel]="role.name"></nz-option>
@@ -79,7 +83,7 @@
   </section>
 
   <section class="editor-section" *ngIf="form.get('roleId')?.value">
-    <h2>Condiciones específicas</h2>
+    <h2>{{ 'evaluationAutomations.specificConditions' | translate }}</h2>
     <div formArrayName="conditions" class="conditions-list">
       <div
         nz-row
@@ -90,16 +94,16 @@
       >
         <div nz-col nzSpan="7">
           <nz-form-item>
-            <nz-form-label nzRequired>Campo</nz-form-label>
-            <nz-form-control nzErrorTip="El campo es obligatorio">
-              <input nz-input formControlName="field" placeholder="Ej. status.name" />
+            <nz-form-label nzRequired>{{ 'evaluationAutomations.field' | translate }}</nz-form-label>
+            <nz-form-control [nzErrorTip]="'evaluationAutomations.fieldRequired' | translate">
+              <input nz-input formControlName="field" [placeholder]="'evaluationAutomations.fieldPlaceholder' | translate" />
             </nz-form-control>
           </nz-form-item>
         </div>
         <div nz-col nzSpan="7">
           <nz-form-item>
-            <nz-form-label nzRequired>Operador</nz-form-label>
-            <nz-form-control nzErrorTip="El operador es obligatorio">
+            <nz-form-label nzRequired>{{ 'evaluationAutomations.operator' | translate }}</nz-form-label>
+            <nz-form-control [nzErrorTip]="'evaluationAutomations.operatorRequired' | translate">
               <nz-select formControlName="operator">
                 <nz-option
                   *ngFor="let operator of conditionOperators"
@@ -112,7 +116,7 @@
         </div>
         <div nz-col nzSpan="7">
           <nz-form-item>
-            <nz-form-label>Valor</nz-form-label>
+            <nz-form-label>{{ 'evaluationAutomations.value' | translate }}</nz-form-label>
             <nz-form-control>
               <input
                 nz-input
@@ -123,7 +127,7 @@
           </nz-form-item>
         </div>
         <div nz-col nzSpan="3" class="condition-actions">
-          <button nz-button type="button" nzDanger (click)="removeCondition(i)" title="Eliminar condición">
+          <button nz-button type="button" nzDanger (click)="removeCondition(i)" [title]="'evaluationAutomations.deleteCondition' | translate">
             <i nz-icon nzType="delete"></i>
           </button>
         </div>
@@ -131,12 +135,12 @@
     </div>
     <button nz-button type="button" (click)="addCondition()">
       <i nz-icon nzType="plus"></i>
-      Agregar condición
+      {{ 'evaluationAutomations.addCondition' | translate }}
     </button>
   </section>
 
   <section class="editor-section">
-    <h2>Trigger</h2>
+    <h2>{{ 'evaluationAutomations.trigger' | translate }}</h2>
     <nz-radio-group formControlName="triggerPoint" (ngModelChange)="onTriggerPointChange($event)">
       <label nz-radio-button *ngFor="let trigger of triggerPoints" [nzValue]="trigger">
         {{ triggerPointLabel[trigger] }}
@@ -146,8 +150,8 @@
     <div nz-row [nzGutter]="16" class="trigger-options" *ngIf="isSessionNumberTrigger() || usesReasonFilter() || isLastLoginTrigger()">
       <div nz-col nzSpan="8" *ngIf="isSessionNumberTrigger()">
         <nz-form-item>
-          <nz-form-label nzRequired>Número de sesión</nz-form-label>
-          <nz-form-control nzErrorTip="El número de sesión es obligatorio para este trigger">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.sessionNumber' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.sessionNumberRequired' | translate">
             <nz-input-number formControlName="triggerSessionNumber" [nzMin]="1"></nz-input-number>
           </nz-form-control>
         </nz-form-item>
@@ -155,7 +159,7 @@
       <div nz-col nzSpan="24" *ngIf="isLastLoginTrigger()">
         <div class="last-login-box">
           <div class="last-login-header">
-            <strong>Condiciones de último login</strong>
+            <strong>{{ 'evaluationAutomations.lastLoginConditions' | translate }}</strong>
             <nz-radio-group formControlName="lastLoginConditionLogic" nzButtonStyle="solid">
               <label nz-radio-button nzValue="AND">AND</label>
               <label nz-radio-button nzValue="OR">OR</label>
@@ -171,7 +175,7 @@
             >
               <div nz-col nzSpan="8">
                 <nz-form-item>
-                  <nz-form-label>Días desde login anterior</nz-form-label>
+                  <nz-form-label>{{ 'evaluationAutomations.daysSincePreviousLogin' | translate }}</nz-form-label>
                   <nz-form-control>
                     <input nz-input value="inactiveDays" disabled />
                   </nz-form-control>
@@ -179,7 +183,7 @@
               </div>
               <div nz-col nzSpan="7">
                 <nz-form-item>
-                  <nz-form-label nzRequired>Operador</nz-form-label>
+                  <nz-form-label nzRequired>{{ 'evaluationAutomations.operator' | translate }}</nz-form-label>
                   <nz-form-control>
                     <nz-select formControlName="operator">
                       <nz-option
@@ -193,19 +197,19 @@
               </div>
               <div nz-col nzSpan="7">
                 <nz-form-item>
-                  <nz-form-label>Valor</nz-form-label>
+                  <nz-form-label>{{ 'evaluationAutomations.value' | translate }}</nz-form-label>
                   <nz-form-control>
                     <input
                       nz-input
                       formControlName="value"
-                      placeholder="Ej. 30 o 7, 14, 30"
+                      [placeholder]="'evaluationAutomations.lastLoginValuePlaceholder' | translate"
                       [disabled]="!lastLoginConditionRequiresValue(i)"
                     />
                   </nz-form-control>
                 </nz-form-item>
               </div>
               <div nz-col nzSpan="2" class="condition-actions">
-                <button nz-button type="button" nzDanger (click)="removeLastLoginCondition(i)" title="Eliminar condición">
+                <button nz-button type="button" nzDanger (click)="removeLastLoginCondition(i)" [title]="'evaluationAutomations.deleteCondition' | translate">
                   <i nz-icon nzType="delete"></i>
                 </button>
               </div>
@@ -213,46 +217,46 @@
           </div>
           <button nz-button type="button" (click)="addLastLoginCondition()">
             <i nz-icon nzType="plus"></i>
-            Agregar condición
+            {{ 'evaluationAutomations.addCondition' | translate }}
           </button>
-          <div class="field-help">Para “pertenece” o “no pertenece”, ingresá valores separados por coma.</div>
+          <div class="field-help">{{ 'evaluationAutomations.belongsHelp' | translate }}</div>
         </div>
       </div>
       <div nz-col nzSpan="8" *ngIf="usesReasonFilter()">
         <nz-form-item>
-          <nz-form-label>Ámbito</nz-form-label>
+          <nz-form-label>{{ 'evaluationAutomations.scope' | translate }}</nz-form-label>
           <nz-form-control>
             <nz-select
               formControlName="triggerReasonScope"
               nzAllowClear
-              nzPlaceHolder="Todos"
+              [nzPlaceHolder]="'core.all' | translate"
               (ngModelChange)="onTriggerReasonScopeChange()"
             >
               <nz-option
                 *ngFor="let scope of triggerReasonScopeOptions"
                 [nzValue]="scope.value"
-                [nzLabel]="scope.label"
+                [nzLabel]="scope.label | translate"
               ></nz-option>
             </nz-select>
-            <div class="field-help">Opcional. Sin selección aplica a tratamiento y supervisión.</div>
+            <div class="field-help">{{ 'evaluationAutomations.scopeHelp' | translate }}</div>
           </nz-form-control>
         </nz-form-item>
       </div>
       <div nz-col nzSpan="8" *ngIf="usesReasonFilter()">
         <nz-form-item>
-          <nz-form-label>Motivos específicos</nz-form-label>
+          <nz-form-label>{{ 'evaluationAutomations.specificReasons' | translate }}</nz-form-label>
           <nz-form-control>
             <nz-select
               formControlName="triggerReasonIds"
               nzMode="multiple"
               nzShowSearch
-              nzPlaceHolder="Sin selección aplica a todos los motivos"
+              [nzPlaceHolder]="'evaluationAutomations.allReasonsPlaceholder' | translate"
             >
               <nz-option-group *ngFor="let group of triggerReasonGroups" [nzLabel]="group.label">
                 <nz-option *ngFor="let reason of group.reasons" [nzValue]="reason.id" [nzLabel]="reason.label"></nz-option>
               </nz-option-group>
             </nz-select>
-            <div class="field-help">Opcional. Si no se selecciona ningún motivo, aplica a todos los motivos del ámbito elegido.</div>
+            <div class="field-help">{{ 'evaluationAutomations.specificReasonsHelp' | translate }}</div>
           </nz-form-control>
         </nz-form-item>
       </div>
@@ -260,7 +264,7 @@
   </section>
 
   <section class="editor-section">
-    <h2>Tipo de automatización</h2>
+    <h2>{{ 'evaluationAutomations.automationType' | translate }}</h2>
     <nz-radio-group formControlName="automationType" (ngModelChange)="onAutomationTypeChange($event)">
       <label nz-radio-button *ngFor="let type of automationTypes" [nzValue]="type">
         {{ automationTypeLabel[type] }}
@@ -269,41 +273,41 @@
   </section>
 
   <section class="editor-section">
-    <h2>Configuración específica</h2>
+    <h2>{{ 'evaluationAutomations.specificConfiguration' | translate }}</h2>
     <div nz-row [nzGutter]="16">
       <div nz-col nzSpan="6">
         <nz-form-item>
-          <nz-form-label nzRequired>Tiempo desde el Trigger Point</nz-form-label>
-          <nz-form-control nzErrorTip="El tiempo desde el trigger es obligatorio">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.delayFromTriggerPoint' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.delayRequired' | translate">
             <nz-input-number formControlName="delayAmount" [nzMin]="0"></nz-input-number>
           </nz-form-control>
         </nz-form-item>
       </div>
       <div nz-col nzSpan="4">
         <nz-form-item>
-          <nz-form-label nzRequired>Unidad</nz-form-label>
-          <nz-form-control nzErrorTip="La unidad es obligatoria">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.unit' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.unitRequired' | translate">
             <nz-select formControlName="delayUnit">
-              <nz-option *ngFor="let unit of delayUnits" [nzValue]="unit" [nzLabel]="delayUnitLabel[unit]"></nz-option>
+              <nz-option *ngFor="let unit of delayUnits" [nzValue]="unit" [nzLabel]="delayUnitLabel[unit] | translate"></nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
       </div>
       <div nz-col nzSpan="6" *ngIf="isFixedScheme">
         <nz-form-item>
-          <nz-form-label nzRequired>Fuente del esquema</nz-form-label>
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.schemeSource' | translate }}</nz-form-label>
           <nz-form-control>
             <nz-select formControlName="fixedSelectionType" (ngModelChange)="onFixedSelectionTypeChange($event)">
-              <nz-option *ngFor="let type of fixedSelectionTypes" [nzValue]="type.value" [nzLabel]="type.label"></nz-option>
+              <nz-option *ngFor="let type of fixedSelectionTypes" [nzValue]="type.value" [nzLabel]="type.label | translate"></nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
       </div>
       <div nz-col nzSpan="8" *ngIf="isFixedScheme && form.get('fixedSelectionType')?.value === 'SCHEME'">
         <nz-form-item>
-          <nz-form-label nzRequired>Esquema fijo asociado</nz-form-label>
-          <nz-form-control nzErrorTip="Seleccioná un esquema fijo">
-            <nz-select formControlName="schemeId" nzShowSearch nzPlaceHolder="Seleccionar esquema fijo">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.associatedFixedScheme' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.fixedSchemeRequired' | translate">
+            <nz-select formControlName="schemeId" nzShowSearch [nzPlaceHolder]="'evaluationAutomations.selectFixedScheme' | translate">
               <nz-option *ngFor="let scheme of schemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
             </nz-select>
           </nz-form-control>
@@ -311,9 +315,9 @@
       </div>
       <div nz-col nzSpan="8" *ngIf="isFixedScheme && form.get('fixedSelectionType')?.value === 'HIGH_LEVEL_RANDOMIZATION'">
         <nz-form-item>
-          <nz-form-label nzRequired>Randomización de nivel alto</nz-form-label>
-          <nz-form-control nzErrorTip="Seleccioná una randomización de nivel alto">
-            <nz-select formControlName="schemeRandomizationRuleId" nzShowSearch nzPlaceHolder="Seleccionar randomización">
+          <nz-form-label nzRequired>{{ 'evaluationAutomations.highLevelRandomization' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.highLevelRandomizationRequired' | translate">
+            <nz-select formControlName="schemeRandomizationRuleId" nzShowSearch [nzPlaceHolder]="'evaluationAutomations.selectRandomization' | translate">
               <nz-option
                 *ngFor="let randomization of highLevelRandomizations"
                 [nzValue]="randomization.id"
@@ -329,20 +333,20 @@
       <div nz-row [nzGutter]="16">
         <div nz-col nzSpan="8">
           <nz-form-item>
-            <nz-form-label nzRequired>Tipo de contenido</nz-form-label>
+            <nz-form-label nzRequired>{{ 'evaluationAutomations.contentType' | translate }}</nz-form-label>
             <nz-form-control>
               <nz-select [ngModel]="contentType" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onContentTypeChange($event)">
-                <nz-option [nzValue]="EACT.QUESTIONNAIRE" nzLabel="Cuestionario"></nz-option>
-                <nz-option [nzValue]="EACT.QUESTIONNAIRE_BUNDLE" nzLabel="Paquete de Cuestionarios"></nz-option>
-                <nz-option [nzValue]="EACT.RANDOMIZATION" nzLabel="Randomización"></nz-option>
+                <nz-option [nzValue]="EACT.QUESTIONNAIRE" [nzLabel]="'core.questionnaire' | translate"></nz-option>
+                <nz-option [nzValue]="EACT.QUESTIONNAIRE_BUNDLE" [nzLabel]="'menu.questionnaireBundle' | translate"></nz-option>
+                <nz-option [nzValue]="EACT.RANDOMIZATION" [nzLabel]="'menu.randomizations' | translate"></nz-option>
               </nz-select>
             </nz-form-control>
           </nz-form-item>
         </div>
         <div nz-col nzSpan="8">
           <nz-form-item>
-            <nz-form-label nzRequired>Tipo de evaluación</nz-form-label>
-            <nz-form-control nzErrorTip="Seleccioná un tipo de evaluación">
+            <nz-form-label nzRequired>{{ 'evaluationAutomations.assessmentType' | translate }}</nz-form-label>
+            <nz-form-control [nzErrorTip]="'evaluationAutomations.assessmentTypeRequired' | translate">
               <nz-select formControlName="assessmentTypeId" nzShowSearch>
                 <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
               </nz-select>
@@ -351,18 +355,18 @@
         </div>
         <div nz-col nzSpan="8">
           <nz-form-item>
-          <nz-form-label>Nombre de la evaluación (opcional)</nz-form-label>
+          <nz-form-label>{{ 'evaluationAutomations.evaluationNameOptional' | translate }}</nz-form-label>
           <nz-form-control>
             <input nz-input formControlName="evaluationName" />
-            <div class="field-help">Si no se completa, se mostrará el tipo de evaluación.</div>
+            <div class="field-help">{{ 'evaluationAutomations.evaluationNameHelp' | translate }}</div>
           </nz-form-control>
         </nz-form-item>
         </div>
       </div>
 
       <nz-form-item *ngIf="contentType === EACT.QUESTIONNAIRE">
-        <nz-form-label nzRequired>Cuestionario</nz-form-label>
-          <nz-form-control nzErrorTip="Seleccioná un cuestionario">
+        <nz-form-label nzRequired>{{ 'core.questionnaire' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.questionnaireRequired' | translate">
           <nz-select formControlName="questionnaireIds" nzShowSearch>
             <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
           </nz-select>
@@ -370,8 +374,8 @@
       </nz-form-item>
 
       <nz-form-item *ngIf="contentType === EACT.QUESTIONNAIRE_BUNDLE">
-        <nz-form-label nzRequired>Paquete de Cuestionarios</nz-form-label>
-          <nz-form-control nzErrorTip="Seleccioná un paquete de cuestionarios">
+        <nz-form-label nzRequired>{{ 'menu.questionnaireBundle' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.bundleRequired' | translate">
           <nz-select formControlName="questionnaireBundleIds" nzShowSearch>
             <nz-option *ngFor="let bundle of bundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
           </nz-select>
@@ -379,8 +383,8 @@
       </nz-form-item>
 
       <nz-form-item *ngIf="contentType === EACT.RANDOMIZATION">
-        <nz-form-label nzRequired>Randomización</nz-form-label>
-          <nz-form-control nzErrorTip="Seleccioná una randomización">
+        <nz-form-label nzRequired>{{ 'menu.randomizations' | translate }}</nz-form-label>
+          <nz-form-control [nzErrorTip]="'evaluationAutomations.randomizationRequired' | translate">
           <nz-select formControlName="randomizationRuleIds" nzShowSearch>
             <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
           </nz-select>
@@ -390,29 +394,29 @@
       <div nz-row [nzGutter]="16">
         <div nz-col nzSpan="12">
           <nz-form-item>
-            <nz-form-label>Expiración</nz-form-label>
+            <nz-form-label>{{ 'evaluationAutomations.expiration' | translate }}</nz-form-label>
             <nz-form-control>
               <div class="unit-row">
                 <nz-input-number formControlName="expirationMinutes" [nzMin]="1"></nz-input-number>
                 <nz-select formControlName="expirationUnit">
-                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
                 </nz-select>
               </div>
-              <div class="field-help">Opcional. Se cuenta desde que la evaluación queda disponible y define hasta cuándo puede responderse.</div>
+              <div class="field-help">{{ 'evaluationAutomations.expirationHelp' | translate }}</div>
             </nz-form-control>
           </nz-form-item>
         </div>
         <div nz-col nzSpan="12">
           <nz-form-item>
-            <nz-form-label>Recordatorios</nz-form-label>
+            <nz-form-label>{{ 'evaluationAutomations.reminders' | translate }}</nz-form-label>
             <nz-form-control>
               <div class="unit-row">
                 <input nz-input formControlName="reminderMinutesText" placeholder="10, 20, 25" />
                 <nz-select formControlName="reminderUnit">
-                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label"></nz-option>
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
                 </nz-select>
               </div>
-              <div class="field-help">Valores desde la disponibilidad, separados por coma.</div>
+              <div class="field-help">{{ 'evaluationAutomations.remindersHelp' | translate }}</div>
             </nz-form-control>
           </nz-form-item>
         </div>
@@ -421,7 +425,7 @@
   </section>
 
   <section class="editor-section">
-    <h2>Resumen</h2>
+    <h2>{{ 'evaluationAutomations.summary' | translate }}</h2>
     <p class="summary">{{ summary() }}</p>
   </section>
 </form>

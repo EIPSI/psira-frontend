@@ -17,7 +17,7 @@ const routes: Routes = [
     path: 'administration',
     component: NotificationConfigurationsComponent,
     data: {
-      breadcrumbI18nKey: 'Administración de Notificaciones',
+      breadcrumbI18nKey: 'menu.notificationAdministration',
       permissions: {
         only: [PermissionKey.NOTIFICATIONS_VIEW_DEPARTMENT, PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT, PermissionKey.MAIL_TEMPLATES_VIEW_DEPARTMENT],
       },
@@ -28,7 +28,7 @@ const routes: Routes = [
     path: 'administration/new',
     component: NotificationConfigurationEditorComponent,
     data: {
-      breadcrumbI18nKey: 'Crear configuración',
+      breadcrumbI18nKey: 'notifications.createConfiguration',
       permissions: {
         only: [PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT],
       },
@@ -39,7 +39,7 @@ const routes: Routes = [
     path: 'administration/:id',
     component: NotificationConfigurationEditorComponent,
     data: {
-      breadcrumbI18nKey: 'Editar configuración',
+      breadcrumbI18nKey: 'notifications.editConfiguration',
       permissions: {
         only: [PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT],
       },

@@ -14,7 +14,7 @@ export class EvaluationSchemeModel {
       },
       formattedStatus: {
         color: json.active ? 'green' : 'default',
-        title: json.active ? 'Activo' : 'Inactivo',
+        title: json.active ? 'evaluationSchemes.active' : 'evaluationSchemes.inactive',
       },
     };
   }

@@ -4,7 +4,7 @@ import { CaseManager } from '../@types/case-manager';
 
 export const PatientColumns: TableColumn<FormattedPatient>[] = [
   {
-    title: 'First name',
+    title: 'tables.patients.firstName',
     name: 'firstName',
     translationPath: 'tables.patients.firstName',
     sort: true,
@@ -14,7 +14,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     },
   },
   {
-    title: 'Middle name',
+    title: 'tables.patients.middleName',
     name: 'middleName',
     translationPath: 'tables.patients.middleName',
     sort: true,
@@ -24,7 +24,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     },
   },
   {
-    title: 'Last name',
+    title: 'tables.patients.lastName',
     name: 'lastName',
     translationPath: 'tables.patients.lastName',
     sort: true,
@@ -34,7 +34,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     },
   },
   {
-    title: 'ID',
+    title: 'forms.patients.id',
     name: 'medicalRecordNo',
     translationPath: 'tables.patients.medicalRecordNo',
     sort: true,
@@ -44,7 +44,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     },
   },
   {
-    title: 'Gender',
+    title: 'forms.patients.gender',
     name: 'gender',
     translationPath: 'tables.patients.gender',
     sort: true,
@@ -52,14 +52,14 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
       type: 'radio',
       value: undefined,
       options: [
-        { label: 'Female', value: 'female' },
-        { label: 'Male', value: 'male' },
-        { label: 'Other', value: 'other' }
+        { label: 'forms.patients.genderFemale', value: 'female' },
+        { label: 'forms.patients.genderMale', value: 'male' },
+        { label: 'forms.patients.genderOther', value: 'other' }
       ],
     },
   },
   {
-    title: 'Date of Birth',
+    title: 'forms.patients.birthDate',
     name: 'birthDate',
     translationPath: 'tables.patients.birthDate',
     render: 'date',
@@ -67,11 +67,11 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     filterField: {
       type: 'date',
       value: undefined,
-      title: 'Date of Birth',
+      title: 'forms.patients.birthDate',
     },
   },
   {
-    title: 'Status',
+    title: 'tables.patients.status',
     name: 'formattedStatus',
     translationPath: 'tables.patients.status',
     altName: 'statusId',
@@ -84,14 +84,14 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     },
   },
   {
-    title: 'Informants',
+    title: 'tables.patients.informants',
     name: 'formattedInformants',
     translationPath: 'tables.patients.informants',
     render: 'avatar',
     sort: true,
   },
   {
-    title: 'Case Manager',
+    title: 'tables.patients.caseManager',
     name: 'formattedCaseManagers',
     translationPath: 'tables.patients.caseManager',
     altName: 'caseManagers',
@@ -114,7 +114,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
         : {},
   },
   {
-    title: 'Created Date',
+    title: 'tables.patients.createdAt',
     name: 'createdAt',
     translationPath: 'tables.patients.createdAt',
     render: 'date',
@@ -122,7 +122,7 @@ export const PatientColumns: TableColumn<FormattedPatient>[] = [
     filterField: {
       type: 'dateRange',
       value: undefined,
-      title: 'Created Date',
+      title: 'tables.patients.createdAt',
     },
   },
 ];

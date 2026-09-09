@@ -13,6 +13,7 @@ import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-patient-statuses',
@@ -35,7 +36,7 @@ export class PatientStatusesComponent implements OnInit {
   actions = PatientStatusesTable.actions;
 
   showCreatePatientStatus = false;
-  panelTitle = 'Create PatientStatus';
+  panelTitle = 'patientStatuses.createPatientStatus';
   loadingMessage = '';
   patientStatusForms = PatientStatusForm;
   hasErrors = false;
@@ -50,7 +51,8 @@ export class PatientStatusesComponent implements OnInit {
     private modalService: NzModalService,
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -74,7 +76,7 @@ export class PatientStatusesComponent implements OnInit {
           this.paging.before = data.patientStatuses.pageInfo.startCursor;
           this.pageInfo = data.patientStatuses.pageInfo;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to get patient statuses' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableLoadPatientStatuses') })
       );
   }
 
@@ -97,7 +99,7 @@ export class PatientStatusesComponent implements OnInit {
   toggleCreatePanel(create: boolean = true) {
     this.isCreateAction = create;
     this.showCreatePatientStatus = !this.showCreatePatientStatus;
-    this.panelTitle = this.isCreateAction ? 'Create PatientStatus' : 'Update PatientStatus';
+    this.panelTitle = this.isCreateAction ? 'patientStatuses.createPatientStatus' : 'patientStatuses.updatePatientStatus';
     if (create) {
       this.resetForm();
     }
@@ -115,7 +117,7 @@ export class PatientStatusesComponent implements OnInit {
   handleActionClick(event: any): void {
     this.selectedIndex = event.index;
     switch (event.action.name) {
-      case 'Edit PatientStatus':
+      case 'patientStatuses.editPatientStatus':
         this.patientStatusForms.groups.map((group) => {
           group.fields.map((field) => {
             field.value = this.patientStatuses[event.index][field.name];
@@ -123,15 +125,14 @@ export class PatientStatusesComponent implements OnInit {
         });
         this.toggleCreatePanel(false);
         break;
-      case 'Delete PatientStatus':
+      case 'patientStatuses.deletePatientStatus':
         this.modalService.confirm({
-          nzTitle: 'Confirm',
-          nzContent: `Are you sure you want to delete patientStatus for
-               <b>${this.patientStatuses[event.index].name}</b>`,
-          nzOkText: 'Delete',
+          nzTitle: this.translate.instant('core.confirm'),
+          nzContent: this.translate.instant('patientStatuses.deletePatientStatusConfirm', { name: this.patientStatuses[event.index].name }),
+          nzOkText: this.translate.instant('core.delete'),
           nzOnOk: () => this.deletePatientStatus(this.patientStatuses[event.index]),
           nzOkDisabled: this.modalLoading,
-          nzCancelText: 'Cancel',
+          nzCancelText: this.translate.instant('core.cancel'),
         });
         break;
     }
@@ -141,7 +142,7 @@ export class PatientStatusesComponent implements OnInit {
     this.isLoading = true;
     this.hasErrors = false;
     this.errors = [];
-    this.loadingMessage = `Creating patientStatus ${patientStatus.name}`;
+    this.loadingMessage = this.translate.instant('patientStatuses.creatingPatientStatus', { name: patientStatus.name });
     this.patientStatusesService
       .createPatientStatus(patientStatus)
       .pipe(
@@ -157,9 +158,9 @@ export class PatientStatusesComponent implements OnInit {
           this.patientStatusesTable.rows = this.patientStatuses;
           this.toggleCreatePanel();
           this.getPatientStatuses();
-          this.message.create('success', `PatientStatus has successfully been created`);
+          this.message.create('success', this.translate.instant('patientStatuses.patientStatusCreated'));
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to create patient status' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableCreatePatientStatus') })
       );
   }
 
@@ -175,12 +176,12 @@ export class PatientStatusesComponent implements OnInit {
           this.patientStatuses[this.selectedIndex] = PatientStatusModel.fromJson(newPatientStatus);
           this.toggleCreatePanel();
           this.getPatientStatuses();
-          this.message.success('Patient status has been successfully edited', {
+          this.message.success(this.translate.instant('patientStatuses.patientStatusUpdated'), {
             nzDuration: 3000,
           });
         },
         (error) =>
-          this.errorService.handleError(error, { prefix: `Unable to update patient status "${patientStatus.name}"` })
+          this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableUpdatePatientStatus', { name: patientStatus.name }) })
       );
   }
 
@@ -192,10 +193,10 @@ export class PatientStatusesComponent implements OnInit {
       .subscribe(
         () => {
           this.patientStatuses.splice(this.selectedIndex, 1);
-          this.message.create('success', `patientStatus has been successfully deleted`);
+          this.message.create('success', this.translate.instant('patientStatuses.patientStatusDeleted'));
         },
         (error: any) =>
-          this.errorService.handleError(error, { prefix: `Unable to remove patient status "${patientStatus.name}"` })
+          this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableRemovePatientStatus', { name: patientStatus.name }) })
       );
   }
 

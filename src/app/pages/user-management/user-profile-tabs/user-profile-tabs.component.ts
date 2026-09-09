@@ -15,6 +15,7 @@ import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { finalize } from 'rxjs/operators';
 import { Convert } from '@shared/classes/convert';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -47,19 +48,19 @@ export class UserProfileTabsComponent implements OnInit {
   public moreTabIndex = 0;
 
   public reportColumns: TableColumn<Partial<Reports>>[] = [
-    { title: 'Name', name: 'name', translationPath: 'tables.reports.name', sort: true },
-    { title: 'Description', name: 'description', translationPath: 'tables.reports.description', sort: true },
-    { title: 'Report Type', name: 'resources', translationPath: 'tables.reports.resources', sort: true },
-    { title: 'Shiny App', name: 'appName', translationPath: 'tables.reports.appName', sort: true },
+    { title: 'tables.reports.name', name: 'name', translationPath: 'tables.reports.name', sort: true },
+    { title: 'tables.reports.description', name: 'description', translationPath: 'tables.reports.description', sort: true },
+    { title: 'tables.reports.resources', name: 'resources', translationPath: 'tables.reports.resources', sort: true },
+    { title: 'tables.reports.appName', name: 'appName', translationPath: 'tables.reports.appName', sort: true },
   ];
 
   public assessmentColumns: TableColumn<FormattedAssessment>[] = AssessmentTable;
 
   public supervisorColumns: TableColumn<Partial<User>>[] = [
-    { title: 'First name', name: 'firstName', translationPath: 'tables.users.firstName', sort: true },
-    { title: 'Last name', name: 'lastName', translationPath: 'tables.users.lastName', sort: true },
-    { title: 'Email', name: 'email', translationPath: 'tables.users.email', sort: true },
-    { title: 'Username', name: 'username', translationPath: 'tables.users.username', sort: true },
+    { title: 'tables.users.firstName', name: 'firstName', translationPath: 'tables.users.firstName', sort: true },
+    { title: 'tables.users.lastName', name: 'lastName', translationPath: 'tables.users.lastName', sort: true },
+    { title: 'tables.users.email', name: 'email', translationPath: 'tables.users.email', sort: true },
+    { title: 'tables.users.username', name: 'username', translationPath: 'tables.users.username', sort: true },
   ];
 
   public assessments: FormattedAssessment[] = [];
@@ -106,7 +107,8 @@ export class UserProfileTabsComponent implements OnInit {
     private reportsResourcesService: ReportsResourcesService,
     private router: Router,
     private assessmentService: AssessmentService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -148,7 +150,7 @@ export class UserProfileTabsComponent implements OnInit {
           this.showSupervisorAssignDrawer = false;
           this.getSupervisors();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to assign supervisor' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignSupervisor') })
       );
   }
 
@@ -173,7 +175,7 @@ export class UserProfileTabsComponent implements OnInit {
       .pipe(finalize(() => (this.supervisorsLoading = false)))
       .subscribe(
         () => this.getSupervisors(),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to remove supervisor' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableRemoveSupervisor') })
       );
   }
 
@@ -188,7 +190,7 @@ export class UserProfileTabsComponent implements OnInit {
         ({ data: { getReportsByResource } }: any) => {
           this.reports = getReportsByResource;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load reports' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reports.unableLoadReports') })
       );
   }
 
@@ -213,7 +215,7 @@ export class UserProfileTabsComponent implements OnInit {
           this.assessments = edges.map((edge: any) => Convert.toFormattedAssessment(edge.node));
           this.assessmentsLoaded = true;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessments' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('plannedAssessments.unableLoadAssessments') })
       );
   }
 
@@ -222,7 +224,7 @@ export class UserProfileTabsComponent implements OnInit {
       ? [
           {
             key: SupervisorActionKey.REMOVE_SUPERVISOR,
-            title: 'Remove supervisor',
+            title: this.translate.instant('userManagement.removeSupervisor'),
           },
         ]
       : [];
@@ -240,7 +242,7 @@ export class UserProfileTabsComponent implements OnInit {
         ({ data }: any) => {
           this.supervisors = data.supervisors.edges.map((edge: any) => edge.node);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadSupervisors') })
       );
 
     if (!this.perms.permissionsOnly(PermissionKey.USERS_EDIT_DEPARTMENT)) return;
@@ -248,7 +250,7 @@ export class UserProfileTabsComponent implements OnInit {
       ({ data }: any) => {
         this.availableSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load available supervisors' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadAvailableSupervisors') })
     );
   }
 }

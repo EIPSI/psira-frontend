@@ -16,6 +16,7 @@ import { AssessmentAdministration } from '@app/pages/administration/@types/asses
 import { AssessmentAdministrationService } from '@app/pages/administration/@services/assessment-administration.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { Convert } from '../../../@shared/classes/convert';
+import { TranslateService } from '@ngx-translate/core';
 
 enum ActionKey {
   EDIT,
@@ -49,12 +50,13 @@ export class AssessmentAdministrationComponent implements OnInit {
 
   constructor(
     private assessmentAdministrationService: AssessmentAdministrationService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.getAssessmentTypes();
-    this.actions = [{ key: ActionKey.EDIT, title: 'Edit Type' }];
+    this.actions = [{ key: ActionKey.EDIT, title: this.translate.instant('assessmentAdministration.editType') }];
   }
 
   public onPageChange(paging: Paging): void {
@@ -119,7 +121,7 @@ export class AssessmentAdministrationComponent implements OnInit {
           );
           this.pageInfo = data.assessmentTypes.pageInfo;
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load assessment type' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('planAssessment.unableLoadAssessmentType') })
       );
   }
 
@@ -138,7 +140,7 @@ export class AssessmentAdministrationComponent implements OnInit {
           this.getAssessmentTypes();
           this.closeCreatePanel();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to create assessment type' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('assessmentAdministration.unableSaveAssessmentType') })
       );
   }
 
@@ -157,7 +159,7 @@ export class AssessmentAdministrationComponent implements OnInit {
           this.getAssessmentTypes();
           this.closeCreatePanel();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to create assessment type' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('assessmentAdministration.unableSaveAssessmentType') })
       );
   }
 }

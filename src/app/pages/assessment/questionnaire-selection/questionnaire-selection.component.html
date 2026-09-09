@@ -19,8 +19,8 @@
       style="width: 100%;"
       nzShowSearch
       nzServerSearch
-      nzPlaceHolder="Search"
-      nzNotFoundContent="No hay contenido disponible para los departamentos seleccionados."
+      [nzPlaceHolder]="'core.search' | translate"
+      [nzNotFoundContent]="'planAssessment.noContentForDepartments' | translate"
       [nzDisabled]="!!disabledMessage"
       [nzShowArrow]="true"
       (nzOnSearch)="onQuestionnaireSearchNew('')"

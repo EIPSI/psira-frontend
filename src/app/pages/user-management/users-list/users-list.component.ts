@@ -26,6 +26,7 @@ import { RolesService } from '../../administration/@services/roles.service';
 import { Role } from '@app/pages/administration/@types/role';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -66,7 +67,8 @@ export class UsersListComponent {
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
     private departmentsService: DepartmentsService,
-    private rolesService: RolesService
+    private rolesService: RolesService,
+    private translate: TranslateService
   ) {
     this.roleCodeFilter = this.activatedRoute.snapshot.data?.roleCode;
     if (this.roleCodeFilter) {
@@ -77,7 +79,7 @@ export class UsersListComponent {
     this.getRoles();
 
     if (this.perms.permissionsOnly(PermissionKey.USERS_DELETE_DEPARTMENT)) {
-      this.actions = [{ key: ActionKey.DELETE_USER, title: 'Delete User' }];
+      this.actions = [{ key: ActionKey.DELETE_USER, title: this.translate.instant('userManagement.deleteUser') }];
     }
   }
 
@@ -129,23 +131,23 @@ export class UsersListComponent {
           this.data = data.users.edges.map((user: any) => UserModel.fromJson(user.node));
           this.pageInfo = data.users.pageInfo;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load users' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadUsers') })
       );
   }
 
   private async deleteUser(user: FormattedUser): Promise<void> {
     // check if you're allowed to delete the user
     if (!this.perms.hasAccessLevelToUser(user)) {
-      this.errorService.handleError(new Error(`You don't have sufficient permission to delete this user`));
+      this.errorService.handleError(new Error(this.translate.instant('userManagement.insufficientDeletePermission')));
       return;
     }
 
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete User',
-      nzContent: `
-        Are you sure you want to delete ${user.firstName} ${user.lastName}? This action is irreversible
-      `,
+      nzTitle: this.translate.instant('userManagement.deleteUser'),
+      nzContent: this.translate.instant('userManagement.deleteUserIrreversibleConfirm', {
+        name: [user.firstName, user.lastName].filter(Boolean).join(' '),
+      }),
     });
 
     const confirmation = await modal.afterClose.toPromise();
@@ -157,7 +159,7 @@ export class UsersListComponent {
       .pipe(finalize(() => {this.loading = false; this.getUsers()}))
       .subscribe(
         () => this.data.splice(this.data.indexOf(user), 1),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to delete user' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableDeleteUserGeneric') })
       );
   }
 
@@ -176,7 +178,7 @@ export class UsersListComponent {
       const column = this.columns.find((c) => c.name === 'formattedRoles');
       column.filterField.options = [
         ...roles.map((r) => ({ label: r.name, value: r.id })),
-        { label: 'No role', value: null },
+        { label: this.translate.instant('systemMessages.noRole'), value: null },
       ];
       this.columns = [...this.columns]; // trigger re-render
     });

@@ -25,6 +25,7 @@ import {
 import { EvaluationSchemesService } from '../@services/evaluation-schemes.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
+import { TranslateService } from '@ngx-translate/core';
 
 enum SessionTargetMode {
   SPECIFIC = 'SPECIFIC',
@@ -90,28 +91,28 @@ export class SchemeEditorComponent implements OnInit {
   public ACT = AssessmentContentType;
   public departments: Department[] = [];
   public timeUnits: Array<{ value: TimeUnit; label: string }> = [
-    { value: 'MINUTES', label: 'Minutos' },
-    { value: 'HOURS', label: 'Horas' },
-    { value: 'DAYS', label: 'Días' },
-    { value: 'WEEKS', label: 'Semanas' },
-    { value: 'MONTHS', label: 'Meses' },
+    { value: 'MINUTES', label: 'time.minutes' },
+    { value: 'HOURS', label: 'time.hours' },
+    { value: 'DAYS', label: 'time.days' },
+    { value: 'WEEKS', label: 'time.weeks' },
+    { value: 'MONTHS', label: 'time.months' },
   ];
   public responderRoleOptions = [
-    { label: 'Paciente', value: 'PATIENT' },
-    { label: 'Cuidador', value: 'CAREGIVER' },
-    { label: 'Terapeuta', value: 'THERAPIST' },
-    { label: 'Supervisor', value: 'SUPERVISOR' },
+    { label: 'roles.patient', value: 'PATIENT' },
+    { label: 'roles.caregiver', value: 'CAREGIVER' },
+    { label: 'roles.therapist', value: 'THERAPIST' },
+    { label: 'roles.supervisor', value: 'SUPERVISOR' },
   ];
   public weekStartDay = 0;
   public fixedBlockSize = 7;
   public hours = Array.from({ length: 24 }, (_, index) => index);
   public quarterMinutes = [0, 15, 30, 45];
   public repeatPresets = [
-    { label: '5 por día', value: 'FIVE_PER_DAY' },
-    { label: '7 por día', value: 'SEVEN_PER_DAY' },
-    { label: '10 por día', value: 'TEN_PER_DAY' },
-    { label: 'Notificación de mañana', value: 'MORNING_NOTIFICATION' },
-    { label: 'Notificación de noche', value: 'NIGHT_NOTIFICATION' },
+    { label: 'evaluationSchemes.fivePerDay', value: 'FIVE_PER_DAY' },
+    { label: 'evaluationSchemes.sevenPerDay', value: 'SEVEN_PER_DAY' },
+    { label: 'evaluationSchemes.tenPerDay', value: 'TEN_PER_DAY' },
+    { label: 'evaluationSchemes.morningNotification', value: 'MORNING_NOTIFICATION' },
+    { label: 'evaluationSchemes.nightNotification', value: 'NIGHT_NOTIFICATION' },
   ];
 
   public baseForm: FormGroup = this.fb.group({
@@ -231,7 +232,8 @@ export class SchemeEditorComponent implements OnInit {
     private randomizationsService: RandomizationsService,
     private errorService: ErrorHandlerService,
     private contextMenuService: NzContextMenuService,
-    private modalService: NzModalService
+    private modalService: NzModalService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -273,7 +275,7 @@ export class SchemeEditorComponent implements OnInit {
         }
         this.loadSchemeById(scheme.id);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to save scheme' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableSaveScheme') })
     ).finally(() => (this.saving = false));
   }
 
@@ -324,7 +326,7 @@ export class SchemeEditorComponent implements OnInit {
         this.attachResourceToCurrentScheme(resource);
         this.resetSessionResourceForm();
       })
-      .catch((error) => this.errorService.handleError(error, { prefix: 'Unable to add session rule' }))
+      .catch((error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableAddSessionRule') }))
       .finally(() => (this.saving = false));
   }
 
@@ -378,9 +380,9 @@ export class SchemeEditorComponent implements OnInit {
     if (!this.scheme?.id) return;
     const schemeId = this.scheme.id;
     this.modalService.confirm({
-      nzTitle: 'Eliminar evaluación del esquema',
-      nzContent: 'Esta regla dejará de generar evaluaciones nuevas.',
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('evaluationSchemes.deleteSchemeAssessment'),
+      nzContent: this.translate.instant('evaluationSchemes.deleteSessionRuleConfirm'),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () => {
         this.schemesService.deleteResourceTemplate(resource.id).subscribe(
@@ -388,7 +390,7 @@ export class SchemeEditorComponent implements OnInit {
             if (this.editingResourceId === resource.id) this.resetSessionResourceForm();
             this.loadSchemeById(schemeId);
           },
-          (error) => this.errorService.handleError(error, { prefix: 'Unable to delete session rule' })
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableDeleteSessionRule') })
         );
       },
     });
@@ -476,17 +478,23 @@ export class SchemeEditorComponent implements OnInit {
   public resourceTargetLabel(resource: any): string {
     if (resource.sessionSelector) return resource.sessionSelector;
     const start = resource.startSessionNumber || 1;
-    const end = resource.endSessionNumber ? ` hasta ${resource.endSessionNumber}` : '';
-    return `Cada ${resource.everyNSessions} sesiones desde ${start}${end}`;
+    const end = resource.endSessionNumber
+      ? this.translate.instant('evaluationSchemes.toSessionShort', { session: resource.endSessionNumber })
+      : '';
+    return this.translate.instant('evaluationSchemes.everySessionsFrom', {
+      every: resource.everyNSessions,
+      start,
+      end,
+    });
   }
 
   public resourceContentLabel(resource: any): string {
     if (resource.name) return resource.name;
     const assessmentTypeName = this.assessmentTypes.find((type) => Number(type.id) === Number(resource.assessmentTypeId))?.name;
     if (assessmentTypeName) return assessmentTypeName;
-    if (resource.questionnaireIds?.length) return `Cuestionario: ${resource.questionnaireIds[0]}`;
-    if (resource.questionnaireBundleIds?.length) return `Paquete: ${resource.questionnaireBundleIds[0]}`;
-    if (resource.randomizationRuleIds?.length) return `Randomización: ${this.randomizationName(resource.randomizationRuleIds[0])}`;
+    if (resource.questionnaireIds?.length) return `${this.translate.instant('questionnaires.questionnaire')}: ${resource.questionnaireIds[0]}`;
+    if (resource.questionnaireBundleIds?.length) return `${this.translate.instant('questionnaireBundles.bundle')}: ${resource.questionnaireBundleIds[0]}`;
+    if (resource.randomizationRuleIds?.length) return `${this.translate.instant('randomizations.randomization')}: ${this.randomizationName(resource.randomizationRuleIds[0])}`;
     return '-';
   }
 
@@ -494,7 +502,7 @@ export class SchemeEditorComponent implements OnInit {
     const roles = this.parseResponderRoles(resource.defaultResponderRole);
     if (!roles.length) return '-';
     return roles
-      .map((role) => this.responderRoleOptions.find((option) => option.value === role)?.label || role)
+      .map((role) => this.translate.instant(this.responderRoleOptions.find((option) => option.value === role)?.label || role))
       .join(', ');
   }
 
@@ -599,7 +607,7 @@ export class SchemeEditorComponent implements OnInit {
           this.attachFixedSlotToCurrentScheme(slot);
           this.closeFixedSlotModal();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to add fixed evaluation slot' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableAddFixedSlot') })
       )
       .finally(() => (this.saving = false));
   }
@@ -626,10 +634,10 @@ export class SchemeEditorComponent implements OnInit {
     if (slot.name) return slot.name;
     const assessmentTypeName = this.assessmentTypes.find((type) => Number(type.id) === Number(slot.assessmentTypeId))?.name;
     if (assessmentTypeName) return assessmentTypeName;
-    if (slot.questionnaireIds?.length) return `Cuestionario ${slot.questionnaireIds[0]}`;
-    if (slot.questionnaireBundleIds?.length) return `Paquete ${slot.questionnaireBundleIds[0]}`;
-    if (slot.randomizationRuleIds?.length) return `Randomización ${this.randomizationName(slot.randomizationRuleIds[0])}`;
-    return 'Evaluacion';
+    if (slot.questionnaireIds?.length) return `${this.translate.instant('questionnaires.questionnaire')} ${slot.questionnaireIds[0]}`;
+    if (slot.questionnaireBundleIds?.length) return `${this.translate.instant('questionnaireBundles.bundle')} ${slot.questionnaireBundleIds[0]}`;
+    if (slot.randomizationRuleIds?.length) return `${this.translate.instant('randomizations.randomization')} ${this.randomizationName(slot.randomizationRuleIds[0])}`;
+    return this.translate.instant('plannedAssessments.assessment');
   }
 
   public fixedSlotBlockHeight(slot: any): number {
@@ -646,7 +654,7 @@ export class SchemeEditorComponent implements OnInit {
   }
 
   public fixedSlotDayTitle(): string {
-    return `Día ${Number(this.fixedSlotForm.get('relativeDay')?.value || 0) + 1}`;
+    return `${this.translate.instant('time.day')} ${Number(this.fixedSlotForm.get('relativeDay')?.value || 0) + 1}`;
   }
 
   public openFixedSlotContextMenu(event: MouseEvent, slot: any, menu: NzDropdownMenuComponent): void {
@@ -697,16 +705,16 @@ export class SchemeEditorComponent implements OnInit {
         };
         if (this.editingFixedSlotId === slot.id) this.closeFixedSlotModal();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to delete fixed evaluation slot' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableDeleteFixedSlot') })
     );
   }
 
   public clearFixedSlots(): void {
     if (!this.fixedSlots().length) return;
     this.modalService.confirm({
-      nzTitle: 'Borrar todas las interacciones',
-      nzContent: 'Se eliminará toda la programación del esquema fijo.',
-      nzOkText: 'Borrar todo',
+      nzTitle: this.translate.instant('evaluationSchemes.clearAllInteractions'),
+      nzContent: this.translate.instant('evaluationSchemes.clearFixedScheduleConfirm'),
+      nzOkText: this.translate.instant('core.clearAll'),
       nzOkDanger: true,
       nzOnOk: () => this.clearFixedSlotsNow(),
     });
@@ -799,9 +807,9 @@ export class SchemeEditorComponent implements OnInit {
 
     if (!slots.length) {
       this.modalService.warning({
-        nzTitle: 'No hay interacciones para crear',
-        nzContent: 'Revisá la regla o la duración del esquema.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.noInteractionsToCreate'),
+        nzContent: this.translate.instant('evaluationSchemes.reviewRuleOrDuration'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return;
     }
@@ -837,7 +845,7 @@ export class SchemeEditorComponent implements OnInit {
               this.matchesSelectedDepartments(questionnaire.departmentIds)
           );
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaires' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('questionnaires.unableLoadQuestionnaires') })
     );
   }
 
@@ -883,21 +891,21 @@ export class SchemeEditorComponent implements OnInit {
           }, { emitEvent: false });
           this.baseForm.get('schemeType').disable();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load scheme' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableLoadScheme') })
       );
   }
 
   private ensureSessionRuleTemplate(): Promise<any> {
     const existing = this.scheme?.sessionTemplates?.[0];
     if (existing) return Promise.resolve(existing);
-    if (!this.scheme?.id) return Promise.reject(new Error('Scheme must be saved first'));
+    if (!this.scheme?.id) return Promise.reject(new Error(this.translate.instant('evaluationSchemes.schemeMustBeSavedFirst')));
 
     return this.schemesService
       .addSessionTemplate({
         schemeId: this.scheme.id,
         sessionKind: ClinicalSessionKind.CLINICAL,
         sessionIndex: 0,
-        title: 'Session resources',
+        title: this.translate.instant('evaluationSchemes.sessionResources'),
         relativeOffsetDays: 0,
         durationMinutes: 60,
       })
@@ -944,27 +952,27 @@ export class SchemeEditorComponent implements OnInit {
     if (this.sessionResourceForm.invalid) {
       this.sessionResourceForm.markAllAsTouched();
       this.modalService.warning({
-        nzTitle: 'Faltan datos de la evaluación',
-        nzContent: 'Completá el tipo de recurso y el tipo de evaluación antes de agregar el recurso.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.missingAssessmentData'),
+        nzContent: this.translate.instant('evaluationSchemes.completeResourceAndAssessmentType'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
 
     if (!this.hasAssessmentContent()) {
       this.modalService.warning({
-        nzTitle: 'Falta cuestionario o paquete',
-        nzContent: 'Elegí un cuestionario o un paquete de cuestionarios para esta evaluación.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.missingQuestionnaireOrBundle'),
+        nzContent: this.translate.instant('evaluationSchemes.chooseQuestionnaireOrBundle'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
 
     if (!this.hasSessionTargetRule()) {
       this.modalService.warning({
-        nzTitle: 'Falta programación de sesiones',
-        nzContent: 'Indicá sesiones específicas o una frecuencia de sesiones.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.missingSessionScheduling'),
+        nzContent: this.translate.instant('evaluationSchemes.indicateSessionsOrFrequency'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
@@ -1106,7 +1114,7 @@ export class SchemeEditorComponent implements OnInit {
                 this.matchesSelectedDepartments((rule.departments || []).map((department: any) => department.id))
             );
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load randomizations' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('randomizations.unableLoadRandomizations') })
       );
   }
 
@@ -1138,7 +1146,7 @@ export class SchemeEditorComponent implements OnInit {
               {
                 sessionKind: ClinicalSessionKind.CLINICAL,
                 sessionIndex: 0,
-                title: 'Session resources',
+          title: this.translate.instant('evaluationSchemes.sessionResources'),
                 relativeOffsetDays: 0,
                 durationMinutes: 60,
                 resourceTemplates: this.draftSessionResources.map(({ id, sessionTemplateId, ...resource }) => resource),
@@ -1185,9 +1193,9 @@ export class SchemeEditorComponent implements OnInit {
 
     this.baseForm.markAllAsTouched();
     this.modalService.warning({
-      nzTitle: 'Faltan datos del esquema',
-      nzContent: 'Completá el nombre y el tipo de esquema.',
-      nzOkText: 'Entendido',
+      nzTitle: this.translate.instant('evaluationSchemes.missingSchemeData'),
+      nzContent: this.translate.instant('evaluationSchemes.completeSchemeNameAndType'),
+      nzOkText: this.translate.instant('core.understood'),
     });
     return false;
   }
@@ -1234,7 +1242,7 @@ export class SchemeEditorComponent implements OnInit {
           independentEvaluationTemplates: [],
         };
       })
-      .catch((error) => this.errorService.handleError(error, { prefix: 'Unable to clear fixed scheme slots' }))
+      .catch((error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableClearFixedSlots') }))
       .finally(() => (this.saving = false));
   }
 
@@ -1266,7 +1274,7 @@ export class SchemeEditorComponent implements OnInit {
       },
       (error) => {
         this.saving = false;
-        this.errorService.handleError(error, { prefix: 'Unable to update fixed evaluation slot' });
+        this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableUpdateFixedSlot') });
       }
     );
   }
@@ -1343,7 +1351,7 @@ export class SchemeEditorComponent implements OnInit {
         };
         if (onDone) onDone();
       })
-      .catch((error) => this.errorService.handleError(error, { prefix: 'Unable to apply fixed scheme rule' }))
+      .catch((error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableApplyFixedRule') }))
       .finally(() => (this.saving = false));
   }
 
@@ -1386,9 +1394,9 @@ export class SchemeEditorComponent implements OnInit {
     const value = this.repeatRuleForm.value;
     if (!value.assessmentTypeId || (!value.questionnaireId && !value.questionnaireBundleId && !value.randomizationRuleId)) {
       this.modalService.warning({
-        nzTitle: 'Faltan datos para la regla',
-        nzContent: 'Elegí el tipo de evaluación y un cuestionario o paquete.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.missingRuleData'),
+        nzContent: this.translate.instant('evaluationSchemes.chooseAssessmentTypeAndContent'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
@@ -1500,9 +1508,9 @@ export class SchemeEditorComponent implements OnInit {
     if (this.fixedSlotForm.invalid) {
       this.fixedSlotForm.markAllAsTouched();
       this.modalService.warning({
-        nzTitle: 'Faltan datos de la interacción',
-        nzContent: 'Completá el tipo de evaluación y el bloque horario.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.missingInteractionData'),
+        nzContent: this.translate.instant('evaluationSchemes.completeAssessmentTypeAndTimeBlock'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
@@ -1510,27 +1518,27 @@ export class SchemeEditorComponent implements OnInit {
     const value = this.fixedSlotForm.value;
     if (!value.questionnaireId && !value.questionnaireBundleId && !value.randomizationRuleId) {
       this.modalService.warning({
-        nzTitle: 'Falta cuestionario o paquete',
-        nzContent: 'Elegí un cuestionario o un paquete para esta interacción.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.missingQuestionnaireOrBundle'),
+        nzContent: this.translate.instant('evaluationSchemes.chooseContentForInteraction'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
 
     if (Number(value.endMinuteOfDay) <= Number(value.relativeMinuteOfDay)) {
       this.modalService.warning({
-        nzTitle: 'Bloque horario inválido',
-        nzContent: 'La hora de fin debe ser posterior a la hora de inicio.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.invalidTimeBlock'),
+        nzContent: this.translate.instant('evaluationSchemes.endTimeAfterStartTime'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
 
     if (Number(value.relativeDay) < 0 || Number(value.relativeDay) >= this.schemeDurationDays) {
       this.modalService.warning({
-        nzTitle: 'Día fuera del esquema',
-        nzContent: 'El día relativo debe estar dentro de la duración configurada para el esquema.',
-        nzOkText: 'Entendido',
+        nzTitle: this.translate.instant('evaluationSchemes.dayOutsideScheme'),
+        nzContent: this.translate.instant('evaluationSchemes.relativeDayInsideDuration'),
+        nzOkText: this.translate.instant('core.understood'),
       });
       return false;
     }
@@ -1624,7 +1632,7 @@ export class SchemeEditorComponent implements OnInit {
   private loadAssessmentTypes(): void {
     this.assessmentAdministrationService.assessmentActive().subscribe(
       ({ data }: any) => (this.assessmentTypes = data.activeAssessmentTypes || []),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessment types' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('plannedAssessments.unableLoadAssessmentTypes') })
     );
   }
 
@@ -1635,7 +1643,7 @@ export class SchemeEditorComponent implements OnInit {
           .map((edge: any) => edge.node)
           .filter((bundle: any) => this.matchesSelectedDepartments(bundle.departmentIds));
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaire bundles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadQuestionnaireBundles') })
     );
   }
 
@@ -1644,7 +1652,7 @@ export class SchemeEditorComponent implements OnInit {
       ({ data }: any) => {
         this.departments = this.filterAllowedDepartments(data.departments.edges.map((edge: any) => edge.node));
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('departments.unableLoadDepartments') })
     );
   }
 

@@ -25,6 +25,7 @@ import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { PatientsService } from '@app/pages/patients-management/@services/patients.service';
 import { CaregiversPatientService } from '@app/pages/patients-management/@services/caregivers-patient.service';
+import { TranslateService } from '@ngx-translate/core';
 
 enum ActionKey {
   DELETE_CAREGIVER,
@@ -67,14 +68,15 @@ export class CaregiverListComponent implements OnInit {
     private patientsService: PatientsService,
     public perms: AppPermissionsService,
     private errorService: ErrorHandlerService,
-    private modalService: NzModalService
+    private modalService: NzModalService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.getCaregiver();
     this.populatePatientsDropDown({});
     if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
-      this.actions = [{ key: ActionKey.DELETE_CAREGIVER, title: 'Delete Caregiver' }];
+      this.actions = [{ key: ActionKey.DELETE_CAREGIVER, title: 'patientsManagement.deleteCaregiver' }];
     }
   }
 
@@ -107,7 +109,7 @@ export class CaregiverListComponent implements OnInit {
     this.populateForm = true;
     this.resetForm = true;
     if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
-      this.actions = [{ key: ActionKey.DELETE_CAREGIVER, title: 'Delete Caregiver' }];
+      this.actions = [{ key: ActionKey.DELETE_CAREGIVER, title: 'patientsManagement.deleteCaregiver' }];
     }
   }
 
@@ -221,10 +223,8 @@ export class CaregiverListComponent implements OnInit {
   private async deleteCaregiver(caregiver: FormattedCaregiver): Promise<void> {
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete caregiver',
-      nzContent: `
-        Are you sure you want to delete ${caregiver.firstName}? This action is irreversible.
-      `,
+      nzTitle: this.translate.instant('patientsManagement.deleteCaregiver'),
+      nzContent: this.translate.instant('patientsManagement.deleteCaregiverConfirm', { name: caregiver.firstName }),
     });
 
     if (!(await modal.afterClose.toPromise())) return;
@@ -239,17 +239,17 @@ export class CaregiverListComponent implements OnInit {
           data.splice(this.data.indexOf(caregiver), 1);
           this.data = data; // mutate reference to trigger change detection
         },
-        (err) => this.errorService.handleError(err, { prefix: `Unable to delete caregiver "${caregiver.firstName}"` })
+        (err) => this.errorService.handleError(err, {
+          prefix: this.translate.instant('patientsManagement.unableDeleteCaregiver', { name: caregiver.firstName }),
+        })
       );
   }
 
   private async deleteCaregiverPatient(patientRelation: PatientRelation): Promise<void> {
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete relation',
-      nzContent: `
-        Are you sure you want to remove this caregiver for the patient?
-      `,
+      nzTitle: this.translate.instant('patientsManagement.deleteRelation'),
+      nzContent: this.translate.instant('patientsManagement.deleteCaregiverRelationConfirm'),
     });
 
     if (!(await modal.afterClose.toPromise())) return;
@@ -265,7 +265,9 @@ export class CaregiverListComponent implements OnInit {
           );
         },
         (err) =>
-          this.errorService.handleError(err, { prefix: `Unable to delete relation "${patientRelation.relation}"` })
+          this.errorService.handleError(err, {
+            prefix: this.translate.instant('patientsManagement.unableDeleteRelation', { relation: patientRelation.relation }),
+          })
       );
   }
 

@@ -25,6 +25,7 @@ import { LocationStrategy } from '@angular/common';
 import { ClipboardService } from 'ngx-clipboard';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { User } from '@app/pages/user-management/@types/user';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -45,12 +46,12 @@ enum ActionKey {
 export class AssessmentsComponent implements OnInit {
   @Input() public patient: FormattedPatient;
   public actions: Action<ActionKey>[] = [
-    { key: ActionKey.SHOW_ASSESSMENT, title: 'Start Session' },
-    { key: ActionKey.COPY_ASSESSMENT_LINK, title: 'Copy Session Link' },
-    { key: ActionKey.ARCHIVE_ASSESSMENT, title: 'Archive Session' },
-    { key: ActionKey.RESTORE_ASSESSMENT, title: 'Restore Session' },
-    { key: ActionKey.DELETE_ASSESSMENT, title: 'Delete Session' },
-    { key: ActionKey.SCAN_QR_CODE, title: 'Scan QR Code' },
+    { key: ActionKey.SHOW_ASSESSMENT, title: 'plannedAssessments.startSession' },
+    { key: ActionKey.COPY_ASSESSMENT_LINK, title: 'plannedAssessments.copySessionLink' },
+    { key: ActionKey.ARCHIVE_ASSESSMENT, title: 'plannedAssessments.archiveAssessment' },
+    { key: ActionKey.RESTORE_ASSESSMENT, title: 'plannedAssessments.restoreAssessment' },
+    { key: ActionKey.DELETE_ASSESSMENT, title: 'plannedAssessments.deleteSession' },
+    { key: ActionKey.SCAN_QR_CODE, title: 'plannedAssessments.scanQrCode' },
   ];
   public filter: CaseManagerFilter;
   public data: FormattedAssessment[];
@@ -84,7 +85,8 @@ export class AssessmentsComponent implements OnInit {
     private clipboardService: ClipboardService,
     private messageService: NzMessageService,
     private locationStrategy: LocationStrategy,
-    private modalService: NzModalService
+    private modalService: NzModalService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -208,8 +210,8 @@ export class AssessmentsComponent implements OnInit {
   public onPatientSelect(): void {
     if (!this.canManagePatientAssessments()) {
       this.modalService.warning({
-        nzTitle: 'Evaluaciones',
-        nzContent: 'Solo los administradores del caso pueden crear evaluaciones individuales.',
+        nzTitle: this.translate.instant('core.assessments'),
+        nzContent: this.translate.instant('patientsManagement.onlyCaseManagersCanCreateAssessments'),
       });
       return;
     }
@@ -263,7 +265,7 @@ export class AssessmentsComponent implements OnInit {
   private copyAssessmentLink({ uuid }: FormattedAssessment): void {
     const url = new URL(this.generateAssessmentURL(uuid), window.location.origin);
     this.clipboardService.copy(url.toString());
-    this.messageService.create('success', 'Assessment link copied to clipboard');
+    this.messageService.create('success', this.translate.instant('plannedAssessments.assessmentLinkCopied'));
   }
 
   private createSearchFilter(searchString: string): Array<{ [K in keyof Partial<FormattedAssessment>]: {} }> {
@@ -321,7 +323,7 @@ export class AssessmentsComponent implements OnInit {
             hasPreviousPage: false,
           };
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessments' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('plannedAssessments.unableLoadAssessments') })
       );
   }
 
@@ -366,18 +368,15 @@ export class AssessmentsComponent implements OnInit {
           };
           this.assessmentModalVisible = true;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessment' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableLoadAssessment') })
       );
   }
 
   private async archiveAssessment(assessment : FormattedAssessment) {
     const modal = this.modalService.confirm({
         nzOnOk: () => true,
-        nzTitle: 'Archive Assessment',
-        nzContent: `
-        Are you sure you want to archive ${
-            assessment.name
-        }?`
+        nzTitle: this.translate.instant('plannedAssessments.archiveAssessmentTitle'),
+        nzContent: this.translate.instant('plannedAssessments.archiveAssessmentConfirm', { name: assessment.name })
     });
 
     const confirmation = await modal.afterClose.toPromise();
@@ -392,19 +391,14 @@ export class AssessmentsComponent implements OnInit {
         } else {
             this.getAssessments();
         }
-    }, (error) => this.errorService.handleError(error, {prefix: `Unable to archive assessment "${
-            assessment.name
-        }"`}));
+    }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableArchiveAssessment', { name: assessment.name })}));
   }
 
   private async restoreAssessment(assessment : FormattedAssessment) {
     const modal = this.modalService.confirm({
         nzOnOk: () => true,
-        nzTitle: 'Restore Assessment',
-        nzContent: `
-        Are you sure you want to restore ${
-            assessment?.name
-        }?`
+        nzTitle: this.translate.instant('plannedAssessments.restoreAssessmentTitle'),
+        nzContent: this.translate.instant('plannedAssessments.restoreAssessmentConfirm', { name: assessment?.name })
     });
 
     const confirmation = await modal.afterClose.toPromise();
@@ -419,19 +413,15 @@ export class AssessmentsComponent implements OnInit {
         } else {
             this.getAssessments();
         }
-    }, (error) => this.errorService.handleError(error, {prefix: `Unable to restore assessment "${
-            assessment.name
-        }"`}));
+    }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableRestoreAssessment', { name: assessment.name })}));
   }
 
   private async deleteAssessment(assessment: FormattedAssessment, archive: boolean = true): Promise<void> {
     // create confirmation modal
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete Assessment',
-      nzContent: `
-        Are you sure you want to delete ${assessment.name}? This action is irreversible
-      `,
+      nzTitle: this.translate.instant('plannedAssessments.deleteAssessmentTitle'),
+      nzContent: this.translate.instant('plannedAssessments.deleteAssessmentConfirm', { name: assessment.name }),
     });
 
     // wait for modal to successfully complete
@@ -450,7 +440,7 @@ export class AssessmentsComponent implements OnInit {
             this.getAssessments();
           }
         },
-        (error) => this.errorService.handleError(error, { prefix: `Unable to delete assessment "${assessment.name}"` })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('plannedAssessments.unableDeleteAssessment', { name: assessment.name }) })
       );
   }
 

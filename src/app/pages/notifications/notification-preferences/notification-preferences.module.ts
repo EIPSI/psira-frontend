@@ -9,6 +9,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzModalModule } from 'ng-zorro-antd/modal';
+import { TranslateModule } from '@ngx-translate/core';
 import { NotificationPreferencesComponent } from './notification-preferences.component';
 
 @NgModule({
@@ -25,6 +26,7 @@ import { NotificationPreferencesComponent } from './notification-preferences.com
     NzSpinModule,
     NzSwitchModule,
     NzModalModule,
+    TranslateModule,
   ],
   exports: [NotificationPreferencesComponent],
 })

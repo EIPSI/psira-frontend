@@ -1,38 +1,38 @@
 const actions: any[] = [
   {
-    type: 'Edit PatientStatus',
-    name: 'Edit PatientStatus',
+    type: 'patientStatuses.editPatientStatus',
+    name: 'patientStatuses.editPatientStatus',
   },
   {
-    type: 'Delete PatientStatus',
-    name: 'Delete PatientStatus',
+    type: 'patientStatuses.deletePatientStatus',
+    name: 'patientStatuses.deletePatientStatus',
   },
 ];
 
 const columns: any[] = [
   {
-    title: 'Name',
+    title: 'tables.patientStatuses.name',
     name: 'name',
     translationPath: 'tables.patientStatuses.name',
     isFilterable: false,
     sort: true,
   },
   {
-    title: 'Description',
+    title: 'tables.patientStatuses.description',
     name: 'description',
     translationPath: 'tables.patientStatuses.description',
     isFilterable: false,
     sort: true,
   },
   {
-    title: 'Created Date',
+    title: 'tables.patientStatuses.formattedCreatedAt',
     name: 'formattedCreatedAt',
     translationPath: 'tables.patientStatuses.formattedCreatedAt',
     isFilterable: false,
     sort: true,
   },
   {
-    title: 'Updated Date',
+    title: 'tables.patientStatuses.formattedUpdatedAt',
     name: 'formattedUpdatedAt',
     translationPath: 'tables.patientStatuses.formattedUpdatedAt',
     isFilterable: false,

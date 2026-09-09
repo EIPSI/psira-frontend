@@ -27,7 +27,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   @Input() therapistId?: number;
   @Input() supervisorId?: number;
   @Input() sessionKind?: ClinicalSessionKind;
-  @Input() title = 'Historia clinica';
+  @Input() title = 'calendar.clinicalHistory';
 
   loading = false;
   saving = false;
@@ -74,7 +74,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
     this.editModalVisible = true;
     this.calendarService.getClinicalSessionFollowUpVersions(session.id).subscribe(
       (versions: ClinicalSessionFollowUpVersion[]) => (this.versions = versions),
-      (error: any) => this.errorService.handleError(error, { prefix: 'Unable to load follow-up versions' })
+      (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadFollowUpVersions') })
     );
   }
 
@@ -92,13 +92,13 @@ export class ClinicalFollowUpListComponent implements OnChanges {
           this.editModalVisible = false;
           this.loadDocument();
         },
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to update follow-up' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableUpdateFollowUp') })
       );
   }
 
   openNoteModal(): void {
     this.noteOccurredAt = new Date();
-    this.noteTitle = 'Nota';
+    this.noteTitle = this.translate.instant('calendar.note');
     this.noteContent = '';
     this.noteModalVisible = true;
   }
@@ -121,7 +121,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
           this.noteModalVisible = false;
           this.loadDocument();
         },
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to create history note' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableCreateHistoryNote') })
       );
   }
 
@@ -174,7 +174,9 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   }
 
   sessionTitle(session: ClinicalSession): string {
-    const number = this.displaySessionNumber(session) ? `Sesion ${this.displaySessionNumber(session)}` : 'Sesion';
+    const number = this.displaySessionNumber(session)
+      ? `${this.translate.instant('dashboard.session')} ${this.displaySessionNumber(session)}`
+      : this.translate.instant('dashboard.session');
     return `${number} - ${formatSystemDateTime(session.calendarOccurrence.startAt)}`;
   }
 
@@ -202,7 +204,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   }
 
   cancellationNoteLabel(session: ClinicalSession): string {
-    return session.sessionKind === 'SUPERVISION' ? 'Nota de supervisión' : 'Nota clínica';
+    return this.translate.instant(session.sessionKind === 'SUPERVISION' ? 'calendar.supervisionNote' : 'calendar.clinicalNote');
   }
 
   entryColor(entry: CaseHistoryEntry): string {
@@ -218,7 +220,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
 
   assessmentName(resource: ClinicalSessionResource): string {
     const assessment = resource.assessment;
-    const base = assessment?.assessmentType?.name || `Evaluacion ${assessment?.id || resource.id}`;
+    const base = assessment?.assessmentType?.name || `${this.translate.instant('plannedAssessments.assessment')} ${assessment?.id || resource.id}`;
     const relative = assessment?.schemeRelativeSessionNumber || resource.schemeRelativeSessionNumber;
     return relative ? `${base} (rel. ${relative})` : base;
   }
@@ -245,7 +247,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
       },
       (error: any) => {
         this.rawAssessmentLoading = false;
-        this.errorService.handleError(error, { prefix: 'Unable to load assessment answers' });
+        this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadAssessmentAnswers') });
       }
     );
   }
@@ -269,13 +271,13 @@ export class ClinicalFollowUpListComponent implements OnChanges {
       },
       (error: any) => {
         this.rawAssessmentLoading = false;
-        this.errorService.handleError(error, { prefix: 'Unable to load assessment answers' });
+        this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadAssessmentAnswers') });
       }
     );
   }
 
   entryAssessmentLabel(entry: CaseHistoryEntry): string {
-    return entry.assessmentName || entry.assessmentTypeName || entry.title || `Evaluacion ${entry.assessmentId}`;
+    return entry.assessmentName || entry.assessmentTypeName || entry.title || `${this.translate.instant('plannedAssessments.assessment')} ${entry.assessmentId}`;
   }
 
   formatPerson(person: any): string {
@@ -315,7 +317,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
           this.historyEntries = entries;
           this.applyFilters();
         },
-        (error: any) => this.errorService.handleError(error, { prefix: 'Unable to load follow-ups' })
+        (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadFollowUps') })
       );
   }
 

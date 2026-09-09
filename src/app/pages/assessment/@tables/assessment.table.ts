@@ -8,7 +8,7 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   {
     name: 'formattedAssessmentType',
     altName: 'assessmentType',
-    title: 'Name',
+    title: 'plannedAssessments.name',
     translationPath: 'plannedAssessments.name',
     sort: true,
     filterField: {
@@ -26,26 +26,28 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   },
   {
     name: 'patientMedicalRecordNo',
-    title: 'ID',
+    title: 'plannedAssessments.patientMedicalRecordNo',
     translationPath: 'plannedAssessments.patientMedicalRecordNo',
     sort: true,
   },
   {
     name: 'formattedOrigin',
     altName: 'origin',
-    title: 'Origen',
+    title: 'plannedAssessments.origin',
+    translationPath: 'plannedAssessments.origin',
     render: 'tag',
     sort: true,
   },
   {
     name: 'linkedSessionLabel',
-    title: 'Sesión vinculada',
+    title: 'plannedAssessments.linkedSession',
+    translationPath: 'plannedAssessments.linkedSession',
     sort: true,
   },
   {
     name: 'formattedPatient',
     altName: 'patient',
-    title: 'Patient',
+    title: 'plannedAssessments.formattedPatient',
     translationPath: 'plannedAssessments.formattedPatient',
     sort: true,
     filterField: {
@@ -67,7 +69,7 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   {
     name: 'formattedClinician',
     altName: 'clinician',
-    title: 'Clinician',
+    title: 'plannedAssessments.formattedClinician',
     translationPath: 'plannedAssessments.formattedClinician',
     sort: true,
     filterField: {
@@ -88,7 +90,7 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   },
   // {
   //   name: 'informantType',
-  //   title: 'Informant',
+  //   title: 'plannedAssessments.informant',
   //   translationPath: 'plannedAssessments.informant',
   //   sort: true,
   //   filterField: {
@@ -98,7 +100,8 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   // },
   {
     name: 'formatedQuestionnaires',
-    title: 'Questionnaires',
+    title: 'plannedAssessments.questionnaires',
+    translationPath: 'plannedAssessments.questionnaires',
     render: 'questAvatar',
     sort: true,
     // filterField: {
@@ -109,26 +112,26 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   {
     name: 'formattedStatus',
     altName: 'status',
-    title: 'Status',
+    title: 'plannedAssessments.formattedStatus',
     sort: true,
     translationPath: 'plannedAssessments.formattedStatus',
     render: 'tag',
   },
   // {
   //   name: 'expirationDate',
-  //   title: 'Expiration Date',
+  //   title: 'plannedAssessments.expirationDate',
   //   translationPath: 'plannedAssessments.expirationDate',
   //   render: 'date',
   //   sort: true,
   //   filterField: {
   //     type: 'dateRange',
   //     value: undefined,
-  //     title: 'expirationDate',
+  //     title: 'plannedAssessments.expirationDate',
   //   },
   // },
   {
     name: 'submissionDate',
-    title: 'Submission Date',
+    title: 'plannedAssessments.submissionDate',
     translationPath: 'plannedAssessments.submissionDate',
     render: 'date',
     sort: true,
@@ -136,21 +139,21 @@ export const AssessmentTable: TableColumn<FormattedAssessment>[] = [
   {
     name: 'emailFormatedStatus',
     altName: 'emailStatus',
-    title: 'Email Status',
+    title: 'plannedAssessments.emailStatus',
     translationPath: 'plannedAssessments.emailStatus',
     render: 'tag',
     sort: true
   },
   {
     name: 'deliveryDate',
-    title: 'Delivery Date',
+    title: 'plannedAssessments.deliveryDate',
     translationPath: 'plannedAssessments.deliveryDate',
     render: 'date',
     sort: true,
     filterField: {
       type: 'dateRange',
       value: undefined,
-      title: 'deliveryDate',
+      title: 'plannedAssessments.deliveryDate',
     },
   },
 ];

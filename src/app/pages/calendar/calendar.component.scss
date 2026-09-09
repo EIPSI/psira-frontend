@@ -1,97 +1,141 @@
-.calendar-toolbar {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: space-between;
-  margin-bottom: 16px;
+.general-calendar {
+  display: grid;
+  gap: 14px;
 }
 
-.calendar-title {
+.general-calendar__filters {
   align-items: center;
-  display: flex;
-  gap: 12px;
-
-  h1 {
-    font-size: 22px;
-    margin: 0;
-    min-width: 180px;
-    text-align: center;
-    text-transform: capitalize;
-  }
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, auto) minmax(280px, 1fr);
 }
 
 .type-filter {
-  width: 260px;
+  min-width: 280px;
+  max-width: 460px;
+  width: 100%;
 }
 
-.calendar-filter {
-  display: grid;
-  gap: 4px;
-  min-width: 180px;
-
-  span {
-    color: #667085;
-    font-size: 12px;
-    line-height: 1;
-  }
+.general-calendar__type-filter {
+  display: flex;
+  justify-content: flex-start;
 }
 
-.event-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.event-item {
+.general-calendar__scope {
   align-items: center;
   display: flex;
-  gap: 4px;
-  min-height: 24px;
-  overflow: hidden;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  min-width: 280px;
 }
 
-.event-time {
-  color: #6b7280;
+.general-calendar__department-filter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dashboard-department-filter {
+  min-width: 280px;
+  max-width: 460px;
+  width: 100%;
+}
+
+.general-calendar-create {
+  display: grid;
+  gap: 16px;
+}
+
+.general-calendar-create .form-field {
+  display: grid;
+  gap: 6px;
+  max-width: 520px;
+}
+
+.general-calendar-create .form-field span {
+  color: #344054;
+  font-weight: 600;
+}
+
+.general-calendar-create .form-field small {
+  color: #667085;
   font-size: 12px;
 }
 
-.event-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.event-detail-list {
-  margin-top: 16px;
-}
-
-.event-detail {
-  border-bottom: 1px solid #eef0f3;
-  padding: 12px 0;
-}
-
-.event-detail > div:first-child {
-  align-items: center;
-  display: flex;
-  gap: 12px;
-}
-
-.event-meta {
-  align-items: center;
-  color: #6b7280;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.general-calendar-create app-user-calendar {
+  display: block;
   margin-top: 6px;
 }
 
-.edit-form {
+::ng-deep .general-calendar-create-modal .ant-modal-body {
+  max-height: calc(100vh - 180px);
+  overflow: auto;
+}
+
+@media (max-width: 768px) {
+  .general-calendar__filters,
+  .general-calendar__scope,
+  .general-calendar__type-filter {
+    align-items: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .general-calendar__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .general-calendar__department-filter {
+    justify-content: stretch;
+  }
+
+  .dashboard-department-filter,
+  .type-filter {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+.event-detail {
   display: grid;
   gap: 12px;
 
-  label {
-    display: grid;
-    gap: 6px;
+  h3 {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+}
+
+.event-detail__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+dl {
+  display: grid;
+  gap: 8px 16px;
+  grid-template-columns: max-content 1fr;
+  margin: 0;
+}
+
+dt {
+  color: #667085;
+  font-weight: 600;
+}
+
+dd {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  dl {
+    grid-template-columns: 1fr;
   }
 }

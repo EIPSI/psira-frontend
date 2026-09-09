@@ -4,7 +4,7 @@
   [nzWidth]="600"
   [nzMask]="true"
   [nzClosable]="true"
-  [nzTitle]="'Edit Script'"
+  [nzTitle]="'disclaimers.editScript' | translate"
   [nzVisible]="showCreateDisclaimer"
   [nzMaskClosable]="false"
   (nzOnClose)="closeCreatePanel()"
@@ -23,8 +23,8 @@
     >
     </app-form>
     <div class="buttons">
-      <button class="cancel-button" nz-button nzType="default" (click)="closeCreatePanel()">Cancel</button>
-      <button class="add-button" nz-button nzType="primary" (click)="updateDisclaimer()">Save</button>
+      <button class="cancel-button" nz-button nzType="default" (click)="closeCreatePanel()">{{ 'core.cancel' | translate }}</button>
+      <button class="add-button" nz-button nzType="primary" (click)="updateDisclaimer()">{{ 'core.save' | translate }}</button>
     </div>
   </div>
 </nz-drawer>

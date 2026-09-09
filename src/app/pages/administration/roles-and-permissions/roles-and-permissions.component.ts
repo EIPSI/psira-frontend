@@ -10,6 +10,7 @@ import { AppPermissionsService } from '@shared/services/app-permissions.service'
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 
 interface PermissionGroup {
   name: string;
@@ -73,57 +74,58 @@ export class RolesAndPermissionsComponent implements OnInit {
     'System Configuration',
   ];
 
-  private readonly resourceDescriptions: Record<string, string> = {
-    users: 'usuarios generales del sistema, incluyendo su perfil, roles, departamentos, estado de cuenta y configuración administrativa.',
-    patients: 'pacientes/casos clínicos, sus datos de caso, departamentos, administradores del caso, cuidadores, contactos, estado e información asociada.',
-    therapists: 'usuarios terapeutas, sus datos de perfil profesional, vínculos de supervisión y disponibilidad de gestión como usuarios especiales.',
-    supervisors: 'usuarios supervisores, sus datos de perfil y su capacidad de articular terapeutas o casos bajo supervisión.',
-    caregivers: 'cuidadores vinculados a pacientes, siempre dependientes de un paciente y heredando el marco departamental del caso.',
-    clinical: 'sesiones, supervisiones, calendario clínico, seguimiento clínico/de supervisión, cancelaciones, reestructuraciones y operaciones asociadas al trabajo clínico.',
-    assessments: 'evaluaciones individuales, evaluaciones generadas por esquemas fijos, session-based, automatizaciones y sus operaciones de asignación, edición, descarte o archivo.',
-    questionnaires: 'cuestionarios como unidad básica de evaluación, sus preguntas, respuestas y configuración interna.',
-    'questionnaire-bundles': 'paquetes de cuestionarios, pantallas de presentación, randomización interna y experiencia secuencial de respuesta.',
-    'evaluation-schemes': 'esquemas de evaluación fijos o vinculados a sesiones, sus reglas de aplicación y propagación.',
-    randomizations: 'reglas de randomización y asignación aleatoria de contenidos o condiciones.',
-    automations: 'automatizaciones configuradas por eventos, condiciones, departamentos, motivos y acciones clínicas o administrativas.',
-    notifications: 'configuración de notificaciones del sistema por evento, rol, departamento, canal y preferencias.',
-    'notification-logs': 'historial técnico de notificaciones emitidas, intentos de envío, estado y auditoría.',
-    'mail-templates': 'modelos de email, variables, emisor, contenido enriquecido y versiones usadas por notificaciones.',
-    'informed-consent-models': 'modelos de consentimiento informado, bloques de texto/pregunta, versiones y previsualizaciones.',
-    'informed-consent-management': 'gestión de cuándo, a quién y bajo qué condiciones aplica cada consentimiento informado.',
-    'informed-consent-responses': 'respuestas, revisiones, rehabilitaciones y auditoría de consentimientos informados respondidos por usuarios.',
-    reports: 'informes generados o configurados para pacientes, usuarios, evaluaciones y otras secciones clínicas o administrativas.',
-    departments: 'departamentos, sus reglas de aplicación por rol, colores, defaults y estructura institucional.',
-    roles: 'roles del sistema, jerarquía, permisos asignados y capacidad de edición de perfiles de acceso.',
-    permissions: 'asignación de permisos a roles dentro de la matriz de permisos de usuarios.',
-    settings: 'ajustes configurables de PSIRA que afectan comportamiento clínico, formatos, limpieza y parámetros generales.',
-    system: 'configuración global del sistema, activación de módulos y parámetros absolutos de plataforma.',
+  private readonly resourceDescriptionKeys: Record<string, string> = {
+    users: 'rolesPermissions.resources.users',
+    patients: 'rolesPermissions.resources.patients',
+    therapists: 'rolesPermissions.resources.therapists',
+    supervisors: 'rolesPermissions.resources.supervisors',
+    caregivers: 'rolesPermissions.resources.caregivers',
+    clinical: 'rolesPermissions.resources.clinical',
+    assessments: 'rolesPermissions.resources.assessments',
+    questionnaires: 'rolesPermissions.resources.questionnaires',
+    'questionnaire-bundles': 'rolesPermissions.resources.questionnaireBundles',
+    'evaluation-schemes': 'rolesPermissions.resources.evaluationSchemes',
+    randomizations: 'rolesPermissions.resources.randomizations',
+    automations: 'rolesPermissions.resources.automations',
+    notifications: 'rolesPermissions.resources.notifications',
+    'notification-logs': 'rolesPermissions.resources.notificationLogs',
+    'mail-templates': 'rolesPermissions.resources.mailTemplates',
+    'informed-consent-models': 'rolesPermissions.resources.informedConsentModels',
+    'informed-consent-management': 'rolesPermissions.resources.informedConsentManagement',
+    'informed-consent-responses': 'rolesPermissions.resources.informedConsentResponses',
+    reports: 'rolesPermissions.resources.reports',
+    departments: 'rolesPermissions.resources.departments',
+    roles: 'rolesPermissions.resources.roles',
+    permissions: 'rolesPermissions.resources.permissions',
+    settings: 'rolesPermissions.resources.settings',
+    system: 'rolesPermissions.resources.system',
   };
 
-  private readonly actionDescriptions: Record<string, string> = {
-    view: 'permite consultar, listar, abrir detalle y usar la información como lectura dentro de las pantallas autorizadas.',
-    create: 'permite crear nuevos registros o programaciones de este recurso, respetando las validaciones propias del módulo.',
-    edit: 'permite modificar registros existentes, actualizar vínculos, cambiar configuración o ejecutar acciones equivalentes de mantenimiento.',
-    delete: 'permite eliminar registros cuando el módulo lo permite, incluyendo operaciones de baja definitiva o eliminación lógica según la entidad.',
-    archive: 'permite archivar registros, quitarlos del flujo operativo principal sin perder el registro histórico.',
-    restore: 'permite restaurar registros archivados, eliminados lógicamente o dados de baja cuando el módulo conserva historial.',
-    assign: 'permite asignar responsables, destinatarios o vínculos operativos relacionados con evaluaciones.',
-    review: 'permite revisar respuestas, rehabilitar estados, registrar decisiones administrativas y operar auditoría de consentimientos.',
-    test: 'permite probar reglas o ejecuciones de automatizaciones sin que eso implique necesariamente crear una automatización nueva.',
+  private readonly actionDescriptionKeys: Record<string, string> = {
+    view: 'rolesPermissions.actions.view',
+    create: 'rolesPermissions.actions.create',
+    edit: 'rolesPermissions.actions.edit',
+    delete: 'rolesPermissions.actions.delete',
+    archive: 'rolesPermissions.actions.archive',
+    restore: 'rolesPermissions.actions.restore',
+    assign: 'rolesPermissions.actions.assign',
+    review: 'rolesPermissions.actions.review',
+    test: 'rolesPermissions.actions.test',
   };
 
-  private readonly scopeDescriptions: Record<string, string> = {
-    all: 'alcance absoluto. Aplica sobre todos los departamentos, usuarios, casos y registros del recurso. Está pensado para super administración o permisos administrativos globales.',
-    department: 'alcance departamental. Aplica solo sobre departamentos a los que pertenece el usuario o sobre registros vinculados a esos departamentos.',
-    'department-hierarchy': 'alcance departamental con jerarquía. Aplica dentro de los departamentos permitidos y además respeta que el usuario solo pueda operar roles o usuarios de jerarquía igual o inferior.',
-    assigned: 'alcance asignado. Aplica solo sobre casos, terapeutas, cuidadores, sesiones, evaluaciones o respuestas donde el usuario participa como responsable, administrador del caso, supervisor o usuario vinculado.',
+  private readonly scopeDescriptionKeys: Record<string, string> = {
+    all: 'rolesPermissions.scopes.all',
+    department: 'rolesPermissions.scopes.department',
+    'department-hierarchy': 'rolesPermissions.scopes.departmentHierarchy',
+    assigned: 'rolesPermissions.scopes.assigned',
   };
 
   constructor(
     private rolesService: RolesService,
     private permissionService: PermissionsService,
     private errorService: ErrorHandlerService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -152,7 +154,7 @@ export class RolesAndPermissionsComponent implements OnInit {
           this.rolesPaging.before = data.roles.pageInfo.startCursor;
           this.rolesPageInfo = data.roles.pageInfo;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableLoadRoles') })
       );
   }
 
@@ -177,7 +179,10 @@ export class RolesAndPermissionsComponent implements OnInit {
           },
           (error: any) =>
             this.errorService.handleError(error, {
-              prefix: `Unable to assign permission "${permission.name}" to role "${role.name}"`,
+              prefix: this.translate.instant('rolesPermissions.unableAssignPermission', {
+                permission: permission.name,
+                role: role.name,
+              }),
             })
         );
     } else {
@@ -190,7 +195,10 @@ export class RolesAndPermissionsComponent implements OnInit {
           },
           (error: any) =>
             this.errorService.handleError(error, {
-              prefix: `Unable to remove permission "${permission.name}" from role "${role.name}"`,
+              prefix: this.translate.instant('rolesPermissions.unableRemovePermission', {
+                permission: permission.name,
+                role: role.name,
+              }),
             })
         );
     }
@@ -236,7 +244,7 @@ export class RolesAndPermissionsComponent implements OnInit {
         },
         (error) => {
           this.loading = false;
-          this.errorService.handleError(error, { prefix: 'Unable to load permissions' });
+          this.errorService.handleError(error, { prefix: this.translate.instant('rolesPermissions.unableLoadPermissions') });
         },
       );
   }
@@ -263,30 +271,40 @@ export class RolesAndPermissionsComponent implements OnInit {
 
   private buildPermissionDetail(permission: Permission): PermissionDetail {
     const [resource, action, scope] = String(permission.name).split('.');
-    const resourceDescription = this.resourceDescriptions[resource] || `el recurso tecnico "${resource}".`;
-    const actionDescription = this.actionDescriptions[action] || `habilita la accion tecnica "${action}".`;
-    const scopeDescription = this.scopeDescriptions[scope] || `alcance tecnico "${scope}".`;
+    const resourceDescription = this.resourceDescriptionKeys[resource]
+      ? this.translate.instant(this.resourceDescriptionKeys[resource])
+      : this.translate.instant('rolesPermissions.technicalResourceDescription', { resource });
+    const actionDescription = this.actionDescriptionKeys[action]
+      ? this.translate.instant(this.actionDescriptionKeys[action])
+      : this.translate.instant('rolesPermissions.technicalActionDescription', { action });
+    const scopeDescription = this.scopeDescriptionKeys[scope]
+      ? this.translate.instant(this.scopeDescriptionKeys[scope])
+      : this.translate.instant('rolesPermissions.technicalScopeDescription', { scope });
 
     return {
       title: String(permission.name),
       resource,
       action,
       scope,
-      description: `Este permiso controla si un usuario puede operar sobre ${resourceDescription} La accion asociada ${actionDescription} El alcance definido es: ${scopeDescription}`,
+      description: this.translate.instant('rolesPermissions.permissionDescription', {
+        resourceDescription,
+        actionDescription,
+        scopeDescription,
+      }),
       enabled: [
-        `Permite ejecutar la accion "${action}" sobre ${resourceDescription}`,
-        'Permite que menus, rutas, botones y resolvers asociados a esta accion queden disponibles cuando el alcance coincide.',
-        'Cuando el permiso es de alcance all, tambien cubre permisos mas acotados del mismo recurso y accion en los guards del sistema.',
+        this.translate.instant('rolesPermissions.enabledAction', { action, resourceDescription }),
+        this.translate.instant('rolesPermissions.enabledUiAndResolvers'),
+        this.translate.instant('rolesPermissions.enabledAllScope'),
       ],
       limits: [
-        'No saltea validaciones clinicas, reglas de negocio, integridad de datos ni restricciones propias de cada modulo.',
-        'No otorga automaticamente permisos sobre otros recursos aunque esten relacionados funcionalmente.',
-        'Los alcances department, department-hierarchy y assigned requieren que el registro este efectivamente dentro del departamento, jerarquia o vinculacion correspondiente.',
+        this.translate.instant('rolesPermissions.limitBusinessRules'),
+        this.translate.instant('rolesPermissions.limitRelatedResources'),
+        this.translate.instant('rolesPermissions.limitScopedRecords'),
       ],
       examples: [
-        `${resource}.${action}.all habilita esta accion en todo PSIRA para ese recurso.`,
-        `${resource}.${action}.department habilita esta accion solo dentro de los departamentos permitidos.`,
-        `${resource}.${action}.assigned habilita esta accion solo cuando el usuario participa directamente en el caso, sesion, evaluacion o respuesta.`,
+        this.translate.instant('rolesPermissions.exampleAll', { resource, action }),
+        this.translate.instant('rolesPermissions.exampleDepartment', { resource, action }),
+        this.translate.instant('rolesPermissions.exampleAssigned', { resource, action }),
       ].filter((example) => !example.includes('undefined')),
     };
   }

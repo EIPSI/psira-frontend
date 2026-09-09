@@ -31,6 +31,7 @@ import { UsersService } from '@app/pages/user-management/@services/users.service
 import { CaregiversPatientService } from '@app/pages/patients-management/@services/caregivers-patient.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -56,11 +57,11 @@ export class PlanAssessmentComponent implements OnInit {
   public assessmentContentType = AssessmentContentType.QUESTIONNAIRE;
   public ACT = AssessmentContentType;
   public timeUnits = [
-    { value: 'MINUTES', label: 'Minutos' },
-    { value: 'HOURS', label: 'Horas' },
-    { value: 'DAYS', label: 'Días' },
-    { value: 'WEEKS', label: 'Semanas' },
-    { value: 'MONTHS', label: 'Meses' },
+    { value: 'MINUTES', label: 'time.minutes' },
+    { value: 'HOURS', label: 'time.hours' },
+    { value: 'DAYS', label: 'time.days' },
+    { value: 'WEEKS', label: 'time.weeks' },
+    { value: 'MONTHS', label: 'time.months' },
   ];
   public typeSelected: any = 'PATIENT';
   public dataToSelect: any = [];
@@ -88,7 +89,7 @@ export class PlanAssessmentComponent implements OnInit {
   public editMode = true;
   public isLoading = false;
   public departments: Department[] = [];
-  public contentTargetMessage = 'Seleccione primero un paciente o usuario para cargar el contenido disponible.';
+  public contentTargetMessage = 'planAssessment.selectTargetForContent';
   public deliveryDate: any = null;
   public expireDate: any = null;
   public maxLength = 200;
@@ -97,91 +98,91 @@ export class PlanAssessmentComponent implements OnInit {
   url: any = '';
   options = [
     {
-      label: 'Mother',
+      label: 'planAssessment.relations.mother',
       value: 'Mother',
     },
     {
-      label: 'Father',
+      label: 'planAssessment.relations.father',
       value: 'Father',
     },
     {
-      label: 'Grandparent',
+      label: 'planAssessment.relations.grandparent',
       value: 'Grandparent',
     },
     {
-      label: 'Uncle/Aunt',
+      label: 'planAssessment.relations.uncleAunt',
       value: 'Uncle/Aunt',
     },
     {
-      label: 'Extended Family',
+      label: 'planAssessment.relations.extendedFamily',
       value: 'Extended Family',
     },
     {
-      label: 'Legal Guardian',
+      label: 'planAssessment.relations.legalGuardian',
       value: 'Legal Guardian',
     },
     {
-      label: 'Family Doctor',
+      label: 'planAssessment.relations.familyDoctor',
       value: 'Family Doctor',
     },
     {
-      label: 'External Paediatrician',
+      label: 'planAssessment.relations.externalPaediatrician',
       value: 'External Paediatrician',
     },
     {
-      label: 'External Psychotherapist',
+      label: 'planAssessment.relations.externalPsychotherapist',
       value: 'External Psychotherapist',
     },
     {
-      label: 'External Psychologist',
+      label: 'planAssessment.relations.externalPsychologist',
       value: 'External Psychologist',
     },
     {
-      label: 'External Social Worker',
+      label: 'planAssessment.relations.externalSocialWorker',
       value: 'External Social Worker',
     },
     {
-      label: 'External Nurse',
+      label: 'planAssessment.relations.externalNurse',
       value: 'External Nurse',
     },
     {
-      label: 'Emergency Department',
+      label: 'planAssessment.relations.emergencyDepartment',
       value: 'Emergency Department',
     },
     {
-      label: 'Friend',
+      label: 'planAssessment.relations.friend',
       value: 'Friend',
     },
     {
-      label: 'Neighbour',
+      label: 'planAssessment.relations.neighbour',
       value: 'Neighbour',
     },
     {
-      label: 'Teacher',
+      label: 'planAssessment.relations.teacher',
       value: 'Teacher',
     },
     {
-      label: 'School Representative',
+      label: 'planAssessment.relations.schoolRepresentative',
       value: 'School Representative',
     },
     {
-      label: 'Advisor',
+      label: 'planAssessment.relations.advisor',
       value: 'Advisor',
     },
     {
-      label: 'Legal Advisor',
+      label: 'planAssessment.relations.legalAdvisor',
       value: 'Legal Advisor',
     },
     {
-      label: 'Assistance',
+      label: 'planAssessment.relations.assistance',
       value: 'Assistance',
     },
     {
-      label: 'Supervisor',
+      label: 'planAssessment.relations.supervisor',
       value: 'Supervisor',
     },
     {
-      label: 'Other',
+      label: 'planAssessment.relations.other',
       value: 'Other',
     },
   ];
@@ -202,7 +203,8 @@ export class PlanAssessmentComponent implements OnInit {
     public perms: AppPermissionsService,
     private router: Router,
     private locationStrategy: LocationStrategy,
-    private clipboard: Clipboard
+    private clipboard: Clipboard,
+    private translate: TranslateService
   ) {}
 
   public ngOnInit(): void {
@@ -297,11 +299,11 @@ export class PlanAssessmentComponent implements OnInit {
 
     action.subscribe(
       () => {
-        this.nzMessage.success('Assessment created', { nzDuration: 3000 });
+        this.nzMessage.success(this.translate.instant('planAssessment.assessmentSaved'), { nzDuration: 3000 });
         this.editMode = false;
         this.router.navigate(['/psira/assessments/planned-assessments']);
       },
-      (err) => this.errorService.handleError(err, { prefix: 'Unable to create assessment ' })
+      (err) => this.errorService.handleError(err, { prefix: this.translate.instant('planAssessment.unableCreateAssessment') })
     );
   }
 
@@ -331,7 +333,7 @@ export class PlanAssessmentComponent implements OnInit {
   public userLabel(user: User): string {
     return [user?.firstName, user?.middleName, user?.lastName]
       .filter((part) => !!part)
-      .join(' ') || user?.username || user?.email || `Usuario ${user?.id}`;
+      .join(' ') || user?.username || user?.email || this.translate.instant('planAssessment.userWithId', {id: user?.id});
   }
 
   public onResponsibleUsersChange(userIds: number[]): void {
@@ -405,7 +407,7 @@ export class PlanAssessmentComponent implements OnInit {
         ({ data }: any) => {
           this.targetUsers = data.users.edges.map((edge: any) => edge.node);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load users' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadUsers') })
       );
   }
 
@@ -454,7 +456,7 @@ export class PlanAssessmentComponent implements OnInit {
         this.responsibleUserOptions = (data?.supervisors?.edges || []).map((edge: any) => edge.node);
         this.initializeResponsibleUsersFromOptions();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadSupervisors') })
     );
   }
 
@@ -557,7 +559,7 @@ export class PlanAssessmentComponent implements OnInit {
 
           this.loadContentOptions();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadDepartments') })
       );
   }
 
@@ -590,7 +592,7 @@ export class PlanAssessmentComponent implements OnInit {
         ({ edges }) => {
           this.listOfRandomizations = edges.map((edge: any) => edge.node).filter((rule: RandomizationRule) => rule.active);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load randomizations' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadRandomizations') })
       );
   }
 
@@ -826,7 +828,7 @@ export class PlanAssessmentComponent implements OnInit {
         }
       },
       (error) =>
-        this.errorService.handleError(error, { prefix: `Unable to load the assessment with ID "${assessmentId}"` })
+        this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadAssessmentById', {id: assessmentId}) })
     );
   }
 
@@ -872,7 +874,7 @@ export class PlanAssessmentComponent implements OnInit {
           this.onTargetRoleChange(defaultRole.code);
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadRoles') })
     );
   }
 
@@ -893,7 +895,7 @@ export class PlanAssessmentComponent implements OnInit {
             this.populateResponderOptions();
           }
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load caregivers' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadCaregivers') })
       );
   }
 
@@ -1028,7 +1030,7 @@ export class PlanAssessmentComponent implements OnInit {
           this.selectedInformant = this.responderOptions.length ? this.responderOptions[0].value : null;
           this.applySelectedResponder();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load responders' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadResponders') })
       );
   }
 
@@ -1058,7 +1060,7 @@ export class PlanAssessmentComponent implements OnInit {
         ({ data }: any) => {
           this.data = data.activeAssessmentTypes;
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load assessment type' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('planAssessment.unableLoadAssessmentType') })
       );
   }
 

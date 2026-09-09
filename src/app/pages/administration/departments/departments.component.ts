@@ -24,6 +24,7 @@ import { RolesService } from '../@services/roles.service';
 import { Role } from '../@types/role';
 import { FieldGroup } from '../../../@shared/components/form/@types/field.group';
 import { Field } from '../../../@shared/components/form/@types/field';
+import { TranslateService } from '@ngx-translate/core';
 
 enum ActionKey {
   EDIT_DEPARTMENT,
@@ -67,7 +68,8 @@ export class DepartmentsComponent implements OnInit {
     private rolesService: RolesService,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   public ngOnInit(): void {
@@ -76,8 +78,8 @@ export class DepartmentsComponent implements OnInit {
 
     if (this.perms.permissionsOnly(PermissionKey.SETTINGS_EDIT_ALL)) {
       this.actions = [
-        { key: ActionKey.EDIT_DEPARTMENT, title: 'Edit Department' },
-        { key: ActionKey.DELETE_DEPARTMENT, title: 'Delete Department' },
+        { key: ActionKey.EDIT_DEPARTMENT, title: this.translate.instant('departments.editDepartment') },
+        { key: ActionKey.DELETE_DEPARTMENT, title: this.translate.instant('departments.deleteDepartment') },
       ];
     }
   }
@@ -115,7 +117,7 @@ export class DepartmentsComponent implements OnInit {
   }
 
   public openCreatePanel(department?: Department): void {
-    this.departmentForms.submitButtonText = department ? 'Edit Department' : 'Create Department';
+    this.departmentForms.submitButtonText = department ? 'departments.editDepartment' : 'departments.createDepartment';
     if (department) {
       this.department = {
         ...department,
@@ -167,7 +169,7 @@ export class DepartmentsComponent implements OnInit {
           this.data = data.departments.edges.map((department: any) => Convert.toDepartment(department.node));
           this.pageInfo = data.departments.pageInfo;
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load departments' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableLoadDepartments') })
       );
   }
 
@@ -179,10 +181,8 @@ export class DepartmentsComponent implements OnInit {
   private async deleteDepartment(department: FormattedDepartment): Promise<void> {
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete department',
-      nzContent: `
-        Are you sure you want to delete ${department.name}? This action is irreversible.
-      `,
+      nzTitle: this.translate.instant('departments.deleteDepartment'),
+      nzContent: this.translate.instant('departments.deleteDepartmentConfirm', { name: department.name }),
     });
 
     if (!(await modal.afterClose.toPromise())) return;
@@ -197,7 +197,7 @@ export class DepartmentsComponent implements OnInit {
           data.splice(this.data.indexOf(department), 1);
           this.data = data; // mutate reference to trigger change detection
         },
-        (err) => this.errorService.handleError(err, { prefix: `Unable to delete department "${department.name}"` })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableDeleteDepartment', { name: department.name }) })
       );
   }
 
@@ -214,7 +214,7 @@ export class DepartmentsComponent implements OnInit {
           this.data = [...this.data, Convert.toDepartment(data.createOneDepartment)];
           this.closeCreatePanel();
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to create department' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableCreateDepartment') })
       );
   }
 
@@ -242,7 +242,7 @@ export class DepartmentsComponent implements OnInit {
           this.data = list; // mutate reference to trigger change detection
           this.closeCreatePanel();
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to update department' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableUpdateDepartment') })
       );
   }
 
@@ -252,7 +252,7 @@ export class DepartmentsComponent implements OnInit {
         this.roles = data.roles.edges.map((edge: any) => edge.node);
         this.setRoleFieldOptions();
       },
-      (err) => this.errorService.handleError(err, { prefix: 'Unable to load roles' })
+      (err) => this.errorService.handleError(err, { prefix: this.translate.instant('roles.unableLoadRoles') })
     );
   }
 

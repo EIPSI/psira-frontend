@@ -3,6 +3,7 @@ import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/
 import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 
 interface AppliedAutomationRun {
   id: number;
@@ -30,7 +31,8 @@ export class AppliedAutomationsListComponent implements OnChanges {
 
   constructor(
     private automationsService: EvaluationAutomationsService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnChanges(): void {
@@ -79,7 +81,7 @@ export class AppliedAutomationsListComponent implements OnChanges {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         ({ edges }) => (this.runs = (edges || []).map((edge: any) => edge.node)),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load applied automations' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadAppliedAutomations') })
       );
   }
 }

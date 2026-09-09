@@ -1,90 +1,191 @@
-<div class="calendar-toolbar">
-  <div class="calendar-title">
-    <button nz-button nzShape="circle" (click)="previousMonth()"><i nz-icon nzType="left"></i></button>
-    <h1>{{ monthLabel }}</h1>
-    <button nz-button nzShape="circle" (click)="nextMonth()"><i nz-icon nzType="right"></i></button>
-  </div>
-  <nz-select
-    class="type-filter"
-    [(ngModel)]="occurrenceType"
-    (ngModelChange)="onTypeChange($event)"
-    nzAllowClear
-    [nzPlaceHolder]="'calendar.type' | translate"
-  >
-    <nz-option *ngFor="let type of occurrenceTypes" [nzValue]="type" [nzLabel]="type"></nz-option>
-  </nz-select>
-  <label class="calendar-filter" *ngIf="canUsePatientFilter()">
-    <span>{{ 'calendar.patient' | translate }}</span>
-    <app-patient-picker
-      [selectedPatient]="selectedPatient"
-      (selectPatient)="selectedPatient = $event; onFilterChange()"
-    ></app-patient-picker>
-  </label>
-  <label class="calendar-filter" *ngIf="canUseUserFilters()">
-    <span>{{ 'calendar.therapist' | translate }}</span>
-    <app-user-picker
-      [selectedUser]="selectedTherapist"
-      (selectUser)="selectedTherapist = $event; onFilterChange()"
-    ></app-user-picker>
-  </label>
-  <label class="calendar-filter" *ngIf="canUseUserFilters()">
-    <span>{{ 'calendar.supervisor' | translate }}</span>
-    <app-user-picker
-      [selectedUser]="selectedSupervisor"
-      (selectUser)="selectedSupervisor = $event; onFilterChange()"
-    ></app-user-picker>
-  </label>
-  <button nz-button nzType="primary" *ngIf="googleCalendarConfigured" (click)="connectGoogleCalendar()">
-    <i nz-icon nzType="google"></i>
-    Conectar Google Calendar
-  </button>
-</div>
-
-<nz-spin [nzSpinning]="loading">
-  <nz-calendar [(ngModel)]="selectedDate" (ngModelChange)="onPanelDateChange($event)">
-    <ul *nzDateCell="let date" class="event-list">
-      <li *ngFor="let event of eventsForDate(date)" class="event-item">
-        <nz-tag [nzColor]="event.isDetachedFromTemplate ? 'orange' : 'blue'">{{ event.occurrenceType }}</nz-tag>
-        <span class="event-time">{{ formatTime(event.startAt) }}</span>
-        <span class="event-title">{{ event.title }}</span>
-      </li>
-    </ul>
-  </nz-calendar>
-</nz-spin>
-
-<div class="event-detail-list" *ngIf="eventsForDate(selectedDate).length; else emptyDay">
-  <div class="event-detail" *ngFor="let event of eventsForDate(selectedDate)">
-    <div>
-      <strong>{{ formatTime(event.startAt) }} - {{ formatTime(event.endAt) }}</strong>
-      <span>{{ event.title }}</span>
+<div class="general-calendar">
+  <div class="general-calendar__filters">
+    <div class="general-calendar__type-filter">
+      <nz-select
+        class="type-filter"
+        [(ngModel)]="selectedTypes"
+        (ngModelChange)="onFiltersChange()"
+        nzMode="multiple"
+        nzAllowClear
+        [nzPlaceHolder]="'calendar.type' | translate"
+      >
+        <nz-option [nzValue]="CET.SESSION" [nzLabel]="'calendar.session' | translate"></nz-option>
+        <nz-option [nzValue]="CET.ASSESSMENT" [nzLabel]="'calendar.assessment' | translate"></nz-option>
+      </nz-select>
     </div>
-    <div class="event-meta">
-      <nz-tag>{{ event.status }}</nz-tag>
-      <span *ngIf="event.patient">{{ event.patient.medicalRecordNo }} {{ personName(event.patient) }}</span>
-      <span *ngIf="event.therapist">{{ personName(event.therapist) }}</span>
-      <span *ngIf="event.supervisor">{{ personName(event.supervisor) }}</span>
-      <button nz-button nzType="link" (click)="openDetail(event)">{{ 'calendar.details' | translate }}</button>
+
+    <div class="general-calendar__scope">
+      <label nz-checkbox [(ngModel)]="showOwnEvents" (ngModelChange)="onFiltersChange()">
+        {{ 'calendar.ownEvents' | translate }}
+      </label>
+      <label *ngIf="canUseManagedScope()" nz-checkbox [(ngModel)]="showManagedEvents" (ngModelChange)="onFiltersChange()">
+        {{ 'calendar.managedEvents' | translate }}
+      </label>
+      <label nz-checkbox *ngIf="canUsePermittedScope()" [(ngModel)]="showPermittedEvents" (ngModelChange)="onFiltersChange()">
+        {{ 'calendar.permittedEvents' | translate }}
+      </label>
+    </div>
+
+    <div class="general-calendar__department-filter">
+      <nz-select
+        class="dashboard-department-filter"
+        [(ngModel)]="selectedDepartmentIds"
+        (ngModelChange)="onFiltersChange()"
+        nzMode="multiple"
+        nzAllowClear
+        [nzPlaceHolder]="'departments.departments' | translate"
+      >
+        <nz-option
+          *ngFor="let department of departments"
+          [nzValue]="department.id"
+          [nzLabel]="department.name"
+        ></nz-option>
+      </nz-select>
     </div>
   </div>
+
+  <app-calendar-grid
+    [events]="events"
+    [loading]="loading || saving"
+    [(selectedDate)]="selectedDate"
+    [(view)]="view"
+    (rangeChange)="onRangeChange()"
+    (createEvent)="openCreateEvent($event.date, $event.hour)"
+    (eventClick)="openEvent($event)"
+    (eventContextMenu)="openEventContextMenu($event.event, calendarContextMenu, $event.calendarEvent)"
+    (eventDragStart)="onEventDragStart($event.event, $event.calendarEvent)"
+    (eventDrop)="onDropEvent($event.event, $event.date, $event.hour)"
+  ></app-calendar-grid>
 </div>
 
-<ng-template #emptyDay>
-  <nz-empty [nzNotFoundContent]="'calendar.emptyDay' | translate"></nz-empty>
-</ng-template>
+<nz-dropdown-menu #calendarContextMenu="nzDropdownMenu">
+  <ul nz-menu>
+    <li nz-menu-item (click)="openDetail()">
+      <i nz-icon nzType="eye"></i>
+      {{ 'calendar.details' | translate }}
+    </li>
+    <li nz-menu-item *ngIf="selectedEvent?.editable" (click)="selectedEvent && openEdit(selectedEvent)">
+      <i nz-icon nzType="edit"></i>
+      {{ 'core.edit' | translate }}
+    </li>
+    <li nz-menu-item *ngIf="selectedEvent?.editable && selectedEvent?.clinicalSessionId" (click)="duplicateSelectedEvent()">
+      <i nz-icon nzType="copy"></i>
+      {{ 'patientsManagement.duplicateEvent' | translate }}
+    </li>
+    <li nz-menu-item *ngIf="selectedEvent?.deletable" nzDanger (click)="discardSelectedEvent()">
+      <i nz-icon nzType="delete"></i>
+      {{ (selectedEvent?.type === CET.ASSESSMENT ? 'patientsManagement.discard' : 'patientsManagement.cancellation') | translate }}
+    </li>
+  </ul>
+</nz-dropdown-menu>
 
 <nz-modal
   [(nzVisible)]="detailModalVisible"
   [nzTitle]="'calendar.details' | translate"
+  [nzOkText]="'core.close' | translate"
+  [nzCancelText]="null"
   (nzOnCancel)="detailModalVisible = false"
   (nzOnOk)="detailModalVisible = false"
 >
-  <div class="edit-form" *ngIf="detailOccurrence">
-    <strong>{{ detailOccurrence.title }}</strong>
-    <span>{{ detailOccurrence.occurrenceType }}</span>
-    <span>{{ formatTime(detailOccurrence.startAt) }} - {{ formatTime(detailOccurrence.endAt) }}</span>
-    <nz-tag>{{ detailOccurrence.status }}</nz-tag>
-    <span *ngIf="detailOccurrence.patient">{{ detailOccurrence.patient.medicalRecordNo }}</span>
-    <span *ngIf="detailOccurrence.therapist">{{ personName(detailOccurrence.therapist) }}</span>
-    <span *ngIf="detailOccurrence.supervisor">{{ personName(detailOccurrence.supervisor) }}</span>
-  </div>
+  <ng-container *nzModalContent>
+    <div class="event-detail" *ngIf="selectedEvent">
+      <div class="event-detail__header">
+        <nz-tag [nzColor]="selectedEvent.type === CET.SESSION ? 'cyan' : 'blue'">{{ eventTypeLabel(selectedEvent) }}</nz-tag>
+        <nz-tag *ngIf="selectedEvent.status">{{ selectedEvent.status }}</nz-tag>
+        <nz-tag *ngIf="selectedEvent.assessmentOrigin">{{ selectedEvent.assessmentOrigin }}</nz-tag>
+      </div>
+      <h3>{{ selectedEvent.title }}</h3>
+      <dl>
+        <dt>{{ 'calendar.startAt' | translate }}</dt>
+        <dd>{{ formatDateTime(selectedEvent.startAt) }}</dd>
+        <dt>{{ 'calendar.endAt' | translate }}</dt>
+        <dd>{{ formatDateTime(selectedEvent.endAt) }}</dd>
+        <dt>{{ 'departments.departments' | translate }}</dt>
+        <dd>{{ departmentNames(selectedEvent) || '-' }}</dd>
+        <dt>{{ 'calendar.patient' | translate }}</dt>
+        <dd>{{ personName(selectedEvent.patient) || '-' }}</dd>
+        <dt>{{ 'calendar.therapist' | translate }}</dt>
+        <dd>{{ personName(selectedEvent.therapist) || '-' }}</dd>
+        <dt>{{ 'calendar.supervisor' | translate }}</dt>
+        <dd>{{ personName(selectedEvent.supervisor) || '-' }}</dd>
+        <dt *ngIf="selectedEvent.responderUser">{{ 'calendar.responder' | translate }}</dt>
+        <dd *ngIf="selectedEvent.responderUser">{{ personName(selectedEvent.responderUser) }}</dd>
+      </dl>
+      <p *ngIf="selectedEvent.description">{{ selectedEvent.description }}</p>
+      <p *ngIf="selectedEvent.cancellationReasonSnapshot">{{ selectedEvent.cancellationReasonSnapshot }}</p>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<app-event-edit-modal
+  [visible]="editModalVisible"
+  [event]="selectedEvent"
+  [saving]="saving"
+  [startAt]="editStartAt"
+  (startAtChange)="editStartAt = $event"
+  [endAt]="editEndAt"
+  (endAtChange)="editEndAt = $event"
+  [sessionNumber]="editSessionNumber"
+  (sessionNumberChange)="editSessionNumber = $event"
+  [modality]="editModality"
+  (modalityChange)="editModality = $event"
+  [modalityOptions]="modalityOptions"
+  [description]="editDescription"
+  (descriptionChange)="editDescription = $event"
+  (durationChange)="setEditDurationMinutes($event)"
+  (visibleChange)="editModalVisible = $event"
+  (discard)="discardSelectedEvent()"
+  (save)="saveEdit()"
+></app-event-edit-modal>
+
+<nz-modal
+  [(nzVisible)]="createModalVisible"
+  [nzTitle]="'calendar.createFromGeneralCalendar' | translate"
+  [nzFooter]="null"
+  [nzWidth]="1180"
+  nzWrapClassName="general-calendar-create-modal"
+  (nzOnCancel)="closeCreateModal()"
+>
+  <ng-container *nzModalContent>
+    <div class="general-calendar-create">
+      <div class="form-field">
+        <span>{{ 'calendar.targetUser' | translate }}</span>
+        <nz-select
+          [(ngModel)]="targetUserId"
+          (ngModelChange)="onTargetUserChange($event)"
+          nzShowSearch
+          nzAllowClear
+          [nzPlaceHolder]="'calendar.selectTargetUser' | translate"
+        >
+          <nz-option
+            *ngFor="let user of targetUsers"
+            [nzValue]="user.id"
+            [nzLabel]="targetUserLabel(user)"
+          ></nz-option>
+        </nz-select>
+      </div>
+
+      <nz-spin *ngIf="loadingTargetPatient" nzSize="small"></nz-spin>
+
+      <app-patient-calendar
+        #targetPatientCalendar
+        *ngIf="targetPatient"
+        [patient]="targetPatient"
+        [hideGrid]="true"
+        [allowExternalManagement]="true"
+        [embeddedCreateMode]="true"
+        (createSaved)="onEmbeddedCreateSaved()"
+      ></app-patient-calendar>
+
+      <app-user-calendar
+        #targetUserCalendar
+        *ngIf="targetUser && !targetUserIsPatient()"
+        [user]="targetUser"
+        [hideGrid]="true"
+        [allowExternalManagement]="true"
+        [embeddedCreateMode]="true"
+        (createSaved)="onEmbeddedCreateSaved()"
+      ></app-user-calendar>
+    </div>
+  </ng-container>
 </nz-modal>

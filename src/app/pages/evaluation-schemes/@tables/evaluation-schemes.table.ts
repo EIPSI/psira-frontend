@@ -3,7 +3,7 @@ import { EvaluationScheme } from '../@types/evaluation-scheme';
 
 export const EvaluationSchemesTable: TableColumn<EvaluationScheme>[] = [
   {
-    title: 'Name',
+    title: 'evaluationSchemes.name',
     name: 'name',
     translationPath: 'evaluationSchemes.name',
     sort: true,
@@ -13,7 +13,7 @@ export const EvaluationSchemesTable: TableColumn<EvaluationScheme>[] = [
     },
   },
   {
-    title: 'Type',
+    title: 'evaluationSchemes.type',
     name: 'formattedSchemeType',
     altName: 'schemeType',
     translationPath: 'evaluationSchemes.type',
@@ -21,13 +21,13 @@ export const EvaluationSchemesTable: TableColumn<EvaluationScheme>[] = [
     sort: true,
   },
   {
-    title: 'Description',
+    title: 'evaluationSchemes.description',
     name: 'description',
     translationPath: 'evaluationSchemes.description',
     sort: true,
   },
   {
-    title: 'Status',
+    title: 'evaluationSchemes.status',
     name: 'formattedStatus',
     altName: 'active',
     translationPath: 'evaluationSchemes.status',
@@ -35,7 +35,7 @@ export const EvaluationSchemesTable: TableColumn<EvaluationScheme>[] = [
     sort: true,
   },
   {
-    title: 'Created At',
+    title: 'tables.department.createdAt',
     name: 'createdAt',
     translationPath: 'tables.department.createdAt',
     render: 'date',

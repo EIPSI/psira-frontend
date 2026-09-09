@@ -14,7 +14,7 @@
     [ngClass]="{ 'has-error': inputIsValid() === false, 'has-success': inputIsValid() === true }"
   >
     <nz-range-picker
-      [attr.placeholder]="field.description"
+      [attr.placeholder]="field.description | translate"
       [formControlName]="field.name"
       [attr.autocomplete]="autoFill"
       [(ngModel)]="field.value"
@@ -33,5 +33,5 @@
   *ngIf="this.inputGroup.controls[this.field.name].dirty && this.inputGroup.controls[this.field.name].invalid"
   translate
 >
-  {{ field.validationMessage }}
+  {{ field.validationMessage | translate }}
 </p>

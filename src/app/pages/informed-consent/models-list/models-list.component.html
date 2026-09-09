@@ -9,7 +9,7 @@
 >
   <div class="actions-left" actions-left>
     <app-master-data-search (search)="onSearch($event)"></app-master-data-search>
-    <button nz-button type="button" (click)="resetFilters()">Restablecer</button>
+    <button nz-button type="button" (click)="resetFilters()">{{ 'core.reset' | translate }}</button>
   </div>
   <ng-container actions-right>
     <button
@@ -17,7 +17,7 @@
       nzType="primary"
       nzShape="circle"
       (click)="create()"
-      title="Crear modelo"
+      [title]="'informedConsent.createModel' | translate"
       *ngIf="perms.permissionsOnly(PK.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT)"
     >
       <i nz-icon nzType="plus"></i>

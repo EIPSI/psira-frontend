@@ -13,6 +13,7 @@ import {
   QuestionnaireVersion,
 } from '@app/pages/questionnaire-management/@types/questionnaire';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
 import {
@@ -80,7 +81,8 @@ export class RandomizationEditorComponent implements OnInit {
     private bundlesService: QuestionnaireBundlesService,
     private schemesService: EvaluationSchemesService,
     private message: NzMessageService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -207,7 +209,7 @@ export class RandomizationEditorComponent implements OnInit {
 
     request$.pipe(finalize(() => (this.saving = false))).subscribe(
       () => {
-        this.message.success(this.isUpdateMode ? 'Randomización actualizada' : 'Randomización creada');
+        this.message.success(this.translate.instant(this.isUpdateMode ? 'randomizations.updated' : 'randomizations.created'));
         this.router.navigate(['/psira/randomizations']);
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to save randomization' })
@@ -309,17 +311,17 @@ export class RandomizationEditorComponent implements OnInit {
   }
 
   private validateItems(): string | null {
-    if (this.items.length < 2) return 'Debe agregar al menos dos elementos.';
+    if (this.items.length < 2) return this.translate.instant('randomizations.minItemsRequired');
 
     const seen = new Set<string>();
     for (const item of this.items) {
       if (!Number.isFinite(Number(item.weight)) || Number(item.weight) <= 0) {
-        return 'Cada proporción debe ser mayor que 0.';
+        return this.translate.instant('randomizations.weightMustBePositive');
       }
 
       const key = this.itemKey(item);
-      if (!key) return 'Cada elemento debe tener una selección válida.';
-      if (seen.has(key)) return 'No se permiten elementos duplicados.';
+      if (!key) return this.translate.instant('randomizations.validSelectionRequired');
+      if (seen.has(key)) return this.translate.instant('randomizations.duplicatesNotAllowed');
       seen.add(key);
     }
 

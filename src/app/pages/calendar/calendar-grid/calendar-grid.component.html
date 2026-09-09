@@ -2,20 +2,20 @@
   <div class="calendar-toolbar">
     <div class="calendar-nav">
       <button nz-button nzShape="circle" (click)="previousPeriod()"><i nz-icon nzType="left"></i></button>
-      <button nz-button (click)="goToday()">Hoy</button>
+      <button nz-button (click)="goToday()">{{ 'calendar.today' | translate }}</button>
       <button nz-button nzShape="circle" (click)="nextPeriod()"><i nz-icon nzType="right"></i></button>
       <h2>{{ title }}</h2>
     </div>
 
     <div class="calendar-actions">
       <nz-button-group>
-        <button nz-button [nzType]="view === CV.MONTH ? 'primary' : 'default'" (click)="setView(CV.MONTH)">Mes</button>
-        <button nz-button [nzType]="view === CV.WEEK ? 'primary' : 'default'" (click)="setView(CV.WEEK)">Semana</button>
-        <button nz-button [nzType]="view === CV.DAY ? 'primary' : 'default'" (click)="setView(CV.DAY)">Día</button>
+        <button nz-button [nzType]="view === CV.MONTH ? 'primary' : 'default'" (click)="setView(CV.MONTH)">{{ 'calendar.month' | translate }}</button>
+        <button nz-button [nzType]="view === CV.WEEK ? 'primary' : 'default'" (click)="setView(CV.WEEK)">{{ 'calendar.week' | translate }}</button>
+        <button nz-button [nzType]="view === CV.DAY ? 'primary' : 'default'" (click)="setView(CV.DAY)">{{ 'calendar.day' | translate }}</button>
       </nz-button-group>
       <button nz-button nzType="primary" (click)="openCreateEvent()">
         <i nz-icon nzType="plus"></i>
-        Crear
+        {{ 'core.create' | translate }}
       </button>
     </div>
   </div>
@@ -44,7 +44,7 @@
           [ngClass]="eventClass(event)"
           [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
           [style.background-color]="event.color || null"
-          draggable="true"
+          [draggable]="event.editable"
           (dragstart)="onEventDragStart($event, event)"
           (dragend)="onEventDragEnd()"
           (mousedown)="onEventMouseDown($event, event)"
@@ -85,7 +85,7 @@
             [ngClass]="eventClass(event)"
             [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
             [style.background-color]="event.color || null"
-            draggable="true"
+            [draggable]="event.editable"
             (dragstart)="onEventDragStart($event, event)"
             (dragend)="onEventDragEnd()"
             (mousedown)="onEventMouseDown($event, event)"
@@ -125,7 +125,7 @@
             [ngClass]="eventClass(event)"
             [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
             [style.background-color]="event.color || null"
-            draggable="true"
+            [draggable]="event.editable"
             (dragstart)="onEventDragStart($event, event)"
             (dragend)="onEventDragEnd()"
             (mousedown)="onEventMouseDown($event, event)"

@@ -1,9 +1,9 @@
 <nz-spin [nzSpinning]="loading">
   <form nz-form [formGroup]="form" class="notification-preferences">
     <section>
-      <h3>Preferencias de notificación</h3>
+      <h3>{{ 'notifications.preferences' | translate }}</h3>
       <nz-form-item *ngIf="accountMode">
-        <nz-form-label>Notificaciones generales</nz-form-label>
+        <nz-form-label>{{ 'notifications.generalNotifications' | translate }}</nz-form-label>
         <nz-form-control>
           <nz-switch formControlName="enabled"></nz-switch>
         </nz-form-control>
@@ -11,14 +11,14 @@
       <ng-container *ngIf="!accountMode">
       <div class="preference-row">
         <div>
-          <strong>Notificaciones inmediatas</strong>
-          <span>Enviar avisos cuando ocurre un evento relevante.</span>
+          <strong>{{ 'notifications.immediateNotifications' | translate }}</strong>
+          <span>{{ 'notifications.immediateNotificationsDescription' | translate }}</span>
         </div>
         <nz-switch formControlName="immediateEnabled"></nz-switch>
       </div>
       <div class="nested-section" *ngIf="form.controls.immediateEnabled.value">
-        <h3>Avisos inmediatos incluidos</h3>
-        <p class="section-help">Activá o desactivá los avisos que querés recibir en el momento para este caso o supervisión.</p>
+        <h3>{{ 'notifications.includedImmediateNotifications' | translate }}</h3>
+        <p class="section-help">{{ 'notifications.includedImmediateNotificationsDescription' | translate }}</p>
         <div class="preference-row" *ngFor="let event of events">
           <div>
             <strong class="notification-title">{{ eventLabel[event] }}</strong>
@@ -33,25 +33,25 @@
       </div>
       <div class="preference-row">
         <div>
-          <strong>Resumen periódico</strong>
-          <span>Agrupar evaluaciones respondidas y pendientes en un informe.</span>
+          <strong>{{ 'notifications.periodicSummary' | translate }}</strong>
+          <span>{{ 'notifications.periodicSummaryDescription' | translate }}</span>
         </div>
         <nz-switch formControlName="periodicEnabled"></nz-switch>
       </div>
       <div class="nested-section" *ngIf="form.controls.periodicEnabled.value">
-        <h3>Frecuencia periódica</h3>
+        <h3>{{ 'notifications.periodicFrequency' | translate }}</h3>
         <div nz-row nzGutter="12">
           <div nz-col nzSpan="8">
             <nz-form-item>
-              <nz-form-label>Cada</nz-form-label>
-              <nz-form-control nzErrorTip="Ingresá una frecuencia válida.">
+              <nz-form-label>{{ 'notifications.every' | translate }}</nz-form-label>
+              <nz-form-control [nzErrorTip]="'notifications.validFrequencyRequired' | translate">
                 <input nz-input type="number" min="1" formControlName="periodicEvery" />
               </nz-form-control>
             </nz-form-item>
           </div>
           <div nz-col nzSpan="16">
             <nz-form-item>
-              <nz-form-label>Unidad</nz-form-label>
+              <nz-form-label>{{ 'notifications.unit' | translate }}</nz-form-label>
               <nz-form-control>
                 <nz-select formControlName="periodicUnit">
                   <nz-option *ngFor="let unit of units" [nzValue]="unit" [nzLabel]="unitLabel[unit]"></nz-option>
@@ -65,7 +65,7 @@
     </section>
 
     <section *ngIf="accountMode">
-      <h3>Lugares incluidos</h3>
+      <h3>{{ 'notifications.includedPlaces' | translate }}</h3>
       <div class="preference-row" *ngFor="let event of events">
         <div>
           <strong class="notification-title">{{ eventLabel[event] }}</strong>
@@ -82,7 +82,7 @@
 
     <div class="actions">
       <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()" type="button">
-        Guardar
+        {{ 'core.save' | translate }}
       </button>
     </div>
   </form>

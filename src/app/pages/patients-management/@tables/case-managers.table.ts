@@ -3,7 +3,7 @@ import { TableColumn } from '../../../@shared/@modules/master-data/@types/list';
 
 export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
   {
-    title: 'First name',
+    title: 'tables.patients.firstName',
     name: 'firstName',
     translationPath: 'tables.casemanagers.firstName',
     sort: true,
@@ -13,7 +13,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Middle name',
+    title: 'tables.patients.middleName',
     name: 'middleName',
     translationPath: 'tables.casemanagers.middleName',
     sort: true,
@@ -23,7 +23,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Last name',
+    title: 'tables.patients.lastName',
     name: 'lastName',
     translationPath: 'tables.casemanagers.lastName',
     sort: true,
@@ -33,7 +33,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'ID',
+    title: 'forms.patients.id',
     name: 'workID',
     translationPath: 'tables.casemanagers.workID',
     sort: true,
@@ -43,7 +43,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Phone',
+    title: 'forms.patients.phone',
     name: 'phone',
     translationPath: 'tables.casemanagers.phone',
     sort: true,
@@ -53,7 +53,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Username',
+    title: 'tables.casemanagers.username',
     name: 'username',
     translationPath: 'tables.casemanagers.username',
     sort: true,
@@ -63,7 +63,7 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Role',
+    title: 'tables.casemanagers.roles',
     name: 'formattedRoles',
     translationPath: 'tables.casemanagers.roles',
     altName: 'roles',
@@ -71,9 +71,9 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     sort: true,
   },
   {
-    title: 'Departments',
+    title: 'core.departments',
     name: 'formattedDepartments',
-    translationPath: 'tables.casemanagers.username',
+    translationPath: 'tables.casemanagers.departments',
     altName: 'departments',
     render: 'tag',
     sort: true,

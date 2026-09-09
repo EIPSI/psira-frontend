@@ -155,6 +155,13 @@ export class AssessmentOverviewComponent implements OnInit {
     );
   }
 
+  public canCompleteAssessment(): boolean {
+    return (
+      this.assessmentFormService.percentageCompleted >= 100 &&
+      this.assessment?.questionnaireAssessment?.status !== AssessmentStatus.COMPLETED
+    );
+  }
+
   private getDescription(): void {
     this.disclaimersService
       .disclaimers()

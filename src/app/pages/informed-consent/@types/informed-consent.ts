@@ -49,23 +49,23 @@ export enum InformedConsentResponseStatus {
 }
 
 export const InformedConsentKindLabel = {
-  [InformedConsentKind.TERMS_OF_USE]: 'Condiciones de uso',
-  [InformedConsentKind.TREATMENT]: 'Tratamiento',
-  [InformedConsentKind.RESEARCH]: 'Investigación',
+  [InformedConsentKind.TERMS_OF_USE]: 'informedConsent.kindTermsOfUse',
+  [InformedConsentKind.TREATMENT]: 'informedConsent.kindTreatment',
+  [InformedConsentKind.RESEARCH]: 'informedConsent.kindResearch',
 };
 
 export const InformedConsentTriggerLabel = {
-  [InformedConsentTrigger.USER_CREATED]: 'Creación de usuario',
-  [InformedConsentTrigger.FIRST_LOGIN]: 'Primer login',
-  [InformedConsentTrigger.NEW_TREATMENT]: 'Nuevo tratamiento/supervisión',
-  [InformedConsentTrigger.CONSENT_VERSION_CHANGED]: 'Cambio de versión',
+  [InformedConsentTrigger.USER_CREATED]: 'informedConsent.triggerUserCreated',
+  [InformedConsentTrigger.FIRST_LOGIN]: 'informedConsent.triggerFirstLogin',
+  [InformedConsentTrigger.NEW_TREATMENT]: 'informedConsent.triggerNewTreatment',
+  [InformedConsentTrigger.CONSENT_VERSION_CHANGED]: 'informedConsent.triggerVersionChanged',
 };
 
 export const InformedConsentStatusLabel = {
-  [InformedConsentManagementStatus.DRAFT]: 'Borrador',
-  [InformedConsentManagementStatus.ACTIVE]: 'Activa',
-  [InformedConsentManagementStatus.PAUSED]: 'Pausada',
-  [InformedConsentManagementStatus.ARCHIVED]: 'Archivada',
+  [InformedConsentManagementStatus.DRAFT]: 'core.draft',
+  [InformedConsentManagementStatus.ACTIVE]: 'core.active',
+  [InformedConsentManagementStatus.PAUSED]: 'core.paused',
+  [InformedConsentManagementStatus.ARCHIVED]: 'core.archived',
 };
 
 export interface InformedConsentTextBlock {

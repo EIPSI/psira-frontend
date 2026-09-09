@@ -304,15 +304,20 @@ export interface CalendarEventFilter {
   patientId?: number;
   therapistId?: number;
   supervisorId?: number;
+  departmentIds?: number[];
   types?: CalendarEventType[];
   sessionKind?: ClinicalSessionKind;
   includeCancelled?: boolean;
+  includeOwnEvents?: boolean;
+  includeManagedEvents?: boolean;
+  includePermittedEvents?: boolean;
 }
 
 export interface CalendarEvent {
   id: string;
   type: CalendarEventType;
   title: string;
+  rawTitle?: string;
   description?: string;
   startAt: string;
   endAt: string;
@@ -336,6 +341,12 @@ export interface CalendarEvent {
   cancellationType?: ClinicalSessionCancellationType;
   cancellationReasonSnapshot?: string;
   cancellationComment?: string;
+  patient?: CalendarPatient;
+  therapist?: CalendarPerson;
+  supervisor?: CalendarPerson;
+  targetUser?: CalendarPerson;
+  responderUser?: CalendarPerson;
+  departments?: Array<{ id: number; name: string }>;
 }
 
 export interface RestructureClinicalSessionsInput {

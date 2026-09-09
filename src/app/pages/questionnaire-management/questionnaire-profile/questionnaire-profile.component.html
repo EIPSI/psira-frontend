@@ -1,8 +1,8 @@
 <div class="questionnaire-profile-header" *ngIf="questionnaireTitle">
   <h1>{{ questionnaireTitle }}</h1>
   <div class="questionnaire-profile-actions">
-    <button nz-button type="button" (click)="previewVisible = true">Previsualizar</button>
-    <button nz-button type="button" (click)="openVersions()">Versiones</button>
+    <button nz-button type="button" (click)="previewVisible = true">{{ 'questionnaireBundles.preview' | translate }}</button>
+    <button nz-button type="button" (click)="openVersions()">{{ 'questionnaires.versions' | translate }}</button>
   </div>
 </div>
 <nz-tabset nzSize="large">
@@ -16,16 +16,16 @@
 
 <nz-drawer
   [nzVisible]="versionsVisible"
-  nzTitle="Versiones anteriores"
+  [nzTitle]="'questionnaires.previousVersions' | translate"
   nzPlacement="right"
   [nzWidth]="520"
   (nzOnClose)="versionsVisible = false"
 >
   <ng-container *nzDrawerContent>
     <div class="questionnaire-versions">
-      <div class="questionnaire-version-empty" *ngIf="versionsLoading">Cargando versiones...</div>
+      <div class="questionnaire-version-empty" *ngIf="versionsLoading">{{ 'questionnaires.loadingVersions' | translate }}</div>
       <ng-container *ngIf="!versionsLoading">
-        <div class="questionnaire-version-empty" *ngIf="!oldVersions.length">Sin versiones anteriores</div>
+        <div class="questionnaire-version-empty" *ngIf="!oldVersions.length">{{ 'questionnaires.noPreviousVersions' | translate }}</div>
         <button
           nz-button
           type="button"
@@ -39,11 +39,11 @@
 
         <section class="questionnaire-version-detail" *ngIf="selectedVersion">
           <h3>{{ selectedVersion.name }}</h3>
-          <p><strong>Abreviatura:</strong> {{ versionAbbreviation(selectedVersion) }}</p>
-          <p><strong>Idioma:</strong> {{ versionLanguage(selectedVersion) }}</p>
-          <p><strong>Estado:</strong> {{ selectedVersion.status }}</p>
-          <p><strong>Tiempo estimado:</strong> {{ selectedVersion.timeToComplete || '-' }}</p>
-          <div [innerHTML]="selectedVersion.description || 'Sin descripcion'"></div>
+          <p><strong>{{ 'questionnaires.abbreviation' | translate }}:</strong> {{ versionAbbreviation(selectedVersion) }}</p>
+          <p><strong>{{ 'questionnaires.language' | translate }}:</strong> {{ versionLanguage(selectedVersion) }}</p>
+          <p><strong>{{ 'core.status' | translate }}:</strong> {{ selectedVersion.status }}</p>
+          <p><strong>{{ 'questionnaires.estimatedTime' | translate }}:</strong> {{ selectedVersion.timeToComplete || '-' }}</p>
+          <div [innerHTML]="selectedVersion.description || ('questionnaires.noDescription' | translate)"></div>
         </section>
       </ng-container>
     </div>
@@ -52,7 +52,7 @@
 
 <nz-modal
   [(nzVisible)]="previewVisible"
-  [nzTitle]="questionnaire?.name || 'Previsualización'"
+  [nzTitle]="questionnaire?.name || ('questionnaireBundles.preview' | translate)"
   [nzFooter]="previewFooter"
   [nzWidth]="900"
   [nzClosable]="true"
@@ -78,11 +78,11 @@
               {{ choice.label || choice.name }}
             </label>
           </div>
-          <textarea *ngSwitchCase="'text'" nz-input disabled rows="3" placeholder="Respuesta"></textarea>
+          <textarea *ngSwitchCase="'text'" nz-input disabled rows="3" [placeholder]="'questionnaireBundles.answerPlaceholder' | translate"></textarea>
           <nz-input-number *ngSwitchCase="'integer'" disabled></nz-input-number>
           <nz-input-number *ngSwitchCase="'decimal'" disabled [nzStep]="0.1"></nz-input-number>
           <nz-date-picker *ngSwitchCase="'date'" disabled></nz-date-picker>
-          <input *ngSwitchDefault nz-input disabled placeholder="Respuesta" />
+          <input *ngSwitchDefault nz-input disabled [placeholder]="'questionnaireBundles.answerPlaceholder' | translate" />
         </ng-container>
       </article>
     </section>
@@ -90,5 +90,5 @@
 </nz-modal>
 
 <ng-template #previewFooter>
-  <button nz-button type="button" (click)="previewVisible = false">Cerrar</button>
+  <button nz-button type="button" (click)="previewVisible = false">{{ 'core.close' | translate }}</button>
 </ng-template>

@@ -126,7 +126,7 @@ export class CreateEmailTemplateComponent implements OnInit {
             this.getDepartments(data.departments.pageInfo.endCursor, allDepartments);
           }
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load departments' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableLoadDepartments') })
       );
   }
 
@@ -192,16 +192,16 @@ export class CreateEmailTemplateComponent implements OnInit {
 
   shortcutGroupTitle(group: string): string {
     const labels: Record<string, string> = {
-      user: 'Usuario',
-      patient: 'Paciente',
-      therapist: 'Terapeuta',
-      supervisor: 'Supervisor',
-      case: 'Caso',
-      assessment: 'Evaluación',
-      session: 'Sesión',
-      consent: 'Consentimiento informado',
-      system: 'Sistema',
-      notification: 'Notificación',
+      user: this.translate.instant('userManagement.user'),
+      patient: this.translate.instant('roles.patient'),
+      therapist: this.translate.instant('roles.therapist'),
+      supervisor: this.translate.instant('roles.supervisor'),
+      case: this.translate.instant('patientsManagement.caseData'),
+      assessment: this.translate.instant('plannedAssessments.assessment'),
+      session: this.translate.instant('dashboard.session'),
+      consent: this.translate.instant('informedConsent.title'),
+      system: this.translate.instant('system.system'),
+      notification: this.translate.instant('notifications.title'),
     };
     const normalized = String(group || '').trim();
     const key = normalized.toLowerCase();
@@ -213,7 +213,9 @@ export class CreateEmailTemplateComponent implements OnInit {
   copyShortcut(token: string, event?: Event): void {
     event?.stopPropagation();
     const copied = this.clipboard.copy(token);
-    copied ? this.nzMessage.success('Variable copiada') : this.nzMessage.error('No se pudo copiar la variable');
+    copied
+      ? this.nzMessage.success(this.translate.instant('language.variableCopied'))
+      : this.nzMessage.error(this.translate.instant('language.unableCopyVariable'));
   }
 
   insertShortcut(token: string): void {
@@ -231,7 +233,7 @@ export class CreateEmailTemplateComponent implements OnInit {
         this.templateShortcuts = shortcuts || [];
         this.shortcutGroups = [...new Set(this.templateShortcuts.map((shortcut) => shortcut.group))];
       },
-      (err) => this.errorService.handleError(err, { prefix: 'Unable to load template shortcuts' })
+      (err) => this.errorService.handleError(err, { prefix: this.translate.instant('emailTemplates.unableLoadShortcuts') })
     );
   }
 

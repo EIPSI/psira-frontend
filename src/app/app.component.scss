@@ -1,0 +1,36 @@
+.app-boot-screen {
+  align-items: center;
+  background: #f7f8fb;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: 100vh;
+  justify-content: center;
+  width: 100vw;
+}
+
+.app-boot-mark {
+  color: #172033;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0;
+
+  &::before {
+    content: 'PSIRA';
+  }
+}
+
+.app-boot-spinner {
+  animation: psira-boot-spin 0.9s linear infinite;
+  border: 3px solid #d9dee8;
+  border-top-color: #172033;
+  border-radius: 50%;
+  height: 34px;
+  width: 34px;
+}
+
+@keyframes psira-boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

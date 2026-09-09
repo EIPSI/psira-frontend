@@ -6,6 +6,7 @@ import { Filter } from '@shared/@types/filter';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 import { NotificationConfigurationModel } from '../@models/notification-configuration.model';
 import { NotificationsService } from '../@services/notifications.service';
@@ -38,6 +39,7 @@ export class NotificationConfigurationsComponent implements OnInit {
     private notificationsService: NotificationsService,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
+    private translate: TranslateService,
     public perms: AppPermissionsService
   ) {}
 
@@ -126,9 +128,9 @@ export class NotificationConfigurationsComponent implements OnInit {
 
   private deleteConfiguration(configuration: NotificationConfiguration): void {
     this.modalService.confirm({
-      nzTitle: 'Eliminar configuración',
-      nzContent: 'La configuración se eliminará y dejará de activar notificaciones para esa combinación.',
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('notifications.deleteConfiguration'),
+      nzContent: this.translate.instant('notifications.deleteConfigurationMessage'),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () =>
         this.notificationsService.deleteConfiguration(configuration.id).subscribe(
@@ -147,9 +149,9 @@ export class NotificationConfigurationsComponent implements OnInit {
   private setActions(): void {
     if (!this.perms.permissionsOnly(PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT)) return;
     this.actions = [
-      { key: ActionKey.EDIT, title: 'Ver / editar' },
-      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
-      { key: ActionKey.DELETE, title: 'Eliminar' },
+      { key: ActionKey.EDIT, title: this.translate.instant('core.viewEdit') },
+      { key: ActionKey.DUPLICATE, title: this.translate.instant('core.duplicate') },
+      { key: ActionKey.DELETE, title: this.translate.instant('core.delete') },
     ];
   }
 

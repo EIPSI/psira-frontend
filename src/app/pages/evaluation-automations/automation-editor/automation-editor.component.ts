@@ -13,6 +13,7 @@ import { RandomizationsService } from '@app/pages/randomizations/@services/rando
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TranslateService } from '@ngx-translate/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { finalize, map, switchMap } from 'rxjs/operators';
 import { EvaluationAutomationsService } from '../@services/evaluation-automations.service';
@@ -69,29 +70,29 @@ export class AutomationEditorComponent implements OnInit {
   public conditionOperators = Object.values(EvaluationAutomationConditionOperator);
   public conditionOperatorLabel = EvaluationAutomationConditionOperatorLabel;
   public delayUnitLabel: Record<EvaluationAutomationDelayUnit, string> = {
-    [EvaluationAutomationDelayUnit.MINUTES]: 'Minutos',
-    [EvaluationAutomationDelayUnit.HOURS]: 'Horas',
-    [EvaluationAutomationDelayUnit.DAYS]: 'Días',
-    [EvaluationAutomationDelayUnit.WEEKS]: 'Semanas',
-    [EvaluationAutomationDelayUnit.MONTHS]: 'Meses',
-    [EvaluationAutomationDelayUnit.YEARS]: 'Años',
+    [EvaluationAutomationDelayUnit.MINUTES]: 'time.minutes',
+    [EvaluationAutomationDelayUnit.HOURS]: 'time.hours',
+    [EvaluationAutomationDelayUnit.DAYS]: 'time.days',
+    [EvaluationAutomationDelayUnit.WEEKS]: 'time.weeks',
+    [EvaluationAutomationDelayUnit.MONTHS]: 'time.months',
+    [EvaluationAutomationDelayUnit.YEARS]: 'time.years',
   };
   public EAT = EvaluationAutomationType;
   public EACT = EvaluationAutomationContentType;
   public fixedSelectionTypes: Array<{ value: FixedAutomationSelectionType; label: string }> = [
-    { value: 'SCHEME', label: 'Esquema fijo' },
-    { value: 'HIGH_LEVEL_RANDOMIZATION', label: 'Randomización de nivel alto' },
+    { value: 'SCHEME', label: 'evaluationAutomations.fixedScheme' },
+    { value: 'HIGH_LEVEL_RANDOMIZATION', label: 'evaluationAutomations.highLevelRandomization' },
   ];
   public timeUnits: Array<{ value: TimeUnit; label: string }> = [
-    { value: 'MINUTES', label: 'Minutos' },
-    { value: 'HOURS', label: 'Horas' },
-    { value: 'DAYS', label: 'Días' },
-    { value: 'WEEKS', label: 'Semanas' },
-    { value: 'MONTHS', label: 'Meses' },
+    { value: 'MINUTES', label: 'time.minutes' },
+    { value: 'HOURS', label: 'time.hours' },
+    { value: 'DAYS', label: 'time.days' },
+    { value: 'WEEKS', label: 'time.weeks' },
+    { value: 'MONTHS', label: 'time.months' },
   ];
   public triggerReasonScopeOptions: Array<{ value: TriggerReasonScope; label: string }> = [
-    { value: 'CLINICAL', label: 'Tratamiento' },
-    { value: 'SUPERVISION', label: 'Supervisión' },
+    { value: 'CLINICAL', label: 'evaluationAutomations.clinicalScope' },
+    { value: 'SUPERVISION', label: 'evaluationAutomations.supervisionScope' },
   ];
 
   constructor(
@@ -105,7 +106,8 @@ export class AutomationEditorComponent implements OnInit {
     private bundlesService: QuestionnaireBundlesService,
     private randomizationsService: RandomizationsService,
     private errorService: ErrorHandlerService,
-    private message: NzMessageService
+    private message: NzMessageService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -260,7 +262,7 @@ export class AutomationEditorComponent implements OnInit {
 
     request.pipe(finalize(() => (this.saving = false))).subscribe(
       () => {
-        this.message.success(this.automationId ? 'Automatización actualizada' : 'Automatización creada');
+        this.message.success(this.translate.instant(this.automationId ? 'evaluationAutomations.updated' : 'evaluationAutomations.created'));
         this.router.navigate(['/psira/evaluation-automations']);
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to save automation' })
@@ -268,16 +270,16 @@ export class AutomationEditorComponent implements OnInit {
   }
 
   public summary(): string {
-    const role = this.roles.find((item) => item.id === this.form?.get('roleId')?.value)?.name || 'el rol seleccionado';
-    const trigger = this.triggerPointLabel[this.form?.get('triggerPoint')?.value] || 'el trigger seleccionado';
+    const role = this.roles.find((item) => item.id === this.form?.get('roleId')?.value)?.name || this.translate.instant('evaluationAutomations.selectedRole');
+    const trigger = this.triggerPointLabel[this.form?.get('triggerPoint')?.value] || this.translate.instant('evaluationAutomations.selectedTrigger');
     const delay = this.form?.get('delayAmount')?.value || 0;
-    const unit = this.delayUnitLabel[this.form?.get('delayUnit')?.value] || '';
+    const unit = this.translate.instant(this.delayUnitLabel[this.form?.get('delayUnit')?.value] || 'time.minutes').toLowerCase();
     if (this.isFixedScheme) {
-      const scheme = this.schemes.find((item) => item.id === this.form?.get('schemeId')?.value)?.name || 'el esquema seleccionado';
-      return `Cuando un usuario con rol ${role} cumpla ${trigger}, se asignará el esquema fijo ${scheme} ${delay} ${unit.toLowerCase()} después.`;
+      const scheme = this.schemes.find((item) => item.id === this.form?.get('schemeId')?.value)?.name || this.translate.instant('evaluationAutomations.selectedScheme');
+      return this.translate.instant('evaluationAutomations.fixedSchemeSummary', { role, trigger, scheme, delay, unit });
     }
-    const name = this.form?.get('evaluationName')?.value || 'la evaluación configurada';
-    return `Cuando un usuario con rol ${role} cumpla ${trigger}, se programará ${name} ${delay} ${unit.toLowerCase()} después.`;
+    const name = this.form?.get('evaluationName')?.value || this.translate.instant('evaluationAutomations.configuredEvaluation');
+    return this.translate.instant('evaluationAutomations.individualEvaluationSummary', { role, trigger, name, delay, unit });
   }
 
   public isSessionNumberTrigger(): boolean {
@@ -616,7 +618,7 @@ export class AutomationEditorComponent implements OnInit {
     const value = this.form.value;
     if (value.triggerPoint === EvaluationAutomationTriggerPoint.SESSION_NUMBER && !value.triggerSessionNumber) {
       this.markRequired('triggerSessionNumber');
-      this.message.error('Debe indicarse el número de sesión que activa la automatización');
+      this.message.error(this.translate.instant('evaluationAutomations.sessionNumberRequiredMessage'));
       return false;
     }
     if (
@@ -624,19 +626,19 @@ export class AutomationEditorComponent implements OnInit {
       value.lastLoginInactiveDays &&
       Number(value.lastLoginInactiveDays) < 1
     ) {
-      this.message.error('Los días desde el login anterior deben ser mayores a cero');
+      this.message.error(this.translate.instant('evaluationAutomations.lastLoginDaysPositive'));
       return false;
     }
 
     if (value.automationType === EvaluationAutomationType.FIXED_SCHEME) {
       if (value.fixedSelectionType === 'SCHEME' && !value.schemeId) {
         this.markRequired('schemeId');
-        this.message.error('Debe seleccionarse un esquema fijo');
+        this.message.error(this.translate.instant('evaluationAutomations.fixedSchemeRequiredMessage'));
         return false;
       }
       if (value.fixedSelectionType === 'HIGH_LEVEL_RANDOMIZATION' && !value.schemeRandomizationRuleId) {
         this.markRequired('schemeRandomizationRuleId');
-        this.message.error('Debe seleccionarse una randomización de nivel alto');
+        this.message.error(this.translate.instant('evaluationAutomations.highLevelRandomizationRequiredMessage'));
         return false;
       }
       return true;
@@ -644,22 +646,22 @@ export class AutomationEditorComponent implements OnInit {
 
     if (!value.assessmentTypeId) {
       this.markRequired('assessmentTypeId');
-      this.message.error('Debe seleccionarse un tipo de evaluación');
+      this.message.error(this.translate.instant('evaluationAutomations.assessmentTypeRequiredMessage'));
       return false;
     }
     if (this.contentType === EvaluationAutomationContentType.QUESTIONNAIRE && !value.questionnaireIds) {
       this.markRequired('questionnaireIds');
-      this.message.error('Debe seleccionarse un cuestionario');
+      this.message.error(this.translate.instant('evaluationAutomations.questionnaireRequiredMessage'));
       return false;
     }
     if (this.contentType === EvaluationAutomationContentType.QUESTIONNAIRE_BUNDLE && !value.questionnaireBundleIds) {
       this.markRequired('questionnaireBundleIds');
-      this.message.error('Debe seleccionarse un paquete de cuestionarios');
+      this.message.error(this.translate.instant('evaluationAutomations.bundleRequiredMessage'));
       return false;
     }
     if (this.contentType === EvaluationAutomationContentType.RANDOMIZATION && !value.randomizationRuleIds) {
       this.markRequired('randomizationRuleIds');
-      this.message.error('Debe seleccionarse una randomización');
+      this.message.error(this.translate.instant('evaluationAutomations.randomizationRequiredMessage'));
       return false;
     }
     return true;
@@ -800,7 +802,7 @@ export class AutomationEditorComponent implements OnInit {
                   { ...reason, label: parentLabel },
                   ...children.map((child: CaseEventReason) => ({
                     ...child,
-                    label: `${parentLabel} > ${child.label}`,
+                    label: [parentLabel, child.label].join(' > '),
                   })),
                 ];
               })
@@ -866,19 +868,19 @@ export class AutomationEditorComponent implements OnInit {
   private contextLabel(context: CaseEventReasonContext): string {
     switch (context) {
       case CaseEventReasonContext.SESSION_CANCELLATION:
-        return 'Tratamiento';
+        return this.translate.instant('evaluationAutomations.clinicalScope');
       case CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION:
-        return 'Supervisión';
+        return this.translate.instant('evaluationAutomations.supervisionScope');
       case CaseEventReasonContext.TREATMENT_FINALIZATION:
-        return 'Tratamiento';
+        return this.translate.instant('evaluationAutomations.clinicalScope');
       case CaseEventReasonContext.SUPERVISION_FINALIZATION:
-        return 'Supervisión';
+        return this.translate.instant('evaluationAutomations.supervisionScope');
       case CaseEventReasonContext.NEW_TREATMENT:
-        return 'Tratamiento';
+        return this.translate.instant('evaluationAutomations.clinicalScope');
       case CaseEventReasonContext.NEW_SUPERVISION:
-        return 'Supervisión';
+        return this.translate.instant('evaluationAutomations.supervisionScope');
       default:
-        return 'Motivo';
+        return this.translate.instant('evaluationAutomations.reason');
     }
   }
 

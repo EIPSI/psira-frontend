@@ -80,7 +80,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.structure = [this.createGroupNode('FIXED_GROUP', 'Evaluation sequence')];
+    this.structure = [this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.defaultSequenceLabel'))];
     this.getDepartments();
     this.getQuestionnaires();
     this.route.params.subscribe((data) => {
@@ -165,7 +165,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
             this.loadDepartmentsPage(data.departments.pageInfo.endCursor, allDepartments);
           }
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load departments' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('questionnaireBundles.unableLoadDepartments') })
       );
   }
 
@@ -218,7 +218,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
           );
         this.clearIncompatibleQuestionnaireNodes();
       },
-      (err) => this.errorService.handleError(err, { prefix: 'Unable to load questionnaires' })
+      (err) => this.errorService.handleError(err, { prefix: this.translate.instant('questionnaireBundles.unableLoadQuestionnaires') })
     );
   }
 
@@ -275,15 +275,15 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   }
 
   addFixedGroup(nodes: BundleNode[] = this.rootChildren): void {
-    nodes.push(this.createGroupNode('FIXED_GROUP', 'Fixed group'));
+    nodes.push(this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.fixedGroup')));
   }
 
   addScreen(nodes: BundleNode[] = this.rootChildren): void {
-    nodes.push(this.createGroupNode('SCREEN', 'Pantalla'));
+    nodes.push(this.createGroupNode('SCREEN', this.translate.instant('questionnaireBundles.screen')));
   }
 
   addRandomGroup(nodes: BundleNode[] = this.rootChildren): void {
-    nodes.push(this.createGroupNode('RANDOM_GROUP', 'Randomized group'));
+    nodes.push(this.createGroupNode('RANDOM_GROUP', this.translate.instant('questionnaireBundles.randomizedGroup')));
   }
 
   addChildQuestionnaire(node: BundleNode): void {
@@ -348,7 +348,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   }
 
   questionnaireName(questionnaireId: string | null | undefined): string {
-    return this.questionnaires.find((questionnaire) => questionnaire._id === questionnaireId)?.name || 'Questionnaire';
+    return this.questionnaires.find((questionnaire) => questionnaire._id === questionnaireId)?.name || this.translate.instant('core.questionnaire');
   }
 
   countQuestionnaires(nodes: BundleNode[] = this.structure): number {
@@ -461,7 +461,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
     const currentNodes = nodes || [];
 
     if (!currentNodes.length) {
-      return [this.createGroupNode('FIXED_GROUP', 'Evaluation sequence')];
+      return [this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.defaultSequenceLabel'))];
     }
 
     if (currentNodes.length === 1 && currentNodes[0].type !== 'QUESTIONNAIRE') {
@@ -471,7 +471,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
 
     return [
       {
-        ...this.createGroupNode('FIXED_GROUP', 'Evaluation sequence'),
+        ...this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.defaultSequenceLabel')),
         children: currentNodes,
       },
     ];
@@ -545,6 +545,6 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
       return graphQLErrors.map((graphQLError: any) => graphQLError.message).join(' ');
     }
 
-    return error?.message || 'Unable to save questionnaire bundle';
+    return error?.message || this.translate.instant('questionnaireBundles.unableSave');
   }
 }

@@ -25,7 +25,7 @@
   [nzMask]="true"
   [nzClosable]="true"
   [nzMaskClosable]="false"
-  [nzTitle]="script?.id ? 'Edit Script' : 'Add Script'"
+  [nzTitle]="(script?.id ? 'questionnaires.editScript' : 'questionnaires.addScript') | translate"
   [nzVisible]="showCreateScript"
   (nzOnClose)="closeCreatePanel()"
   nzPlacement="right"
@@ -42,7 +42,7 @@
   >
   </app-form>
   <div class="card-div">
-    <nz-card nzTitle="Reports*">
+    <nz-card [nzTitle]="'questionnaires.reportsRequired' | translate">
       <nz-checkbox-wrapper style="width: 100%">
         <div nz-row>
           <div nz-col nzSpan="24" *ngFor="let report of reports">
@@ -59,7 +59,7 @@
     </nz-card>
   </div>
   <div class="buttons">
-    <button class="cancel-button" nz-button nzType="default" (click)="closeCreatePanel()">Cancel</button>
-    <button class="add-button" nz-button nzType="primary" (click)="createScript()">Add</button>
+    <button class="cancel-button" nz-button nzType="default" (click)="closeCreatePanel()">{{ 'core.cancel' | translate }}</button>
+    <button class="add-button" nz-button nzType="primary" (click)="createScript()">{{ 'core.add' | translate }}</button>
   </div>
 </nz-drawer>

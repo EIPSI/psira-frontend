@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import {
   endOfDay,
   endOfMonth,
@@ -50,6 +50,7 @@ import {
   EvaluationAutomationTriggerPoint,
   EvaluationAutomationTriggerPointLabel,
 } from '@app/pages/evaluation-automations/@types/evaluation-automation';
+import { TranslateService } from '@ngx-translate/core';
 
 enum CalendarCreateType {
   SESSION = 'SESSION',
@@ -83,6 +84,10 @@ export class UserCalendarComponent implements OnChanges {
   triggerPointLabel = EvaluationAutomationTriggerPointLabel;
 
   @Input() user?: User;
+  @Input() hideGrid = false;
+  @Input() allowExternalManagement = false;
+  @Input() embeddedCreateMode = false;
+  @Output() createSaved = new EventEmitter<void>();
 
   selectedDate = new Date();
   view = CalendarView.MONTH;
@@ -124,11 +129,11 @@ export class UserCalendarComponent implements OnChanges {
   simpleReminderUnit: AssessmentAvailabilityUnit = 'MINUTES';
   simpleAssessmentNote = '';
   availabilityUnits: Array<{ label: string; value: AssessmentAvailabilityUnit }> = [
-    { label: 'Minutos', value: 'MINUTES' },
-    { label: 'Horas', value: 'HOURS' },
-    { label: 'Días', value: 'DAYS' },
-    { label: 'Semanas', value: 'WEEKS' },
-    { label: 'Meses', value: 'MONTHS' },
+    { label: 'time.minutes', value: 'MINUTES' },
+    { label: 'time.hours', value: 'HOURS' },
+    { label: 'time.days', value: 'DAYS' },
+    { label: 'time.weeks', value: 'WEEKS' },
+    { label: 'time.months', value: 'MONTHS' },
   ];
   assessmentTypes: any[] = [];
   foundQuestionnaires: QuestionnaireVersion[] = [];
@@ -160,12 +165,12 @@ export class UserCalendarComponent implements OnChanges {
   repeatUnits = this.recurrenceService.repeatUnits;
   weekDayOptions = this.recurrenceService.weekDayOptions;
   addSchemeApplicationModeOptions = [
-    { label: 'Desde esta sesión', value: AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION },
-    { label: 'Estructura original', value: AddClinicalSessionSchemesApplicationMode.ORIGINAL_SESSION_NUMBER },
+    { label: 'patientsManagement.fromThisSession', value: AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION },
+    { label: 'patientsManagement.originalStructure', value: AddClinicalSessionSchemesApplicationMode.ORIGINAL_SESSION_NUMBER },
   ];
   modalityOptions = [
-    { label: 'Presencial', value: ClinicalSessionModality.IN_PERSON },
-    { label: 'Online', value: ClinicalSessionModality.ONLINE },
+    { label: 'patientsManagement.inPerson', value: ClinicalSessionModality.IN_PERSON },
+    { label: 'patientsManagement.online', value: ClinicalSessionModality.ONLINE },
   ];
 
   private currentUser?: User;
@@ -202,7 +207,8 @@ export class UserCalendarComponent implements OnChanges {
     private recurrenceService: CalendarRecurrenceService,
     private schemesService: EvaluationSchemesService,
     private evaluationAutomationsService: EvaluationAutomationsService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private translate: TranslateService
   ) {}
 
   ngOnChanges(): void {
@@ -220,8 +226,8 @@ export class UserCalendarComponent implements OnChanges {
   openCreateEvent(date: Date = this.selectedDate, hour?: number): void {
     if (!this.canManageUserCalendar()) {
       this.modalService.warning({
-        nzTitle: 'Calendario del terapeuta',
-        nzContent: 'Solo los supervisores asignados pueden crear sesiones y evaluaciones.',
+        nzTitle: this.translate.instant('calendar.therapistCalendar'),
+        nzContent: this.translate.instant('calendar.onlyAssignedSupervisorsCanManage'),
       });
       return;
     }
@@ -229,7 +235,7 @@ export class UserCalendarComponent implements OnChanges {
     const startAt = new Date(date);
     startAt.setHours(hour ?? 9, 0, 0, 0);
     this.createType = CalendarCreateType.SESSION;
-    this.createTitle = 'Supervisión';
+    this.createTitle = this.translate.instant('dashboard.supervision');
     this.createStartAt = startAt;
     this.createEndAt = new Date(startAt.getTime() + 60 * 60 * 1000);
     this.createResponsibleUserIds = this.defaultSupervisorIds();
@@ -294,11 +300,11 @@ export class UserCalendarComponent implements OnChanges {
   stopActiveScheme(application: ClinicalSessionSchemeApplication): void {
     if (!this.editingEvent?.clinicalSessionId) return;
     this.modalService.confirm({
-      nzTitle: 'Detener esquema',
-      nzContent: 'Se cancelarán evaluaciones pendientes de este esquema desde esta sesión en adelante.',
-      nzOkText: 'Detener',
+      nzTitle: this.translate.instant('patientsManagement.stopScheme'),
+      nzContent: this.translate.instant('calendar.stopSchemeConfirmLong'),
+      nzOkText: this.translate.instant('patientsManagement.stop'),
       nzOkDanger: true,
-      nzCancelText: 'Volver',
+      nzCancelText: this.translate.instant('core.back'),
       nzOnOk: () => {
         this.saving = true;
         this.calendarService
@@ -309,7 +315,7 @@ export class UserCalendarComponent implements OnChanges {
               this.loadActiveSchemeApplications(this.editingEvent.clinicalSessionId as number);
               this.loadEvents();
             },
-            (error) => this.errorService.handleError(error, { prefix: 'Unable to stop evaluation scheme' })
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableStopEvaluationScheme') })
           );
       },
     });
@@ -362,9 +368,9 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   private defaultCreateTitle(type: CalendarCreateType): string {
-    if (type === CalendarCreateType.FIXED_SCHEME) return 'Evaluación - esquema fijo';
-    if (type === CalendarCreateType.SIMPLE_ASSESSMENT) return 'Evaluación - individual';
-    return 'Supervisión';
+    if (type === CalendarCreateType.FIXED_SCHEME) return this.translate.instant('calendar.fixedSchemeAssessment');
+    if (type === CalendarCreateType.SIMPLE_ASSESSMENT) return this.translate.instant('calendar.individualAssessment');
+    return this.translate.instant('dashboard.supervision');
   }
 
   setEditDurationMinutes(minutes: number): void {
@@ -427,7 +433,7 @@ export class UserCalendarComponent implements OnChanges {
             this.editModalVisible = false;
             this.loadEvents();
           },
-          (error) => this.errorService.handleError(error, { prefix: 'Unable to update clinical session' })
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableUpdateSession') })
         );
       return;
     }
@@ -453,7 +459,7 @@ export class UserCalendarComponent implements OnChanges {
             this.matchesDepartments(questionnaire.departmentIds)
           );
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaires' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('questionnaires.unableLoadQuestionnaires') })
     );
   }
 
@@ -475,7 +481,7 @@ export class UserCalendarComponent implements OnChanges {
     const responsibleUserIds = this.selectedResponsibleUserIds();
     const primaryResponsibleUserId = this.primaryResponsibleUserId() || this.currentUser?.id;
     const sessions = this.buildSessionOccurrences().map((occurrence) => ({
-      title: this.createTitle || 'Supervisión',
+        title: this.createTitle || this.translate.instant('dashboard.supervision'),
       sessionKind: ClinicalSessionKind.SUPERVISION,
       startAt: occurrence.startAt,
       endAt: occurrence.endAt,
@@ -495,9 +501,10 @@ export class UserCalendarComponent implements OnChanges {
       .subscribe(
         () => {
           this.createEventModalVisible = false;
+          this.createSaved.emit();
           this.loadEvents();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to create supervision session' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableCreateSupervisionSession') })
       );
   }
 
@@ -529,9 +536,10 @@ export class UserCalendarComponent implements OnChanges {
       .subscribe(
         () => {
           this.createEventModalVisible = false;
+          this.createSaved.emit();
           this.loadEvents();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to apply fixed scheme' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableApplyFixedScheme') })
       );
   }
 
@@ -567,9 +575,10 @@ export class UserCalendarComponent implements OnChanges {
       .subscribe(
         () => {
           this.createEventModalVisible = false;
+          this.createSaved.emit();
           this.loadEvents();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to create assessment' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableCreateAssessment') })
       );
   }
 
@@ -622,10 +631,10 @@ export class UserCalendarComponent implements OnChanges {
     const clinicalSessionId = event.clinicalSessionId;
     if (!clinicalSessionId) return;
     this.modalService.confirm({
-      nzTitle: 'Cancelación',
-      nzContent: 'Confirmá que la cancelación no fue un error.',
-      nzOkText: 'Continuar',
-      nzCancelText: 'Volver',
+      nzTitle: this.translate.instant('patientsManagement.cancellation'),
+      nzContent: this.translate.instant('calendar.sessionWillBeCancelled'),
+      nzOkText: this.translate.instant('core.continue'),
+      nzCancelText: this.translate.instant('core.back'),
       nzOnOk: () => this.openCancellationModal(event),
     });
   }
@@ -670,7 +679,7 @@ export class UserCalendarComponent implements OnChanges {
           this.cancellationReasonLevels[levelIndex + 1] = children;
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load cancellation reason level' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadCancellationReasonLevel') })
     );
   }
 
@@ -680,22 +689,22 @@ export class UserCalendarComponent implements OnChanges {
     const parent = this.cancellationReasonLevels[levelIndex - 1]?.find(
       (reason) => Number(reason.id) === Number(parentId)
     );
-    return parent?.nextLevelLabel || 'Submotivo';
+    return parent?.nextLevelLabel || this.translate.instant('reasonTrees.subreason');
   }
 
   confirmCancellation(): void {
     if (!this.cancelEvent) return;
     if (this.cancelType === ClinicalSessionCancellationType.NO_SHOW && !this.cancelReasonId) {
       this.modalService.warning({
-        nzTitle: 'Motivo requerido',
-        nzContent: 'Para registrar una falta tenés que seleccionar un motivo.',
+        nzTitle: this.translate.instant('calendar.reasonRequired'),
+        nzContent: this.translate.instant('calendar.noShowReasonRequired'),
       });
       return;
     }
     if (this.cancelType === ClinicalSessionCancellationType.NO_SHOW && this.showCancellationOtherReason && !this.cancelOtherReason.trim()) {
       this.modalService.warning({
-        nzTitle: 'Otro motivo requerido',
-        nzContent: 'Completá el detalle de Otro motivo.',
+        nzTitle: this.translate.instant('calendar.otherReasonRequired'),
+        nzContent: this.translate.instant('calendar.otherReasonDetailRequired'),
       });
       return;
     }
@@ -706,7 +715,7 @@ export class UserCalendarComponent implements OnChanges {
         cancellationType: this.cancelType,
         cancellationReason:
           this.cancelType === ClinicalSessionCancellationType.RESCHEDULED
-            ? 'Cancelación por reprogramación'
+            ? this.translate.instant('calendar.rescheduledCancellation')
             : undefined,
         cancellationReasonId:
           this.cancelType === ClinicalSessionCancellationType.NO_SHOW ? this.cancelReasonId : undefined,
@@ -724,17 +733,17 @@ export class UserCalendarComponent implements OnChanges {
           this.editModalVisible = false;
           this.loadEvents();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to discard session' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableDiscardSession') })
       );
   }
 
   private discardAssessment(event: CalendarEvent): void {
     this.modalService.confirm({
-      nzTitle: 'Descartar evaluación',
-      nzContent: 'La evaluación quedará cancelada y dejará de mostrarse como pendiente.',
-      nzOkText: 'Descartar',
+      nzTitle: this.translate.instant('calendar.discardAssessment'),
+      nzContent: this.translate.instant('calendar.assessmentDiscardConfirm'),
+      nzOkText: this.translate.instant('patientsManagement.discard'),
       nzOkDanger: true,
-      nzCancelText: 'Volver',
+      nzCancelText: this.translate.instant('core.back'),
       nzOnOk: () => {
         this.saving = true;
         this.calendarService
@@ -745,7 +754,7 @@ export class UserCalendarComponent implements OnChanges {
               this.editModalVisible = false;
               this.loadEvents();
             },
-            (error) => this.errorService.handleError(error, { prefix: 'Unable to discard assessment' })
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableDiscardAssessment') })
           );
       },
     });
@@ -758,15 +767,15 @@ export class UserCalendarComponent implements OnChanges {
         if (closeModal) this.editModalVisible = false;
         this.loadEvents();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to move calendar event' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableMoveCalendarEvent') })
     );
   }
 
   private duplicateEvent(event: CalendarEvent): void {
     if (!event.clinicalSessionId || !event.editable || !this.user?.id) {
       this.modalService.warning({
-        nzTitle: 'Duplicar evento',
-        nzContent: 'Por ahora solo se pueden duplicar sesiones desde el calendario.',
+        nzTitle: this.translate.instant('calendar.duplicateEvent'),
+        nzContent: this.translate.instant('calendar.onlySessionsCanBeDuplicated'),
       });
       return;
     }
@@ -790,7 +799,7 @@ export class UserCalendarComponent implements OnChanges {
       .pipe(finalize(() => (this.creating = false)))
       .subscribe(
         () => this.loadEvents(),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate calendar event' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableDuplicateCalendarEvent') })
       );
   }
 
@@ -838,7 +847,7 @@ export class UserCalendarComponent implements OnChanges {
           const availableIds = this.automationPreview.map((automation) => automation.automationId);
           this.skippedAutomationIds = this.skippedAutomationIds.filter((id) => availableIds.includes(id));
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load automation preview' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadAutomationPreview') })
       );
   }
 
@@ -849,6 +858,7 @@ export class UserCalendarComponent implements OnChanges {
   }
 
   private canManageUserCalendar(): boolean {
+    if (this.allowExternalManagement) return true;
     const currentUserId = Number(this.currentUser?.id);
     return !!currentUserId && this.supervisorOptions.some((user) => Number(user.id) === currentUserId);
   }
@@ -856,7 +866,7 @@ export class UserCalendarComponent implements OnChanges {
   userLabel(user: User): string {
     return [user?.firstName, user?.middleName, user?.lastName]
       .filter((part) => !!part)
-      .join(' ') || user?.username || user?.email || `Usuario ${user?.id}`;
+      .join(' ') || user?.username || user?.email || `${this.translate.instant('userManagement.user')} ${user?.id}`;
   }
 
   onResponsibleUsersChange(userIds: number[]): void {
@@ -891,7 +901,7 @@ export class UserCalendarComponent implements OnChanges {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         (events) => (this.events = events),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load therapist calendar' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadTherapistCalendar') })
       );
   }
 
@@ -918,14 +928,14 @@ export class UserCalendarComponent implements OnChanges {
           (scheme: EvaluationScheme) => scheme.schemeType === EvaluationSchemeType.SESSION_BASED
         );
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load schemes' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableLoadSchemes') })
     );
   }
 
   private loadAssessmentTypes(): void {
     this.assessmentAdministrationService.assessmentActive().subscribe(
       ({ data }: any) => (this.assessmentTypes = data.activeAssessmentTypes || []),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessment types' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('plannedAssessments.unableLoadAssessmentTypes') })
     );
   }
 
@@ -934,7 +944,7 @@ export class UserCalendarComponent implements OnChanges {
       ({ data }: any) => {
         this.questionnaireBundles = data.getQuestionnaireBundles.edges.map((edge: any) => edge.node);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load questionnaire bundles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadQuestionnaireBundles') })
     );
   }
 
@@ -955,7 +965,7 @@ export class UserCalendarComponent implements OnChanges {
             (randomization: RandomizationRule) => randomization.type === RandomizationRuleType.HIGH_LEVEL
           );
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load randomizations' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('randomizations.unableLoadRandomizations') })
       );
   }
 
@@ -968,7 +978,7 @@ export class UserCalendarComponent implements OnChanges {
         this.createResponsibleUserIds = this.defaultSupervisorIds();
         this.createSupervisor = this.primaryResponsibleUser();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load supervisors' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadSupervisors') })
     );
   }
 
@@ -979,7 +989,7 @@ export class UserCalendarComponent implements OnChanges {
         this.cancellationReasons = reasons || [];
         this.resetCancellationReasonSelection();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load cancellation reasons' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadCancellationReasons') })
     );
   }
 
@@ -990,16 +1000,16 @@ export class UserCalendarComponent implements OnChanges {
           item.context === CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION &&
           !item.departmentId
         ) || (trees || []).find((item) => item.context === CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION);
-        this.cancellationRootLabel = tree?.levelLabels?.[0] || 'Motivo';
+        this.cancellationRootLabel = tree?.levelLabels?.[0] || this.translate.instant('reasonTrees.reason');
       },
-      () => (this.cancellationRootLabel = 'Motivo')
+      () => (this.cancellationRootLabel = this.translate.instant('reasonTrees.reason'))
     );
   }
 
   private loadActiveSchemeApplications(clinicalSessionId: number): void {
     this.calendarService.getClinicalSessionSchemeApplications(clinicalSessionId).subscribe(
       (applications) => (this.activeSchemeApplications = applications || []),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load active evaluation schemes' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableLoadActiveEvaluationSchemes') })
     );
   }
 
@@ -1015,6 +1025,7 @@ export class UserCalendarComponent implements OnChanges {
 
   private defaultSupervisorIds(): number[] {
     const currentUserId = Number(this.currentUser?.id);
+    if (this.allowExternalManagement && currentUserId) return [currentUserId];
     if (currentUserId && this.supervisorOptions.some((user) => Number(user.id) === currentUserId)) return [currentUserId];
     const firstSupervisorId = Number(this.supervisorOptions[0]?.id);
     return firstSupervisorId ? [firstSupervisorId] : [];

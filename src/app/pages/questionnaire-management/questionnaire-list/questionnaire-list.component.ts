@@ -82,11 +82,8 @@ export class QuestionnaireListComponent {
     this.getDepartments();
 
     if (this.perms.permissionsOnly(PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT)) {
-      this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'Discard Questionnaire' });
+      this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'questionnaires.discardQuestionnaire' });
     }
-    // if (this.perms.permissionsOnly(PermissionKey.QUESTIONNAIRES_DELETE_DEPARTMENT)) {
-    //   this.actions.push({ key: ActionKey.DELETE_QUESTIONNAIRE, title: 'Delete Questionnaire' });
-    // }
   }
 
   public onSelect(questionnaire: FormattedQuestionnaireVersion): void {
@@ -190,8 +187,8 @@ export class QuestionnaireListComponent {
       // create confirmation modal
       const modal = this.modalService.confirm({
         nzOnOk: () => true,
-        nzTitle: 'Delete Questionnaire',
-        nzContent: `This action will delete the questionnaire and all the associated assessments. Are you sure you want to proceed?`,
+        nzTitle: this.translate.instant('questionnaires.deleteQuestionnaire'),
+        nzContent: this.translate.instant('questionnaires.deleteQuestionnaireConfirm'),
       });
 
       // wait for modal to successfully complete
@@ -240,7 +237,9 @@ export class QuestionnaireListComponent {
           this.getQuestionnaires();
         },
         (error) =>
-          this.errorService.handleError(error, { prefix: `Unable to delete assessment "${questionnaire.name}"` })
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('questionnaires.unableDeleteQuestionnaire', { name: questionnaire.name }),
+          })
       );
   }
 }

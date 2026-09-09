@@ -15,6 +15,7 @@ import { AppPermissionsService } from '@shared/services/app-permissions.service'
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { finalize } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { EvaluationSchemeModel } from '../@models/evaluation-scheme.model';
 import { EvaluationSchemesTable } from '../@tables/evaluation-schemes.table';
 import { EvaluationScheme } from '../@types/evaluation-scheme';
@@ -50,7 +51,8 @@ export class SchemesListComponent implements OnInit {
     private schemesService: EvaluationSchemesService,
     private errorService: ErrorHandlerService,
     private modalService: NzModalService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -109,27 +111,27 @@ export class SchemesListComponent implements OnInit {
   private toggleActive(scheme: EvaluationScheme): void {
     this.schemesService.updateScheme({ id: scheme.id, active: !scheme.active }).subscribe(
       () => this.loadSchemes(),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to update scheme' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableUpdateScheme') })
     );
   }
 
   private duplicateScheme(scheme: EvaluationScheme): void {
     this.schemesService.createScheme(this.duplicateSchemePayload(scheme)).subscribe(
       () => this.loadSchemes(),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to duplicate scheme' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableDuplicateScheme') })
     );
   }
 
   private discardScheme(scheme: EvaluationScheme): void {
     this.modalService.confirm({
-      nzTitle: 'Eliminar esquema',
-      nzContent: `El esquema "${scheme.name}" se eliminará. Las ocurrencias y evaluaciones ya creadas quedarán desvinculadas del esquema.`,
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('evaluationSchemes.deleteScheme'),
+      nzContent: this.translate.instant('evaluationSchemes.deleteSchemeConfirm', { name: scheme.name }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () =>
         this.schemesService.deleteScheme(scheme.id).subscribe(
           () => this.loadSchemes(),
-          (error) => this.errorService.handleError(error, { prefix: 'Unable to delete scheme' })
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableDeleteScheme') })
         ),
     });
   }
@@ -144,7 +146,7 @@ export class SchemesListComponent implements OnInit {
           this.schemes = edges.map((edge: any) => EvaluationSchemeModel.fromJson(edge.node));
           this.pageInfo = pageInfo;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load schemes' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('evaluationSchemes.unableLoadSchemes') })
       );
   }
 
@@ -152,16 +154,16 @@ export class SchemesListComponent implements OnInit {
     if (!this.perms.permissionsOnly(PermissionKey.EVALUATION_SCHEMES_EDIT_DEPARTMENT)) return;
 
     this.actions = [
-      { key: ActionKey.EDIT, title: 'Edit Scheme' },
-      { key: ActionKey.DUPLICATE, title: 'Duplicar' },
-      { key: ActionKey.TOGGLE_ACTIVE, title: 'Activate/Deactivate' },
-      { key: ActionKey.DISCARD, title: 'Eliminar' },
+      { key: ActionKey.EDIT, title: 'evaluationSchemes.edit' },
+      { key: ActionKey.DUPLICATE, title: 'core.duplicate' },
+      { key: ActionKey.TOGGLE_ACTIVE, title: 'core.activateDeactivate' },
+      { key: ActionKey.DISCARD, title: 'core.delete' },
     ];
   }
 
   private duplicateSchemePayload(scheme: EvaluationScheme): Partial<EvaluationScheme> {
     return {
-      name: `${scheme.name} copy`,
+      name: `${scheme.name} ${this.translate.instant('core.copySuffix')}`,
       description: scheme.description,
       schemeType: scheme.schemeType,
       defaultRecurrenceRule: scheme.defaultRecurrenceRule,

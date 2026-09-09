@@ -11,7 +11,7 @@
       <div>
         <h2 *ngIf="group.title">
           <span *ngIf="group.translationPath; else plainTitle" [translate]="group.translationPath"></span>
-          <ng-template #plainTitle> {{ group.title }} </ng-template>
+          <ng-template #plainTitle> {{ group.title | translate }} </ng-template>
         </h2>
       </div>
       <div nz-row nzGutter="16" class="form-fields">
@@ -28,7 +28,7 @@
                 <ng-container *ngIf="field.translationPath; else plainFieldTitle">
                   <span [translate]="field.translationPath"></span>
                 </ng-container>
-                <ng-template #plainFieldTitle>{{ field.displayLabel || field.title || field.label }}</ng-template>
+                <ng-template #plainFieldTitle>{{ (field.displayLabel || field.title || field.label) | translate }}</ng-template>
                 <span class="required-mark" *ngIf="field?.isRequired && inputMode"> *</span>
               </b>
             </div>
@@ -36,7 +36,7 @@
             <ng-container *ngIf="definitionLayout && !inputMode; else editableField">
               <div class="definition-array-cards" *ngIf="field.type === 'array'; else definitionValue">
                 <div class="definition-array-card" *ngFor="let row of field.rows; let rowIndex = index">
-                  <div class="definition-array-card-title">{{ field.label || field.title }} {{ rowIndex + 1 }}</div>
+                  <div class="definition-array-card-title">{{ (field.label || field.title) | translate }} {{ rowIndex + 1 }}</div>
                   <div class="definition-array-card-field" *ngFor="let child of row">
                     <span class="definition-array-card-label">{{ fieldLabel(child) }}</span>
                     <span class="definition-array-card-value">{{ displayFieldValue(child) }}</span>
@@ -171,7 +171,9 @@
     </ng-container>
   </ng-container>
   <nz-button-group *ngIf="form.submitButtonText && inputMode" [ngClass]="form.submitButtonClass">
-    <button nz-button *ngIf="showCancelButton" [nzShape]="'round'" (click)="onCancel()">Cancel</button>
+    <button nz-button *ngIf="showCancelButton" [nzShape]="'round'" (click)="onCancel()">
+      {{ 'core.cancel' | translate }}
+    </button>
     <button
       *ngIf="showSubmitButton"
       nz-button
@@ -180,7 +182,7 @@
       (click)="handleSubmitForm(form)"
       [nzType]="'primary'"
     >
-      {{ form.submitButtonText }}
+      {{ form.submitButtonText | translate }}
     </button>
   </nz-button-group>
   <button
@@ -191,6 +193,6 @@
     [ngClass]="form.submitButtonClass"
     (click)="toggleEdit()"
   >
-    {{ form.editButtonText }}
+    {{ form.editButtonText | translate }}
   </button>
 </nz-spin>

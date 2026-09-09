@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 import { InformedConsentService } from '../@services/informed-consent.service';
 import {
@@ -41,7 +42,8 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private message: NzMessageService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -67,7 +69,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
         this.syncVisiblePendingItems();
         this.visiblePendingItems.forEach((item) => this.loadModel(item.modelId));
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load pending informed consents' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadPending') })
     );
   }
 
@@ -87,7 +89,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
       (error) => {
         this.modelLoading[modelId] = false;
         this.modelLoadError[modelId] = true;
-        this.errorService.handleError(error, { prefix: 'Unable to load informed consent model' });
+        this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadModel') });
       }
     );
   }
@@ -97,7 +99,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
     const questions = model?.currentPublishedVersion?.questions || [];
     const missing = questions.some((question) => question.required && !this.answers[item.managementId]?.[question.id]);
     if (missing) {
-      this.message.warning('Respondé las preguntas obligatorias.');
+      this.message.warning(this.translate.instant('informedConsent.answerRequiredQuestions'));
       return;
     }
     const answers = questions.map((question) => ({
@@ -111,14 +113,14 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
     request.pipe(finalize(() => (this.savingId = undefined))).subscribe(
       () => {
         this.editCompleted = true;
-        this.submittedThankYouHtml = model.currentPublishedVersion?.thankYouHtml || '<p>Gracias. Tu respuesta fue registrada correctamente.</p>';
-        this.message.success('Consentimiento registrado');
+        this.submittedThankYouHtml = model.currentPublishedVersion?.thankYouHtml || `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`;
+        this.message.success(this.translate.instant('informedConsent.consentRegistered'));
         if (!this.publicToken) {
           this.router.navigate(['/psira/dashboard']);
           return;
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to submit informed consent' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableSubmitConsent') })
     );
   }
 
@@ -148,7 +150,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
   }
 
   submitButtonLabel(modelData: InformedConsentModel): string {
-    return modelData?.currentPublishedVersion?.submitButtonLabel || 'Registrar respuesta';
+    return modelData?.currentPublishedVersion?.submitButtonLabel || this.translate.instant('informedConsent.defaultSubmitButton');
   }
 
   private syncVisiblePendingItems(): void {
@@ -166,7 +168,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
         this.syncVisiblePendingItems();
         this.visiblePendingItems.forEach((pendingItem) => this.loadModel(pendingItem.modelId));
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load pending informed consents' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadPending') })
     );
   }
 
@@ -186,7 +188,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
       : this.service.cancelMyReactivation(input);
     request.subscribe(
       () => undefined,
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to cancel informed consent edition' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableCancelConsentEdition') })
     );
   }
 }

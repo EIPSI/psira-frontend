@@ -19,6 +19,7 @@ import { DepartmentsService } from '@app/pages/administration/@services/departme
 import { Department } from '@app/pages/administration/@types/department';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 
 interface FlatReason extends CaseEventReason {
   depth: number;
@@ -79,35 +80,17 @@ export class SessionCancellationReasonsComponent implements OnInit {
     startCursor: null,
     endCursor: null,
   };
-  treeActions: Action<TreeActionKey>[] = [
-    { key: TreeActionKey.EDIT, title: 'Editar' },
-    { key: TreeActionKey.DELETE, title: 'Eliminar' },
-  ];
-  reasonActions: Action<ReasonActionKey>[] = [
-    { key: ReasonActionKey.ADD_CHILD, title: 'Agregar submotivo' },
-    { key: ReasonActionKey.EDIT, title: 'Editar' },
-    { key: ReasonActionKey.TOGGLE_ACTIVE, title: 'Activar / desactivar' },
-    { key: ReasonActionKey.DELETE, title: 'Eliminar' },
-  ];
-  treeColumns: TableColumn<ReasonTreeRow>[] = [
-    { name: 'placeName', title: 'Lugar', sort: true },
-    { name: 'scopeName', title: 'Ámbito', sort: true },
-    { name: 'departmentName', title: 'Departamento', sort: true },
-    { name: 'rootCount', title: 'Motivos raíz', sort: true },
-    { name: 'nodeCount', title: 'Total motivos', sort: true },
-  ];
-  reasonColumns: TableColumn<FlatReason>[] = [
-    { name: 'path', title: 'Motivo', sort: true },
-    { name: 'sortOrder', title: 'Orden', sort: true },
-    { name: 'activeLabel' as keyof FlatReason, title: 'Estado', sort: true },
-  ];
+  treeActions: Action<TreeActionKey>[] = [];
+  reasonActions: Action<ReasonActionKey>[] = [];
+  treeColumns: TableColumn<ReasonTreeRow>[] = [];
+  reasonColumns: TableColumn<FlatReason>[] = [];
   searchString = '';
 
   treeModalVisible = false;
   treePlace?: ReasonPlace;
   treeScope?: ReasonScope;
   treeDepartmentIds: number[] = [];
-  treeLevelLabels: string[] = ['Motivo'];
+  treeLevelLabels: string[] = [];
   editingTree?: ReasonTreeRow;
 
   reasonModalVisible = false;
@@ -120,27 +103,58 @@ export class SessionCancellationReasonsComponent implements OnInit {
   active = true;
   isOther = false;
 
-  placeOptions: Array<{ value: ReasonPlace; label: string }> = [
-    { value: 'SESSION_CANCELLATION', label: 'Cancelación por falta' },
-    { value: 'FINALIZATION', label: 'Finalización' },
-    { value: 'NEW_CYCLE', label: 'Nuevo ciclo' },
-    { value: 'INFORMED_CONSENT_REACTIVATION', label: 'Rehabilitación CI' },
-  ];
-  scopeOptions: Array<{ value: ReasonScope; label: string }> = [
-    { value: 'CLINICAL', label: 'Tratamiento' },
-    { value: 'SUPERVISION', label: 'Supervisión' },
-  ];
+  placeOptions: Array<{ value: ReasonPlace; label: string }> = [];
+  scopeOptions: Array<{ value: ReasonScope; label: string }> = [];
 
   constructor(
     private calendarService: CalendarService,
     private departmentsService: DepartmentsService,
     private errorService: ErrorHandlerService,
     private message: NzMessageService,
-    private modalService: NzModalService
-  ) {}
+    private modalService: NzModalService,
+    private translate: TranslateService
+  ) {
+    this.initializeTranslatedConfig();
+    this.treeLevelLabels = [this.translate.instant('reasonTrees.reason')];
+  }
 
   ngOnInit(): void {
     this.loadDepartments();
+  }
+
+  private initializeTranslatedConfig(): void {
+    this.treeActions = [
+      { key: TreeActionKey.EDIT, title: this.translate.instant('core.edit') },
+      { key: TreeActionKey.DELETE, title: this.translate.instant('core.delete') },
+    ];
+    this.reasonActions = [
+      { key: ReasonActionKey.ADD_CHILD, title: this.translate.instant('reasonTrees.addSubreason') },
+      { key: ReasonActionKey.EDIT, title: this.translate.instant('core.edit') },
+      { key: ReasonActionKey.TOGGLE_ACTIVE, title: this.translate.instant('core.toggleActive') },
+      { key: ReasonActionKey.DELETE, title: this.translate.instant('core.delete') },
+    ];
+    this.treeColumns = [
+      { name: 'placeName', title: 'reasonTrees.place', translationPath: 'reasonTrees.place', sort: true },
+      { name: 'scopeName', title: 'reasonTrees.scope', translationPath: 'reasonTrees.scope', sort: true },
+      { name: 'departmentName', title: 'reasonTrees.department', translationPath: 'reasonTrees.department', sort: true },
+      { name: 'rootCount', title: 'reasonTrees.rootReasons', translationPath: 'reasonTrees.rootReasons', sort: true },
+      { name: 'nodeCount', title: 'reasonTrees.totalReasons', translationPath: 'reasonTrees.totalReasons', sort: true },
+    ];
+    this.reasonColumns = [
+      { name: 'path', title: 'reasonTrees.reason', translationPath: 'reasonTrees.reason', sort: true },
+      { name: 'sortOrder', title: 'reasonTrees.order', translationPath: 'reasonTrees.order', sort: true },
+      { name: 'activeLabel' as keyof FlatReason, title: 'core.status', translationPath: 'core.status', sort: true },
+    ];
+    this.placeOptions = [
+      { value: 'SESSION_CANCELLATION', label: this.translate.instant('reasonTrees.placeNoShowCancellation') },
+      { value: 'FINALIZATION', label: this.translate.instant('reasonTrees.placeFinalization') },
+      { value: 'NEW_CYCLE', label: this.translate.instant('reasonTrees.placeNewCycle') },
+      { value: 'INFORMED_CONSENT_REACTIVATION', label: this.translate.instant('reasonTrees.placeInformedConsentReactivation') },
+    ];
+    this.scopeOptions = [
+      { value: 'CLINICAL', label: this.translate.instant('reasonTrees.scopeTreatment') },
+      { value: 'SUPERVISION', label: this.translate.instant('reasonTrees.scopeSupervision') },
+    ];
   }
 
   openCreateTreeModal(): void {
@@ -148,7 +162,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
     this.treePlace = undefined;
     this.treeScope = undefined;
     this.treeDepartmentIds = [];
-    this.treeLevelLabels = ['Motivo'];
+    this.treeLevelLabels = [this.translate.instant('reasonTrees.reason')];
     this.treeModalVisible = true;
   }
 
@@ -174,16 +188,16 @@ export class SessionCancellationReasonsComponent implements OnInit {
     this.treePlace = undefined;
     this.treeScope = undefined;
     this.treeDepartmentIds = [];
-    this.treeLevelLabels = ['Motivo'];
+    this.treeLevelLabels = [this.translate.instant('reasonTrees.reason')];
   }
 
   saveTreeSelection(): void {
     if (!this.treePlace) {
-      this.message.warning('El lugar es obligatorio.');
+      this.message.warning(this.translate.instant('reasonTrees.placeRequired'));
       return;
     }
     if (!this.isGlobalReactivationPlace(this.treePlace) && !this.treeScope) {
-      this.message.warning('El ámbito es obligatorio.');
+      this.message.warning(this.translate.instant('reasonTrees.scopeRequired'));
       return;
     }
 
@@ -193,7 +207,10 @@ export class SessionCancellationReasonsComponent implements OnInit {
     const activeTree = this.editingTree || this.selectedTree;
     const duplicate = this.findDuplicateTree(context, departmentScopes, activeTree);
     if (duplicate) {
-      this.message.info(`Ya existe un árbol para ${this.contextLabel(context)} - ${this.scopeLabel(duplicate.departmentId)}.`);
+      this.message.info(this.translate.instant('reasonTrees.duplicateTree', {
+        context: this.contextLabel(context),
+        scope: this.scopeLabel(duplicate.departmentId),
+      }));
       return;
     }
 
@@ -222,7 +239,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
     this.treePlace = undefined;
     this.treeScope = undefined;
     this.treeDepartmentIds = [];
-    this.treeLevelLabels = ['Motivo'];
+    this.treeLevelLabels = [this.translate.instant('reasonTrees.reason')];
     this.reasons = [];
     this.flatReasons = [];
     this.loadTrees();
@@ -252,7 +269,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
           this.flatReasons = this.flattenReasons(reasons).map((reason) => this.decorateReason(reason));
           this.applySearch();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load reasons' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableLoadReasons') })
       );
   }
 
@@ -295,7 +312,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
   saveReason(): void {
     if (!this.selectedTree) return;
     if (!this.label.trim()) {
-      this.message.warning('El motivo es obligatorio.');
+      this.message.warning(this.translate.instant('reasonTrees.reasonRequired'));
       return;
     }
 
@@ -321,19 +338,23 @@ export class SessionCancellationReasonsComponent implements OnInit {
       .pipe(finalize(() => (this.saving = false)))
       .subscribe(
         () => {
-          this.message.success(this.editingReason ? 'Motivo actualizado' : 'Motivo agregado');
+          this.message.success(
+            this.editingReason
+              ? this.translate.instant('reasonTrees.reasonUpdated')
+              : this.translate.instant('reasonTrees.reasonAdded')
+          );
           this.closeReasonModal();
           this.loadReasons();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to save reason' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableSaveReason') })
       );
   }
 
   deactivateReason(reason: CaseEventReason): void {
     this.modalService.confirm({
-      nzTitle: 'Eliminar motivo',
-      nzContent: `El motivo "${reason.label}" y sus submotivos se eliminarán definitivamente. Si ya tiene registros históricos vinculados, la base de datos puede impedir la eliminación.`,
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('reasonTrees.deleteReason'),
+      nzContent: this.translate.instant('reasonTrees.deleteReasonConfirm', { reason: reason.label }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () => {
         this.saving = true;
@@ -342,7 +363,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
           .pipe(finalize(() => (this.saving = false)))
           .subscribe(
             () => this.loadReasons(),
-            (error) => this.errorService.handleError(error, { prefix: 'Unable to delete reason' })
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableDeleteReason') })
           );
       },
     });
@@ -383,8 +404,8 @@ export class SessionCancellationReasonsComponent implements OnInit {
 
   reasonLevelLabel(level: number): string {
     const labels = this.normalizeLevelLabels(this.treeLevelLabels);
-    if (level === 1) return labels[0] || 'Motivo';
-    return 'Submotivo';
+    if (level === 1) return labels[0] || this.translate.instant('reasonTrees.reason');
+    return this.translate.instant('reasonTrees.subreason');
   }
 
   reasonNodeLevelLabel(parent: CaseEventReason | null | undefined, level: number): string {
@@ -429,29 +450,29 @@ export class SessionCancellationReasonsComponent implements OnInit {
   }
 
   placeLabel(place?: ReasonPlace): string {
-    return this.placeOptions.find((option) => option.value === place)?.label || 'Lugar';
+    return this.placeOptions.find((option) => option.value === place)?.label || this.translate.instant('reasonTrees.place');
   }
 
   scopeLabelForContext(context?: CaseEventReasonContext): string {
-    if (this.placeForContext(context) === 'INFORMED_CONSENT_REACTIVATION') return 'Todos los usuarios';
+    if (this.placeForContext(context) === 'INFORMED_CONSENT_REACTIVATION') return this.translate.instant('reasonTrees.allUsers');
     return this.scopeOptions.find((option) => option.value === this.scopeForContext(context))?.label || '';
   }
 
   scopeLabel(departmentId?: number): string {
-    if (!departmentId) return 'Default';
-    return this.departments.find((department) => Number(department.id) === Number(departmentId))?.name || `Departamento #${departmentId}`;
+    if (!departmentId) return this.translate.instant('core.default');
+    return this.departments.find((department) => Number(department.id) === Number(departmentId))?.name || this.translate.instant('reasonTrees.departmentNumber', { id: departmentId });
   }
 
   selectedTreeTitle(): string {
     if (!this.selectedTree) return '';
     const place = this.selectedTree.place || this.placeForContext(this.selectedTree.context);
     const scope = this.selectedTree.scope || this.scopeForContext(this.selectedTree.context);
-    const scopeName = place === 'INFORMED_CONSENT_REACTIVATION' ? 'Todos los usuarios' : this.scopeName(scope);
+    const scopeName = place === 'INFORMED_CONSENT_REACTIVATION' ? this.translate.instant('reasonTrees.allUsers') : this.scopeName(scope);
     return `${this.placeLabel(place)} - ${scopeName} - ${this.scopeLabel(this.selectedTree.departmentId)}`;
   }
 
   scopeName(scope?: ReasonScope): string {
-    return this.scopeOptions.find((option) => option.value === scope)?.label || 'Ámbito';
+    return this.scopeOptions.find((option) => option.value === scope)?.label || this.translate.instant('reasonTrees.scope');
   }
 
   isGlobalReactivationPlace(place?: ReasonPlace): boolean {
@@ -492,7 +513,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
       },
       (error) => {
         this.loading = false;
-        this.errorService.handleError(error, { prefix: 'Unable to load departments' });
+        this.errorService.handleError(error, { prefix: this.translate.instant('departments.unableLoadDepartments') });
       }
     );
   }
@@ -518,10 +539,10 @@ export class SessionCancellationReasonsComponent implements OnInit {
                 );
               this.applySearch();
             },
-            (error) => this.errorService.handleError(error, { prefix: 'Unable to load reason trees' })
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableLoadTrees') })
           );
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load reason trees' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableLoadTrees') })
       );
   }
 
@@ -569,12 +590,12 @@ export class SessionCancellationReasonsComponent implements OnInit {
       )
       .subscribe(
         () => {
-          this.message.success('Árbol actualizado');
+          this.message.success(this.translate.instant('reasonTrees.treeUpdated'));
           this.closeCreateTreeModal();
           this.selectedTree = undefined;
           this.loadTrees();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to update reason tree' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableUpdateTree') })
       );
   }
 
@@ -594,7 +615,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
       )
       .subscribe(
         (trees) => {
-          this.message.success('Árbol creado');
+          this.message.success(this.translate.instant('reasonTrees.treeCreated'));
           this.closeCreateTreeModal();
           const firstTree = trees[0];
           this.openTree(this.decorateTree({
@@ -606,16 +627,18 @@ export class SessionCancellationReasonsComponent implements OnInit {
             nodeCount: 0,
           }));
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to create reason tree' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableCreateTree') })
       );
   }
 
   private deleteTree(tree: ReasonTreeRow): void {
     if (!tree.id) return;
     this.modalService.confirm({
-      nzTitle: 'Eliminar árbol de motivos',
-      nzContent: `El árbol "${this.contextLabel(tree.context)} - ${this.scopeLabel(tree.departmentId)}" dejará de estar disponible para nuevos usos. Los registros históricos se conservan.`,
-      nzOkText: 'Eliminar',
+      nzTitle: this.translate.instant('reasonTrees.deleteTree'),
+      nzContent: this.translate.instant('reasonTrees.deleteTreeConfirm', {
+        tree: `${this.contextLabel(tree.context)} - ${this.scopeLabel(tree.departmentId)}`,
+      }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
       nzOnOk: () => {
         this.saving = true;
@@ -624,7 +647,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
           .pipe(finalize(() => (this.saving = false)))
           .subscribe(
             () => this.loadTrees(),
-            (error) => this.errorService.handleError(error, { prefix: 'Unable to delete reason tree' })
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableDeleteTree') })
           );
       },
     });
@@ -790,13 +813,13 @@ export class SessionCancellationReasonsComponent implements OnInit {
     const normalized = (labels || [])
       .map((label) => String(label || '').trim())
       .filter((label) => !!label);
-    return [normalized[0] || 'Motivo'];
+    return [normalized[0] || this.translate.instant('reasonTrees.reason')];
   }
 
   private decorateReason(reason: FlatReason): FlatReason {
     return {
       ...reason,
-      activeLabel: reason.active ? 'Activo' : 'Inactivo',
+      activeLabel: reason.active ? this.translate.instant('core.active') : this.translate.instant('core.inactive'),
     } as FlatReason;
   }
 
@@ -835,7 +858,7 @@ export class SessionCancellationReasonsComponent implements OnInit {
       )
       .subscribe(
         () => this.loadReasons(),
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to reorder reasons' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reasonTrees.unableReorderReasons') })
       );
   }
 

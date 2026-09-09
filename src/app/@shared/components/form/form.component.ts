@@ -3,6 +3,7 @@ import { Field } from './@types/field';
 import { FormGroup } from '@angular/forms';
 import { Form } from './@types/form';
 import { FieldGroup } from './@types/field.group';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-form',
@@ -53,7 +54,7 @@ export class FormComponent implements OnInit {
   formGroup: FormGroup;
   private _resetForm = false;
 
-  constructor() {}
+  constructor(private translate: TranslateService) {}
 
   ngOnInit(): void {}
 
@@ -72,7 +73,7 @@ export class FormComponent implements OnInit {
   }
 
   fieldLabel(field: Field): string {
-    return field.displayLabel || field.title || field.label || field.name || '';
+    return this.translate.instant(field.displayLabel || field.title || field.label || field.name || '');
   }
 
   displayFieldValue(field: Field): string {
@@ -80,15 +81,17 @@ export class FormComponent implements OnInit {
     if (field.type === 'select' || field.type === 'radio') return this.optionLabel(field);
     if (field.type === 'checkBox') return this.optionLabel(field);
     if (Array.isArray(field.value)) return field.value.length ? field.value.join(', ') : '-';
-    if (field.value === true) return 'Yes';
-    if (field.value === false) return 'No';
+    if (field.value === true) return this.translate.instant('core.yes');
+    if (field.value === false) return this.translate.instant('core.no');
     return field.value !== undefined && field.value !== null && field.value !== '' ? String(field.value) : '-';
   }
 
   optionLabel(field: Field): string {
     if (!field.options?.length) return this.displayRawValue(field.value);
-    const findLabel = (value: any) =>
-      field.options.find((option) => option.value === value)?.label || String(value);
+    const findLabel = (value: any) => {
+      const label = field.options.find((option) => option.value === value)?.label || String(value);
+      return this.translate.instant(label);
+    };
     if (Array.isArray(field.value)) {
       const values = field.value as any[];
       return values.length ? values.map((value: any) => findLabel(value)).join(', ') : '-';
@@ -100,8 +103,8 @@ export class FormComponent implements OnInit {
 
   displayRawValue(value: any): string {
     if (Array.isArray(value)) return value.length ? value.join(', ') : '-';
-    if (value === true) return 'Yes';
-    if (value === false) return 'No';
+    if (value === true) return this.translate.instant('core.yes');
+    if (value === false) return this.translate.instant('core.no');
     return value !== undefined && value !== null && value !== '' ? String(value) : '-';
   }
 

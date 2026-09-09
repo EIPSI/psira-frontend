@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslateService } from '@ngx-translate/core';
-import { merge } from 'rxjs';
+import { merge, Observable } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
 
 import { environment } from '@env/environment';
@@ -20,13 +20,17 @@ const log = new Logger('App');
 })
 @UntilDestroy()
 export class AppComponent implements OnInit {
+  i18nReady$: Observable<boolean>;
+
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
     private translateService: TranslateService,
     private i18nService: I18nService
-  ) {}
+  ) {
+    this.i18nReady$ = this.i18nService.ready$.asObservable();
+  }
 
   ngOnInit() {
     // Setup logger

@@ -20,6 +20,7 @@ import { Router } from '@angular/router';
 import { environment } from '@env/environment';
 import { ReportsModel } from '@app/pages/administration/@models/reports.model';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
+import { TranslateService } from '@ngx-translate/core';
 
 enum ActionKey {
   EDIT_REPORT,
@@ -53,13 +54,14 @@ export class ReportsComponent implements OnInit {
     private errorService: ErrorHandlerService,
     private modalService: NzModalService,
     public perms: AppPermissionsService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.getReports();
     this.actions = [
-      { key: ActionKey.DELETE_REPORT, title: 'Delete Report' },
+      { key: ActionKey.DELETE_REPORT, title: this.translate.instant('reports.deleteReport') },
     ];
   }
 
@@ -131,17 +133,15 @@ export class ReportsComponent implements OnInit {
           console.log('this.data', this.data);
           this.pageInfo = data.reports.pageInfo;
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load reports' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('reports.unableLoadReports') })
       );
   }
 
   private async deleteReport(report: FormattedReport): Promise<void> {
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete report',
-      nzContent: `
-        Are you sure you want to delete ${report.name}? This action is irreversible.
-      `,
+      nzTitle: this.translate.instant('reports.deleteReport'),
+      nzContent: this.translate.instant('reports.deleteReportConfirm', { name: report.name }),
     });
 
     if (!(await modal.afterClose.toPromise())) return;
@@ -156,7 +156,7 @@ export class ReportsComponent implements OnInit {
           data.splice(this.data.indexOf(report), 1);
           this.data = data; // mutate reference to trigger change detection
         },
-        (err) => this.errorService.handleError(err, { prefix: `Unable to delete caregiver "${report.name}"` })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('reports.unableDeleteReport', { name: report.name }) })
       );
   }
 }

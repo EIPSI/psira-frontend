@@ -1,5 +1,5 @@
 <section class="institutional-section">
-  <h2>Institucional</h2>
+  <h2>{{ 'patientsManagement.institutional' | translate }}</h2>
   <div class="institutional-definition-fields">
     <div class="institutional-field">
       <label class="institutional-label">
@@ -9,7 +9,7 @@
         <input
           *ngIf="inputMode"
           nz-input
-          placeholder="Enter medical record number"
+          [placeholder]="'patientsManagement.enterMedicalRecordNumber' | translate"
           [(ngModel)]="medicalRecordNo"
         />
         <div class="field-value" *ngIf="!inputMode">{{ medicalRecordNo || '-' }}</div>
@@ -26,7 +26,7 @@
           nzMode="multiple"
           nzShowSearch
           nzAllowClear
-          nzPlaceHolder="Select Department"
+          [nzPlaceHolder]="'patientsManagement.selectDepartment' | translate"
           [nzDisabled]="getAccessScope() === 'ASSIGNED'"
           [(ngModel)]="selectedDepartmentIds"
           (ngModelChange)="handleDepartmentSelection($event)"
@@ -48,7 +48,7 @@
           nzMode="multiple"
           nzShowSearch
           nzAllowClear
-          nzPlaceHolder="Select Case Manager"
+          [nzPlaceHolder]="'patientsManagement.selectCaseManager' | translate"
           [nzDisabled]="getAccessScope() === 'ASSIGNED'"
           [(ngModel)]="selectedCaseManagerIds"
         >
@@ -84,14 +84,14 @@
       *ngIf="!automationPreview.length"
       nzType="info"
       nzShowIcon
-      nzMessage="Automatizaciones"
-      nzDescription="No hay automatizaciones aplicables para el rol Paciente, departamento y triggers configurados."
+      [nzMessage]="'menu.evaluationAutomations' | translate"
+      [nzDescription]="'patientsManagement.noPatientAutomations' | translate"
     ></nz-alert>
 
     <div *ngIf="automationPreview.length">
-      <h3>Automatizaciones que se aplicarán automáticamente</h3>
+      <h3>{{ 'patientsManagement.automationsAppliedAutomatically' | translate }}</h3>
       <p class="automation-preview-help">
-        De manera automática estas evaluaciones se aplicarán al rol Paciente. Podés desmarcar las que no querés aplicar.
+        {{ 'patientsManagement.patientAutomationsHelp' | translate }}
       </p>
       <div class="automation-trigger-group" *ngFor="let triggerPoint of automationPreviewTriggerPoints()">
         <h4>{{ triggerPointLabel[triggerPoint] || triggerPoint }}</h4>
@@ -103,7 +103,7 @@
           (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
         >
           <strong>{{ automation.title }}</strong>
-          <span>Recurso: {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          <span>{{ 'patientsManagement.resource' | translate }}: {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
         </label>
       </div>
     </div>

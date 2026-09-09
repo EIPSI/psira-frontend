@@ -247,11 +247,11 @@ export class PatientProfileComponent implements OnInit {
 
   confirmFinalizeTreatment(): void {
     if (!this.finalizationReasonId) {
-      this.message.warning('Seleccioná un motivo.');
+      this.message.warning(this.translate.instant('patientsManagement.selectReason'));
       return;
     }
     if (this.showFinalizationOtherReason && !this.finalizationOtherReason.trim()) {
-      this.message.warning('Completá Otro motivo.');
+      this.message.warning(this.translate.instant('patientsManagement.completeOtherReason'));
       return;
     }
     this.cycleSaving = true;
@@ -274,7 +274,7 @@ export class PatientProfileComponent implements OnInit {
           this.activeTreatmentCycle = cycle;
           this.finalizeModalVisible = false;
           this.refreshCalendarAfterAutomationTrigger();
-          this.message.success('Tratamiento finalizado');
+          this.message.success(this.translate.instant('patientsManagement.treatmentFinalized'));
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to finalize treatment' })
       );
@@ -291,7 +291,7 @@ export class PatientProfileComponent implements OnInit {
           this.activeTreatmentCycle = cycle;
           this.cancelFinalizationModalVisible = false;
           this.refreshCalendarAfterAutomationTrigger();
-          this.message.success('Finalización anulada');
+          this.message.success(this.translate.instant('patientsManagement.finalizationCancelled'));
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to cancel finalization' })
       );
@@ -299,11 +299,11 @@ export class PatientProfileComponent implements OnInit {
 
   confirmNewTreatment(): void {
     if (!this.newTreatmentReasonId) {
-      this.message.warning('Seleccioná un motivo.');
+      this.message.warning(this.translate.instant('patientsManagement.selectReason'));
       return;
     }
     if (this.showNewTreatmentOtherReason && !this.newTreatmentOtherReason.trim()) {
-      this.message.warning('Completá Otro motivo.');
+      this.message.warning(this.translate.instant('patientsManagement.completeOtherReason'));
       return;
     }
     this.cycleSaving = true;
@@ -325,7 +325,7 @@ export class PatientProfileComponent implements OnInit {
           this.activeTreatmentCycle = cycle;
           this.newTreatmentModalVisible = false;
           this.refreshCalendarAfterAutomationTrigger();
-          this.message.success('Nuevo tratamiento iniciado');
+          this.message.success(this.translate.instant('patientsManagement.newTreatmentStarted'));
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to start new treatment' })
       );
@@ -405,7 +405,7 @@ export class PatientProfileComponent implements OnInit {
       .subscribe(
         ({ data }) => {
           this.patient = PatientModel.fromJson(data.changePatientStatus);
-          this.message.success('Patient status updated successfully');
+          this.message.success(this.translate.instant('patientsManagement.patientStatusUpdated'));
         },
         (error: any) => this.errorService.handleError(error, { prefix: 'Unable to update patient status' })
       );
@@ -502,11 +502,13 @@ export class PatientProfileComponent implements OnInit {
   handleDeletePatientAccount(): void {
     if (!this.patientAccountUser?.id) return;
     this.modalService.confirm({
-      nzTitle: 'Confirm',
-      nzContent: `Are you sure you want to delete ${this.patientAccountUser.firstName} ${this.patientAccountUser.lastName}`,
-      nzOkText: 'Delete',
+      nzTitle: this.translate.instant('patientsManagement.confirm'),
+      nzContent: this.translate.instant('patientsManagement.deletePatientAccountConfirm', {
+        name: `${this.patientAccountUser.firstName} ${this.patientAccountUser.lastName}`,
+      }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOnOk: () => this.deletePatientAccount(),
-      nzCancelText: 'Cancel',
+      nzCancelText: this.translate.instant('core.cancel'),
     });
   }
 
@@ -521,7 +523,9 @@ export class PatientProfileComponent implements OnInit {
         () => this.router.navigate(['/psira/case-management/patients']),
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to delete user "${this.patientAccountUser.firstName} ${this.patientAccountUser.lastName}"`,
+            prefix: this.translate.instant('patientsManagement.unableDeletePatientAccount', {
+              name: `${this.patientAccountUser.firstName} ${this.patientAccountUser.lastName}`,
+            }),
           })
       );
   }
@@ -563,7 +567,7 @@ export class PatientProfileComponent implements OnInit {
           const lastSession = elapsedSessions[elapsedSessions.length - 1];
           if (lastSession?.sessionNumber) this.finalizationLastSessionNumber = Number(lastSession.sessionNumber);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to detect last session' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableDetectLastSession') })
       );
   }
 
@@ -612,9 +616,9 @@ export class PatientProfileComponent implements OnInit {
           item.context === context &&
           !item.departmentId
         ) || (trees || []).find((item) => item.context === context);
-        assign(tree?.levelLabels?.[0] || 'Motivo');
+        assign(tree?.levelLabels?.[0] || this.translate.instant('patientsManagement.reason'));
       },
-      () => assign('Motivo')
+      () => assign(this.translate.instant('patientsManagement.reason'))
     );
   }
 
@@ -629,7 +633,7 @@ export class PatientProfileComponent implements OnInit {
     const parent = levels[levelIndex - 1]?.find(
       (reason) => Number(reason.id) === Number(parentId)
     );
-    return parent?.nextLevelLabel || 'Submotivo';
+    return parent?.nextLevelLabel || this.translate.instant('patientsManagement.subreason');
   }
 
   private isSelectedOtherReason(levels: CaseEventReason[][], reasonId?: number): boolean {

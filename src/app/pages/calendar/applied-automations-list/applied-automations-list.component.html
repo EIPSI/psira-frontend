@@ -4,22 +4,22 @@
   [nzData]="runs"
   [nzLoading]="loading"
   [nzFrontPagination]="false"
-  [nzNoResult]="userId ? 'Sin automatizaciones aplicadas' : 'Este registro no tiene usuario asociado'"
+  [nzNoResult]="userId ? ('calendar.noAppliedAutomations' | translate) : ('calendar.noLinkedUser' | translate)"
 >
   <thead>
     <tr>
-      <th [nzSortFn]="dateSort('createdAt')">Fecha</th>
-      <th [nzSortFn]="stringSort('automationTitle')">Automatización</th>
-      <th [nzSortFn]="stringSort('triggerPoint')">Disparador</th>
-      <th [nzSortFn]="stringSort('status')">Estado</th>
-      <th [nzSortFn]="stringSort('resourceType')">Recurso</th>
-      <th [nzSortFn]="stringSort('message')">Mensaje</th>
+      <th [nzSortFn]="dateSort('createdAt')">{{ 'core.date' | translate }}</th>
+      <th [nzSortFn]="stringSort('automationTitle')">{{ 'evaluationAutomations.automation' | translate }}</th>
+      <th [nzSortFn]="stringSort('triggerPoint')">{{ 'evaluationAutomations.trigger' | translate }}</th>
+      <th [nzSortFn]="stringSort('status')">{{ 'core.status' | translate }}</th>
+      <th [nzSortFn]="stringSort('resourceType')">{{ 'patientsManagement.resource' | translate }}</th>
+      <th [nzSortFn]="stringSort('message')">{{ 'notifications.message' | translate }}</th>
     </tr>
   </thead>
   <tbody>
     <tr *ngFor="let run of runsTable.data">
       <td>{{ run.createdAt | formatDateTime }}</td>
-      <td>{{ run.automationTitle || 'Automatización eliminada' }}</td>
+      <td>{{ run.automationTitle || ('calendar.deletedAutomation' | translate) }}</td>
       <td>{{ triggerPointLabel[run.triggerPoint] || run.triggerPoint }}</td>
       <td><nz-tag [nzColor]="statusColor(run.status)">{{ run.status }}</nz-tag></td>
       <td>{{ run.resourceType ? (run.resourceType + ' #' + run.resourceId) : '-' }}</td>

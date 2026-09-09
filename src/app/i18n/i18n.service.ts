@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { NzI18nService, en_US } from 'ng-zorro-antd/i18n';
@@ -30,7 +30,9 @@ export function extract(s: string) {
 export class I18nService {
   defaultLanguage!: string;
   supportedLanguages!: string[];
+  readonly ready$ = new BehaviorSubject<boolean>(false);
   private runtimeLocale = '';
+  private initialized = false;
 
   constructor(
     private translateService: TranslateService,
@@ -47,8 +49,10 @@ export class I18nService {
    * @param supportedLanguages The list of supported languages.
    */
   init(defaultLanguage: string, supportedLanguages: string[]) {
+    this.ready$.next(false);
     this.defaultLanguage = this.normalize(defaultLanguage);
     this.supportedLanguages = supportedLanguages.map((language) => this.normalize(language));
+    this.initialized = true;
     this.language = '';
   }
 
@@ -103,9 +107,12 @@ export class I18nService {
     log.debug(`Language set to ${language}`);
     const languageChange = this.translateService.use(language);
     if (languageChange && typeof (languageChange as any).subscribe === 'function') {
-      (languageChange as any).subscribe(() => this.applyRuntimeLocale(language));
+      (languageChange as any).subscribe(
+        () => this.completeLanguageLoad(language),
+        () => this.completeLanguageLoad(this.defaultLanguage || 'en')
+      );
     } else {
-      this.applyRuntimeLocale(language);
+      this.completeLanguageLoad(language);
     }
   }
 
@@ -160,5 +167,10 @@ export class I18nService {
     moment.locale(language || this.defaultLanguage || 'en');
     // Keep ng-zorro widgets on a stable locale. The application text still uses ngx-translate.
     this.nzI18nService.setLocale(en_US);
+  }
+
+  private completeLanguageLoad(language: string): void {
+    this.applyRuntimeLocale(language);
+    if (this.initialized) this.ready$.next(true);
   }
 }

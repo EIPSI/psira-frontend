@@ -5,7 +5,7 @@ import { User } from '@app/pages/user-management/@types/user';
 
 export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
   {
-    title: 'Title',
+    title: 'tables.assessmentsPatients.title',
     name: 'formattedAssessmentType',
     altName: 'assessmentType',
     translationPath: 'tables.assessmentsPatients.title',
@@ -24,7 +24,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
       : {},
   },
   {
-    title: 'Manager',
+    title: 'tables.assessmentsPatients.manager',
     name: 'formattedClinician',
     altName: 'clinician',
     translationPath: 'tables.assessmentsPatients.manager',
@@ -46,19 +46,19 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
       : {},
   },
   {
-    title: 'Origen',
+    title: 'tables.assessmentsPatients.origin',
     name: 'formattedOrigin',
     altName: 'origin',
     render: 'tag',
     sort: true,
   },
   {
-    title: 'Sesión vinculada',
+    title: 'tables.assessmentsPatients.linkedSession',
     name: 'linkedSessionLabel',
     sort: true,
   },
   // {
-  //   title: 'Informants',
+  //   title: 'tables.patients.informants',
   //   name: 'informantType',
   //   translationPath: 'tables.assessmentsPatients.informant',
   //   sort: true,
@@ -69,7 +69,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
   // },
   {
     name: 'formatedQuestionnaires',
-    title: 'Questionnaires',
+    title: 'tables.assessmentsPatients.questionnaires',
     render: 'questAvatar',
     sort: true,
     filterField: {
@@ -78,7 +78,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     },
   },
   {
-    title: 'Status',
+    title: 'tables.patients.status',
     name: 'formattedStatus',
     altName: 'status',
     translationPath: 'tables.assessmentsPatients.status',
@@ -91,7 +91,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     },
   },
   // {
-  //   title: 'Expiration Date',
+  //   title: 'tables.assessmentsPatients.expirationDate',
   //   altName: 'expirationDate',
   //   name: 'formatedExpirationDate',
   //   translationPath: 'tables.assessmentsPatients.expirationDate',
@@ -99,18 +99,18 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
   //   filterField: {
   //     type: 'dateRange',
   //     value: undefined,
-  //     title: 'Expiration Date',
+  //     title: 'tables.assessmentsPatients.expirationDate',
   //   },
   // },
   {
     name: 'submissionDate',
-    title: 'Submission Date',
+    title: 'tables.assessmentsPatients.submissionDate',
     translationPath: 'plannedAssessments.submissionDate',
     render: 'date',
     sort: true,
   },
   {
-    title: 'Email Status',
+    title: 'tables.assessmentsPatients.emailStatus',
     name: 'emailFormatedStatus',
     altName: 'emailStatus',
     render: 'tag',
@@ -122,7 +122,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     },
   },
   {
-    title: 'Delivery Date',
+    title: 'tables.assessmentsPatients.deliveryDate',
     name: 'formatedDeliveryDate',
     altName: 'deliveryDate',
     translationPath: 'tables.assessmentsPatients.deliveryDate',
@@ -130,7 +130,7 @@ export const AssessmentsPatientsTable: TableColumn<FormattedAssessment>[] = [
     filterField: {
       type: 'dateRange',
       value: undefined,
-      title: 'Delivery Date',
+      title: 'tables.assessmentsPatients.deliveryDate',
     },
   },
 ];

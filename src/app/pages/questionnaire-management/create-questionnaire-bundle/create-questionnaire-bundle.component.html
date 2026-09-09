@@ -1,50 +1,56 @@
-<button nz-button routerLink="/psira/questionnaire-management/questionnaire-bundles-list" nzType="secondary">Go back</button>
+<button nz-button routerLink="/psira/questionnaire-management/questionnaire-bundles-list" nzType="secondary">
+  {{ 'core.back' | translate }}
+</button>
 
 <form nz-form [formGroup]="bundleForm" class="bundle-form">
   <nz-form-item>
     <nz-form-label [nzSpan]="6">{{ 'emailTemplates.name' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
-      <input placeholder="Select bundle name..." formControlName="name" nz-input name="name" type="text" id="name" />
+      <input [placeholder]="'questionnaireBundles.selectBundleName' | translate" formControlName="name" nz-input name="name" type="text" id="name" />
     </nz-form-control>
   </nz-form-item>
 
   <nz-form-item>
-    <nz-form-label [nzSpan]="6">Status</nz-form-label>
+    <nz-form-label [nzSpan]="6">{{ 'core.status' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
-      <nz-switch formControlName="active" nzCheckedChildren="Activa" nzUnCheckedChildren="Inactiva"></nz-switch>
+      <nz-switch
+        formControlName="active"
+        [nzCheckedChildren]="'core.active' | translate"
+        [nzUnCheckedChildren]="'core.inactive' | translate"
+      ></nz-switch>
     </nz-form-control>
   </nz-form-item>
 
   <nz-form-item>
-    <nz-form-label [nzSpan]="6">Cabecera del paquete</nz-form-label>
+    <nz-form-label [nzSpan]="6">{{ 'questionnaireBundles.packageHeader' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
       <angular-editor
         [config]="editorConfig"
-        placeholder="Texto que aparece arriba de toda la evaluación..."
+        [placeholder]="'questionnaireBundles.packageHeaderPlaceholder' | translate"
         formControlName="headerHtml"
       ></angular-editor>
     </nz-form-control>
   </nz-form-item>
 
   <nz-form-item>
-    <nz-form-label [nzSpan]="6">Aviso al pie</nz-form-label>
+    <nz-form-label [nzSpan]="6">{{ 'questionnaireBundles.footerNotice' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
       <angular-editor
         [config]="editorConfig"
-        placeholder="Texto que aparece al final de cada pantalla..."
+        [placeholder]="'questionnaireBundles.footerNoticePlaceholder' | translate"
         formControlName="noticeHtml"
       ></angular-editor>
     </nz-form-control>
   </nz-form-item>
 
   <nz-form-item>
-    <nz-form-label [nzSpan]="6">Departments</nz-form-label>
+    <nz-form-label [nzSpan]="6">{{ 'core.departments' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
       <button type="button" nz-button nzSize="small" class="department-action" (click)="selectAllDepartments()">
-        Select all departments
+        {{ 'core.selectAll' | translate }}
       </button>
       <button type="button" nz-button nzSize="small" class="department-action" (click)="removeAllDepartments()">
-        Remove departments
+        {{ 'questionnaireBundles.removeDepartments' | translate }}
       </button>
       <nz-checkbox-wrapper style="width: 100%; margin-top: 5px;">
         <label
@@ -64,34 +70,34 @@
 
   <section class="structure-header">
     <div>
-      <h3>Evaluation sequence structure</h3>
-      <p>{{ countQuestionnaires() }} questionnaires / {{ countScreens() }} screens / {{ countGroups() }} groups</p>
+      <h3>{{ 'questionnaireBundles.sequenceStructure' | translate }}</h3>
+      <p>{{ 'questionnaireBundles.sequenceSummary' | translate:{ questionnaires: countQuestionnaires(), screens: countScreens(), groups: countGroups() } }}</p>
     </div>
-    <button nz-button type="button" (click)="openPreview()">Previsualizar</button>
+    <button nz-button type="button" (click)="openPreview()">{{ 'questionnaireBundles.preview' | translate }}</button>
   </section>
 
   <section class="root-node" *ngIf="rootNode as root">
     <div class="node-row root-row">
       <span class="drag-placeholder"></span>
-      <span class="node-kind">ROOT GROUP</span>
+      <span class="node-kind">{{ 'questionnaireBundles.rootGroup' | translate }}</span>
       <input
         class="group-label"
         nz-input
         [(ngModel)]="root.label"
         [ngModelOptions]="{ standalone: true }"
-        placeholder="Root group label"
+        [placeholder]="'questionnaireBundles.rootGroupLabel' | translate"
       />
       <nz-select class="mode-select" [ngModel]="root.type" [ngModelOptions]="{ standalone: true }" (ngModelChange)="setRootType($event)">
-        <nz-option nzValue="FIXED_GROUP" nzLabel="Fixed group"></nz-option>
-        <nz-option nzValue="RANDOM_GROUP" nzLabel="Randomized group"></nz-option>
+        <nz-option nzValue="FIXED_GROUP" [nzLabel]="'questionnaireBundles.fixedGroup' | translate"></nz-option>
+        <nz-option nzValue="RANDOM_GROUP" [nzLabel]="'questionnaireBundles.randomizedGroup' | translate"></nz-option>
       </nz-select>
       <ng-container *ngIf="root.type === 'RANDOM_GROUP'">
         <nz-select class="mode-select" [(ngModel)]="root.randomizationMode" [ngModelOptions]="{ standalone: true }">
-          <nz-option nzValue="RANDOM_ORDER" nzLabel="Random order"></nz-option>
-          <nz-option nzValue="REPLACEMENT" nzLabel="Replacement"></nz-option>
+          <nz-option nzValue="RANDOM_ORDER" [nzLabel]="'questionnaireBundles.randomOrder' | translate"></nz-option>
+          <nz-option nzValue="REPLACEMENT" [nzLabel]="'questionnaireBundles.replacement' | translate"></nz-option>
         </nz-select>
         <label class="number-field" *ngIf="root.randomizationMode === 'REPLACEMENT'">
-          <span>Items to select (how many from this group)</span>
+          <span>{{ 'questionnaireBundles.itemsToSelect' | translate }}</span>
           <nz-input-number
             [(ngModel)]="root.selectionCount"
             [ngModelOptions]="{ standalone: true }"
@@ -102,14 +108,13 @@
     </div>
 
     <div class="child-toolbar">
-      <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(root)">Add questionnaire</button>
-      <button type="button" nz-button nzSize="small" (click)="addChildScreen(root)">Add screen</button>
-      <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(root)">Add fixed group</button>
-      <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(root)">Add randomized group</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(root)">{{ 'questionnaireBundles.addQuestionnaire' | translate }}</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildScreen(root)">{{ 'questionnaireBundles.addScreen' | translate }}</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(root)">{{ 'questionnaireBundles.addFixedGroup' | translate }}</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(root)">{{ 'questionnaireBundles.addRandomizedGroup' | translate }}</button>
     </div>
     <p class="random-help" *ngIf="root.type === 'RANDOM_GROUP'">
-      Relative weight controls probability inside this group. Random order uses it to decide what appears earlier;
-      replacement uses it to decide which items are selected.
+      {{ 'questionnaireBundles.randomHelp' | translate }}
     </p>
 
     <ng-container
@@ -117,8 +122,8 @@
     ></ng-container>
   </section>
 
-  <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="button" nzType="primary">Submit</button>
-  <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button type="button" nzType="primary">Update</button>
+  <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="button" nzType="primary">{{ 'core.submit' | translate }}</button>
+  <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button type="button" nzType="primary">{{ 'core.update' | translate }}</button>
 </form>
 
 <ng-template #nodeList let-nodes="nodes" let-parent="parent" let-level="level" let-inRandomGroup="inRandomGroup">
@@ -155,14 +160,14 @@
               nz-input
               [(ngModel)]="node.label"
               [ngModelOptions]="{ standalone: true }"
-              placeholder="Nombre interno"
+              [placeholder]="'questionnaireBundles.internalName' | translate"
             />
             <input
               class="group-label"
               nz-input
               [(ngModel)]="node.displayTitle"
               [ngModelOptions]="{ standalone: true }"
-              placeholder="Título visible"
+              [placeholder]="'questionnaireBundles.visibleTitle' | translate"
             />
           </ng-container>
         </ng-container>
@@ -173,24 +178,24 @@
           nz-input
           [(ngModel)]="node.displayTitle"
           [ngModelOptions]="{ standalone: true }"
-          placeholder="Título visible opcional"
+          [placeholder]="'questionnaireBundles.optionalVisibleTitle' | translate"
         />
         <label class="inline-toggle" *ngIf="node.type === 'QUESTIONNAIRE'">
           <nz-switch
             [(ngModel)]="node.showTitle"
             [ngModelOptions]="{ standalone: true }"
-            nzCheckedChildren="Título"
-            nzUnCheckedChildren="Oculto"
+            [nzCheckedChildren]="'questionnaireBundles.titleVisible' | translate"
+            [nzUnCheckedChildren]="'questionnaireBundles.titleHidden' | translate"
           ></nz-switch>
         </label>
 
         <ng-container *ngIf="node.type === 'RANDOM_GROUP'">
           <nz-select class="mode-select" [(ngModel)]="node.randomizationMode" [ngModelOptions]="{ standalone: true }">
-            <nz-option nzValue="RANDOM_ORDER" nzLabel="Random order"></nz-option>
-            <nz-option nzValue="REPLACEMENT" nzLabel="Replacement"></nz-option>
+            <nz-option nzValue="RANDOM_ORDER" [nzLabel]="'questionnaireBundles.randomOrder' | translate"></nz-option>
+            <nz-option nzValue="REPLACEMENT" [nzLabel]="'questionnaireBundles.replacement' | translate"></nz-option>
           </nz-select>
           <label class="number-field" *ngIf="node.randomizationMode === 'REPLACEMENT'">
-            <span>Items to select (how many from this group)</span>
+            <span>{{ 'questionnaireBundles.itemsToSelect' | translate }}</span>
             <nz-input-number
               [(ngModel)]="node.selectionCount"
               [ngModelOptions]="{ standalone: true }"
@@ -200,7 +205,7 @@
         </ng-container>
 
         <label class="number-field" *ngIf="inRandomGroup">
-          <span>Relative weight (selection/order probability)</span>
+          <span>{{ 'questionnaireBundles.relativeWeight' | translate }}</span>
           <nz-input-number
             [(ngModel)]="node.weight"
             [ngModelOptions]="{ standalone: true }"
@@ -222,19 +227,19 @@
 
       <div class="screen-rich-texts" *ngIf="node.type === 'SCREEN'">
         <label>
-          <span>Cabecera de pantalla</span>
+          <span>{{ 'questionnaireBundles.screenHeader' | translate }}</span>
           <angular-editor
             [config]="editorConfig"
-            placeholder="Texto opcional arriba de esta pantalla..."
+            [placeholder]="'questionnaireBundles.screenHeaderPlaceholder' | translate"
             [(ngModel)]="node.headerHtml"
             [ngModelOptions]="{ standalone: true }"
           ></angular-editor>
         </label>
         <label>
-          <span>Pie de pantalla</span>
+          <span>{{ 'questionnaireBundles.screenFooter' | translate }}</span>
           <angular-editor
             [config]="editorConfig"
-            placeholder="Texto opcional debajo de esta pantalla..."
+            [placeholder]="'questionnaireBundles.screenFooterPlaceholder' | translate"
             [(ngModel)]="node.footerHtml"
             [ngModelOptions]="{ standalone: true }"
           ></angular-editor>
@@ -242,14 +247,13 @@
       </div>
 
       <div class="child-toolbar" *ngIf="node.type !== 'QUESTIONNAIRE'">
-        <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(node)">Add child questionnaire</button>
-        <button type="button" nz-button nzSize="small" (click)="addChildScreen(node)">Add child screen</button>
-        <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(node)">Add child fixed group</button>
-        <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(node)">Add child randomized group</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(node)">{{ 'questionnaireBundles.addChildQuestionnaire' | translate }}</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildScreen(node)">{{ 'questionnaireBundles.addChildScreen' | translate }}</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(node)">{{ 'questionnaireBundles.addChildFixedGroup' | translate }}</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(node)">{{ 'questionnaireBundles.addChildRandomizedGroup' | translate }}</button>
       </div>
       <p class="random-help" *ngIf="node.type === 'RANDOM_GROUP'">
-        Relative weight controls probability inside this group. Random order uses it to decide what appears earlier;
-        replacement uses it to decide which items are selected.
+        {{ 'questionnaireBundles.randomHelp' | translate }}
       </p>
 
       <ng-container *ngIf="node.type !== 'QUESTIONNAIRE'">
@@ -266,7 +270,7 @@
 
 <nz-modal
   [(nzVisible)]="previewVisible"
-  [nzTitle]="bundleForm.value.name || 'Previsualización del paquete'"
+  [nzTitle]="bundleForm.value.name || ('questionnaireBundles.previewTitle' | translate)"
   [nzFooter]="previewFooter"
   [nzWidth]="900"
   [nzClosable]="true"
@@ -295,11 +299,11 @@
                   {{ choice.label || choice.name }}
                 </label>
               </div>
-              <textarea *ngSwitchCase="'text'" nz-input disabled rows="3" placeholder="Respuesta"></textarea>
+              <textarea *ngSwitchCase="'text'" nz-input disabled rows="3" [placeholder]="'questionnaireBundles.answerPlaceholder' | translate"></textarea>
               <nz-input-number *ngSwitchCase="'integer'" disabled></nz-input-number>
               <nz-input-number *ngSwitchCase="'decimal'" disabled [nzStep]="0.1"></nz-input-number>
               <nz-date-picker *ngSwitchCase="'date'" disabled></nz-date-picker>
-              <input *ngSwitchDefault nz-input disabled placeholder="Respuesta" />
+              <input *ngSwitchDefault nz-input disabled [placeholder]="'questionnaireBundles.answerPlaceholder' | translate" />
             </ng-container>
           </article>
         </section>
@@ -311,5 +315,5 @@
 </nz-modal>
 
 <ng-template #previewFooter>
-  <button nz-button type="button" (click)="previewVisible = false">Cerrar</button>
+  <button nz-button type="button" (click)="previewVisible = false">{{ 'core.close' | translate }}</button>
 </ng-template>

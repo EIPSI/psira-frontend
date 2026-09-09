@@ -30,6 +30,7 @@ import {
 import { FormattedUser } from '@app/pages/user-management/@types/formatted-user';
 import { AppPermissionsService } from '@app/@shared/services/app-permissions.service';
 import { ErrorHandlerService } from '@app/@shared/services/error-handler.service';
+import { TranslateService } from '@ngx-translate/core';
 enum ActionKey {
   UNASSIGN_CASEMANAGER,
 }
@@ -112,18 +113,19 @@ export class CaseManagersComponent implements OnInit {
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
     private usersService: UsersService,
-    private departmentsService: DepartmentsService
+    private departmentsService: DepartmentsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.currentUserId = (JSON.parse(localStorage.getItem('user')) || {}).id;
     this.caseManagersRequestOptions.filter = this.filter;
     this.getCaseManagers();
-    this.drawerTitle = this.managerType === 'caseManager' ? 'Filter Case Managers' : 'Filter Informants';
-    this.caseManagerNiceName = this.managerType === 'caseManager' ? 'Case Manager' : 'Informant';
+    this.drawerTitle = this.managerType === 'caseManager' ? 'patientsManagement.filterCaseManagers' : 'patientsManagement.filterInformants';
+    this.caseManagerNiceName = this.managerType === 'caseManager' ? 'patientsManagement.caseManager' : 'patientsManagement.informant';
     this.getDepartments();
     if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
-      this.actions = [{ key: ActionKey.UNASSIGN_CASEMANAGER, title: 'Unasign casemanager' }];
+      this.actions = [{ key: ActionKey.UNASSIGN_CASEMANAGER, title: 'patientsManagement.unassignCaseManager' }];
     }
   }
 
@@ -164,7 +166,9 @@ export class CaseManagersComponent implements OnInit {
 
   public async updatePatientDepartment(manager: CaseManager): Promise<void> {
     const modal = this.modalService.create<SelectModalComponent<Department>>({
-      nzTitle: `Add ${this.patient.firstName} ${this.patient.lastName} to department`,
+      nzTitle: this.translate.instant('patientsManagement.addPatientToDepartment', {
+        patient: `${this.patient.firstName} ${this.patient.lastName}`,
+      }),
       nzContent: SelectModalComponent,
       nzComponentParams: {
         options: this.manager.departments,
@@ -229,14 +233,14 @@ export class CaseManagersComponent implements OnInit {
     switch (event.action.name) {
       case 'Remove':
         this.modalService.confirm({
-          nzTitle: 'Confirm',
-          nzContent: `Are you sure you want to remove ${this.caseManagers[this.selectedIndex].firstName} ${
-            this.caseManagers[this.selectedIndex].lastName
-          }`,
-          nzOkText: 'Remove',
+          nzTitle: this.translate.instant('patientsManagement.confirm'),
+          nzContent: this.translate.instant('patientsManagement.removeCaseManagerConfirm', {
+            name: `${this.caseManagers[this.selectedIndex].firstName} ${this.caseManagers[this.selectedIndex].lastName}`,
+          }),
+          nzOkText: this.translate.instant('core.remove'),
           nzOnOk: () => this.unAssignCaseManager(this.caseManagers[this.selectedIndex]),
           nzOkDisabled: this.loading,
-          nzCancelText: 'Cancel',
+          nzCancelText: this.translate.instant('core.cancel'),
         });
         break;
     }
@@ -347,12 +351,18 @@ export class CaseManagersComponent implements OnInit {
           this.data = [CaseManagerModel.fromJson(manager), ...this.data];
           this.message.create(
             'success',
-            `${manager.firstName} has been successfully assigned to ${this.patient.firstName}`
+            this.translate.instant('patientsManagement.managerAssigned', {
+              manager: manager.firstName,
+              patient: this.patient.firstName,
+            })
           );
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `${manager.firstName} could not be assigned to ${this.patient.firstName}`,
+            prefix: this.translate.instant('patientsManagement.unableAssignManager', {
+              manager: manager.firstName,
+              patient: this.patient.firstName,
+            }),
           })
       );
   }
@@ -360,17 +370,17 @@ export class CaseManagersComponent implements OnInit {
   private async unAssignCaseManager(manager: CaseManager) {
     if (!this.canRemoveCaseManager(manager)) {
       this.errorService.handleError(
-        new Error('You need special permission to remove yourself as case manager')
+        new Error(this.translate.instant('patientsManagement.specialPermissionRemoveSelf'))
       );
       return;
     }
 
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Unassign Case manager',
-      nzContent: `
-        Are you sure you want to unassign case manager ${manager.firstName} ${manager.lastName}? This action is irreversible
-      `,
+      nzTitle: this.translate.instant('patientsManagement.unassignCaseManager'),
+      nzContent: this.translate.instant('patientsManagement.unassignCaseManagerConfirm', {
+        name: `${manager.firstName} ${manager.lastName}`,
+      }),
     });
 
     const confirmation = await modal.afterClose.toPromise();
@@ -404,7 +414,7 @@ export class CaseManagersComponent implements OnInit {
         data.patients.edges.map((patient: any) => {
           const option = {
             value: patient.node.id,
-            label: `${patient.node.firstName} ${patient.node.lastName}`,
+            label: [patient.node.firstName, patient.node.lastName].filter(Boolean).join(' '),
           };
           if (options.indexOf(option) === -1) {
             options.push(option);
@@ -428,7 +438,7 @@ export class CaseManagersComponent implements OnInit {
         this.caseManagersFilterForm.groups[0].fields[2].options = this.users.map((user) => {
           return {
             value: user.id,
-            label: `${user.firstName} ${user.lastName}`,
+            label: [user.firstName, user.lastName].filter(Boolean).join(' '),
           };
         });
       });

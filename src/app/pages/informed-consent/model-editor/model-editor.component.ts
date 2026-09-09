@@ -7,6 +7,7 @@ import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { AngularEditorConfig } from '@kolkov/angular-editor';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { InformedConsentService } from '../@services/informed-consent.service';
 import {
   InformedConsentAnswerResolution,
@@ -46,8 +47,8 @@ export class InformedConsentModelEditorComponent implements OnInit {
   activeShortcutBlockIndex?: number;
   versionTitleTouched = false;
   blockTypes: Array<{ value: ConsentBlockType; label: string }> = [
-    { value: 'TEXT', label: 'Texto' },
-    { value: 'QUESTION', label: 'Pregunta' },
+    { value: 'TEXT', label: 'informedConsent.textBlock' },
+    { value: 'QUESTION', label: 'informedConsent.questionBlock' },
   ];
   editorConfig: AngularEditorConfig = {
     minHeight: '180px',
@@ -63,8 +64,8 @@ export class InformedConsentModelEditorComponent implements OnInit {
     systemDefault: [false],
     departmentIds: [[]],
     versionTitle: ['', Validators.required],
-    submitButtonLabel: ['Registrar respuesta', Validators.required],
-    thankYouHtml: ['<p>Gracias. Tu respuesta fue registrada correctamente.</p>'],
+    submitButtonLabel: ['', Validators.required],
+    thankYouHtml: [''],
     versionNotes: [''],
     blocks: this.fb.array([]),
   });
@@ -81,7 +82,8 @@ export class InformedConsentModelEditorComponent implements OnInit {
     private departmentsService: DepartmentsService,
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
-    private clipboard: Clipboard
+    private clipboard: Clipboard,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -89,6 +91,7 @@ export class InformedConsentModelEditorComponent implements OnInit {
     if (id && id !== 'new') this.modelId = Number(id);
     this.form.get('name').valueChanges.subscribe(() => this.syncDefaultVersionTitle());
     this.addBlock('TEXT');
+    if (!this.modelId) this.applyDefaultEditableTexts();
     this.loadReferences();
     this.loadShortcuts();
     if (this.modelId) this.loadModel(this.modelId);
@@ -97,7 +100,7 @@ export class InformedConsentModelEditorComponent implements OnInit {
   loadReferences(): void {
     this.departmentsService.departments({ paging: { first: 50 }, sorting: [{ field: 'name', direction: 'ASC' }] as any }).subscribe(
       (result: any) => (this.departments = result.data.departments.edges.map((edge: any) => edge.node)),
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('departments.unableLoadDepartments') })
     );
   }
 
@@ -129,14 +132,14 @@ export class InformedConsentModelEditorComponent implements OnInit {
           systemDefault: false,
           departmentIds: model.departments?.map((department) => department.id) || [],
           versionTitle: this.defaultVersionTitle(model.name, (model.versions?.length || 0) + 1),
-          submitButtonLabel: model.currentPublishedVersion?.submitButtonLabel || 'Registrar respuesta',
-          thankYouHtml: model.currentPublishedVersion?.thankYouHtml || '<p>Gracias. Tu respuesta fue registrada correctamente.</p>',
+          submitButtonLabel: model.currentPublishedVersion?.submitButtonLabel || this.translate.instant('informedConsent.defaultSubmitButton'),
+          thankYouHtml: model.currentPublishedVersion?.thankYouHtml || `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`,
           versionNotes: '',
         }, { emitEvent: false });
         this.hydrateBlocks(model.currentPublishedVersion);
         if (!this.blocks.length) this.addBlock('TEXT');
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load informed consent model' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadModel') })
     );
   }
 
@@ -174,8 +177,8 @@ export class InformedConsentModelEditorComponent implements OnInit {
       helpText: [block.helpText || ''],
       required: [block.required !== false],
       answerOptions: this.fb.array((block.answerOptions?.length ? block.answerOptions : [
-        { orderIndex: 1, label: 'Acepto', resolution: InformedConsentAnswerResolution.ACCEPTS },
-        { orderIndex: 2, label: 'No acepto', resolution: InformedConsentAnswerResolution.REJECTS },
+        { orderIndex: 1, label: this.translate.instant('dashboard.accept'), resolution: InformedConsentAnswerResolution.ACCEPTS },
+        { orderIndex: 2, label: this.translate.instant('informedConsent.doNotAccept'), resolution: InformedConsentAnswerResolution.REJECTS },
       ]).map((option: any) => this.optionGroup(option))),
     });
   }
@@ -210,7 +213,7 @@ export class InformedConsentModelEditorComponent implements OnInit {
   }
 
   previewCurrent(): void {
-    this.previewTitle = this.form.get('versionTitle').value || this.form.get('name').value || 'Consentimiento informado';
+    this.previewTitle = this.form.get('versionTitle').value || this.form.get('name').value || this.translate.instant('informedConsent.title');
     this.previewBlocks = this.blocks.value.map((block: any, index: number) => ({
       ...block,
       orderIndex: index + 1,
@@ -221,11 +224,11 @@ export class InformedConsentModelEditorComponent implements OnInit {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.message.warning('Completá los campos obligatorios.');
+      this.message.warning(this.translate.instant('forms.common.requiredField'));
       return;
     }
     if (!this.validChoiceQuestions()) {
-      this.message.warning('Las preguntas de selección necesitan respuestas con texto y resolución.');
+      this.message.warning(this.translate.instant('informedConsent.choiceQuestionsNeedAnswers'));
       return;
     }
     const value = this.form.value;
@@ -253,10 +256,10 @@ export class InformedConsentModelEditorComponent implements OnInit {
       : this.service.createModel(payload);
     request.pipe(finalize(() => (this.saving = false))).subscribe(
       () => {
-        this.message.success('Modelo guardado');
+        this.message.success(this.translate.instant('informedConsent.modelSaved'));
         this.router.navigate(['/psira/informed-consent/models']);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to save informed consent model' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableSaveModel') })
     );
   }
 
@@ -311,15 +314,17 @@ export class InformedConsentModelEditorComponent implements OnInit {
 
   consentKindNames(kinds?: InformedConsentKind[], kind?: InformedConsentKind): string {
     const values = kinds?.length ? kinds : (kind ? [kind] : []);
-    return values.length ? values.map((value) => this.kindLabel[value] || value).join(', ') : 'Sin tipo asociado';
+    return values.length
+      ? values.map((value) => this.translate.instant(this.kindLabel[value] || value)).join(', ')
+      : this.translate.instant('informedConsent.noKindAssociated');
   }
 
   resolutionLabel(resolution?: InformedConsentAnswerResolution): string {
     const labels: Record<string, string> = {
-      [InformedConsentAnswerResolution.ACCEPTS]: 'Acepta',
-      [InformedConsentAnswerResolution.REJECTS]: 'Rechaza',
-      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: 'Requiere revisión',
-      [InformedConsentAnswerResolution.NOT_APPLICABLE]: 'No aplica',
+      [InformedConsentAnswerResolution.ACCEPTS]: this.translate.instant('informedConsent.resolutionAccepts'),
+      [InformedConsentAnswerResolution.REJECTS]: this.translate.instant('informedConsent.resolutionRejects'),
+      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: this.translate.instant('informedConsent.resolutionRequiresReview'),
+      [InformedConsentAnswerResolution.NOT_APPLICABLE]: this.translate.instant('informedConsent.resolutionNotApplicable'),
     };
     return resolution ? labels[resolution] || resolution : '-';
   }
@@ -342,16 +347,16 @@ export class InformedConsentModelEditorComponent implements OnInit {
 
   shortcutGroupTitle(group: string): string {
     const labels: Record<string, string> = {
-      user: 'Usuario',
-      patient: 'Paciente',
-      therapist: 'Terapeuta',
-      supervisor: 'Supervisor',
-      case: 'Caso',
-      assessment: 'Evaluación',
-      session: 'Sesión',
-      consent: 'Consentimiento informado',
-      system: 'Sistema',
-      notification: 'Notificación',
+      user: this.translate.instant('userManagement.user'),
+      patient: this.translate.instant('roles.patient'),
+      therapist: this.translate.instant('roles.therapist'),
+      supervisor: this.translate.instant('roles.supervisor'),
+      case: this.translate.instant('patientsManagement.caseData'),
+      assessment: this.translate.instant('plannedAssessments.assessment'),
+      session: this.translate.instant('dashboard.session'),
+      consent: this.translate.instant('informedConsent.title'),
+      system: this.translate.instant('system.system'),
+      notification: this.translate.instant('notifications.title'),
     };
     const normalized = String(group || '').trim();
     const key = normalized.toLowerCase();
@@ -363,7 +368,9 @@ export class InformedConsentModelEditorComponent implements OnInit {
   copyShortcut(token: string, event?: Event): void {
     event?.stopPropagation();
     const copied = this.clipboard.copy(token);
-    copied ? this.message.success('Variable copiada') : this.message.error('No se pudo copiar la variable');
+    copied
+      ? this.message.success(this.translate.instant('language.variableCopied'))
+      : this.message.error(this.translate.instant('language.unableCopyVariable'));
   }
 
   private validChoiceQuestions(): boolean {
@@ -437,7 +444,7 @@ export class InformedConsentModelEditorComponent implements OnInit {
   }
 
   private versionPrefix(name: string): string {
-    const words = String(name || 'Consentimiento')
+    const words = String(name || this.translate.instant('informedConsent.title'))
       .trim()
       .split(/\s+/)
       .filter(Boolean);
@@ -453,5 +460,12 @@ export class InformedConsentModelEditorComponent implements OnInit {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') || `option-${orderIndex}`;
+  }
+
+  private applyDefaultEditableTexts(): void {
+    this.form.patchValue({
+      submitButtonLabel: this.translate.instant('informedConsent.defaultSubmitButton'),
+      thankYouHtml: `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`,
+    }, { emitEvent: false });
   }
 }

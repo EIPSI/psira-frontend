@@ -7,6 +7,7 @@ import { AppPermissionsService } from '@shared/services/app-permissions.service'
 import { environment } from '@env/environment';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 import { InformedConsentService } from '../@services/informed-consent.service';
 import { CalendarService } from '@app/pages/calendar/@services/calendar.service';
@@ -54,14 +55,14 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
   kindLabel = InformedConsentKindLabel;
   sortFields: SortField<any>[] = [];
   columns: TableColumn<any>[] = [
-    { title: 'Modelo', name: 'modelName', sort: true, filterField: { type: 'text', value: undefined } as any },
-    { title: 'Gestión', name: 'managementTitle', sort: true },
-    { title: 'Firmante', name: 'signerName', sort: true },
-    { title: 'Representado', name: 'representedName', sort: true },
-    { title: 'Estado', name: 'formattedStatus', render: 'tag', sort: true },
-    { title: 'Resolución', name: 'formattedResolution', sort: true },
-    { title: 'Fecha', name: 'answeredDate', render: 'date', sort: true },
-    { title: 'Registros', name: 'historyCount', sort: true },
+    { title: 'informedConsent.model', translationPath: 'informedConsent.model', name: 'modelName', sort: true, filterField: { type: 'text', value: undefined } as any },
+    { title: 'informedConsent.management', translationPath: 'informedConsent.management', name: 'managementTitle', sort: true },
+    { title: 'informedConsent.signer', translationPath: 'informedConsent.signer', name: 'signerName', sort: true },
+    { title: 'informedConsent.represented', translationPath: 'informedConsent.represented', name: 'representedName', sort: true },
+    { title: 'core.status', translationPath: 'core.status', name: 'formattedStatus', render: 'tag', sort: true },
+    { title: 'informedConsent.resolution', translationPath: 'informedConsent.resolution', name: 'formattedResolution', sort: true },
+    { title: 'core.date', translationPath: 'core.date', name: 'answeredDate', render: 'date', sort: true },
+    { title: 'informedConsent.records', translationPath: 'informedConsent.records', name: 'historyCount', sort: true },
   ];
 
   constructor(
@@ -72,7 +73,8 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
     private modal: NzModalService,
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
-    private perms: AppPermissionsService
+    private perms: AppPermissionsService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -97,7 +99,7 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
         this.responses = responses || [];
         this.applyLocalFilters();
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load informed consent responses' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadResponses') })
     );
   }
 
@@ -113,26 +115,26 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
 
   requestChange(response: InformedConsentResponse): void {
     if (!response?.id) {
-      this.message.error('No se pudo identificar la respuesta de consentimiento informado.');
+      this.message.error(this.translate.instant('informedConsent.unableIdentifyResponse'));
       return;
     }
     this.modal.confirm({
-      nzTitle: 'Modificar consentimiento informado',
-      nzContent: 'Cambiar una respuesta de consentimiento puede modificar el acceso al sistema o el modo en que se usan tus datos. ¿Deseás continuar?',
-      nzOkText: 'Continuar',
-      nzCancelText: 'Cancelar',
+      nzTitle: this.translate.instant('informedConsent.modifyConsent'),
+      nzContent: this.translate.instant('informedConsent.modifyConsentWarning'),
+      nzOkText: this.translate.instant('core.continue'),
+      nzCancelText: this.translate.instant('core.cancel'),
       nzOnOk: () => {
         this.responseVisible = false;
         const input = {
           responseId: Number(response.id),
-          reason: 'Solicitud del usuario para modificar su respuesta.',
+            reason: this.translate.instant('informedConsent.userRequestedResponseChange'),
         };
         const request = this.ownOnly
           ? this.service.reactivateMyResponse(input)
           : this.service.reactivateResponse(input);
         request.subscribe(
           () => {
-            this.message.success('Consentimiento reactivado para responder nuevamente.');
+            this.message.success(this.translate.instant('informedConsent.consentReactivated'));
             const publicToken = this.ownOnly ? this.publicConsentToken(response.signerUserId) : undefined;
             if (publicToken) {
               const tree = this.router.createUrlTree(['/informed-consent/pending'], {
@@ -155,7 +157,7 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
               },
             });
           },
-          (error) => this.errorService.handleError(error, { prefix: 'Unable to reactivate informed consent response' })
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableReactivateResponse') })
         );
       },
     });
@@ -175,11 +177,11 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
   submitReactivate(): void {
     if (!this.selectedResponse?.id) return;
     if (!this.reactivateReasonId) {
-      this.message.warning('Ingresá un motivo para rehabilitar el consentimiento.');
+      this.message.warning(this.translate.instant('informedConsent.enterReactivationReason'));
       return;
     }
     if (this.selectedReactivateReason()?.isOther && !this.reactivateOtherReason.trim()) {
-      this.message.warning('Completá el otro motivo.');
+      this.message.warning(this.translate.instant('calendar.completeOtherReason'));
       return;
     }
     this.reactivating = true;
@@ -192,12 +194,12 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
       .pipe(finalize(() => (this.reactivating = false)))
       .subscribe(
         () => {
-          this.message.success('Consentimiento rehabilitado para responder nuevamente.');
+          this.message.success(this.translate.instant('informedConsent.consentReactivated'));
           this.reactivateVisible = false;
           this.responseVisible = false;
           this.load();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to reactivate informed consent response' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableReactivateResponse') })
       );
   }
 
@@ -225,12 +227,12 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
   }
 
   reactivateReasonLevelLabel(levelIndex: number): string {
-    if (levelIndex === 0) return 'Motivo';
+    if (levelIndex === 0) return this.translate.instant('calendar.reason');
     const previousReasonId = this.selectedReactivateReasonIds[levelIndex - 1];
     const previousReason = this.reactivateReasonLevels[levelIndex - 1]?.find(
       (reason) => Number(reason.id) === Number(previousReasonId)
     );
-    return previousReason?.nextLevelLabel || 'Submotivo';
+    return previousReason?.nextLevelLabel || this.translate.instant('calendar.subreason');
   }
 
   userName(user: any): string {
@@ -267,7 +269,9 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
 
   consentKindNames(kinds?: any[], kind?: any): string {
     const values = kinds?.length ? kinds : (kind ? [kind] : []);
-    return values.length ? values.map((value) => this.kindLabel[value] || value).join(', ') : 'Sin tipo asociado';
+    return values.length
+      ? values.map((value) => this.translate.instant(this.kindLabel[value] || value)).join(', ')
+      : this.translate.instant('informedConsent.noKindAssociated');
   }
 
   showTechnicalMetadata(): boolean {
@@ -276,10 +280,10 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
 
   resolutionLabel(resolution?: InformedConsentAnswerResolution): string {
     const labels: Record<string, string> = {
-      [InformedConsentAnswerResolution.ACCEPTS]: 'Acepta',
-      [InformedConsentAnswerResolution.REJECTS]: 'Rechaza',
-      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: 'Requiere revisión',
-      [InformedConsentAnswerResolution.NOT_APPLICABLE]: 'No aplica',
+      [InformedConsentAnswerResolution.ACCEPTS]: this.translate.instant('informedConsent.resolutionAccepts'),
+      [InformedConsentAnswerResolution.REJECTS]: this.translate.instant('informedConsent.resolutionRejects'),
+      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: this.translate.instant('informedConsent.resolutionRequiresReview'),
+      [InformedConsentAnswerResolution.NOT_APPLICABLE]: this.translate.instant('informedConsent.resolutionNotApplicable'),
     };
     return resolution ? labels[resolution] || resolution : '-';
   }
@@ -433,7 +437,7 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
           this.reactivateReasonLevels[levelIndex] = reasons;
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load reactivation reasons' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadReactivationReasons') })
     );
   }
 

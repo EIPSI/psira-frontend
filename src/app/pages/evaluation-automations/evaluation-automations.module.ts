@@ -15,6 +15,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { TranslateModule } from '@ngx-translate/core';
 import { AutomationEditorComponent } from './automation-editor/automation-editor.component';
 import { AutomationsListComponent } from './automations-list/automations-list.component';
 import { EvaluationAutomationsRoutingModule } from './evaluation-automations-routing.module';
@@ -25,6 +26,7 @@ import { EvaluationAutomationsRoutingModule } from './evaluation-automations-rou
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
     EvaluationAutomationsRoutingModule,
     MasterDataModule,
     NzAlertModule,

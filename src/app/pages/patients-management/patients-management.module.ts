@@ -53,7 +53,6 @@ import { NzCalendarModule } from 'ng-zorro-antd/calendar';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
-import { PatientCalendarComponent } from './calendar/patient-calendar.component';
 import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
 import { NotificationPreferencesModule } from '../notifications/notification-preferences/notification-preferences.module';
 import { InformedConsentSharedModule } from '../informed-consent/informed-consent-shared.module';
@@ -119,7 +118,6 @@ const antModules = [
     ReportsComponent,
     AssessmentsComponent,
     CreateAssessmentComponent,
-    PatientCalendarComponent,
   ],
   providers: [
     PatientsService,

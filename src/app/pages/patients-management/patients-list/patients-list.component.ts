@@ -25,6 +25,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from '../../../@shared/@modules/master-data/@types/list';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TranslateService } from '@ngx-translate/core';
 
 const CryptoJS = require('crypto-js');
 
@@ -79,7 +80,8 @@ export class PatientsListComponent {
     private message: NzMessageService,
     private patientStateService: PatientStatusesService,
     private errorService: ErrorHandlerService,
-    public perms: AppPermissionsService
+    public perms: AppPermissionsService,
+    private translate: TranslateService
   ) {
     if(!localStorage.getItem('onlyMyPatients')){
       localStorage.setItem('onlyMyPatients', this.onlyMyPatients.toString());
@@ -226,7 +228,7 @@ export class PatientsListComponent {
         const statusCol = this.columns.find((c) => c.name === 'formattedStatus');
         statusCol.filterField.options = [
           ...this.patientStates.map((ps) => ({ label: ps.name, value: ps.id })),
-          { label: 'not set', value: null },
+          { label: this.translate.instant('patientsManagement.notSet'), value: null },
         ];
         this.columns = [...this.columns]; // trigger setter to re-render filter
       },
@@ -240,7 +242,9 @@ export class PatientsListComponent {
   private async changePatientStatus(patient: FormattedPatient): Promise<void> {
     // create state modal
     const modal = this.modalService.create<SelectModalComponent<PatientStatus>>({
-      nzTitle: `Change status of ${patient.firstName} ${patient.lastName}`,
+      nzTitle: this.translate.instant('patientsManagement.changePatientStatusTitle', {
+        name: `${patient.firstName} ${patient.lastName}`,
+      }),
       nzContent: SelectModalComponent,
       nzComponentParams: {
         options: this.patientStates,
@@ -281,10 +285,10 @@ export class PatientsListComponent {
     // create confirmation modal
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete Patient',
-      nzContent: `
-        Are you sure you want to delete ${patient.firstName} ${patient.lastName}? This action is irreversible
-      `,
+      nzTitle: this.translate.instant('patientsManagement.deletePatient'),
+      nzContent: this.translate.instant('patientsManagement.deletePatientConfirm', {
+        name: `${patient.firstName} ${patient.lastName}`,
+      }),
     });
 
     // wait for modal to successfully complete
@@ -299,12 +303,14 @@ export class PatientsListComponent {
       .subscribe(
         () => {
           this.data.splice(this.data.indexOf(patient), 1);
-          this.message.success('Patient has been successfully deleted');
+          this.message.success(this.translate.instant('patientsManagement.patientDeleted'));
           this.getPatients();
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to delete patient "${patient.firstName} ${patient.lastName}"`,
+            prefix: this.translate.instant('patientsManagement.unableDeletePatient', {
+              name: `${patient.firstName} ${patient.lastName}`,
+            }),
           })
       );
   }
@@ -312,10 +318,10 @@ export class PatientsListComponent {
   private async archivePatient(patient: FormattedPatient): Promise<void> {
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Archive Patient',
-      nzContent: `
-        Are you sure you want to archive ${patient.firstName} ${patient.lastName}? This action is irreversible
-      `,
+      nzTitle: this.translate.instant('patientsManagement.archivePatient'),
+      nzContent: this.translate.instant('patientsManagement.archivePatientConfirm', {
+        name: `${patient.firstName} ${patient.lastName}`,
+      }),
     });
 
     const confirmation = await modal.afterClose.toPromise();
@@ -332,7 +338,9 @@ export class PatientsListComponent {
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to archived patient "${patient.firstName} ${patient.lastName}"`,
+            prefix: this.translate.instant('patientsManagement.unableArchivePatient', {
+              name: `${patient.firstName} ${patient.lastName}`,
+            }),
           })
       );
   }
@@ -340,10 +348,10 @@ export class PatientsListComponent {
   private async restorePatient(patient: FormattedPatient): Promise<void> {
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Restore Patient',
-      nzContent: `
-        Are you sure you want to restore ${patient.firstName} ${patient.lastName}? This action is irreversible
-      `,
+      nzTitle: this.translate.instant('patientsManagement.restorePatient'),
+      nzContent: this.translate.instant('patientsManagement.restorePatientConfirm', {
+        name: `${patient.firstName} ${patient.lastName}`,
+      }),
     });
 
     const confirmation = await modal.afterClose.toPromise();
@@ -360,7 +368,9 @@ export class PatientsListComponent {
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to restore patient "${patient.firstName} ${patient.lastName}"`,
+            prefix: this.translate.instant('patientsManagement.unableRestorePatient', {
+              name: `${patient.firstName} ${patient.lastName}`,
+            }),
           })
       );
   }
@@ -373,13 +383,13 @@ export class PatientsListComponent {
 
   private setActions(): void {
     if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
-      this.actions = [...this.actions, { key: ActionKey.CHANGE_STATUS, title: 'Change Status' }];
-      this.actions = [...this.actions, { key: ActionKey.ARCHIVE_PATIENT, title: 'Archive Patient' }];
-      this.actions = [...this.actions, { key: ActionKey.RESTORE_PATIENT, title: 'Restore Patient' }];
+      this.actions = [...this.actions, { key: ActionKey.CHANGE_STATUS, title: 'patientsManagement.changeStatus' }];
+      this.actions = [...this.actions, { key: ActionKey.ARCHIVE_PATIENT, title: 'patientsManagement.archivePatient' }];
+      this.actions = [...this.actions, { key: ActionKey.RESTORE_PATIENT, title: 'patientsManagement.restorePatient' }];
     }
 
     if (this.perms.permissionsOnly(PermissionKey.PATIENTS_DELETE_DEPARTMENT)) {
-      this.actions = [...this.actions, { key: ActionKey.DELETE_PATIENT, title: 'Delete Patient' }];
+      this.actions = [...this.actions, { key: ActionKey.DELETE_PATIENT, title: 'patientsManagement.deletePatient' }];
     }
   }
 }

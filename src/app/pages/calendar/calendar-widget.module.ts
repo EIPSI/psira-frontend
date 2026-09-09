@@ -27,6 +27,7 @@ import { EventEditModalComponent } from './event-edit-modal/event-edit-modal.com
 import { RecurrenceFormComponent } from './recurrence-form/recurrence-form.component';
 import { SessionsListComponent } from './sessions-list/sessions-list.component';
 import { UserCalendarComponent } from './user-calendar/user-calendar.component';
+import { PatientCalendarComponent } from '@app/pages/patients-management/calendar/patient-calendar.component';
 
 @NgModule({
   declarations: [
@@ -39,6 +40,7 @@ import { UserCalendarComponent } from './user-calendar/user-calendar.component';
     RecurrenceFormComponent,
     SessionsListComponent,
     UserCalendarComponent,
+    PatientCalendarComponent,
   ],
   imports: [
     CommonModule,
@@ -71,6 +73,7 @@ import { UserCalendarComponent } from './user-calendar/user-calendar.component';
     RecurrenceFormComponent,
     SessionsListComponent,
     UserCalendarComponent,
+    PatientCalendarComponent,
   ],
 })
 export class CalendarWidgetModule {}

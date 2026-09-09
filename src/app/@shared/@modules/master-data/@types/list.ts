@@ -24,6 +24,7 @@ export interface TableColumn<T> {
 export interface TagInfo {
   color: string;
   title: string;
+  translationPath?: string;
 }
 
 export interface SortField<T> {

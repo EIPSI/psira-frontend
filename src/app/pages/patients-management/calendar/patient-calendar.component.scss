@@ -342,12 +342,59 @@
   min-width: 0;
 }
 
+.embedded-calendar-create {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  margin-top: 4px;
+  padding: 16px;
+}
+
+.embedded-calendar-create__actions {
+  align-items: center;
+  border-top: 1px solid #eef0f3;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
 @media (max-width: 768px) {
-  .calendar-toolbar,
+  .calendar-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
   .calendar-nav,
   .calendar-actions {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .calendar-nav {
+    justify-content: flex-start;
+  }
+
+  .calendar-actions {
+    justify-content: space-between;
+  }
+
+  .calendar-toolbar h2 {
+    flex: 1 1 100%;
+    font-size: 16px;
+    margin: 2px 0 0;
+  }
+
+  .calendar-toolbar button,
+  .calendar-actions nz-button-group {
+    flex: 0 0 auto;
+    width: auto;
   }
 
   .month-day {

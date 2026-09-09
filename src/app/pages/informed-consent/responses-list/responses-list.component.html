@@ -7,13 +7,13 @@
 >
   <div class="actions-left" actions-left>
     <app-master-data-search (search)="onSearch($event)"></app-master-data-search>
-    <button nz-button type="button" (click)="resetFilters()">Restablecer</button>
+    <button nz-button type="button" (click)="resetFilters()">{{ 'core.reset' | translate }}</button>
   </div>
 </app-master-data-list>
 
 <nz-modal
   [(nzVisible)]="responseVisible"
-  [nzTitle]="selectedResponse?.model?.name || 'Consentimiento informado'"
+  [nzTitle]="selectedResponse?.model?.name || ('informedConsent.title' | translate)"
   [nzFooter]="responseFooter"
   (nzOnCancel)="responseVisible = false"
   (nzOnOk)="responseVisible = false"
@@ -44,7 +44,7 @@
             <h4>{{ block.label }}</h4>
             <p *ngIf="block.helpText">{{ block.helpText }}</p>
             <p class="ci-response-kind" *ngIf="showTechnicalMetadata()">
-              Tipo de consentimiento: {{ consentKindNames(block.kinds, block.kind) }}
+              {{ 'informedConsent.consentKind' | translate }}: {{ consentKindNames(block.kinds, block.kind) }}
             </p>
             <ul>
               <li
@@ -63,7 +63,7 @@
 </nz-modal>
 
 <ng-template #responseFooter>
-  <button nz-button type="button" (click)="responseVisible = false">Cerrar</button>
+  <button nz-button type="button" (click)="responseVisible = false">{{ 'core.close' | translate }}</button>
   <button
     *ngIf="ownOnly && selectedResponse"
     nz-button
@@ -71,7 +71,7 @@
     type="button"
     (click)="requestChange(selectedResponse)"
   >
-    Modificar respuesta
+    {{ 'informedConsent.modifyResponse' | translate }}
   </button>
   <button
     *ngIf="canReactivate(selectedResponse)"
@@ -80,23 +80,22 @@
     type="button"
     (click)="openReactivate(selectedResponse)"
   >
-    Rehabilitar respuesta
+    {{ 'informedConsent.reactivateResponse' | translate }}
   </button>
 </ng-template>
 
 <nz-modal
   [(nzVisible)]="reactivateVisible"
-  nzTitle="Rehabilitar consentimiento informado"
+  [nzTitle]="'informedConsent.reactivateConsent' | translate"
   [nzOkLoading]="reactivating"
-  nzOkText="Rehabilitar"
-  nzCancelText="Cancelar"
+  [nzOkText]="'informedConsent.reactivate' | translate"
+  [nzCancelText]="'core.cancel' | translate"
   (nzOnCancel)="reactivateVisible = false"
   (nzOnOk)="submitReactivate()"
 >
   <div *nzModalContent class="ci-reactivation-form">
     <p>
-      Esta acción permite que el usuario vuelva a responder el consentimiento informado.
-      El motivo quedará registrado en el historial de revisiones.
+      {{ 'informedConsent.reactivationHelp' | translate }}
     </p>
     <label *ngFor="let level of reactivateReasonLevels; let levelIndex = index">
       <span>{{ reactivateReasonLevelLabel(levelIndex) }}</span>
@@ -105,25 +104,25 @@
         nzAllowClear
         [ngModel]="selectedReactivateReasonIds[levelIndex]"
         (ngModelChange)="onReactivateReasonChange(levelIndex, $event)"
-        nzPlaceHolder="Seleccionar motivo"
+        [nzPlaceHolder]="'calendar.selectReason' | translate"
       >
         <nz-option *ngFor="let reason of level" [nzValue]="reason.id" [nzLabel]="reason.label"></nz-option>
       </nz-select>
     </label>
-    <label *ngIf="selectedReactivateReason()?.isOther" class="m-t-16">Otro motivo</label>
+    <label *ngIf="selectedReactivateReason()?.isOther" class="m-t-16">{{ 'calendar.otherReason' | translate }}</label>
     <textarea
       *ngIf="selectedReactivateReason()?.isOther"
       nz-input
       rows="3"
       [(ngModel)]="reactivateOtherReason"
-      placeholder="Completá el motivo"
+      [placeholder]="'calendar.completeReason' | translate"
     ></textarea>
-    <label class="m-t-16">Comentario</label>
+    <label class="m-t-16">{{ 'core.comment' | translate }}</label>
     <textarea
       nz-input
       rows="3"
       [(ngModel)]="reactivateComment"
-      placeholder="Comentario opcional"
+      [placeholder]="'calendar.optionalComment' | translate"
     ></textarea>
   </div>
 </nz-modal>

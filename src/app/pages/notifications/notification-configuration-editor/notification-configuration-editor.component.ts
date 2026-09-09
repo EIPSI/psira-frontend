@@ -7,6 +7,7 @@ import { RolesService } from '@app/pages/administration/@services/roles.service'
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { TranslateService } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { NotificationsService } from '../@services/notifications.service';
@@ -59,7 +60,8 @@ export class NotificationConfigurationEditorComponent implements OnInit {
     private emailTemplatesService: EmailTemplatesService,
     private message: NzMessageService,
     private modalService: NzModalService,
-    private errorService: ErrorHandlerService
+    private errorService: ErrorHandlerService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -74,7 +76,7 @@ export class NotificationConfigurationEditorComponent implements OnInit {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.message.warning('Completá los campos obligatorios.');
+      this.message.warning(this.translate.instant('systemMessages.requiredFields'));
       return;
     }
     const value = this.form.value;
@@ -98,7 +100,9 @@ export class NotificationConfigurationEditorComponent implements OnInit {
     this.saving = true;
     request.pipe(finalize(() => (this.saving = false))).subscribe(
       () => {
-        this.message.success(this.configurationId ? 'Configuración actualizada' : 'Configuraciones creadas');
+        this.message.success(
+          this.translate.instant(this.configurationId ? 'notifications.configurationUpdated' : 'notifications.configurationsCreated')
+        );
         this.router.navigate(['/psira/notifications/administration']);
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to save notification configuration' })
@@ -112,8 +116,8 @@ export class NotificationConfigurationEditorComponent implements OnInit {
   showEventDescription(event: NotificationEvent): void {
     this.modalService.info({
       nzTitle: this.eventLabel[event] || event,
-      nzContent: this.eventDescription[event] || 'Tipo de notificación configurable en PSIRA.',
-      nzOkText: 'Cerrar',
+      nzContent: this.eventDescription[event] || this.translate.instant('notifications.configurableNotificationType'),
+      nzOkText: this.translate.instant('core.close'),
     });
   }
 
@@ -139,7 +143,9 @@ export class NotificationConfigurationEditorComponent implements OnInit {
             recipientRoleId: configuration.recipientRoleId,
             mailTemplateId: configuration.mailTemplateId || null,
             active: configuration.active,
-            notes: duplicate ? `${configuration.notes || ''}${configuration.notes ? '\n' : ''}Copia pendiente de guardar.` : configuration.notes || '',
+            notes: duplicate
+              ? [configuration.notes, this.translate.instant('notifications.copyPendingSave')].filter(Boolean).join('\n')
+              : configuration.notes || '',
           }),
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load notification configuration' })
       );

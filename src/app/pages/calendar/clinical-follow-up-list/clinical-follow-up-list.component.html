@@ -2,17 +2,17 @@
   <div class="filters">
     <nz-range-picker [(ngModel)]="dateRange" (ngModelChange)="applyFilters()"></nz-range-picker>
     <nz-select [(ngModel)]="sortDirection" (ngModelChange)="applyFilters()" class="sort-select">
-      <nz-option nzValue="DESC" nzLabel="Mas recientes primero"></nz-option>
-      <nz-option nzValue="ASC" nzLabel="Mas antiguas primero"></nz-option>
+      <nz-option nzValue="DESC" [nzLabel]="'calendar.newestFirst' | translate"></nz-option>
+      <nz-option nzValue="ASC" [nzLabel]="'calendar.oldestFirst' | translate"></nz-option>
     </nz-select>
     <label nz-checkbox [(ngModel)]="showFutureSessions" (ngModelChange)="applyFilters()">
-      Mostrar sesiones futuras
+      {{ 'calendar.showFutureSessions' | translate }}
     </label>
   </div>
   <div class="settings" *ngIf="settings">
-    Ventana de edicion: {{ settings.editWindowDays }} dias
+    {{ 'calendar.editWindow' | translate }}: {{ settings.editWindowDays }} {{ 'time.days' | translate }}
   </div>
-  <button nz-button nzType="primary" (click)="openNoteModal()">Agregar nota</button>
+  <button nz-button nzType="primary" (click)="openNoteModal()">{{ 'calendar.addNote' | translate }}</button>
 </div>
 
 <nz-spin [nzSpinning]="loading">
@@ -25,30 +25,30 @@
     >
       <header class="card-header" *ngIf="item.type === 'SESSION'">
         <div>
-          <h3>Sesion {{ displaySessionNumber(item.session) || '-' }}</h3>
+          <h3>{{ 'dashboard.session' | translate }} {{ displaySessionNumber(item.session) || '-' }}</h3>
           <span>{{ sessionDate(item.session) | formatDateTime }}</span>
         </div>
         <div class="card-actions">
           <nz-tag [nzColor]="isNoShowCancelled(item.session) ? 'default' : 'processing'">
-            {{ isNoShowCancelled(item.session) ? 'Cancelada por falta' : item.session.clinicalStatus }}
+            {{ isNoShowCancelled(item.session) ? ('calendar.cancelledNoShow' | translate) : item.session.clinicalStatus }}
           </nz-tag>
-          <nz-tag *ngIf="isFutureSession(item.session)" nzColor="default">Futura</nz-tag>
+          <nz-tag *ngIf="isFutureSession(item.session)" nzColor="default">{{ 'calendar.future' | translate }}</nz-tag>
           <button nz-button nzType="link" [disabled]="!canEdit(item.session)" (click)="openEdit(item.session)">
-            Editar
+            {{ 'core.edit' | translate }}
           </button>
         </div>
       </header>
 
       <ng-container *ngIf="item.type === 'SESSION'">
         <div class="cancel-detail" *ngIf="isNoShowCancelled(item.session)">
-          {{ cancellationDetail(item.session) || 'Sin motivo registrado' }}
+          {{ cancellationDetail(item.session) || ('calendar.noReasonRegistered' | translate) }}
         </div>
         <div class="cancel-detail" *ngIf="isNoShowCancelled(item.session) && item.session.cancellationComment">
           <strong>{{ cancellationNoteLabel(item.session) }}:</strong>
           {{ item.session.cancellationComment }}
         </div>
 
-        <p class="follow-up-text">{{ item.session.clinicalHistory || 'Sin seguimiento' }}</p>
+        <p class="follow-up-text">{{ item.session.clinicalHistory || ('calendar.noFollowUp' | translate) }}</p>
 
         <div class="assessment-strip" *ngIf="assessmentResources(item.session).length">
           <button
@@ -78,7 +78,7 @@
         <div class="cancel-detail" *ngIf="item.entry.reasonSnapshot">
           {{ item.entry.reasonSnapshot }}
         </div>
-        <p class="follow-up-text">{{ item.entry.content || 'Sin nota' }}</p>
+        <p class="follow-up-text">{{ item.entry.content || ('calendar.noNote' | translate) }}</p>
         <div class="assessment-strip" *ngIf="entryIsAssessmentNote(item.entry)">
           <button
             type="button"
@@ -95,15 +95,15 @@
 </nz-spin>
 
 <ng-template #emptyState>
-  <div class="empty-state">Sin seguimientos para mostrar</div>
+  <div class="empty-state">{{ 'calendar.noFollowUpsToShow' | translate }}</div>
 </ng-template>
 
 <nz-modal
   [(nzVisible)]="editModalVisible"
-  [nzTitle]="editingSession ? sessionTitle(editingSession) : title"
+  [nzTitle]="editingSession ? sessionTitle(editingSession) : (title | translate)"
   [nzOkLoading]="saving"
-  nzOkText="Guardar"
-  nzCancelText="Cancelar"
+  [nzOkText]="'core.save' | translate"
+  [nzCancelText]="'core.cancel' | translate"
   (nzOnCancel)="editModalVisible = false"
   (nzOnOk)="saveFollowUp()"
 >
@@ -112,11 +112,11 @@
     <label>{{ editingSession.historyLabel }}</label>
     <textarea nz-input rows="8" [(ngModel)]="editHistory"></textarea>
     <div class="version-list" *ngIf="versions.length">
-      <h4>Versiones anteriores</h4>
+      <h4>{{ 'core.previousVersions' | translate }}</h4>
       <div class="version-row" *ngFor="let version of versions">
         <strong>{{ version.createdAt | formatDateTime }}</strong>
         <span *ngIf="version.editedBy">{{ formatPerson(version.editedBy) }}</span>
-        <p>{{ version.previousText || 'Sin texto previo' }}</p>
+        <p>{{ version.previousText || ('calendar.noPreviousText' | translate) }}</p>
       </div>
     </div>
   </div>
@@ -125,24 +125,24 @@
 
 <nz-modal
   [(nzVisible)]="noteModalVisible"
-  [nzTitle]="'Agregar nota'"
+  [nzTitle]="'calendar.addNote' | translate"
   [nzOkLoading]="saving"
-  nzOkText="Guardar"
-  nzCancelText="Cancelar"
+  [nzOkText]="'core.save' | translate"
+  [nzCancelText]="'core.cancel' | translate"
   (nzOnCancel)="noteModalVisible = false"
   (nzOnOk)="saveNote()"
 >
   <ng-container *nzModalContent>
     <div class="follow-up-editor">
-      <label>Fecha</label>
+      <label>{{ 'core.date' | translate }}</label>
       <nz-date-picker
         nzShowTime
         [(ngModel)]="noteOccurredAt"
         style="width: 100%;"
       ></nz-date-picker>
-      <label>Titulo</label>
+      <label>{{ 'core.title' | translate }}</label>
       <input nz-input [(ngModel)]="noteTitle" />
-      <label>Nota</label>
+      <label>{{ 'calendar.note' | translate }}</label>
       <textarea nz-input rows="6" [(ngModel)]="noteContent"></textarea>
     </div>
   </ng-container>
@@ -151,7 +151,7 @@
 <nz-modal
   [(nzVisible)]="rawAssessmentModalVisible"
   [nzTitle]="rawAssessmentTitle"
-  nzOkText="Cerrar"
+  [nzOkText]="'core.close' | translate"
   [nzCancelText]="null"
   (nzOnCancel)="rawAssessmentModalVisible = false"
   (nzOnOk)="rawAssessmentModalVisible = false"
@@ -178,7 +178,7 @@
         </article>
       </div>
       <ng-template #rawAssessmentFallback>
-        <pre class="raw-assessment">{{ rawAssessmentData || 'Sin respuestas registradas' }}</pre>
+        <pre class="raw-assessment">{{ rawAssessmentData || ('calendar.noAnswersRegistered' | translate) }}</pre>
       </ng-template>
     </nz-spin>
   </ng-container>

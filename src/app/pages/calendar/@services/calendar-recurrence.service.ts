@@ -36,20 +36,20 @@ export interface RecurrenceConfig {
 })
 export class CalendarRecurrenceService {
   readonly repeatUnits: RepeatOption<RepeatUnit>[] = [
-    { label: 'días', value: RepeatUnit.DAY },
-    { label: 'semanas', value: RepeatUnit.WEEK },
-    { label: 'meses', value: RepeatUnit.MONTH },
-    { label: 'años', value: RepeatUnit.YEAR },
+    { label: 'time.days', value: RepeatUnit.DAY },
+    { label: 'time.weeks', value: RepeatUnit.WEEK },
+    { label: 'time.months', value: RepeatUnit.MONTH },
+    { label: 'time.years', value: RepeatUnit.YEAR },
   ];
 
   readonly weekDayOptions: RepeatOption<number>[] = [
-    { label: 'Dom', value: 0 },
-    { label: 'Lun', value: 1 },
-    { label: 'Mar', value: 2 },
-    { label: 'Mié', value: 3 },
-    { label: 'Jue', value: 4 },
-    { label: 'Vie', value: 5 },
-    { label: 'Sáb', value: 6 },
+    { label: 'calendar.weekdayShortSunday', value: 0 },
+    { label: 'calendar.weekdayShortMonday', value: 1 },
+    { label: 'calendar.weekdayShortTuesday', value: 2 },
+    { label: 'calendar.weekdayShortWednesday', value: 3 },
+    { label: 'calendar.weekdayShortThursday', value: 4 },
+    { label: 'calendar.weekdayShortFriday', value: 5 },
+    { label: 'calendar.weekdayShortSaturday', value: 6 },
   ];
 
   buildOccurrences(config: RecurrenceConfig): Array<{ startAt: Date; endAt: Date }> {

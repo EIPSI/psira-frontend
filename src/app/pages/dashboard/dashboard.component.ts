@@ -103,7 +103,7 @@ export class DashboardComponent implements OnInit {
           this.reports = [];
         }
       },
-      (err) => this.errorService.handleError(err, { prefix: 'Unable to get user profile' })
+      (err) => this.errorService.handleError(err, { prefix: this.translate.instant('systemMessages.unableGetUserProfile') })
     );
   }
 
@@ -163,7 +163,7 @@ export class DashboardComponent implements OnInit {
         ({ data }: any) => {
           this.disclaimer = data.disclaimers.find((disclaimers: any) => disclaimers.type === 'loginDisclaimer');
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load disclaimers' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('systemMessages.unableLoadMessages') })
       );
   }
 
@@ -190,7 +190,7 @@ export class DashboardComponent implements OnInit {
           this.assessments = edges.map((e: any) => Convert.toFormattedAssessment(e.node));
           this.updateTimelineItems();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load assessments' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('systemMessages.unableLoadAssessments') })
       );
   }
 
@@ -215,7 +215,7 @@ export class DashboardComponent implements OnInit {
           this.loadClinicalSettingsForDashboard();
           this.getDashboardReports();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load informed consents' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('systemMessages.unableLoadInformedConsents') })
       );
   }
 
@@ -258,7 +258,7 @@ export class DashboardComponent implements OnInit {
 
   public showCalendarTab(): boolean {
     if (this.hasBlockingInformedConsent() || this.hasMandatoryPendingConsents()) return false;
-    return !this.calendarContentKnown || this.calendarHasContent;
+    return !!this.user;
   }
 
   public onCalendarContentChange(hasContent: boolean): void {
@@ -268,6 +268,10 @@ export class DashboardComponent implements OnInit {
 
   public hasAnyVisibleTab(): boolean {
     return this.showGeneralTab() || this.showCalendarTab() || this.showReportsTab();
+  }
+
+  public showDashboardDepartmentFilter(): boolean {
+    return this.selectedTabIndex === 0 && this.showGeneralTab() && this.departmentFilters.length > 0;
   }
 
   public visibleTimelineItems(): DashboardTimelineItem[] {
@@ -350,7 +354,7 @@ export class DashboardComponent implements OnInit {
             .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
           this.updateTimelineItems();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load upcoming sessions' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('systemMessages.unableLoadUpcomingSessions') })
       );
   }
 
@@ -390,15 +394,17 @@ export class DashboardComponent implements OnInit {
   }
 
   public sessionTitle(session: CalendarOccurrence): string {
-    const number = session.clinicalSession?.sessionNumber ? `Sesion ${session.clinicalSession.sessionNumber}` : 'Sesion';
+    const number = session.clinicalSession?.sessionNumber
+      ? this.translate.instant('dashboard.sessionNumber', { number: session.clinicalSession.sessionNumber })
+      : this.translate.instant('dashboard.session');
     const person = this.sessionPersonLabel(session);
     return person ? `${number}: ${person}` : number;
   }
 
   public sessionKindLabel(session: CalendarOccurrence): string {
     return session.occurrenceType === CalendarOccurrenceType.SUPERVISION
-      ? 'Supervision'
-      : 'Sesion clinica';
+      ? this.translate.instant('dashboard.supervision')
+      : this.translate.instant('dashboard.clinicalSession');
   }
 
   private sessionPersonLabel(session: CalendarOccurrence): string {

@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '@shared';
 import { MasterDataModule } from '@shared/@modules/master-data/master-data.module';
 import { AngularEditorModule } from '@kolkov/angular-editor';
+import { TranslateModule } from '@ngx-translate/core';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
@@ -44,6 +45,7 @@ import { InformedConsentResponsesListComponent } from './responses-list/response
     SharedModule,
     MasterDataModule,
     AngularEditorModule,
+    TranslateModule,
     NzButtonModule,
     NzDrawerModule,
     NzDropDownModule,

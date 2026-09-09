@@ -6,12 +6,12 @@
   <nz-tab *ngIf="isTherapist" [nzTitle]="'core.calendar' | translate">
     <app-user-calendar *ngIf="selectedTabIndex === 0" [user]="user"></app-user-calendar>
   </nz-tab>
-  <nz-tab *ngIf="isTherapist" nzTitle="Historia de supervision">
+  <nz-tab *ngIf="isTherapist" [nzTitle]="'calendar.supervisionHistory' | translate">
     <app-clinical-follow-up-list
       *ngIf="selectedTabIndex === 1"
       [therapistId]="user?.id"
       [sessionKind]="CSK.SUPERVISION"
-      title="Historia de supervision"
+      [title]="'calendar.supervisionHistory' | translate"
     ></app-clinical-follow-up-list>
   </nz-tab>
   <nz-tab *ngIf="hasReportsTab" [nzTitle]="'core.reports' | translate">
@@ -23,7 +23,7 @@
       (rowClick)="generateReport($event)"
     ></app-master-data-list>
   </nz-tab>
-  <nz-tab nzTitle="Datos del perfil">
+  <nz-tab [nzTitle]="'userManagement.profileData' | translate">
     <nz-tabset *ngIf="selectedTabIndex === profileTabIndex" nzSize="small" [(nzSelectedIndex)]="profileDataTabIndex">
       <nz-tab [nzTitle]="'core.profile' | translate">
         <app-user-form
@@ -34,7 +34,7 @@
           [roleCodeOverride]="roleCode"
         ></app-user-form>
       </nz-tab>
-      <nz-tab nzTitle="Settings">
+      <nz-tab [nzTitle]="'core.settings' | translate">
         <app-user-form
           *ngIf="profileDataTabIndex === 1"
           section="settings"
@@ -72,10 +72,10 @@
           </ng-template>
         </nz-list>
       </nz-tab>
-      <nz-tab *ngIf="isTherapist" nzTitle="Notificaciones">
+      <nz-tab *ngIf="isTherapist" [nzTitle]="'notifications.title' | translate">
         <app-notification-preferences *ngIf="profileDataTabIndex === 4" [therapistId]="user?.id"></app-notification-preferences>
       </nz-tab>
-      <nz-tab nzTitle="Consentimiento informado">
+      <nz-tab [nzTitle]="'informedConsent.title' | translate">
         <app-informed-consent-responses-list
           *ngIf="profileDataTabIndex === (isTherapist ? 5 : 3)"
           [userId]="user?.id"
@@ -83,7 +83,7 @@
       </nz-tab>
     </nz-tabset>
   </nz-tab>
-  <nz-tab nzTitle="Más" (nzSelect)="getAssessments()">
+  <nz-tab [nzTitle]="'core.more' | translate" (nzSelect)="getAssessments()">
     <nz-tabset *ngIf="selectedTabIndex === moreTopTabIndex" nzSize="small" [(nzSelectedIndex)]="moreTabIndex">
       <nz-tab [nzTitle]="'core.assessments' | translate" (nzSelect)="getAssessments()">
         <app-master-data-list
@@ -93,13 +93,13 @@
           [loading]="assessmentsLoading"
         ></app-master-data-list>
       </nz-tab>
-      <nz-tab *ngIf="isTherapist" nzTitle="Sesiones">
+      <nz-tab *ngIf="isTherapist" [nzTitle]="'calendar.sessions' | translate">
         <app-sessions-list *ngIf="moreTabIndex === 1" [therapistId]="user?.id" [sessionKind]="CSK.SUPERVISION"></app-sessions-list>
       </nz-tab>
-      <nz-tab *ngIf="isTherapist" nzTitle="Ciclos">
+      <nz-tab *ngIf="isTherapist" [nzTitle]="'calendar.cycles' | translate">
         <app-cycles-list *ngIf="moreTabIndex === 2" [therapistId]="user?.id" [cycleKind]="CSK.SUPERVISION"></app-cycles-list>
       </nz-tab>
-      <nz-tab nzTitle="Automatizaciones aplicadas">
+      <nz-tab [nzTitle]="'evaluationAutomations.appliedAutomations' | translate">
         <app-applied-automations-list *ngIf="moreTabIndex === (isTherapist ? 3 : 1)" [userId]="user?.id"></app-applied-automations-list>
       </nz-tab>
     </nz-tabset>
@@ -128,7 +128,7 @@
           name="supervisor"
           [nzLoading]="supervisorsLoading"
           nzShowSearch
-          nzPlaceHolder="Supervisor"
+          [nzPlaceHolder]="'roles.supervisor' | translate"
           class="assignment-select"
         >
           <nz-option

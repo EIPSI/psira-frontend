@@ -3,7 +3,7 @@ import { FormattedDepartment } from '../@types/department';
 
 export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
   {
-    title: 'Department Name',
+    title: 'tables.department.name',
     name: 'name',
     translationPath: 'tables.department.name',
     sort: true,
@@ -13,7 +13,7 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
     },
   },
   {
-    title: 'Description',
+    title: 'tables.department.description',
     name: 'description',
     translationPath: 'tables.department.description',
     sort: true,
@@ -23,7 +23,7 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
     },
   },
   {
-    title: 'Status',
+    title: 'tables.department.formattedStatus',
     name: 'formattedStatus',
     translationPath: 'tables.department.formattedStatus',
     altName: 'active',
@@ -33,13 +33,14 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
       type: 'select',
       value: undefined,
       options: [
-        { label: 'Active', value: true },
-        { label: 'Inactive', value: false },
+        { label: 'core.active', value: true },
+        { label: 'core.inactive', value: false },
       ],
     },
   },
   {
-    title: 'Aplica a roles',
+    title: 'departments.appliesToRoles',
+    translationPath: 'departments.appliesToRoles',
     name: 'formattedAppliedRoles',
     altName: 'appliedRoleCodes',
     sort: false,
@@ -49,7 +50,8 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
     },
   },
   {
-    title: 'Por defecto para roles',
+    title: 'departments.defaultForRoles',
+    translationPath: 'departments.defaultForRoles',
     name: 'formattedDefaultRoles',
     altName: 'defaultRoleCodes',
     sort: false,
@@ -59,7 +61,7 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
     },
   },
   {
-    title: 'Created At',
+    title: 'tables.department.createdAt',
     name: 'createdAt',
     translationPath: 'tables.department.createdAt',
     sort: true,
