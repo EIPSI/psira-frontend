@@ -96,22 +96,17 @@
   "
 >
   <div class="expired-text">
-    <h1>{{ expiredDisclaimer }}</h1>
+    <div class="status-message" [innerHTML]="expiredDisclaimer | noSanitize"></div>
   </div>
 </section>
 
 <section *ngIf="AssessmentStatus[assessment.questionnaireAssessment.status] === AssessmentStatus.PLANNED">
   <div class="expired-text">
-    <h1>
-      {{ plannedDisclaimer }}
-      {{ assessment.deliveryDate | formatDateTime }}.
-    </h1>
+    <div class="status-message" [innerHTML]="renderPlannedDisclaimer(assessment.deliveryDate | formatDateTime) | noSanitize"></div>
   </div>
 </section>
 <section *ngIf="AssessmentStatus[assessment.questionnaireAssessment.status] === AssessmentStatus.COMPLETED">
   <div class="expired-text">
-    <h1>
-      {{ completedDisclaimer }}
-    </h1>
+    <div class="status-message" [innerHTML]="completedDisclaimer | noSanitize"></div>
   </div>
 </section>

@@ -5,5 +5,5 @@ export const environment = {
   production: false, // opcional, EnvironmentBase ya lo pone
   hmr: false, // como lo tengas
   email: true, // como lo tengas
-  baseURL: 'https://psira.localhost:8443/graphql',
+  baseURL: '/graphql',
 };

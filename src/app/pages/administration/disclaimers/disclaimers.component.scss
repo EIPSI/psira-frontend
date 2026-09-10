@@ -23,6 +23,13 @@
   min-height: 800px;
 }
 
-textarea .ant-input {
-  height: 220px !important;
+.message-label {
+  color: #3b4552;
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.message-editor {
+  display: block;
 }

@@ -4,6 +4,7 @@ export enum DisclaimerEnum {
   expiredText = 'Assessment Expired',
   plannedText = 'Assessment Planned',
   completedText = 'Assessment Completed',
+  versionMessage = 'Version Message',
 }
 
 export interface Disclaimers {

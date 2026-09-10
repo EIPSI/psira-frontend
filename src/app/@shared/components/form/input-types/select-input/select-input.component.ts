@@ -1,14 +1,15 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Field } from '@shared/components/form/@types/field';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-select-input',
   templateUrl: './select-input.component.html',
   styleUrls: ['./select-input.component.scss'],
 })
-export class SelectInputComponent implements OnInit, OnChanges {
+export class SelectInputComponent implements OnInit, OnChanges, OnDestroy {
   @Input() field: Field;
   @Input() inputMode = false;
   @Input() autoFill = false;
@@ -16,6 +17,7 @@ export class SelectInputComponent implements OnInit, OnChanges {
   @Input() showLabel = true;
   @Output() valueChange: EventEmitter<any> = new EventEmitter<any>();
   inputGroup: FormGroup;
+  private valueChangesSubscription?: Subscription;
 
   constructor(private translate: TranslateService) {}
 
@@ -30,6 +32,7 @@ export class SelectInputComponent implements OnInit, OnChanges {
   }
 
   initializeInput() {
+    this.valueChangesSubscription?.unsubscribe();
     let control: FormControl | FormGroup;
     if (this.field.isRequired) {
       if (this.field.pattern) {
@@ -54,6 +57,15 @@ export class SelectInputComponent implements OnInit, OnChanges {
     }
     this.inputGroup = new FormGroup({ [this.field.name]: control });
     this.inputGroup.controls[this.field.name].setValue(this.field.value, { emitEvent: false });
+    this.valueChangesSubscription = this.inputGroup.controls[this.field.name].valueChanges.subscribe((value) => {
+      if (this.valuesAreEqual(this.field.value, value)) return;
+      this.field.value = value;
+      this.valueChange.emit(value);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.valueChangesSubscription?.unsubscribe();
   }
 
   inputIsValid(): boolean {
@@ -62,9 +74,17 @@ export class SelectInputComponent implements OnInit, OnChanges {
   }
 
   handleValueChange(input: any) {
+    if (this.valuesAreEqual(this.field.value, input)) return;
     this.field.value = input;
     this.inputGroup.controls[this.field.name]?.setValue(input, { emitEvent: false });
     this.valueChange.emit(input);
+  }
+
+  private valuesAreEqual(current: any, next: any): boolean {
+    if (Array.isArray(current) || Array.isArray(next)) {
+      return JSON.stringify(current || []) === JSON.stringify(next || []);
+    }
+    return current === next;
   }
 
   getSelectedLabel(): string {

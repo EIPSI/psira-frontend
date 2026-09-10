@@ -12,9 +12,6 @@
   <nz-input-group [formGroup]="inputGroup" [ngClass]="{ 'is-disabled': field.disabled }">
     <nz-select
       style="width: 100%"
-      (ngModelChange)="handleValueChange($event)"
-      [(ngModel)]="field.value"
-      [attr.autocomplete]="autoFill"
       [nzPlaceHolder]="field.description | translate"
       [formControlName]="field.name"
       [nzMode]="field.mode || 'default'"

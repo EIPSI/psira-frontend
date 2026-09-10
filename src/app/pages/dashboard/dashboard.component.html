@@ -152,7 +152,7 @@
   <ng-container *nzModalContent>
     <p class="icon"><i class="fas fa-info-circle"></i></p>
     <p class="title">{{ 'dashboard.welcome' | translate }}</p>
-    <p class="description">{{ disclaimer?.description }}</p>
+    <div class="description" [innerHTML]="disclaimer?.description | noSanitize"></div>
   </ng-container>
   <ng-container *nzModalFooter>
     <button nz-button nzType="primary" style="" class="modal-button" (click)="updateUser()">

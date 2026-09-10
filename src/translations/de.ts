@@ -1,4 +1,8 @@
 export default {
+  "storageNotice": {
+    "title": "Datenschutz und Browserspeicher",
+    "message": "PSIRA verwendet keine Cookies für die Anmeldung oder Nachverfolgung. Es nutzt lokalen und sitzungsbezogenen Browserspeicher, um Sitzung, Berechtigungen, Sprache und erforderliche Systemeinstellungen zu speichern."
+  },
   "assessmentForm": {
     "alreadyCompleted": "Testung wurde abgeschlossen",
     "complete": "Danke für die Teilnahme an der Untersuchung.",
@@ -258,6 +262,8 @@ export default {
     "duplicate": "Duplicate",
     "edit": "Edit",
     "editCaregiver": "Betreuer bearbeiten",
+    "on": "On",
+    "off": "Off",
     "export": "Export",
     "filter": "Filter",
     "goHome": "Go Home",
@@ -634,20 +640,20 @@ export default {
       "reportName": "Berichtsname",
       "reportStatus": "Berichtsstatus",
       "repositoryLink": "Repository-Link",
-      "resources": "Ressourcen",
+      "resources": "Where it appears",
       "roles": "Rollen",
       "url": "URL des Berichts",
       "reportNameDescription": "Enter the report name.",
       "reportNameValidation": "Report name is required.",
-      "resourcesDescription": "Select where this report applies.",
-      "resourcesValidation": "Report type is required.",
+      "resourcesDescription": "Select the general section where this report will appear.",
+      "resourcesValidation": "Report location is required.",
       "descriptionDescription": "Describe what this report is used for.",
       "descriptionValidation": "Description is required.",
       "appNameDescription": "Select the Shiny app used by this report.",
       "appNameValidation": "Shiny app is required.",
       "urlDescription": "URL generated from the selected reporting tool.",
       "urlValidation": "Enter a valid URL.",
-      "repositoryLinkDescription": "Repository link associated with the report.",
+      "repositoryLinkDescription": "Optional technical reference, such as the Git repository, documentation, script, or internal folder where this report is maintained.",
       "repositoryLinkValidation": "Enter a valid repository link.",
       "reportStatusDescription": "Enable or disable this report.",
       "reportStatusValidation": "Report status is required."
@@ -1263,8 +1269,22 @@ export default {
     "unableLoadRandomizations": "Unable to load randomizations"
   },
   "reports": {
+    "reports": "Berichte",
+    "usage": "Report usage",
     "notFound": "Report not found or unavailable.",
     "report": "Report",
+    "user": "User",
+    "patient": "Patient",
+    "context": "Context",
+    "contextGeneral": "General",
+    "contextPatient": "Patient",
+    "contextTherapist": "Therapist",
+    "contextSupervisor": "Supervisor",
+    "contextUser": "User",
+    "startedAt": "Started",
+    "lastSeenAt": "Last activity",
+    "endedAt": "Ended",
+    "duration": "Duration",
     "unableLoadReports": "Unable to load reports",
     "createReport": "Create report",
     "saveReport": "Save report",
@@ -1279,7 +1299,9 @@ export default {
     "unableCreateReport": "Unable to create report",
     "unableUpdateReport": "Unable to update report",
     "unableDeleteReport": "Unable to delete report",
-    "unableLoadShinyApps": "Unable to load Shiny apps"
+    "unableLoadShinyApps": "Unable to load Shiny apps",
+    "unableLoadReportSessions": "Unable to load report usage",
+    "rolesRequiredValidation": "Select at least one role that can access this report."
   },
   "rolesPermissions": {
     "permissions": "Berechtigungen",
@@ -1470,7 +1492,7 @@ export default {
       "description": "Beschreibung",
       "name": "Name",
       "repositoryLink": "Repository",
-      "resources": "Art des Berichts",
+      "resources": "Where it appears",
       "roles": "Rollen mit Zugang zum Bericht",
       "status": "Status"
     },

@@ -11,17 +11,12 @@
   nzPlacement="right"
 >
   <div class="big-div">
-    <app-form
-      class="mt-3"
-      [form]="disclaimerForm"
-      [formData]="disclaimer"
-      [isLoading]="isLoading"
-      [populateForm]="populateForm"
-      [resetForm]="resetForm"
-      [showCancelButton]="showCancelButton"
-      [loadingMessage]="loadingMessage"
-    >
-    </app-form>
+    <label class="message-label">{{ 'tables.disclaimer.textInformation' | translate }}</label>
+    <angular-editor
+      class="message-editor"
+      [config]="editorConfig"
+      [(ngModel)]="description"
+    ></angular-editor>
     <div class="buttons">
       <button class="cancel-button" nz-button nzType="default" (click)="closeCreatePanel()">{{ 'core.cancel' | translate }}</button>
       <button class="add-button" nz-button nzType="primary" (click)="updateDisclaimer()">{{ 'core.save' | translate }}</button>

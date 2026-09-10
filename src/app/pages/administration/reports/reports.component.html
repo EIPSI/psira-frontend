@@ -1,21 +1,76 @@
-<app-master-data-list
-  [data]="data"
-  [columns]="columns"
-  [loading]="isLoading"
-  [pageInfo]="pageInfo"
-  [actions]="actions"
-  (pageChange)="onPageChange($event)"
-  (sort)="onSort($event)"
-  (filter)="onFilter($event)"
-  (executeAction)="onAction($event)"
-  (rowClick)="handleRowClick($event)"
->
-  <ng-container actions-left>
-    <app-master-data-search (search)="onSearch($event)"></app-master-data-search>
-  </ng-container>
-  <ng-container actions-right>
-    <button nz-button nzType="primary" nzShape="circle" routerLink="/psira/administration/create-report">
-      <i nz-icon nzType="plus"></i>
-    </button>
-  </ng-container>
-</app-master-data-list>
+<nz-tabset (nzSelectedIndexChange)="onTabChange($event)">
+  <nz-tab [nzTitle]="'reports.reports' | translate">
+    <app-master-data-list
+      [data]="data"
+      [columns]="columns"
+      [loading]="isLoading"
+      [pageInfo]="pageInfo"
+      [actions]="actions"
+      (pageChange)="onPageChange($event)"
+      (sort)="onSort($event)"
+      (filter)="onFilter($event)"
+      (executeAction)="onAction($event)"
+      (rowClick)="handleRowClick($event)"
+    >
+      <ng-container actions-left>
+        <app-master-data-search (search)="onSearch($event)"></app-master-data-search>
+      </ng-container>
+      <ng-container actions-right>
+        <button nz-button nzType="primary" nzShape="circle" routerLink="/psira/administration/create-report">
+          <i nz-icon nzType="plus"></i>
+        </button>
+      </ng-container>
+    </app-master-data-list>
+  </nz-tab>
+
+  <nz-tab [nzTitle]="'reports.usage' | translate">
+    <div class="report-usage-toolbar">
+      <button nz-button (click)="refreshReportSessions()">
+        <i nz-icon nzType="reload"></i>
+        {{ 'core.reset' | translate }}
+      </button>
+    </div>
+
+    <nz-table
+      #sessionsTable
+      [nzData]="reportSessions"
+      [nzLoading]="reportSessionsLoading"
+      [nzPageSize]="25"
+      nzSize="small"
+    >
+      <thead>
+        <tr>
+          <th>{{ 'reports.report' | translate }}</th>
+          <th>{{ 'reports.user' | translate }}</th>
+          <th>{{ 'reports.patient' | translate }}</th>
+          <th>{{ 'reports.context' | translate }}</th>
+          <th>{{ 'reports.startedAt' | translate }}</th>
+          <th>{{ 'reports.lastSeenAt' | translate }}</th>
+          <th>{{ 'reports.endedAt' | translate }}</th>
+          <th>{{ 'reports.duration' | translate }}</th>
+          <th>{{ 'core.status' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let session of sessionsTable.data">
+          <td>{{ getSessionReportName(session) }}</td>
+          <td>{{ getSessionUserName(session) }}</td>
+          <td>{{ getSessionPatientName(session) }}</td>
+          <td>
+            <span>{{ getContextLabel(session.contextType) | translate }}</span>
+            <small *ngIf="session.closedBy"> · {{ session.closedBy }}</small>
+          </td>
+          <td>{{ session.startedAt | formatDateTime }}</td>
+          <td>{{ session.lastSeenAt | formatDateTime }}</td>
+          <td>{{ session.endedAt ? (session.endedAt | formatDateTime) : '-' }}</td>
+          <td>{{ formatDuration(session.durationSeconds) }}</td>
+          <td>
+            <nz-tag [nzColor]="session.active ? 'green' : 'default'">
+              {{ (session.active ? 'core.active' : 'core.inactive') | translate }}
+            </nz-tag>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-tab>
+</nz-tabset>

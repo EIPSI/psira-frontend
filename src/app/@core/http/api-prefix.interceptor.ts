@@ -15,8 +15,9 @@ export class ApiPrefixInterceptor implements HttpInterceptor {
   constructor(private injector: Injector, private router: Router) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    const isLoginRequest = typeof request.body?.query === 'string' && request.body.query.includes('login(');
     const userStr = localStorage.getItem('auth_app_token');
-    if (userStr) {
+    if (userStr && !isLoginRequest) {
       const user = JSON.parse(userStr);
       if (user.accessToken) {
         request = request.clone({

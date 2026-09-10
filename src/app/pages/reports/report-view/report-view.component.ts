@@ -82,7 +82,9 @@ export class ReportViewComponent implements OnInit, OnDestroy {
   }
 
   private startReportSession(reportId: number) {
-    this.reportsService.startReportSession(reportId, this.patientId).subscribe(
+    this.reportsService
+      .startReportSession(reportId, this.patientId, this.getContextType(), this.getContextParams())
+      .subscribe(
       ({ data }: any) => {
         this.reportSessionId = data.startReportSession?.id;
         if (this.reportSessionId) this.startHeartbeat();
@@ -132,5 +134,24 @@ export class ReportViewComponent implements OnInit, OnDestroy {
     if (!serializedParams) return url;
 
     return `${url}${url.includes('?') ? '&' : '?'}${serializedParams}`;
+  }
+
+  private getContextType(): string {
+    if (this.patientId) return 'PATIENT';
+    const params = this.activatedRoute.snapshot.queryParamMap;
+    if (params.get('therapist_id')) return 'THERAPIST';
+    if (params.get('supervisor_id')) return 'SUPERVISOR';
+    if (params.get('user_id')) return 'USER';
+    return 'GENERAL';
+  }
+
+  private getContextParams(): string {
+    const context: Record<string, string> = {};
+    for (const paramName of this.contextParamNames) {
+      const value = this.activatedRoute.snapshot.queryParamMap.get(paramName);
+      if (value) context[paramName] = value;
+    }
+
+    return Object.keys(context).length ? JSON.stringify(context) : null;
   }
 }

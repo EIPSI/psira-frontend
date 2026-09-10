@@ -83,7 +83,6 @@ export class AssessmentOverviewComponent implements OnInit {
       }
     });
     this.getDescription();
-    console.log(this.completedDisclaimer);
   }
 
   public getMaxRequiredQuestions(questionnaire: any): number {
@@ -139,7 +138,6 @@ export class AssessmentOverviewComponent implements OnInit {
 
   public completeAssessment(): void {
     const id = this.assessment.questionnaireAssessment._id;
-    console.log('here');
     forkJoin([
       this.translateService.get(this.translations.assessmentForm.complete),
       this.assessmentService.changeAssessmentStatus(id, AssessmentStatus.COMPLETED),
@@ -160,6 +158,15 @@ export class AssessmentOverviewComponent implements OnInit {
       this.assessmentFormService.percentageCompleted >= 100 &&
       this.assessment?.questionnaireAssessment?.status !== AssessmentStatus.COMPLETED
     );
+  }
+
+  public renderPlannedDisclaimer(deliveryDate: string): string {
+    const template = this.plannedDisclaimer || '';
+    if (/{{\s*deliveryDate\s*}}/.test(template)) {
+      return template.replace(/{{\s*deliveryDate\s*}}/g, deliveryDate);
+    }
+
+    return `${template} ${deliveryDate}.`;
   }
 
   private getDescription(): void {

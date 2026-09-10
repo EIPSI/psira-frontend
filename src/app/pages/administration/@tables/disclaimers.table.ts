@@ -15,6 +15,7 @@ export const DisclaimersColumns: TableColumn<Partial<FormattedDisclaimer>>[] = [
   {
     title: 'tables.disclaimer.textInformation',
     name: 'description',
+    render: 'html',
     translationPath: 'tables.disclaimer.textInformation',
     sort: true,
     filterField: {

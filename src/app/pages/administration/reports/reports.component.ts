@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { PermissionKey } from '@shared/@types/permission';
-import { FormattedReport, Reports } from '@app/pages/administration/@types/reports';
+import { FormattedReport, ReportSession, Reports } from '@app/pages/administration/@types/reports';
 import {
   Action,
   ActionArgs,
@@ -48,6 +48,9 @@ export class ReportsComponent implements OnInit {
   };
   public pageInfo: PageInfo;
   public actions: Action<ActionKey>[] = [];
+  public reportSessions: ReportSession[] = [];
+  public reportSessionsLoading = false;
+  public reportSessionsLoaded = false;
 
   constructor(
     private reportsService: ReportsService,
@@ -117,6 +120,57 @@ export class ReportsComponent implements OnInit {
     this.router.navigate(['/psira/administration/create-report']);
   }
 
+  public onTabChange(index: number): void {
+    if (index === 1 && !this.reportSessionsLoaded) {
+      this.getReportSessions();
+    }
+  }
+
+  public refreshReportSessions(): void {
+    this.getReportSessions();
+  }
+
+  public getSessionReportName(session: ReportSession): string {
+    return session.report?.name || `#${session.reportId}`;
+  }
+
+  public getSessionUserName(session: ReportSession): string {
+    const user = session.user;
+    if (!user) return `#${session.userId}`;
+    return [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || user.username || `#${user.id}`;
+  }
+
+  public getSessionPatientName(session: ReportSession): string {
+    const patient = session.patient;
+    if (!patient) return session.patientId ? `#${session.patientId}` : '-';
+    const name = [patient.firstName, patient.lastName].filter(Boolean).join(' ');
+    return patient.medicalRecordNo ? `${name} (${patient.medicalRecordNo})` : name;
+  }
+
+  public getContextLabel(contextType: string): string {
+    const normalized = (contextType || 'GENERAL').toLowerCase();
+    const labels: Record<string, string> = {
+      general: 'reports.contextGeneral',
+      patient: 'reports.contextPatient',
+      therapist: 'reports.contextTherapist',
+      supervisor: 'reports.contextSupervisor',
+      user: 'reports.contextUser',
+    };
+
+    return labels[normalized] || contextType || 'reports.contextGeneral';
+  }
+
+  public formatDuration(seconds: number): string {
+    const total = Math.max(0, seconds || 0);
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const remainingSeconds = total % 60;
+
+    if (hours) return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    if (minutes) return `${minutes}m ${remainingSeconds}s`;
+    return `${remainingSeconds}s`;
+  }
+
   private createSearchFilter(searchString: string): Array<{ [K in keyof Partial<Reports>]: {} }> {
     if (!searchString) return [];
     return [{ name: { iLike: `%${searchString}%` } }, { description: { iLike: `%${searchString}%` } }];
@@ -134,6 +188,20 @@ export class ReportsComponent implements OnInit {
           this.pageInfo = data.reports.pageInfo;
         },
         (err) => this.errorService.handleError(err, { prefix: this.translate.instant('reports.unableLoadReports') })
+      );
+  }
+
+  private getReportSessions(): void {
+    this.reportSessionsLoading = true;
+    this.reportsService
+      .reportSessions()
+      .pipe(finalize(() => (this.reportSessionsLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.reportSessions = data.reportSessions || [];
+          this.reportSessionsLoaded = true;
+        },
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('reports.unableLoadReportSessions') })
       );
   }
 

@@ -15,6 +15,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { FormsModule } from '@angular/forms';
 import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
+import { SharedModule } from '@shared';
 
 @NgModule({
   declarations: [DashboardComponent, ReportsComponent],
@@ -33,6 +34,7 @@ import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
     NzSelectModule,
     FormsModule,
     CalendarWidgetModule,
+    SharedModule,
   ],
 })
 export class DashboardModule {}

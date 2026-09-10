@@ -3,7 +3,6 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '@app/auth/auth.service';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { version } from '../../../../package.json';
 
 @Component({
   selector: 'app-login',
@@ -16,7 +15,6 @@ export class LoginComponent implements OnInit {
   hasErrors = false;
   errors: string[] = [];
   passwordVisible = false;
-  version: string = version;
 
   constructor(
     private fb: FormBuilder,
@@ -26,6 +24,7 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.clearStoredSession();
     this.validateForm = this.fb.group({
       identifier: [null, [Validators.required]],
       password: [null, [Validators.required]],
@@ -105,6 +104,15 @@ export class LoginComponent implements OnInit {
       };
       this.signIn(credentials);
     }
+  }
+
+
+  private clearStoredSession(): void {
+    const items = ['auth_app_token', 'user', 'settings', 'tabs', 'activeTabIndex', 'permissions'];
+    items.forEach((item) => {
+      localStorage.removeItem(item);
+      sessionStorage.removeItem(item);
+    });
   }
 
   private formatLoginErrors(error: any): string[] {

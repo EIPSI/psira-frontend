@@ -2,7 +2,8 @@ FROM node:14 AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install -g npm@8
+RUN npm ci --legacy-peer-deps --omit=optional --ignore-scripts
 
 COPY . .
 

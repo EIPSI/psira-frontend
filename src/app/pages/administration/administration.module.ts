@@ -29,6 +29,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
+import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { ReportsComponent } from './reports/reports.component';
 import { CreateReportComponent } from './create-report/create-report.component';
@@ -38,6 +39,7 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { DisclaimersComponent } from './disclaimers/disclaimers.component';
 import { AssessmentAdministrationComponent } from './assessment-administration/assessment-administration.component';
 import { VersionComponent } from './version/version.component';
+import { AngularEditorModule } from '@kolkov/angular-editor';
 
 const antModules = [
   NzGridModule,
@@ -56,6 +58,7 @@ const antModules = [
   NzGridModule,
   NzDrawerModule,
   NzTableModule,
+  NzTagModule,
   NzCheckboxModule,
   NzCollapseModule,
   NzSpinModule,
@@ -76,6 +79,7 @@ const antModules = [
     NzSelectModule,
     NzRadioModule,
     NzFormModule,
+    AngularEditorModule,
   ],
   declarations: [
     RolesAndPermissionsComponent,

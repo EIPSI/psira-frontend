@@ -20,7 +20,11 @@ const log = new Logger('App');
 })
 @UntilDestroy()
 export class AppComponent implements OnInit {
+  readonly storageNoticeKey = 'psira_storage_notice_v1';
+  readonly storageNoticeVersion = 1;
+  readonly storageNoticeFeatures = ['browserStorage'];
   i18nReady$: Observable<boolean>;
+  showStorageNotice = false;
 
   constructor(
     private router: Router,
@@ -74,6 +78,32 @@ export class AppComponent implements OnInit {
         untilDestroyed(this)
       )
       .subscribe((key) => this.titleService.setTitle(this.translateService.instant(key) + ' | PSIRA'));
+
+    this.showStorageNotice = this.readStorageNoticeValue() !== this.storageNoticeValue;
   }
 
+  acknowledgeStorageNotice() {
+    this.writeStorageNoticeValue();
+    this.showStorageNotice = false;
+  }
+
+  private get storageNoticeValue() {
+    return `acknowledged:${this.storageNoticeVersion}:${this.storageNoticeFeatures.join(',')}`;
+  }
+
+  private readStorageNoticeValue() {
+    try {
+      return localStorage.getItem(this.storageNoticeKey);
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStorageNoticeValue() {
+    try {
+      localStorage.setItem(this.storageNoticeKey, this.storageNoticeValue);
+    } catch {
+      return;
+    }
+  }
 }

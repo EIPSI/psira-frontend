@@ -27,11 +27,28 @@ export interface ReportSession {
   reportId: number;
   userId: number;
   patientId?: number;
+  contextType?: string;
+  contextParams?: string;
+  closedBy?: string;
   startedAt: string;
   lastSeenAt: string;
   endedAt?: string;
   durationSeconds: number;
   active: boolean;
+  report?: Pick<Reports, 'id' | 'name'>;
+  user?: {
+    id: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+  };
+  patient?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    medicalRecordNo?: string;
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -70,7 +87,7 @@ export interface UpdateReport {
 }
 
 export interface CreateReportInput {
-  id: number;
+  id?: number;
   anonymus?: boolean;
   name?: string;
   description?: string;
