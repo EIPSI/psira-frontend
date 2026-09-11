@@ -4,7 +4,9 @@ import { SystemConfigurationComponent } from './system-configuration/system-conf
 import { PatientStatusesComponent } from '../patient-statuses/patient-statuses.component';
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { PermissionGuard } from '../../../permission.guard';
-import { AutomaticEmailSettingsComponent } from './automatic-email-settings/automatic-email-settings.component';
+import { FollowUpSettingsComponent } from './follow-up-settings/follow-up-settings.component';
+import { SessionCancellationReasonsComponent } from './session-cancellation-reasons/session-cancellation-reasons.component';
+import { LanguageSettingsComponent } from './language/language-settings.component';
 
 const routes: Routes = [
   {
@@ -16,7 +18,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.systemConfiguration',
           permissions: {
-            only: [PermissionKey.VIEW_SYSCONF],
+            only: [PermissionKey.SYSTEM_VIEW_ALL],
           },
         },
         canActivate: [PermissionGuard],
@@ -27,18 +29,40 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.patientStatuses',
           permissions: {
-            only: [PermissionKey.VIEW_SETTINGS],
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
           },
         },
         canActivate: [PermissionGuard],
       },
       {
-        path: 'automatic-emails',
-        component: AutomaticEmailSettingsComponent,
+        path: 'follow-up-settings',
+        component: FollowUpSettingsComponent,
         data: {
-          breadcrumbI18nKey: 'menu.automaticEmails',
+          breadcrumbI18nKey: 'clinicalSettings.title',
           permissions: {
-            only: [PermissionKey.VIEW_SYSCONF],
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'session-cancellation-reasons',
+        component: SessionCancellationReasonsComponent,
+        data: {
+          breadcrumbI18nKey: 'menu.reasonConfiguration',
+          permissions: {
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'language',
+        component: LanguageSettingsComponent,
+        data: {
+          breadcrumbI18nKey: 'menu.language',
+          permissions: {
+            only: [PermissionKey.SETTINGS_VIEW_ALL],
           },
         },
         canActivate: [PermissionGuard],

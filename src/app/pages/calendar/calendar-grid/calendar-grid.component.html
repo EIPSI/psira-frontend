@@ -1,0 +1,154 @@
+<div class="calendar-shell">
+  <div class="calendar-toolbar">
+    <div class="calendar-nav">
+      <button nz-button nzShape="circle" (click)="previousPeriod()"><i nz-icon nzType="left"></i></button>
+      <button nz-button (click)="goToday()">{{ 'calendar.today' | translate }}</button>
+      <button nz-button nzShape="circle" (click)="nextPeriod()"><i nz-icon nzType="right"></i></button>
+      <h2>{{ title }}</h2>
+    </div>
+
+    <div class="calendar-actions">
+      <nz-button-group>
+        <button nz-button [nzType]="view === CV.MONTH ? 'primary' : 'default'" (click)="setView(CV.MONTH)">{{ 'calendar.month' | translate }}</button>
+        <button nz-button [nzType]="view === CV.WEEK ? 'primary' : 'default'" (click)="setView(CV.WEEK)">{{ 'calendar.week' | translate }}</button>
+        <button nz-button [nzType]="view === CV.DAY ? 'primary' : 'default'" (click)="setView(CV.DAY)">{{ 'calendar.day' | translate }}</button>
+      </nz-button-group>
+      <button nz-button nzType="primary" (click)="openCreateEvent()">
+        <i nz-icon nzType="plus"></i>
+        {{ 'core.create' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <nz-spin [nzSpinning]="loading">
+    <section *ngIf="view === CV.MONTH" class="month-view">
+      <div class="weekday" *ngFor="let day of weekDays">{{ formatWeekday(day) }}</div>
+      <div
+        role="button"
+        tabindex="0"
+        class="month-day"
+        *ngFor="let day of monthDays"
+        [class.month-day--muted]="isMutedMonthDay(day)"
+        [class.month-day--today]="isToday(day)"
+        (mouseup)="onCellMouseUp($event, day)"
+        (contextmenu)="onCellContextMenu($event)"
+        (dragenter)="onDragOver($event)"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, day)"
+      >
+        <span class="day-number">{{ formatDay(day) }}</span>
+        <div
+          class="calendar-event"
+          *ngFor="let event of eventsForDate(day) | slice:0:4"
+          [attr.data-event-id]="event.id"
+          [ngClass]="eventClass(event)"
+          [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
+          [style.background-color]="event.color || null"
+          [draggable]="event.editable"
+          (dragstart)="onEventDragStart($event, event)"
+          (dragend)="onEventDragEnd()"
+          (mousedown)="onEventMouseDown($event, event)"
+          (mouseup)="onEventMouseUp($event, event)"
+          (click)="onEventNativeClick($event)"
+          (contextmenu)="onEventContextMenu($event, event)"
+        >
+          <span>{{ formatTime(event.startAt) }}</span>
+          {{ event.title }}
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="view === CV.WEEK" class="time-grid">
+      <div class="time-corner"></div>
+      <div class="time-day-header" *ngFor="let day of weekDays">
+        <strong>{{ formatWeekday(day) }}</strong>
+        <span>{{ formatDay(day) }}</span>
+      </div>
+
+      <ng-container *ngFor="let hour of hourSlots">
+        <div class="time-label">{{ hour }}:00</div>
+        <div
+          role="button"
+          tabindex="0"
+          class="time-cell"
+          *ngFor="let day of weekDays"
+          (mouseup)="onCellMouseUp($event, day, hour)"
+          (contextmenu)="onCellContextMenu($event)"
+          (dragenter)="onDragOver($event)"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event, day, hour)"
+        >
+          <div
+            class="calendar-event calendar-event--timed"
+            *ngFor="let event of eventsForHour(day, hour)"
+            [attr.data-event-id]="event.id"
+            [ngClass]="eventClass(event)"
+            [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
+            [style.background-color]="event.color || null"
+            [draggable]="event.editable"
+            (dragstart)="onEventDragStart($event, event)"
+            (dragend)="onEventDragEnd()"
+            (mousedown)="onEventMouseDown($event, event)"
+            (mouseup)="onEventMouseUp($event, event)"
+            (click)="onEventNativeClick($event)"
+            (contextmenu)="onEventContextMenu($event, event)"
+          >
+            {{ formatTime(event.startAt) }} {{ event.title }}
+          </div>
+        </div>
+      </ng-container>
+    </section>
+
+    <section *ngIf="view === CV.DAY" class="time-grid time-grid--day">
+      <div class="time-corner"></div>
+      <div class="time-day-header">
+        <strong>{{ formatWeekday(selectedDate, true) }}</strong>
+        <span>{{ formatDay(selectedDate) }}</span>
+      </div>
+
+      <ng-container *ngFor="let hour of hourSlots">
+        <div class="time-label">{{ hour }}:00</div>
+        <div
+          role="button"
+          tabindex="0"
+          class="time-cell"
+          (mouseup)="onCellMouseUp($event, selectedDate, hour)"
+          (contextmenu)="onCellContextMenu($event)"
+          (dragenter)="onDragOver($event)"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event, selectedDate, hour)"
+        >
+          <div
+            class="calendar-event calendar-event--timed"
+            *ngFor="let event of eventsForHour(selectedDate, hour)"
+            [attr.data-event-id]="event.id"
+            [ngClass]="eventClass(event)"
+            [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
+            [style.background-color]="event.color || null"
+            [draggable]="event.editable"
+            (dragstart)="onEventDragStart($event, event)"
+            (dragend)="onEventDragEnd()"
+            (mousedown)="onEventMouseDown($event, event)"
+            (mouseup)="onEventMouseUp($event, event)"
+            (click)="onEventNativeClick($event)"
+            (contextmenu)="onEventContextMenu($event, event)"
+          >
+            {{ formatTime(event.startAt) }} {{ event.title }}
+          </div>
+        </div>
+      </ng-container>
+    </section>
+  </nz-spin>
+</div>
+
+<div
+  *ngIf="dragPreviewEvent"
+  class="calendar-drag-preview"
+  [ngClass]="eventClass(dragPreviewEvent)"
+  [style.background-color]="dragPreviewEvent.color || null"
+  [style.left.px]="dragPreviewX + 12"
+  [style.top.px]="dragPreviewY + 12"
+>
+  <span>{{ formatTime(dragPreviewEvent.startAt) }}</span>
+  {{ dragPreviewEvent.title }}
+</div>

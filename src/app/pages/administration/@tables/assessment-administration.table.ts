@@ -3,7 +3,7 @@ import { FormattedAssessmentAdministration } from '@app/pages/administration/@ty
 
 export const AssessmentAdministrationColumns: TableColumn<Partial<FormattedAssessmentAdministration>>[] = [
   {
-    title: 'Type of Assessment',
+    title: 'tables.assessmentAdministration.assessmentType',
     name: 'name',
     translationPath: 'tables.assessmentAdministration.assessmentType',
     sort: true,
@@ -13,22 +13,24 @@ export const AssessmentAdministrationColumns: TableColumn<Partial<FormattedAsses
     },
   },
   {
-    title: 'Status',
+    title: 'tables.department.formattedStatus',
     name: 'formattedStatus',
     translationPath: 'tables.department.formattedStatus',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,
       options: [
-        { label: 'Active', value: true },
-        { label: 'Inactive', value: false },
+        { label: 'core.active', value: true },
+        { label: 'core.inactive', value: false },
       ],
     },
   },
   {
-    title: 'Last Update',
+    title: 'tables.assessmentAdministration.lastUpdate',
     name: 'updatedAt',
     translationPath: 'tables.assessmentAdministration.lastUpdate',
+    sort: true,
   },
 ];

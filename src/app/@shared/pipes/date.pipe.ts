@@ -1,13 +1,29 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import * as moment from 'moment';
+import { formatSystemDate, formatSystemDateTime, formatSystemTime } from '@shared/utils/system-settings.util';
 
 @Pipe({
   name: 'formatDate',
 })
 export class DatePipe implements PipeTransform {
   transform(date: any, args?: any): any {
-    const _date = new Date(date);
-    const settings = JSON.parse(localStorage.getItem('settings'));
-    return moment(_date).format(settings.dateFormat);
+    return formatSystemDate(date);
+  }
+}
+
+@Pipe({
+  name: 'formatDateTime',
+})
+export class DateTimePipe implements PipeTransform {
+  transform(date: any): any {
+    return formatSystemDateTime(date);
+  }
+}
+
+@Pipe({
+  name: 'formatTime',
+})
+export class TimePipe implements PipeTransform {
+  transform(date: any): any {
+    return formatSystemTime(date);
   }
 }

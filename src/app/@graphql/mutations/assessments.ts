@@ -220,6 +220,7 @@ const addAnswer = gql`
       _id
       answers {
         question
+        occurrenceId
         valid
         textValue
         multipleChoiceValue

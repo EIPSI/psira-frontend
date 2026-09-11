@@ -1,4 +1,4 @@
-<button nz-button routerLink="/psira/administration/email-templates" nzType="secondary">Go back</button>
+<button nz-button routerLink="/psira/notifications/email-templates" nzType="secondary">{{ 'core.back' | translate }}</button>
 <div nz-row>
     <div nz-col nzSpan="24">
         <form nz-form [formGroup]="emailForm">
@@ -15,49 +15,121 @@
                 </nz-form-control>
             </nz-form-item >
             <nz-form-item>
+                <nz-form-label [nzSpan]="6">{{ 'emailTemplates.senderName' | translate }}</nz-form-label>
+                <nz-form-control [nzSpan]="14">
+                  <input formControlName="senderName" nz-input name="senderName" type="text" id="senderName" [placeholder]="'emailTemplates.defaultSender' | translate">
+                </nz-form-control>
+            </nz-form-item >
+            <nz-form-item>
                 <nz-form-label [nzSpan]="6">{{'emailTemplates.body' | translate}}</nz-form-label>
                 <nz-form-control [nzSpan]="14">
-                  <angular-editor [config]="editorConfig" [placeholder]="'Enter email body here...'" formControlName="body"></angular-editor>
+                  <div class="template-tools">
+                    <button nz-button nzSize="small" type="button" (click)="showPreview()">{{ 'questionnaireBundles.preview' | translate }}</button>
+                    <button nz-button nzSize="small" type="button" (click)="showShortcuts()">{{ 'language.availableVariables' | translate }}</button>
+                  </div>
+                  <angular-editor [config]="editorConfig" [placeholder]="'emailTemplates.bodyPlaceholder' | translate" formControlName="body"></angular-editor>
                 </nz-form-control>
             </nz-form-item >
             <nz-form-item>
                 <nz-form-label [nzSpan]="6">{{'emailTemplates.status' | translate}}</nz-form-label>
                 <nz-form-control [nzSpan]="14">
                     <nz-radio-group ngModel="ACTIVE" formControlName="status">
-                        <label nz-radio nzValue="ACTIVE">Active</label>
-                        <label nz-radio nzValue="INACTIVE">Inactive</label>
+                        <label nz-radio nzValue="ACTIVE">{{ 'core.active' | translate }}</label>
+                        <label nz-radio nzValue="INACTIVE">{{ 'core.inactive' | translate }}</label>
                     </nz-radio-group>
                 </nz-form-control>
             </nz-form-item >
             <nz-form-item>
-                <nz-form-label [nzSpan]="6">All Departments</nz-form-label>
+                <nz-form-label [nzSpan]="6">{{ 'emailTemplates.allDepartments' | translate }}</nz-form-label>
                 <nz-form-control [nzSpan]="14">
-                    <nz-radio-group [(ngModel)]="allDepartments" ngModel="ACTIVE" formControlName="isPublic">
-                        <label nz-radio [nzValue]="true">Yes</label>
-                        <label nz-radio [nzValue]="false">No</label>
+                    <nz-radio-group (ngModelChange)="onPublicChange($event)" formControlName="isPublic">
+                        <label nz-radio [nzValue]="true">{{ 'core.yes' | translate }}</label>
+                        <label nz-radio [nzValue]="false">{{ 'core.no' | translate }}</label>
                     </nz-radio-group>
                 </nz-form-control>
             </nz-form-item >
             <nz-form-item *ngIf="!allDepartments">
-                <nz-form-label [nzSpan]="6">Departments</nz-form-label>
+                <nz-form-label [nzSpan]="6">{{ 'departments.departments' | translate }}</nz-form-label>
                 <nz-form-control [nzSpan]="14">
-                    <nz-checkbox-wrapper style="width: 100%; margin-top: 5px;" (nzOnChange)="selectDepartments($event)">
-                        <label style="align-items: center;" [ngModel]="templateHasDepartment(option.id)" [ngModelOptions]="{standalone: true}" *ngFor="let option of listOfDepartments" [nzValue]="option.id" nz-checkbox>{{option.name}}</label>
-                    </nz-checkbox-wrapper><br><br>
+                    <nz-select
+                        formControlName="departmentIds"
+                        nzMode="multiple"
+                        nzShowSearch
+                        nzAllowClear
+                        [nzPlaceHolder]="'departments.departments' | translate"
+                        (ngModelChange)="selectDepartments($event)"
+                    >
+                        <nz-option *ngFor="let option of listOfDepartments" [nzValue]="option.id" [nzLabel]="option.name"></nz-option>
+                    </nz-select>
+                    <div class="department-actions">
+                        <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">{{ 'departments.selectAll' | translate }}</button>
+                        <button nz-button nzSize="small" type="button" (click)="removeDepartments()">{{ 'departments.removeAll' | translate }}</button>
+                    </div>
                 </nz-form-control>
             </nz-form-item>
-            <nz-form-item>
-                <nz-form-label [nzSpan]="6">Module</nz-form-label>
-                <nz-form-control [nzSpan]="14">
-                    <nz-select formControlName="module" nzShowSearch nzAllowClear nzPlaceHolder="Select module">
-                        <nz-option nzLabel="Client" nzValue="CLIENT"></nz-option>
-                        <nz-option nzLabel="Assessment" nzValue="ASSESSMENT"></nz-option>
-                        <nz-option nzLabel="First login" nzValue="WELCOME"></nz-option>
-                    </nz-select>
-                </nz-form-control>
-            </nz-form-item >
-            <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="submit" nzType="primary">Submit</button>
-            <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button nzType="primary">Update</button>
+            <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="submit" nzType="primary">{{ 'core.submit' | translate }}</button>
+            <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button nzType="primary">{{ 'core.update' | translate }}</button>
         </form>
     </div>
 </div>
+
+<nz-modal
+  [(nzVisible)]="shortcutsVisible"
+  [nzTitle]="'language.availableVariables' | translate"
+  [nzOkText]="'core.close' | translate"
+  [nzCancelText]="null"
+  [nzWidth]="920"
+  (nzOnCancel)="shortcutsVisible = false"
+  (nzOnOk)="shortcutsVisible = false"
+>
+  <div *nzModalContent class="shortcut-groups">
+    <section *ngFor="let group of shortcutGroups" class="shortcut-group">
+      <h3>{{ shortcutGroupTitle(group) }}</h3>
+      <div
+        class="shortcut-row"
+        role="button"
+        tabindex="0"
+        *ngFor="let shortcut of shortcutsForGroup(group)"
+        (click)="insertShortcut(shortcut.token)"
+        (keydown.enter)="insertShortcut(shortcut.token)"
+        (keydown.space)="insertShortcut(shortcut.token); $event.preventDefault()"
+      >
+        <span class="shortcut-variable">
+          <strong>{{ shortcut.label || shortcut.token }}</strong>
+          <span class="shortcut-token" (mousedown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+            <code>{{ shortcut.token }}</code>
+            <button
+              nz-button
+              nzSize="small"
+              nzShape="circle"
+              type="button"
+              class="shortcut-copy"
+              [title]="'language.copyVariable' | translate"
+              (mousedown)="$event.stopPropagation()"
+              (click)="copyShortcut(shortcut.token, $event)"
+            >
+              <span nz-icon nzType="copy" nzTheme="outline"></span>
+            </button>
+          </span>
+        </span>
+        <span class="shortcut-description">{{ shortcut.description }}</span>
+      </div>
+    </section>
+  </div>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="previewVisible"
+  [nzTitle]="'emailTemplates.previewTitle' | translate"
+  [nzOkText]="'core.close' | translate"
+  [nzCancelText]="null"
+  [nzWidth]="860"
+  (nzOnCancel)="previewVisible = false"
+  (nzOnOk)="previewVisible = false"
+>
+  <div *nzModalContent class="email-preview">
+    <p class="email-preview__sender">{{ 'emailTemplates.from' | translate }}: {{ emailForm.controls['senderName'].value || ('emailTemplates.defaultSender' | translate) }}</p>
+    <h2>{{ emailForm.controls['subject'].value || ('emailTemplates.noSubject' | translate) }}</h2>
+    <div class="email-preview__body" [innerHTML]="emailForm.controls['body'].value"></div>
+  </div>
+</nz-modal>

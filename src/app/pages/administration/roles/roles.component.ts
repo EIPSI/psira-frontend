@@ -14,6 +14,7 @@ import { ErrorHandlerService } from '../../../@shared/services/error-handler.ser
 import { finalize } from 'rxjs/operators';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-roles',
@@ -38,7 +39,7 @@ export class RolesComponent implements OnInit {
   actions = RolesTable.actions;
 
   showCreateRole = false;
-  panelTitle = 'Create Role';
+  panelTitle = 'roles.createRole';
   loadingMessage = '';
   roleForms = RoleForm;
   inputMode = true;
@@ -52,7 +53,8 @@ export class RolesComponent implements OnInit {
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
     public perms: AppPermissionsService,
-    private paginationService: PaginationService
+    private paginationService: PaginationService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -76,7 +78,7 @@ export class RolesComponent implements OnInit {
           this.paging.before = data.roles.pageInfo.startCursor;
           this.pageInfo = data.roles.pageInfo;
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to get roles' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableLoadRoles') })
       );
   }
 
@@ -93,9 +95,9 @@ export class RolesComponent implements OnInit {
       .subscribe(
         () => {
           this.rolesTable.rows.splice(index, 1);
-          this.message.success('Role has been successfully deleted');
+          this.message.success(this.translate.instant('roles.roleDeleted'));
         },
-        (error) => this.errorService.handleError(error, { prefix: `Could not remove role for ${role.name}` })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableRemoveRole', { name: role.name }) })
       );
   }
 
@@ -103,22 +105,21 @@ export class RolesComponent implements OnInit {
     this.role = this.roles[event.index];
     this.populateForm = false;
     switch (event.action.name) {
-      case 'Delete Role':
+      case 'roles.deleteRole':
         this.modalService.confirm({
-          nzTitle: 'Confirm',
-          nzContent: `Are you sure you want to delete the role
-               <b>${this.roles[event.index].name}</b>. ${
+          nzTitle: this.translate.instant('core.confirm'),
+          nzContent: `${this.translate.instant('roles.deleteRoleConfirm', { name: this.roles[event.index].name })} ${
             this.role.users && this.role.users.length > 0
-              ? 'There are users assigned to this role.  If you delete it, these users will have no role and lose all permissions'
-              : 'This role have no users assigned to it.'
+              ? this.translate.instant('roles.deleteRoleUsersWarning')
+              : this.translate.instant('roles.deleteRoleNoUsers')
           }`,
-          nzOkText: 'Delete',
+          nzOkText: this.translate.instant('core.delete'),
           nzOnOk: () => this.deleteRole(this.roles[event.index], event.index),
           nzOkDisabled: this.modalLoading,
-          nzCancelText: 'Cancel',
+          nzCancelText: this.translate.instant('core.cancel'),
         });
         break;
-      case 'Edit Role':
+      case 'roles.editRole':
         this.populateForm = true;
         this.toggleCreatePanel(false);
         break;
@@ -126,7 +127,7 @@ export class RolesComponent implements OnInit {
   }
 
   handleRowClick(event: any) {
-    if (!this.perms.permissionsOnly([PermissionKey.MANAGE_ROLES_PERMISSIONS])) return;
+    if (!this.perms.permissionsOnly([PermissionKey.ROLES_EDIT_ALL])) return;
 
     this.role = this.roles[event.index];
     this.populateForm = true;
@@ -155,14 +156,14 @@ export class RolesComponent implements OnInit {
       this.role = null;
       this.resetForm = true;
     }
-    this.panelTitle = !this.isCreateAction ? 'Update Role' : 'Create Role';
+    this.panelTitle = !this.isCreateAction ? 'roles.updateRole' : 'roles.createRole';
   }
 
   createRole(role: Role) {
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    this.loadingMessage = `Creating role ${role.name}`;
+    this.loadingMessage = this.translate.instant('roles.creatingRole', { name: role.name });
     this.rolesService
       .createRole(role)
       .pipe(
@@ -179,9 +180,9 @@ export class RolesComponent implements OnInit {
           this.populateForm = false;
           this.toggleCreatePanel();
           this.getRoles();
-          this.message.success('Role has successfully been created');
+          this.message.success(this.translate.instant('roles.roleCreated'));
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to create role' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableCreateRole') })
       );
   }
 
@@ -203,7 +204,7 @@ export class RolesComponent implements OnInit {
       },
     };
     this.isLoading = true;
-    this.loadingMessage = `Updating role ${role.name}`;
+    this.loadingMessage = this.translate.instant('roles.updatingRole', { name: role.name });
     this.rolesService
       .updateRole(updateOneRoleInput)
       .pipe(
@@ -225,10 +226,10 @@ export class RolesComponent implements OnInit {
           this.resetForm = true;
           this.populateForm = false;
           this.toggleCreatePanel();
-          this.message.success('Role has successfully been updated');
+          this.message.success(this.translate.instant('roles.roleUpdated'));
           this.role = null;
         },
-        (error) => this.errorService.handleError(error, { prefix: `Unable to delete role "${role.name}"` })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableUpdateRole', { name: role.name }) })
       );
   }
 }

@@ -3,7 +3,7 @@ import { Department } from '../@types/department';
 
 export const DepartmentsColumns: TableColumn<Department>[] = [
   {
-    title: 'Name',
+    title: 'tables.departments.name',
     name: 'name',
     translationPath: 'tables.departments.name',
     sort: true,
@@ -13,7 +13,7 @@ export const DepartmentsColumns: TableColumn<Department>[] = [
     },
   },
   {
-    title: 'Description',
+    title: 'tables.departments.description',
     name: 'description',
     translationPath: 'tables.departments.description',
     sort: true,
@@ -23,7 +23,7 @@ export const DepartmentsColumns: TableColumn<Department>[] = [
     },
   },
   {
-    title: 'Created Date',
+    title: 'tables.patients.createdAt',
     name: 'createdAt',
     translationPath: 'tables.departments.createdAt',
     render: 'date',
@@ -31,7 +31,7 @@ export const DepartmentsColumns: TableColumn<Department>[] = [
     filterField: {
       type: 'dateRange',
       value: undefined,
-      title: 'Created Date',
+      title: 'tables.patients.createdAt',
     },
   },
 ];

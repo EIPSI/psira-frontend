@@ -24,8 +24,8 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { QuestionnaireVersion } from '@app/pages/questionnaire-management/@types/questionnaire';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { FormComponent } from '@shared/components/form/form.component';
+import { TranslateService } from '@ngx-translate/core';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   EDIT_SCRIPT,
@@ -73,16 +73,17 @@ export class QuestionnaireScriptComponent implements OnInit {
     private reportsService: ReportsService,
     private message: NzMessageService,
     private modalService: NzModalService,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.getScripts();
     this.getReports();
     this.actions = [
-      { key: ActionKey.EDIT_SCRIPT, title: 'Edit Script' },
-      { key: ActionKey.DOWNLOAD_SCRIPT, title: 'Download Script' },
-      { key: ActionKey.DELETE_SCRIPT, title: 'Delete Script' },
+      { key: ActionKey.EDIT_SCRIPT, title: 'questionnaires.editScript' },
+      { key: ActionKey.DOWNLOAD_SCRIPT, title: 'questionnaires.downloadScript' },
+      { key: ActionKey.DELETE_SCRIPT, title: 'questionnaires.deleteScript' },
     ];
   }
 
@@ -168,7 +169,7 @@ export class QuestionnaireScriptComponent implements OnInit {
           options.push({ label: _report.name, value: _report.id });
         });
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load reports' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('questionnaires.unableLoadReports') })
     );
   }
 
@@ -195,7 +196,7 @@ export class QuestionnaireScriptComponent implements OnInit {
       }
 
       scriptInput.questionnaireId = this.questionnaire._id;
-      this.loadingMessage = `Creating script ${inputData.name} `;
+      this.loadingMessage = this.translate.instant('questionnaires.creatingScript', { name: inputData.name });
 
       if (this.onUpdate) {
         console.log(scriptInput);
@@ -209,7 +210,7 @@ export class QuestionnaireScriptComponent implements OnInit {
               this.closeCreatePanel();
               this.getScripts();
             },
-            (error) => this.errorService.handleError(error, { prefix: 'Unable to update script' })
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('questionnaires.unableUpdateScript') })
           );
       }
       this.scriptsService
@@ -222,7 +223,7 @@ export class QuestionnaireScriptComponent implements OnInit {
         )
         .subscribe(
           ({ data }) => {
-            this.message.create('success', `Script has successfully been created`);
+            this.message.create('success', this.translate.instant('questionnaires.scriptCreated'));
             this.script = data.createOneScript;
             if (this.selectedReport.length > 0) {
             }
@@ -231,7 +232,7 @@ export class QuestionnaireScriptComponent implements OnInit {
           },
           (error) =>
             this.errorService.handleError(error, {
-              prefix: 'Unable to create script',
+              prefix: this.translate.instant('questionnaires.unableCreateScript'),
             })
         );
     } catch (e) {
@@ -243,10 +244,8 @@ export class QuestionnaireScriptComponent implements OnInit {
   private async deleteScript(script: Scripts): Promise<void> {
     const modal = this.modalService.confirm({
       nzOnOk: () => true,
-      nzTitle: 'Delete script',
-      nzContent: `
-        Are you sure you want to delete ${script.name}? This action is irreversible.
-      `,
+      nzTitle: this.translate.instant('questionnaires.deleteScript'),
+      nzContent: this.translate.instant('questionnaires.deleteScriptConfirm', { name: script.name }),
     });
 
     if (!(await modal.afterClose.toPromise())) return;
@@ -261,7 +260,9 @@ export class QuestionnaireScriptComponent implements OnInit {
           data.splice(this.data.indexOf(script), 1);
           this.data = data; // mutate reference to trigger change detection
         },
-        (err) => this.errorService.handleError(err, { prefix: `Unable to delete script "${script.name}"` })
+        (err) => this.errorService.handleError(err, {
+          prefix: this.translate.instant('questionnaires.unableDeleteScript', { name: script.name }),
+        })
       );
   }
 
@@ -276,7 +277,7 @@ export class QuestionnaireScriptComponent implements OnInit {
           this.data = data.scripts.edges.map((script: any) => ScriptsModel.fromJson(script.node));
           this.pageInfo = data.scripts.pageInfo;
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load scripts' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('questionnaires.unableLoadScripts') })
       );
   }
   private downloadScript(script: Scripts) {

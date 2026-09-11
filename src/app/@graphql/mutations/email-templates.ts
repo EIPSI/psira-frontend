@@ -6,9 +6,10 @@ const createOneEmailTemplate = gql `
       id
       name
       subject
+      senderName
       body
       status
-      module
+      purpose
       isPublic
       departments{
         id
@@ -23,9 +24,10 @@ const updateOneEmailTemplate = gql `
       id
       name
       subject
+      senderName
       body
       status
-      module
+      purpose
       isPublic
       departments{
         id

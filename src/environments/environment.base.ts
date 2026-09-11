@@ -16,7 +16,7 @@ export const EnvironmentBase = {
   hmr: false,
   baseURL: 'https://dev-api.psira.net/graphql',
   defaultLanguage: 'en-US',
-  supportedLanguages: ['en-US', 'fr-FR'],
+  supportedLanguages: ['en', 'es', 'de', 'nl'],
   email: true,
 };
 

@@ -1,0 +1,11 @@
+.ci-page-header,
+.ci-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ci-toolbar input {
+  max-width: 360px;
+}

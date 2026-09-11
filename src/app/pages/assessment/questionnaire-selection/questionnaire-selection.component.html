@@ -7,12 +7,21 @@
 
 <article>
   <ng-container *ngIf="!readonly">
+    <nz-alert
+      *ngIf="disabledMessage"
+      nzType="info"
+      nzShowIcon
+      [nzMessage]="disabledMessage"
+      style="margin-bottom: 12px;"
+    ></nz-alert>
     <section>
       <nz-select
       style="width: 100%;"
       nzShowSearch
       nzServerSearch
-      nzPlaceHolder="Search"
+      [nzPlaceHolder]="'core.search' | translate"
+      [nzNotFoundContent]="'planAssessment.noContentForDepartments' | translate"
+      [nzDisabled]="!!disabledMessage"
       [nzShowArrow]="true"
       (nzOnSearch)="onQuestionnaireSearchNew('')"
       [nzOptionHeightPx]="80"
@@ -43,7 +52,7 @@
               nz-button
               [nzType]="isSelected(o) ? 'danger' : 'primary'"
               nzShape="circle"
-              [disabled]="isDisabled(o)"
+              [disabled]="isDisabled(o) || !!disabledMessage"
               (click)="onToggleQuestionnaire(o)"
             >
               <i nz-icon [nzType]="isSelected(o) ? 'minus' : 'plus'"></i>
@@ -93,6 +102,7 @@
             ></ng-container>
             <div *ngIf="!readonly">
               <button
+                *ngIf="!singleSelection"
                 nz-button
                 nzSize="small"
                 nzShape="circle"
@@ -102,6 +112,7 @@
                 <i nz-icon nzType="down"></i>
               </button>
               <button
+                *ngIf="!singleSelection"
                 nz-button
                 nzSize="small"
                 nzShape="circle"

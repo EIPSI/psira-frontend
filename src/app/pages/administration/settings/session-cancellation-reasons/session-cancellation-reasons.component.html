@@ -1,0 +1,253 @@
+<app-master-data-list
+  *ngIf="!selectedTree"
+  [columns]="treeColumns"
+  [data]="filteredTreeRows"
+  [pageInfo]="pageInfo"
+  [loading]="loading"
+  [actions]="treeActions"
+  (executeAction)="onTreeAction($event)"
+  (rowClick)="openTree($event)"
+>
+  <div class="actions-left" actions-left>
+    <app-master-data-search (search)="onSearch($event)"></app-master-data-search>
+  </div>
+  <ng-container actions-right>
+    <button
+      nz-button
+      nzType="primary"
+      nzShape="circle"
+      (click)="openCreateTreeModal()"
+      [title]="'reasonTrees.createReasonTree' | translate"
+    >
+      <i nz-icon nzType="plus"></i>
+    </button>
+  </ng-container>
+</app-master-data-list>
+
+<section *ngIf="selectedTree" class="reason-editor">
+  <button nz-button nzType="secondary" (click)="backToTrees()">{{ 'core.back' | translate }}</button>
+
+  <div class="reason-editor-form">
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">{{ 'reasonTrees.place' | translate }}</nz-form-label>
+      <nz-form-control [nzSpan]="14">
+        <nz-select [(ngModel)]="treePlace" (ngModelChange)="onTreePlaceChange($event)" nzShowSearch>
+          <nz-option *ngFor="let option of placeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">{{ 'reasonTrees.scope' | translate }}</nz-form-label>
+      <nz-form-control [nzSpan]="14">
+        <nz-select
+          [(ngModel)]="treeScope"
+          nzShowSearch
+          [nzDisabled]="isGlobalReactivationPlace(treePlace)"
+          [nzPlaceHolder]="isGlobalReactivationPlace(treePlace) ? ('reasonTrees.allUsers' | translate) : ('reasonTrees.selectScope' | translate)"
+        >
+          <nz-option *ngFor="let option of scopeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">{{ 'reasonTrees.department' | translate }}</nz-form-label>
+      <nz-form-control [nzSpan]="14">
+        <nz-select [(ngModel)]="treeDepartmentIds" nzMode="multiple" nzAllowClear nzShowSearch [nzPlaceHolder]="'core.default' | translate">
+          <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">{{ 'core.status' | translate }}</nz-form-label>
+      <nz-form-control [nzSpan]="14">
+        <nz-tag nzColor="green">{{ 'core.active' | translate }}</nz-tag>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">{{ 'reasonTrees.rootLabel' | translate }}</nz-form-label>
+      <nz-form-control [nzSpan]="14">
+        <input nz-input [(ngModel)]="treeLevelLabels[0]" [placeholder]="'reasonTrees.reason' | translate" />
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+
+  <section class="structure-header">
+    <div>
+      <h3>{{ 'reasonTrees.reasonStructure' | translate }}</h3>
+      <p>{{ 'reasonTrees.reasonCounts' | translate: { total: flatReasons.length, root: reasons.length } }}</p>
+    </div>
+    <div class="toolbar">
+      <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveTreeSelection()">{{ 'reasonTrees.updateTree' | translate }}</button>
+      <button nz-button (click)="openCreateReasonModal()">{{ 'reasonTrees.addReason' | translate }}</button>
+    </div>
+  </section>
+
+  <section class="root-node">
+    <div class="node-row root-row">
+      <span class="drag-placeholder"></span>
+      <span class="node-kind">{{ 'reasonTrees.tree' | translate }}</span>
+      <strong>{{ selectedTreeTitle() }}</strong>
+    </div>
+
+    <ng-container
+      *ngTemplateOutlet="reasonList; context: { nodes: reasons, parent: null, level: 1 }"
+    ></ng-container>
+  </section>
+</section>
+
+<ng-template #reasonList let-nodes="nodes" let-parent="parent" let-level="level">
+  <div
+    class="node-list"
+    cdkDropList
+    [id]="dropListId(parent || selectedTree)"
+    [cdkDropListData]="nodes"
+    [cdkDropListConnectedTo]="dropListIds()"
+    (cdkDropListDropped)="dropReason($event, parent)"
+    [style.--level]="level"
+  >
+    <div class="node" *ngFor="let reason of nodes; let i = index" cdkDrag>
+      <div class="node-row">
+        <button type="button" nz-button nzShape="circle" class="drag-handle" cdkDragHandle>
+          <i nz-icon nzType="drag"></i>
+        </button>
+        <span class="node-kind">{{ reasonNodeLevelLabel(parent, level) }}</span>
+        <span class="reason-node-label">{{ reason.label }}</span>
+        <nz-tag [nzColor]="reason.active ? 'green' : 'default'">
+          {{ reason.active ? ('core.active' | translate) : ('core.inactive' | translate) }}
+        </nz-tag>
+        <nz-tag *ngIf="reason.isOther" nzColor="gold">{{ 'reasonTrees.other' | translate }}</nz-tag>
+        <button nz-button nzSize="small" (click)="openCreateReasonModal(reason)">{{ 'reasonTrees.addSubreason' | translate }}</button>
+        <button nz-button nzSize="small" (click)="openEditReasonModal(reason)">{{ 'core.edit' | translate }}</button>
+        <button nz-button nzSize="small" (click)="setReasonActive(reason, !reason.active)">
+          {{ reason.active ? ('core.deactivate' | translate) : ('core.activate' | translate) }}
+        </button>
+        <button nz-button nzSize="small" nzDanger [disabled]="saving" (click)="deactivateReason(reason)">
+          {{ 'core.delete' | translate }}
+        </button>
+      </div>
+
+      <ng-container
+        *ngTemplateOutlet="reasonList; context: { nodes: reason.children || [], parent: reason, level: level + 1 }"
+      ></ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<nz-modal
+  [(nzVisible)]="treeModalVisible"
+  [nzTitle]="editingTree ? ('reasonTrees.editReasonTree' | translate) : ('reasonTrees.createReasonTree' | translate)"
+  [nzOkText]="editingTree ? ('core.save' | translate) : ('core.create' | translate)"
+  [nzCancelText]="'core.cancel' | translate"
+  [nzOkLoading]="saving"
+  (nzOnCancel)="closeCreateTreeModal()"
+  (nzOnOk)="saveTreeSelection()"
+>
+  <ng-container *nzModalContent>
+    <div class="reason-modal-form">
+      <label>
+        <span>{{ 'reasonTrees.place' | translate }}</span>
+        <nz-select [(ngModel)]="treePlace" (ngModelChange)="onTreePlaceChange($event)" nzShowSearch [nzPlaceHolder]="'reasonTrees.selectPlace' | translate">
+          <nz-option *ngFor="let option of placeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+        </nz-select>
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.scope' | translate }}</span>
+        <nz-select
+          [(ngModel)]="treeScope"
+          nzShowSearch
+          [nzDisabled]="isGlobalReactivationPlace(treePlace)"
+          [nzPlaceHolder]="isGlobalReactivationPlace(treePlace) ? ('reasonTrees.allUsers' | translate) : ('reasonTrees.selectScope' | translate)"
+        >
+          <nz-option *ngFor="let option of scopeOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+        </nz-select>
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.department' | translate }}</span>
+        <nz-select [(ngModel)]="treeDepartmentIds" nzMode="multiple" nzAllowClear nzShowSearch [nzPlaceHolder]="'core.default' | translate">
+          <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
+        </nz-select>
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.rootLabel' | translate }}</span>
+        <input nz-input [(ngModel)]="treeLevelLabels[0]" [placeholder]="'reasonTrees.reason' | translate" />
+      </label>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="reasonModalVisible"
+  [nzTitle]="editingReason ? ('reasonTrees.editReason' | translate) : ('reasonTrees.createReason' | translate)"
+  [nzOkText]="'core.save' | translate"
+  [nzCancelText]="'core.cancel' | translate"
+  [nzOkLoading]="saving"
+  (nzOnCancel)="closeReasonModal()"
+  (nzOnOk)="saveReason()"
+>
+  <ng-container *nzModalContent>
+    <div class="reason-modal-form">
+      <label>
+        <span>{{ 'reasonTrees.place' | translate }}</span>
+        <input nz-input [ngModel]="placeLabel(selectedTree?.place)" disabled />
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.scope' | translate }}</span>
+        <input
+          nz-input
+          [ngModel]="isGlobalReactivationPlace(selectedTree?.place) ? ('reasonTrees.allUsers' | translate) : scopeName(selectedTree?.scope)"
+          disabled
+        />
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.department' | translate }}</span>
+        <input nz-input [ngModel]="scopeLabel(selectedTree?.departmentId)" disabled />
+      </label>
+
+      <label>
+        <span>{{ reasonEditLabel() }}</span>
+        <input nz-input [(ngModel)]="label" />
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.childLabel' | translate }}</span>
+        <input nz-input [(ngModel)]="nextLevelLabel" [placeholder]="'reasonTrees.childLabelPlaceholder' | translate" />
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.dependsOn' | translate }}</span>
+        <nz-select [(ngModel)]="parentId" nzAllowClear nzShowSearch>
+          <nz-option
+            *ngFor="let reason of flatReasons"
+            [nzValue]="reason.id"
+            [nzLabel]="reason.path"
+            [nzDisabled]="editingReason?.id === reason.id"
+          ></nz-option>
+        </nz-select>
+      </label>
+
+      <label>
+        <span>{{ 'reasonTrees.order' | translate }}</span>
+        <input nz-input type="number" [(ngModel)]="sortOrder" />
+      </label>
+
+      <label class="reason-active">
+        <span>{{ 'core.active' | translate }}</span>
+        <nz-switch [(ngModel)]="active"></nz-switch>
+      </label>
+
+      <label class="reason-active">
+        <span>{{ 'reasonTrees.otherReason' | translate }}</span>
+        <nz-switch [(ngModel)]="isOther"></nz-switch>
+      </label>
+    </div>
+  </ng-container>
+</nz-modal>

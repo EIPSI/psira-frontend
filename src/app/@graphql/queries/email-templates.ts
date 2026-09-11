@@ -1,19 +1,21 @@
 import gql from 'graphql-tag';
 
 const getAllEmailTemplates = gql `
- query($paging: CursorPaging, $filter: MailTemplateFilter) {
-    getAllEmailTemplates(paging: $paging, filter: $filter) {
+ query($paging: CursorPaging, $filter: MailTemplateFilter, $departmentIds: [Int!]) {
+    getAllEmailTemplates(paging: $paging, filter: $filter, departmentIds: $departmentIds) {
         edges {
             node {
                 id
                 name
                 status
                 subject
-                module
+                senderName
+                purpose
                 body
                 isPublic
                 departments{
                     id
+                    name
                 }
             }
         }
@@ -33,15 +35,17 @@ query($patientId: ID) {
         id
         name
         subject
+        senderName
         body
         status
-        module
+        purpose
         createdAt
         updatedAt
         deletedAt
         isPublic
         departments{
             id
+            name
         }
     }
 }`;
@@ -53,11 +57,13 @@ const getOneEmailTemplate = gql `
         name
         status
         subject
-        module
+        senderName
+        purpose
         body
         isPublic
         departments{
             id
+            name
         }
     }
 }

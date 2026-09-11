@@ -10,6 +10,8 @@ const departments = gql`
           name
           description
           active
+          appliedRoleCodes
+          defaultRoleCodes
           createdAt
           updatedAt
           users {

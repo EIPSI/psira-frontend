@@ -15,7 +15,19 @@ export class SystemConfigurationComponent implements OnInit {
   PK = PermissionKey;
   settingsForm: Form = settingsForms.general;
   isLoading = false;
+  googleCalendarSaving = false;
+  featureSaving = false;
   settings: Setting;
+  featureSettings: Partial<Setting> = {
+    notificationsEnabled: true,
+    informedConsentEnabled: true,
+  };
+  googleCalendarSettings: Partial<Setting> = {
+    googleCalendarEnabled: false,
+    googleCalendarClientId: '',
+    googleCalendarClientSecret: '',
+    googleCalendarRedirectUri: '',
+  };
   loadingMessage = '';
 
   constructor(private settingsService: SettingsService, public perms: AppPermissionsService) {}
@@ -23,6 +35,7 @@ export class SystemConfigurationComponent implements OnInit {
   ngOnInit(): void {
     this.getFormat();
     this.getTimeFormarts();
+    this.getDateTimeFormats();
     this.getLocales();
     this.getZones();
     this.getSettings();
@@ -33,6 +46,17 @@ export class SystemConfigurationComponent implements OnInit {
     this.settingsService.settings().subscribe(
       async ({ data }) => {
         this.settings = Object.assign({}, data.settings);
+        localStorage.setItem('settings', JSON.stringify(this.settings));
+        this.featureSettings = {
+          notificationsEnabled: this.settings.notificationsEnabled !== false,
+          informedConsentEnabled: this.settings.informedConsentEnabled !== false,
+        };
+        this.googleCalendarSettings = {
+          googleCalendarEnabled: !!this.settings.googleCalendarEnabled,
+          googleCalendarClientId: this.settings.googleCalendarClientId || '',
+          googleCalendarClientSecret: '',
+          googleCalendarRedirectUri: this.settings.googleCalendarRedirectUri || '',
+        };
 
         this.settingsForm.groups.map((group) => {
           group.fields.map((field) => {
@@ -52,8 +76,8 @@ export class SystemConfigurationComponent implements OnInit {
     this.settingsService.updateSetting($event).subscribe(
       async ({ data }) => {
         if (data) {
-          console.log($event);
-          localStorage.setItem('settings', JSON.stringify($event));
+          this.settings = { ...this.settings, ...$event };
+          localStorage.setItem('settings', JSON.stringify(this.settings));
         }
 
         this.isLoading = false;
@@ -62,6 +86,47 @@ export class SystemConfigurationComponent implements OnInit {
         this.isLoading = false;
       }
     );
+  }
+
+  saveGoogleCalendarSettings(): void {
+    this.googleCalendarSaving = true;
+    const input: Partial<Setting> = {
+      googleCalendarEnabled: !!this.googleCalendarSettings.googleCalendarEnabled,
+      googleCalendarClientId: this.googleCalendarSettings.googleCalendarClientId || '',
+      googleCalendarRedirectUri: this.googleCalendarSettings.googleCalendarRedirectUri || '',
+    };
+
+    if (this.googleCalendarSettings.googleCalendarClientSecret) {
+      input.googleCalendarClientSecret = this.googleCalendarSettings.googleCalendarClientSecret;
+    }
+
+    this.settingsService.updateSetting(input as Setting).subscribe(
+      () => {
+        this.googleCalendarSaving = false;
+        this.getSettings();
+      },
+      () => {
+        this.googleCalendarSaving = false;
+      }
+    );
+  }
+
+  saveFeatureSettings(): void {
+    this.featureSaving = true;
+    this.settingsService
+      .updateSetting({
+        notificationsEnabled: this.featureSettings.notificationsEnabled !== false,
+        informedConsentEnabled: this.featureSettings.informedConsentEnabled !== false,
+      } as Setting)
+      .subscribe(
+        () => {
+          this.featureSaving = false;
+          this.getSettings();
+        },
+        () => {
+          this.featureSaving = false;
+        }
+      );
   }
 
   private getLocales() {
@@ -105,7 +170,7 @@ export class SystemConfigurationComponent implements OnInit {
       'YYYY/MM/DD',
       'YYYY/DD/MM',
       'DD/MM/YYYY',
-      'MM/DD/YYY',
+      'MM/DD/YYYY',
     ];
     this.settingsForm.groups.map((group) => {
       group.fields.map((field) => {
@@ -119,12 +184,33 @@ export class SystemConfigurationComponent implements OnInit {
   }
 
   private getTimeFormarts() {
-    const dateFormarts = ['LT', 'LTS', 'L', 'I', 'LL', 'II', 'LLL', 'III', 'LLLL', 'IIII'];
+    const dateFormarts = ['LT', 'LTS', 'HH:mm', 'HH:mm:ss', 'h:mm A', 'h:mm:ss A'];
     this.settingsForm.groups.map((group) => {
       group.fields.map((field) => {
         if (field.name === 'timeFormat') {
           field.options = dateFormarts.map((zone: string) => {
             return { value: zone, label: zone };
+          });
+        }
+      });
+    });
+  }
+
+  private getDateTimeFormats() {
+    const dateTimeFormats = [
+      'YYYY-MM-DD LT',
+      'YYYY-MM-DD HH:mm',
+      'DD/MM/YYYY LT',
+      'DD/MM/YYYY HH:mm',
+      'MM/DD/YYYY LT',
+      'LLL',
+      'LLLL',
+    ];
+    this.settingsForm.groups.map((group) => {
+      group.fields.map((field) => {
+        if (field.name === 'dateTimeFormat') {
+          field.options = dateTimeFormats.map((format: string) => {
+            return { value: format, label: format };
           });
         }
       });

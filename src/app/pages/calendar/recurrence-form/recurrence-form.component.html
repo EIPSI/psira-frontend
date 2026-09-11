@@ -1,0 +1,54 @@
+<div class="repeat-panel">
+  <label class="inline-check">
+    <input type="checkbox" [ngModel]="enabled" (ngModelChange)="setEnabled($event)" />
+    <span>{{ 'calendar.repeat' | translate }}</span>
+  </label>
+
+  <ng-container *ngIf="enabled">
+    <div class="repeat-grid">
+      <div class="form-field">
+        <span>{{ 'calendar.repeatEvery' | translate }}</span>
+        <input nz-input type="number" min="1" [ngModel]="every" (ngModelChange)="setEvery($event)" />
+      </div>
+      <div class="form-field">
+        <span>{{ 'patientsManagement.unit' | translate }}</span>
+        <nz-select [ngModel]="unit" (ngModelChange)="setUnit($event)">
+          <nz-option *ngFor="let option of repeatUnits" [nzValue]="option.value" [nzLabel]="option.label | translate"></nz-option>
+        </nz-select>
+      </div>
+    </div>
+
+    <div class="repeat-days" *ngIf="unit === RU.WEEK">
+      <span>{{ 'calendar.repeatOn' | translate }}</span>
+      <button
+        type="button"
+        nz-button
+        nzSize="small"
+        *ngFor="let day of weekDayOptions"
+        [nzType]="isRepeatDaySelected(day.value) ? 'primary' : 'default'"
+        (click)="toggleRepeatDay(day.value)"
+      >
+        {{ day.label | translate }}
+      </button>
+    </div>
+
+    <div class="form-field">
+      <span>{{ 'calendar.ends' | translate }}</span>
+      <nz-select [ngModel]="endMode" (ngModelChange)="setEndMode($event)">
+        <nz-option [nzValue]="RE.NEVER" [nzLabel]="'calendar.never' | translate"></nz-option>
+        <nz-option [nzValue]="RE.ON_DATE" [nzLabel]="'calendar.onDate' | translate"></nz-option>
+        <nz-option [nzValue]="RE.AFTER_COUNT" [nzLabel]="'calendar.afterCount' | translate"></nz-option>
+      </nz-select>
+    </div>
+
+    <div class="form-field" *ngIf="endMode === RE.ON_DATE">
+      <span>{{ 'calendar.endDate' | translate }}</span>
+      <nz-date-picker [ngModel]="endDate" (ngModelChange)="setEndDate($event)"></nz-date-picker>
+    </div>
+
+    <div class="form-field" *ngIf="endMode === RE.AFTER_COUNT">
+      <span>{{ 'calendar.count' | translate }}</span>
+      <input nz-input type="number" min="1" [ngModel]="count" (ngModelChange)="setCount($event)" />
+    </div>
+  </ng-container>
+</div>

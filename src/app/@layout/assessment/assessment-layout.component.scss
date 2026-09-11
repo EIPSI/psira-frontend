@@ -1,7 +1,7 @@
 nz-header {
   position: fixed;
   width: 100%;
-  background-color: #f1f4ff;
+  background-color: #eef4fb;
 }
 
 nz-content {
@@ -13,4 +13,19 @@ nz-content {
   padding: 24px;
   max-width: 800px;
   margin: 0 auto;
+}
+
+@media (max-width: 767px) {
+  nz-header {
+    height: 48px;
+  }
+
+  nz-content {
+    margin-top: 48px;
+  }
+
+  .inner-content {
+    max-width: 100%;
+    padding: 12px;
+  }
 }

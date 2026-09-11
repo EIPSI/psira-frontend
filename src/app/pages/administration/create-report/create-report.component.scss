@@ -24,3 +24,28 @@ form {
 .form-div {
   width: 540px;
 }
+
+.report-field {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+  }
+}
+
+.required-mark,
+.validation-message {
+  color: #f5222d;
+}
+
+.validation-message {
+  margin: 6px 0 0;
+}
+
+.report-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}

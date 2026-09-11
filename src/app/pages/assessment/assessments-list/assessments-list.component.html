@@ -24,7 +24,7 @@
 
     <label [ngClass]="{'text-green' : onlyMyAssessments}" class="spacer" (ngModelChange)="onMyAssessments()" nz-checkbox [(ngModel)]="onlyMyAssessments">{{ 'assessments.myAssessment' | translate }}</label>
     <label [ngClass]="{'text-green' : onlyArchivedAssessments}" (ngModelChange)="onArchivedAssessments()" nz-checkbox [(ngModel)]="onlyArchivedAssessments">{{ 'assessments.archivedAssessments' | translate }}</label>
-    <nz-select style="margin-right: 10px;" nzPlaceHolder="Filter status" [(ngModel)]="statusFilter" (ngModelChange)="onStatusSelect()">
+    <nz-select style="margin-right: 10px;" [nzPlaceHolder]="'plannedAssessments.filterStatus' | translate" [(ngModel)]="statusFilter" (ngModelChange)="onStatusSelect()">
       <nz-option nzValue="EXPIRED" [nzLabel]="'emailStatusFilter.expired' | translate"></nz-option>
       <nz-option nzValue="PLANNED" [nzLabel]="'emailStatusFilter.planned' | translate"></nz-option>
       <nz-option nzValue="PENDING" [nzLabel]="'emailStatusFilter.pending' | translate"></nz-option>
@@ -33,7 +33,7 @@
       <nz-option nzValue="COMPLETED" [nzLabel]="'emailStatusFilter.completed' | translate"></nz-option>
     </nz-select>
     <nz-badge *ngIf="currentFilters || cacheFilters?.and" nz-tooltip [nzTooltipTitle]="badgeTitle" nzDot><span nz-icon nzType="filter"></span></nz-badge>
-    <ng-template #badgeTitle>You have active filters on. Press the reset button to reset filters.</ng-template>
+    <ng-template #badgeTitle>{{ 'plannedAssessments.activeFiltersHelp' | translate }}</ng-template>
   </div>
   <ng-container actions-right>
     <button
@@ -41,7 +41,7 @@
       nzType="primary"
       nzShape="circle"
       routerLink="/psira/assessments/plan-assessments"
-      *ngIf="perms.permissionsOnly(PK.MANAGE_ASSESSMENTS)"
+      *ngIf="perms.permissionsOnly(PK.ASSESSMENTS_EDIT_DEPARTMENT)"
     >
       <i nz-icon nzType="plus"></i>
     </button>

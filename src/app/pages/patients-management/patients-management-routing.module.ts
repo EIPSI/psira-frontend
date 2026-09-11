@@ -7,6 +7,7 @@ import { InformantsListComponent } from './informants-list/informants-list.compo
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { PermissionGuard } from '../../permission.guard';
 import { CaregiverListComponent } from './caregiver-list/caregiver-list.component';
+import { CaregiverFormComponent } from './caregiver-form/caregiver-form.component';
 import { CreateReportComponent } from '../administration/create-report/create-report.component';
 import { CreateAssessmentComponent } from './create-assessment/create-assessment.component';
 
@@ -20,7 +21,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.patientList',
           permissions: {
-            only: [PermissionKey.VIEW_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_VIEW_ALL,
+              PermissionKey.PATIENTS_VIEW_DEPARTMENT,
+              PermissionKey.PATIENTS_VIEW_ASSIGNED,
+            ],
           },
           canActivate: [PermissionGuard],
         },
@@ -38,7 +43,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.createPatient',
           permissions: {
-            only: [PermissionKey.VIEW_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_VIEW_ALL,
+              PermissionKey.PATIENTS_VIEW_DEPARTMENT,
+              PermissionKey.PATIENTS_VIEW_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -49,7 +58,26 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.caregiverList',
           permissions: {
-            only: [PermissionKey.VIEW_PATIENTS],
+            only: [
+              PermissionKey.CAREGIVERS_VIEW_ALL,
+              PermissionKey.CAREGIVERS_VIEW_DEPARTMENT,
+              PermissionKey.CAREGIVERS_VIEW_ASSIGNED,
+            ],
+          },
+        },
+        canActivate: [PermissionGuard],
+      },
+      {
+        path: 'caregiver-form',
+        component: CaregiverFormComponent,
+        data: {
+          breadcrumbI18nKey: 'core.createCaregiver',
+          permissions: {
+            only: [
+              PermissionKey.CAREGIVERS_CREATE_ALL,
+              PermissionKey.CAREGIVERS_CREATE_DEPARTMENT,
+              PermissionKey.CAREGIVERS_CREATE_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -60,7 +88,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.caseManagers',
           permissions: {
-            only: [PermissionKey.MANAGE_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_EDIT_ALL,
+              PermissionKey.PATIENTS_EDIT_DEPARTMENT,
+              PermissionKey.PATIENTS_EDIT_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -71,7 +103,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.informants',
           permissions: {
-            only: [PermissionKey.MANAGE_PATIENTS],
+            only: [
+              PermissionKey.PATIENTS_EDIT_ALL,
+              PermissionKey.PATIENTS_EDIT_DEPARTMENT,
+              PermissionKey.PATIENTS_EDIT_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],

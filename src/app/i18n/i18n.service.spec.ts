@@ -1,11 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { NzI18nService } from 'ng-zorro-antd/i18n';
 
 import { extract, I18nService } from './i18n.service';
 
-const defaultLanguage = 'en-US';
-const supportedLanguages = ['eo', 'en-US', 'fr-FR'];
+const defaultLanguage = 'en';
+const supportedLanguages = ['eo', 'en', 'fr'];
 
 class MockTranslateService {
   currentLang = '';
@@ -23,6 +25,10 @@ class MockTranslateService {
     return 'en-US';
   }
 
+  getBrowserLang() {
+    return 'en';
+  }
+
   setTranslation(lang: string, translations: object, shouldMerge?: boolean) {}
 }
 
@@ -33,7 +39,12 @@ describe('I18nService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [I18nService, { provide: TranslateService, useClass: MockTranslateService }],
+      providers: [
+        I18nService,
+        { provide: TranslateService, useClass: MockTranslateService },
+        { provide: HttpClient, useValue: { post: () => new Subject() } },
+        { provide: NzI18nService, useValue: { setLocale: () => null } },
+      ],
     });
 
     i18nService = TestBed.inject(I18nService);
@@ -105,8 +116,8 @@ describe('I18nService', () => {
       i18nService.language = newLanguage;
 
       // Assert
-      expect(translateService.use).toHaveBeenCalledWith('fr-FR');
-      expect(onLangChangeSpy).toHaveBeenCalledWith('fr-FR');
+      expect(translateService.use).toHaveBeenCalledWith('fr');
+      expect(onLangChangeSpy).toHaveBeenCalledWith('fr');
     });
 
     it('should change current language to default if unsupported', () => {

@@ -10,6 +10,7 @@ import { BreadcrumbComponent } from './breadcrumb/breadcrumb.component';
 import {
   CapitalizePipe,
   DatePipe,
+  DateTimePipe,
   IconFilterPipe,
   NoSanitizePipe,
   NumberWithCommasPipe,
@@ -17,6 +18,7 @@ import {
   RoundPipe,
   SearchPipe,
   TimingPipe,
+  TimePipe,
 } from '../pipes';
 import { CustomFilterComponent } from './custom-filter/custom-filter.component';
 import { AppFormModule } from '@shared/components/form/app-form.module';
@@ -171,6 +173,8 @@ const PIPES = [
   SearchPipe,
   TimingPipe,
   DatePipe,
+  DateTimePipe,
+  TimePipe,
   CountryPipe,
 ];
 

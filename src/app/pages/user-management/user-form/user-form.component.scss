@@ -26,3 +26,58 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
+.assignment-panel {
+  display: grid;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.profile-assignment {
+  border-top: 1px solid #eef0f3;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+
+.supervisor-create-assignment {
+  margin-top: 24px;
+}
+
+.assignment-row {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.assignment-select {
+  min-width: 320px;
+}
+
+.automation-preview {
+  border-top: 1px solid #eef0f3;
+  margin-top: 24px;
+  max-width: 760px;
+  padding-top: 20px;
+}
+
+.automation-preview-help {
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.automation-trigger-group {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.automation-preview-item {
+  display: flex;
+  gap: 8px;
+
+  span {
+    color: #6b7280;
+    margin-left: 6px;
+  }
+}

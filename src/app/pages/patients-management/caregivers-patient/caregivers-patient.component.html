@@ -18,74 +18,13 @@
       nz-button
       nzType="primary"
       nzShape="circle"
-      (click)="openAddPanel()"
-      *ngIf="perms.permissionsOnly(PK.MANAGE_SETTINGS)"
+      (click)="openCreateCaregiverPage()"
+      *ngIf="perms.permissionsOnly(PK.CAREGIVERS_EDIT_DEPARTMENT)"
     >
       <i nz-icon nzType="plus"></i>
     </button>
   </ng-container>
 </app-master-data-list>
-
-<nz-drawer
-  [nzWidth]="820"
-  [nzMask]="true"
-  [nzClosable]="true"
-  [nzMaskClosable]="false"
-  [nzVisible]="showAddCaregiver"
-  nzPlacement="right"
-  [nzTitle]="caregiver?.id ? ('core.editCaregiver' | translate) : ('core.createCaregiver' | translate)"
-  (nzOnClose)="closeAddPanel()"
->
-  <div>
-    <p style="color: black; font-size: 16px">{{ 'caregiver.nonExistingCaregiver' | translate }}</p>
-  </div>
-  <div>
-    <button
-      nz-button
-      nzType="primary"
-      class="add-button"
-      (click)="openCreatePanel()"
-      *ngIf="perms.permissionsOnly(PK.MANAGE_SETTINGS)"
-    >
-      <i nz-icon nzType="plus" nzTheme="outline"></i>{{ 'caregiver.newCaregiver' | translate }}
-    </button>
-  </div>
-  <br />
-  <br />
-  <div>
-    <h3><b>Or</b></h3>
-  </div>
-  <br />
-  <div>
-    <h5>{{ 'caregiver.existingCaregiver' | translate }}</h5>
-  </div>
-  <div>
-    <section nz-col>
-      <form nz-form class="search-form">
-        <nz-form-item class="form-item">
-          <nz-form-label nzFor="caregiver">{{ 'caregiver.searchCaregiver' | translate }}</nz-form-label>
-          <nz-form-control class="form-control">
-            <app-caregiver-picker
-              [assignSelfOption]="true"
-              [selectedCaregiver]="selectedCaregiver"
-              (selectCaregiver)="onCaregiverSelect($event)"
-            >
-            </app-caregiver-picker>
-          </nz-form-control>
-        </nz-form-item>
-        <button
-          nz-button
-          nzType="primary"
-          class="button"
-          [disabled]="!this.selectedCaregiver"
-          (click)="addCaregiverToPatient()"
-        >
-          {{ 'caregiver.add' | translate }}
-        </button>
-      </form>
-    </section>
-  </div>
-</nz-drawer>
 
 <nz-drawer
   [nzWidth]="820"
@@ -106,6 +45,7 @@
     [resetForm]="resetForm"
     [inputMode]="true"
     [showCancelButton]="true"
+    layoutMode="definition"
     (submitForm)="onSubmitForm($event)"
   >
   </app-form>

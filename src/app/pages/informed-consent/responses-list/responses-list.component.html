@@ -1,0 +1,128 @@
+<app-master-data-list
+  [columns]="columns"
+  [data]="filteredResponses"
+  [loading]="loading"
+  (rowClick)="open($event.source)"
+  (sort)="onSort($event)"
+>
+  <div class="actions-left" actions-left>
+    <app-master-data-search (search)="onSearch($event)"></app-master-data-search>
+    <button nz-button type="button" (click)="resetFilters()">{{ 'core.reset' | translate }}</button>
+  </div>
+</app-master-data-list>
+
+<nz-modal
+  [(nzVisible)]="responseVisible"
+  [nzTitle]="selectedResponse?.model?.name || ('informedConsent.title' | translate)"
+  [nzFooter]="responseFooter"
+  (nzOnCancel)="responseVisible = false"
+  (nzOnOk)="responseVisible = false"
+  [nzWidth]="820"
+>
+  <div *nzModalContent class="ci-response-document">
+    <ng-container *ngIf="selectedResponse">
+      <div class="ci-response-history" *ngIf="selectedHistory.length > 1">
+        <button
+          nz-button
+          nzSize="small"
+          type="button"
+          *ngFor="let historyItem of selectedHistory"
+          [nzType]="historyItem.id === selectedResponse.id ? 'primary' : 'default'"
+          (click)="selectHistoryResponse(historyItem)"
+        >
+          {{ (historyItem.answeredAt || historyItem.createdAt) | formatDateTime }} · {{ historyItem.status }}
+        </button>
+      </div>
+
+      <article class="ci-response-block" *ngFor="let block of versionBlocks(selectedResponse)">
+        <ng-container [ngSwitch]="block.blockType">
+          <section *ngSwitchCase="'TEXT'">
+            <h4 *ngIf="block.title">{{ block.title }}</h4>
+            <div class="ci-response-text" [innerHTML]="block.content"></div>
+          </section>
+          <section *ngSwitchCase="'QUESTION'" class="ci-response-question">
+            <h4>{{ block.label }}</h4>
+            <p *ngIf="block.helpText">{{ block.helpText }}</p>
+            <p class="ci-response-kind" *ngIf="showTechnicalMetadata()">
+              {{ 'informedConsent.consentKind' | translate }}: {{ consentKindNames(block.kinds, block.kind) }}
+            </p>
+            <ul>
+              <li
+                *ngFor="let option of block.answerOptions"
+                [class.selected-answer]="isSelectedAnswer(selectedResponse, block.id, option.id)"
+              >
+                <span>{{ option.label }}</span>
+                <small *ngIf="showTechnicalMetadata()">{{ resolutionLabel(option.resolution) }}</small>
+              </li>
+            </ul>
+          </section>
+        </ng-container>
+      </article>
+    </ng-container>
+  </div>
+</nz-modal>
+
+<ng-template #responseFooter>
+  <button nz-button type="button" (click)="responseVisible = false">{{ 'core.close' | translate }}</button>
+  <button
+    *ngIf="ownOnly && selectedResponse"
+    nz-button
+    nzType="primary"
+    type="button"
+    (click)="requestChange(selectedResponse)"
+  >
+    {{ 'informedConsent.modifyResponse' | translate }}
+  </button>
+  <button
+    *ngIf="canReactivate(selectedResponse)"
+    nz-button
+    nzType="primary"
+    type="button"
+    (click)="openReactivate(selectedResponse)"
+  >
+    {{ 'informedConsent.reactivateResponse' | translate }}
+  </button>
+</ng-template>
+
+<nz-modal
+  [(nzVisible)]="reactivateVisible"
+  [nzTitle]="'informedConsent.reactivateConsent' | translate"
+  [nzOkLoading]="reactivating"
+  [nzOkText]="'informedConsent.reactivate' | translate"
+  [nzCancelText]="'core.cancel' | translate"
+  (nzOnCancel)="reactivateVisible = false"
+  (nzOnOk)="submitReactivate()"
+>
+  <div *nzModalContent class="ci-reactivation-form">
+    <p>
+      {{ 'informedConsent.reactivationHelp' | translate }}
+    </p>
+    <label *ngFor="let level of reactivateReasonLevels; let levelIndex = index">
+      <span>{{ reactivateReasonLevelLabel(levelIndex) }}</span>
+      <nz-select
+        nzShowSearch
+        nzAllowClear
+        [ngModel]="selectedReactivateReasonIds[levelIndex]"
+        (ngModelChange)="onReactivateReasonChange(levelIndex, $event)"
+        [nzPlaceHolder]="'calendar.selectReason' | translate"
+      >
+        <nz-option *ngFor="let reason of level" [nzValue]="reason.id" [nzLabel]="reason.label"></nz-option>
+      </nz-select>
+    </label>
+    <label *ngIf="selectedReactivateReason()?.isOther" class="m-t-16">{{ 'calendar.otherReason' | translate }}</label>
+    <textarea
+      *ngIf="selectedReactivateReason()?.isOther"
+      nz-input
+      rows="3"
+      [(ngModel)]="reactivateOtherReason"
+      [placeholder]="'calendar.completeReason' | translate"
+    ></textarea>
+    <label class="m-t-16">{{ 'core.comment' | translate }}</label>
+    <textarea
+      nz-input
+      rows="3"
+      [(ngModel)]="reactivateComment"
+      [placeholder]="'calendar.optionalComment' | translate"
+    ></textarea>
+  </div>
+</nz-modal>

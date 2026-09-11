@@ -1,0 +1,34 @@
+.integration-card {
+  margin-top: 24px;
+}
+
+.integration-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.integration-field {
+  display: grid;
+  grid-template-columns: 180px minmax(260px, 560px);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.integration-field span {
+  font-weight: 600;
+}
+
+.feature-toggle-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.feature-toggle-control small {
+  color: #6b7280;
+  line-height: 1.35;
+}

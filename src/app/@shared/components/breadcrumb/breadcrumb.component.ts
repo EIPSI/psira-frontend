@@ -70,6 +70,16 @@ export class BreadcrumbComponent implements OnInit {
         // Do not change nextUrl if routeUrl is falsy. This happens when it's a route lazy loading other modules.
         const nextUrl = routeUrl ? `${url}/${routeUrl}` : url;
         const breadcrumbLabel = child.snapshot.data[this.label];
+        const parentBreadcrumbLabel = child.snapshot.data.parentBreadcrumbI18nKey;
+        const parentBreadcrumbUrl = child.snapshot.data.parentBreadcrumbUrl;
+
+        if (breadcrumbs.length && parentBreadcrumbLabel) {
+          breadcrumbs[breadcrumbs.length - 1] = {
+            ...breadcrumbs[breadcrumbs.length - 1],
+            label: parentBreadcrumbLabel,
+            url: parentBreadcrumbUrl || breadcrumbs[breadcrumbs.length - 1].url,
+          };
+        }
 
         // If have data, go to generate a breadcrumb for it.
         if (routeUrl && breadcrumbLabel) {

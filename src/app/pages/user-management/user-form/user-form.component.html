@@ -1,7 +1,14 @@
-<h1 *ngIf="userTitle">{{ userTitle }}</h1>
-
-<nz-tabset>
-  <nz-tab nzTitle="Profile">
+<ng-container *ngIf="false && defaultRoleCode === 'SUPERVISOR' && newMode; else standardUserForm">
+  <nz-drawer
+    [nzWidth]="820"
+    [nzMask]="true"
+    [nzClosable]="true"
+    [nzMaskClosable]="false"
+    [nzVisible]="true"
+    nzPlacement="right"
+    [nzTitle]="'menu.newSupervisor' | translate"
+    (nzOnClose)="closeSupervisorCreatePanel()"
+  >
     <app-form
       [form]="profileFields"
       [formData]="user"
@@ -11,52 +18,207 @@
       [loadingMessage]="loadingMessage"
       [inputMode]="inputMode"
       [showCancelButton]="showCancelButton"
-      [showEditButton]="perms.permissionsOnly([PK.MANAGE_USERS]) && perms.hasAccessLevelToUser(user)"
-      [form]="profileFields"
+      [showEditButton]="perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) && perms.hasAccessLevelToUser(user)"
+      layoutMode="definition"
+      (inputChange)="handleProfileInputChange($event)"
       (submitForm)="submitForm($event)"
     ></app-form>
-  </nz-tab>
-  <nz-tab nzTitle="Settings">
-    <div nz-row nzGutter="16">
-      <div nz-col>
-        <nz-card style="width: 300px" nzTitle="Enable or Disable {{ user?.firstName }}">
-          <p>To disable and Enable {{ user?.firstName }} toggle the switch below.</p>
-          <nz-switch
-            [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
-            (ngModelChange)="activateUser(user)"
-            [(ngModel)]="user.active"
-          ></nz-switch>
-        </nz-card>
-      </div>
-      <div nz-col>
-        <nz-card style="width: 300px" nzTitle="Change {{ user?.firstName }}'s password">
-          <p>To change password for {{ user.firstName }} toggle the button below.</p>
-          <button
-            [disabled]="!perms.permissionsOnly([PK.MANAGE_USERS]) || !perms.hasAccessLevelToUser(user)"
-            (click)="showChangePasswordForm()"
-            nz-button
-            nzType="primary"
-          >
-            Change Password
-          </button>
-        </nz-card>
-      </div>
-      <div nz-col>
-        <nz-card style="width: 300px" nzTitle="Delete User {{ user?.firstName }} ({{ user?.username }})">
-          <p>To remove User {{ user?.firstName }} toggle the button below.</p>
-          <button
-            [disabled]="!perms.permissionsOnly([PK.DELETE_USERS]) || !perms.hasAccessLevelToUser(user)"
-            (click)="handleDeleteAction(user)"
-            nz-button
-            nzType="danger"
-          >
-            Delete User
-          </button>
-        </nz-card>
-      </div>
+
+    <ng-container *ngTemplateOutlet="automationPreviewBlock"></ng-container>
+
+    <div class="assignment-panel supervisor-create-assignment">
+      <h3>{{ 'menu.therapists' | translate }}</h3>
+      <ng-container *ngTemplateOutlet="therapistAssignment"></ng-container>
     </div>
-  </nz-tab>
-</nz-tabset>
+  </nz-drawer>
+</ng-container>
+
+<ng-template #standardUserForm>
+  <h1 *ngIf="showTitle && userTitle">{{ userTitle }}</h1>
+
+  <ng-container *ngIf="section === 'profile'">
+    <ng-container *ngTemplateOutlet="profileSection"></ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="section === 'settings'">
+    <ng-container *ngTemplateOutlet="settingsSection"></ng-container>
+  </ng-container>
+
+  <nz-tabset *ngIf="section === 'all'">
+    <nz-tab [nzTitle]="'core.profile' | translate">
+      <ng-container *ngTemplateOutlet="profileSection"></ng-container>
+    </nz-tab>
+    <nz-tab [nzTitle]="'core.settings' | translate">
+      <ng-container *ngTemplateOutlet="settingsSection"></ng-container>
+    </nz-tab>
+    <nz-tab [nzTitle]="'notifications.title' | translate" *ngIf="isOwnUserProfile">
+      <app-notification-preferences [userId]="user.id" [accountMode]="true"></app-notification-preferences>
+    </nz-tab>
+    <nz-tab [nzTitle]="'informedConsent.mySignedConsents' | translate" *ngIf="isOwnUserProfile">
+      <app-informed-consent-responses-list
+        [ownOnlyInput]="true"
+        [latestOnly]="true"
+        [userView]="true"
+      ></app-informed-consent-responses-list>
+    </nz-tab>
+  </nz-tabset>
+</ng-template>
+
+<ng-template #profileSection>
+  <app-form
+    [form]="profileFields"
+    [formData]="user"
+    [resetForm]="resetForm"
+    [populateForm]="populateForm"
+    [isLoading]="isLoading"
+    [loadingMessage]="loadingMessage"
+    [inputMode]="inputMode"
+    [showCancelButton]="showCancelButton"
+    [showEditButton]="perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) && perms.hasAccessLevelToUser(user)"
+    layoutMode="definition"
+    (inputChange)="handleProfileInputChange($event)"
+    (submitForm)="submitForm($event)"
+  ></app-form>
+
+  <ng-container *ngTemplateOutlet="automationPreviewBlock"></ng-container>
+
+  <div class="assignment-panel profile-assignment" *ngIf="defaultRoleCode === 'THERAPIST'">
+    <h3>{{ 'menu.supervisors' | translate }}</h3>
+    <ng-container *ngTemplateOutlet="supervisorAssignment"></ng-container>
+  </div>
+
+  <div class="assignment-panel profile-assignment" *ngIf="defaultRoleCode === 'SUPERVISOR'">
+    <h3>{{ 'menu.therapists' | translate }}</h3>
+    <ng-container *ngTemplateOutlet="therapistAssignment"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #settingsSection>
+  <div nz-row nzGutter="16">
+    <div nz-col>
+      <nz-card style="width: 300px" [nzTitle]="'userManagement.enableDisableUser' | translate: { name: userDisplayName }">
+        <p>{{ 'userManagement.enableDisableUserHelp' | translate: { name: userDisplayName } }}</p>
+        <nz-switch
+          [disabled]="!perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) || !perms.hasAccessLevelToUser(user)"
+          (ngModelChange)="activateUser(user)"
+          [(ngModel)]="user.active"
+        ></nz-switch>
+      </nz-card>
+    </div>
+    <div nz-col>
+      <nz-card style="width: 300px" [nzTitle]="'userManagement.changeUserPasswordTitle' | translate: { name: userDisplayName }">
+        <p>{{ 'userManagement.changeUserPasswordHelp' | translate: { name: userDisplayName } }}</p>
+        <button
+          [disabled]="!perms.permissionsOnly([PK.USERS_EDIT_DEPARTMENT]) || !perms.hasAccessLevelToUser(user)"
+          (click)="showChangePasswordForm()"
+          nz-button
+          nzType="primary"
+        >
+          {{ 'userManagement.changePassword' | translate }}
+        </button>
+      </nz-card>
+    </div>
+    <div nz-col>
+      <nz-card style="width: 300px" [nzTitle]="'userManagement.deleteUserTitle' | translate: { name: user?.firstName, username: user?.username }">
+        <p>{{ 'userManagement.deleteUserHelp' | translate: { name: user?.firstName } }}</p>
+        <button
+          [disabled]="!perms.permissionsOnly([PK.USERS_DELETE_DEPARTMENT]) || !perms.hasAccessLevelToUser(user)"
+          (click)="handleDeleteAction(user)"
+          nz-button
+          nzType="danger"
+        >
+          {{ 'userManagement.deleteUser' | translate }}
+        </button>
+      </nz-card>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #automationPreviewBlock>
+  <div class="automation-preview" *ngIf="newMode">
+    <nz-spin [nzSpinning]="automationPreviewLoading">
+      <nz-alert
+        *ngIf="!automationPreview.length"
+        nzType="info"
+        nzShowIcon
+        [nzMessage]="'evaluationAutomations.title' | translate"
+        [nzDescription]="'userManagement.noApplicableAutomations' | translate"
+      ></nz-alert>
+
+      <div *ngIf="automationPreview.length">
+        <h3>{{ 'userManagement.automaticAutomationsToApply' | translate }}</h3>
+        <p class="automation-preview-help">
+          {{ 'userManagement.automaticAutomationsHelp' | translate }}
+        </p>
+        <div class="automation-trigger-group" *ngFor="let triggerPoint of automationPreviewTriggerPoints()">
+          <h4>{{ triggerPointLabel[triggerPoint] || triggerPoint }}</h4>
+          <label
+            nz-checkbox
+            class="automation-preview-item"
+            *ngFor="let automation of automationsForTrigger(triggerPoint)"
+            [ngModel]="automationPreviewChecked(automation.automationId)"
+            (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+          >
+            <strong>{{ automation.title }}</strong>
+            <span>{{ 'patientsManagement.resource' | translate }}: {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          </label>
+        </div>
+      </div>
+    </nz-spin>
+  </div>
+</ng-template>
+
+<ng-template #supervisorAssignment>
+  <div class="assignment-row">
+    <nz-select
+      [(ngModel)]="selectedSupervisorId"
+      [nzLoading]="assignmentLoading"
+      [nzPlaceHolder]="'menu.supervisors' | translate"
+      class="assignment-select"
+    >
+      <nz-option
+        *ngFor="let supervisor of availableSupervisors"
+        [nzValue]="supervisor.id"
+        [nzLabel]="supervisor.firstName + ' ' + supervisor.lastName"
+      ></nz-option>
+    </nz-select>
+    <button nz-button nzType="primary" [disabled]="!user?.id || !selectedSupervisorId" (click)="assignSupervisor()">
+      {{ 'core.add' | translate }}
+    </button>
+  </div>
+
+  <ul nz-list [nzDataSource]="assignedSupervisors" [nzLoading]="assignmentLoading">
+    <li nz-list-item *ngFor="let supervisor of assignedSupervisors" nzNoFlex>
+      {{ supervisor.firstName }} {{ supervisor.lastName }}
+    </li>
+  </ul>
+</ng-template>
+
+<ng-template #therapistAssignment>
+  <div class="assignment-row">
+    <nz-select
+      [(ngModel)]="selectedTherapistId"
+      [nzLoading]="assignmentLoading"
+      [nzPlaceHolder]="'menu.therapists' | translate"
+      class="assignment-select"
+    >
+      <nz-option
+        *ngFor="let therapist of availableTherapists"
+        [nzValue]="therapist.id"
+        [nzLabel]="therapist.firstName + ' ' + therapist.lastName"
+      ></nz-option>
+    </nz-select>
+    <button nz-button nzType="primary" [disabled]="!user?.id || !selectedTherapistId" (click)="assignTherapist()">
+      {{ 'core.add' | translate }}
+    </button>
+  </div>
+
+  <ul nz-list [nzDataSource]="assignedTherapists" [nzLoading]="assignmentLoading">
+    <li nz-list-item *ngFor="let therapist of assignedTherapists" nzNoFlex>
+      {{ therapist.firstName }} {{ therapist.lastName }}
+    </li>
+  </ul>
+</ng-template>
 
 <nz-modal
   [(nzVisible)]="showModal"

@@ -1,0 +1,31 @@
+<nz-table
+  #cyclesTable
+  nzSize="small"
+  [nzData]="cycles"
+  [nzLoading]="loading"
+  [nzFrontPagination]="false"
+  [nzNoResult]="'calendar.noCycles' | translate"
+>
+  <thead>
+    <tr>
+      <th [nzSortFn]="numberSort('cycleNumber')">{{ 'calendar.cycle' | translate }}</th>
+      <th [nzSortFn]="stringSort('status')">{{ 'core.status' | translate }}</th>
+      <th [nzSortFn]="dateSort('startedAt')">{{ 'core.start' | translate }}</th>
+      <th [nzSortFn]="dateSort('finalizedAt')">{{ 'calendar.finalization' | translate }}</th>
+      <th [nzSortFn]="numberSort('lastSessionNumber')">{{ 'calendar.lastSession' | translate }}</th>
+      <th [nzSortFn]="reasonSort">{{ 'reasonTrees.reason' | translate }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let cycle of cyclesTable.data">
+      <td>{{ cycle.cycleNumber }}</td>
+      <td>
+        <nz-tag [nzColor]="statusColor(cycle.status)">{{ statusLabel(cycle.status) }}</nz-tag>
+      </td>
+      <td>{{ cycle.startedAt | formatDateTime }}</td>
+      <td>{{ cycle.finalizedAt ? (cycle.finalizedAt | formatDateTime) : '-' }}</td>
+      <td>{{ cycle.lastSessionNumber || '-' }}</td>
+      <td>{{ reasonLabel(cycle) }}</td>
+    </tr>
+  </tbody>
+</nz-table>

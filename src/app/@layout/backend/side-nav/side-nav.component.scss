@@ -129,7 +129,7 @@ ul {
 }
 
 .text-in-help:hover {
-  color: #89d180;
+  color: #89b3e0;
 }
 
 .version-text{
@@ -139,4 +139,25 @@ ul {
 .version-text-collapsed{
   color: white;
   margin-left: -10px;
+}
+
+@media (max-width: 767px) {
+  .side-nav {
+    margin-bottom: 24px;
+  }
+
+  ul {
+    li {
+      margin-bottom: 8px;
+      margin-top: 8px;
+
+      i {
+        font-size: 24px !important;
+      }
+    }
+  }
+
+  .big-div {
+    min-height: calc(100vh - 76px);
+  }
 }

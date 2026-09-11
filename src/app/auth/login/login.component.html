@@ -3,9 +3,7 @@
     <div class="form-container">
       <div class="app-logo">
         <img src="../../../assets/images/logo.svg" />
-        <h1>PSIRA</h1>
-        <p class="version-text">Version: {{version}}</p
-        >
+        <h1>{{ 'dashboard.name' | translate }}</h1>
       </div>
       <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
         <div nz-row class="form-title">
@@ -13,7 +11,7 @@
             <div class="line"></div>
           </div>
           <div nz-col nzSpan="8">
-            <p>Log In</p>
+            <p>{{ 'auth.logInTitle' | translate }}</p>
           </div>
           <div nz-col nzSpan="8">
             <div class="line"></div>
@@ -23,7 +21,7 @@
           <nz-alert *ngFor="let error of errors" nzType="error" [nzDescription]="error" nzShowIcon></nz-alert>
         </div>
         <nz-form-item>
-          <nz-form-control nzErrorTip="Please input your username!">
+          <nz-form-control [nzErrorTip]="'auth.identifierRequired' | translate">
             <nz-input-group nzPrefixIcon="user">
               <input
                 readonly
@@ -32,13 +30,13 @@
                 type="text"
                 nz-input
                 formControlName="identifier"
-                placeholder="Username or email"
+                [placeholder]="'auth.identifier' | translate"
               />
             </nz-input-group>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
-          <nz-form-control nzErrorTip="Please input your Password!">
+          <nz-form-control [nzErrorTip]="'auth.passwordRequired' | translate">
             <nz-input-group [nzSuffix]="suffixTemplate" nzPrefixIcon="lock">
               <input
                 readonly
@@ -47,7 +45,7 @@
                 [type]="passwordVisible ? 'text' : 'password'"
                 nz-input
                 formControlName="password"
-                placeholder="Password"
+                [placeholder]="'auth.password' | translate"
               />
             </nz-input-group>
           </nz-form-control>
@@ -60,9 +58,9 @@
           </ng-template>
         </nz-form-item>
         <button nz-button class="login-form-button login-form-margin" [nzLoading]="isLoading" [nzType]="'primary'">
-          Log in
+          {{ 'auth.logIn' | translate }}
         </button>
-        <a class="forgot-password" href="javascript:;" (click)="forgotPassword()">Forgot password</a>
+        <a class="forgot-password" href="javascript:;" (click)="forgotPassword()">{{ 'auth.forgotPassword' | translate }}</a>
       </form>
     </div>
   </nz-content>

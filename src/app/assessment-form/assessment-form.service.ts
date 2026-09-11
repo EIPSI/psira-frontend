@@ -30,6 +30,10 @@ export class AssessmentFormService {
     return this._questionnaire.asObservable();
   }
 
+  public get questionnaireSnapshot(): any {
+    return this._questionnaire.value;
+  }
+
   public get percentageCompleted(): number {
     return this._assessmentInfo?.percentage ?? 0;
   }
@@ -56,12 +60,14 @@ export class AssessmentFormService {
   }
 
   public addAnswer(answerInput: Omit<AnswerAssessmentInput, 'assessmentId' | 'questionnaireVersionId'>) {
+    const occurrenceId = this.questionnaireSnapshot?.occurrenceId || null;
     return this.questionnaire$.pipe(
       first(),
       switchMap((questionnaire) =>
         // upload answer
         this.assessmentService.addAnswer({
           ...answerInput,
+          occurrenceId,
           assessmentId: this._assessment.value.questionnaireAssessment._id,
           questionnaireVersionId: questionnaire._id,
         })
@@ -70,7 +76,11 @@ export class AssessmentFormService {
         // invalidate answer if its bad user input
         if (isApolloError(err) && err.graphQLErrors.some((e) => e.extensions?.code === 'BAD_USER_INPUT')) {
           const answers = this.assessmentSnapshot.questionnaireAssessment.answers;
-          const answer = answers.find((a) => a.question === answerInput.question);
+          const answer = answers.find(
+            (a) =>
+              a.question === answerInput.question &&
+              (a.occurrenceId || null) === occurrenceId
+          );
           if (answer) {
             answer.valid = false;
             this.setAnswers(answers);
@@ -85,19 +95,66 @@ export class AssessmentFormService {
     );
   }
 
+  public addAnswerForQuestionnaire(
+    questionnaire: QuestionnaireVersion,
+    answerInput: Omit<AnswerAssessmentInput, 'assessmentId' | 'questionnaireVersionId'>
+  ) {
+    const occurrenceId = (questionnaire as any)?.occurrenceId || null;
+    return this.assessmentService
+      .addAnswer({
+        ...answerInput,
+        occurrenceId,
+        assessmentId: this._assessment.value.questionnaireAssessment._id,
+        questionnaireVersionId: questionnaire._id,
+      })
+      .pipe(
+        catchError((err: any) => {
+          if (isApolloError(err) && err.graphQLErrors.some((e) => e.extensions?.code === 'BAD_USER_INPUT')) {
+            const answers = this.assessmentSnapshot.questionnaireAssessment.answers;
+            const answer = answers.find(
+              (a) =>
+                a.question === answerInput.question &&
+                (a.occurrenceId || null) === occurrenceId
+            );
+            if (answer) {
+              answer.valid = false;
+              this.setAnswers(answers);
+            }
+          }
+          return throwError(err);
+        }),
+        tap((answers) => this.setAnswers(answers))
+      );
+  }
+
   private prepareAssessmentInfo(assessment: FullAssessment) {
     this._assessmentInfo.questions = assessment.questionnaireAssessment.questionnaires
-      .map((q) => q.questionGroups.map((g) => g.questions).flat())
+      .map((q: any) => q.questionGroups.map((g: any) => g.questions).flat())
       .flat();
     this._assessmentInfo.answers = assessment.questionnaireAssessment.answers;
-    const requiredUniqueQuestions = assessment.questionnaireAssessment.questionnaires.map((q) => q.questionGroups.map((g) => g.uniqueQuestions)).flat(2).map((el) => el.subQuestions).flat().filter((q) => q.required);
-    const requiredQuestions = this._assessmentInfo.questions.filter((q) => q.required).concat(requiredUniqueQuestions);
+    const requiredQuestions = assessment.questionnaireAssessment.questionnaires
+      .map((questionnaire: any) => {
+        const occurrenceId = questionnaire.occurrenceId || null;
+        const groupQuestions = questionnaire.questionGroups.map((g: any) => g.questions).flat();
+        const uniqueQuestions = questionnaire.questionGroups
+          .map((g: any) => g.uniqueQuestions)
+          .flat(2)
+          .map((el: any) => el.subQuestions)
+          .flat();
 
-    const numAnswers = requiredQuestions.reduce(
-      (sum, question) =>
-        this._assessmentInfo.answers.find((a) => a.question === question._id)?.valid ? (sum += 1) : sum,
-      0
-    );
-    this._assessmentInfo.percentage = (numAnswers / requiredQuestions.length) * 100;
+        return groupQuestions
+          .concat(uniqueQuestions)
+          .filter((question: any) => question.required)
+          .map((question: any) => ({ question, occurrenceId }));
+      })
+      .flat();
+
+    const numAnswers = requiredQuestions.reduce((sum: number, item: any) => {
+      const answer = this._assessmentInfo.answers.find(
+        (a: any) => a.question === item.question._id && (a.occurrenceId || null) === item.occurrenceId
+      );
+      return answer?.valid ? (sum += 1) : sum;
+    }, 0);
+    this._assessmentInfo.percentage = requiredQuestions.length ? (numAnswers / requiredQuestions.length) * 100 : 100;
   }
 }

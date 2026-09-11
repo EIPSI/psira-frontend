@@ -2,14 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslateService } from '@ngx-translate/core';
-import { merge } from 'rxjs';
+import { merge, Observable } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
 
 import { environment } from '@env/environment';
 import { Logger } from '@core';
-import { translationList } from '../translations/translation-list';
 import { TranslationCode } from './@shared/@types/translation';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { I18nService } from './i18n/i18n.service';
 
 const log = new Logger('App');
 
@@ -20,12 +20,21 @@ const log = new Logger('App');
 })
 @UntilDestroy()
 export class AppComponent implements OnInit {
+  readonly storageNoticeKey = 'psira_storage_notice_v1';
+  readonly storageNoticeVersion = 1;
+  readonly storageNoticeFeatures = ['browserStorage'];
+  i18nReady$: Observable<boolean>;
+  showStorageNotice = false;
+
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
-    private translateService: TranslateService
-  ) {}
+    private translateService: TranslateService,
+    private i18nService: I18nService
+  ) {
+    this.i18nReady$ = this.i18nService.ready$.asObservable();
+  }
 
   ngOnInit() {
     // Setup logger
@@ -36,7 +45,18 @@ export class AppComponent implements OnInit {
     log.debug('init');
 
     // Setup translations
-    this.initStoredLang();
+    this.i18nService.init(TranslationCode.EN, [
+      TranslationCode.EN,
+      TranslationCode.ES,
+      TranslationCode.DE,
+      TranslationCode.NL,
+      ...(environment.supportedLanguages || []),
+    ]);
+    this.i18nService.loadActiveLanguages().subscribe((languages) => {
+      if (!languages.length) return;
+      this.i18nService.setSupportedLanguages(languages.map((language) => language.code));
+      this.i18nService.language = '';
+    });
 
     // Change page title on navigation or language change, based on route data
     merge(
@@ -58,20 +78,32 @@ export class AppComponent implements OnInit {
         untilDestroyed(this)
       )
       .subscribe((key) => this.titleService.setTitle(this.translateService.instant(key) + ' | PSIRA'));
+
+    this.showStorageNotice = this.readStorageNoticeValue() !== this.storageNoticeValue;
   }
 
-  private initStoredLang() {
-    const lang = localStorage.getItem('currentLang');
-    const browserLang = this.translateService.getBrowserLang();
-    if (lang) {
-      this.translateService.use(lang);
-    } else {
-      // using substr to move something like en_US to en
-      if (translationList.some((trans) => trans.code === browserLang.substr(0, trans.code.length))) {
-        this.translateService.use(browserLang);
-      } else {
-        this.translateService.use(TranslationCode.EN);
-      }
+  acknowledgeStorageNotice() {
+    this.writeStorageNoticeValue();
+    this.showStorageNotice = false;
+  }
+
+  private get storageNoticeValue() {
+    return `acknowledged:${this.storageNoticeVersion}:${this.storageNoticeFeatures.join(',')}`;
+  }
+
+  private readStorageNoticeValue() {
+    try {
+      return localStorage.getItem(this.storageNoticeKey);
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStorageNoticeValue() {
+    try {
+      localStorage.setItem(this.storageNoticeKey, this.storageNoticeValue);
+    } catch {
+      return;
     }
   }
 }

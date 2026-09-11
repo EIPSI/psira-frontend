@@ -27,6 +27,9 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
+import { NotificationPreferencesModule } from '../notifications/notification-preferences/notification-preferences.module';
+import { InformedConsentSharedModule } from '../informed-consent/informed-consent-shared.module';
 
 const antModules = [
   NzGridModule,
@@ -61,6 +64,9 @@ const antModules = [
     UserManagementRoutingModule,
     NzSwitchModule,
     MasterDataModule,
+    CalendarWidgetModule,
+    NotificationPreferencesModule,
+    InformedConsentSharedModule,
   ],
   declarations: [UsersListComponent, UserFormComponent, UserProfileTabsComponent],
 })

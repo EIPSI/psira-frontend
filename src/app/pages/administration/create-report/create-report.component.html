@@ -1,26 +1,113 @@
-<button style="margin-bottom: 16px" nz-button nzType="primary" (click)="goBack()">Back</button>
+<button style="margin-bottom: 16px" nz-button nzType="primary" (click)="goBack()">{{ 'core.back' | translate }}</button>
 
-<h1>Create Report</h1>
+<h1>{{ 'reports.createReport' | translate }}</h1>
 <div class="parent-div">
   <div class="form-div">
-    <app-form
-      class="mt-3"
-      [form]="reportForm"
-      [formData]="report"
-      [isLoading]="isLoading"
-      [populateForm]="populateForm"
-      [resetForm]="resetForm"
-      [inputMode]="inputMode"
-      [showCancelButton]="showCancelButton"
-      [loadingMessage]="loadingMessage"
-      (submitForm)="submitForm($event)"
-      (inputChange)="handleReportInputChange($event)"
-      (inputModeChanged)="inputMode = $event"
-    >
-    </app-form>
+    <div class="report-field">
+      <label>
+        <b>{{ 'forms.createReportForm.reportName' | translate }} <span class="required-mark">*</span></b>
+      </label>
+      <input
+        nz-input
+        [(ngModel)]="reportDraft.name"
+        [disabled]="!inputMode"
+        [placeholder]="'forms.createReportForm.reportNameDescription' | translate"
+      />
+    </div>
+
+    <div class="report-field">
+      <label>
+        <b>{{ 'forms.createReportForm.resources' | translate }} <span class="required-mark">*</span></b>
+      </label>
+      <nz-select
+        style="width: 100%"
+        [ngModel]="selectedResource"
+        (ngModelChange)="handleResourceChange($event)"
+        [nzDisabled]="!inputMode"
+        [nzPlaceHolder]="'forms.createReportForm.resourcesDescription' | translate"
+      >
+        <nz-option
+          *ngFor="let option of resourceOptions"
+          [nzValue]="option.value"
+          [nzLabel]="option.label | translate"
+        ></nz-option>
+      </nz-select>
+      <p class="validation-message" *ngIf="resourceTouched && !selectedResource">
+        {{ 'forms.createReportForm.resourcesValidation' | translate }}
+      </p>
+    </div>
+
+    <div class="report-field">
+      <label>
+        <b>{{ 'forms.createReportForm.description' | translate }} <span class="required-mark">*</span></b>
+      </label>
+      <textarea
+        nz-input
+        rows="4"
+        [(ngModel)]="reportDraft.description"
+        [disabled]="!inputMode"
+        [placeholder]="'forms.createReportForm.descriptionDescription' | translate"
+      ></textarea>
+    </div>
+
+    <div class="report-field">
+      <label>
+        <b>{{ 'forms.createReportForm.appName' | translate }} <span class="required-mark">*</span></b>
+      </label>
+      <nz-select
+        style="width: 100%"
+        [ngModel]="selectedAppName"
+        (ngModelChange)="handleAppNameChange($event)"
+        [nzDisabled]="!inputMode"
+        [nzPlaceHolder]="'forms.createReportForm.appNameDescription' | translate"
+      >
+        <nz-option
+          *ngFor="let option of appOptions"
+          [nzValue]="option.value"
+          [nzLabel]="option.label | translate"
+        ></nz-option>
+      </nz-select>
+      <p class="validation-message" *ngIf="appNameTouched && !selectedAppName">
+        {{ 'forms.createReportForm.appNameValidation' | translate }}
+      </p>
+    </div>
+
+    <div class="report-field">
+      <label>
+        <b>{{ 'forms.createReportForm.repositoryLink' | translate }}</b>
+      </label>
+      <input
+        nz-input
+        [(ngModel)]="reportDraft.repositoryLink"
+        [disabled]="!inputMode"
+        [placeholder]="'forms.createReportForm.repositoryLinkDescription' | translate"
+      />
+    </div>
+
+    <div class="report-field">
+      <label>
+        <b>{{ 'forms.createReportForm.reportStatus' | translate }}</b>
+      </label>
+      <nz-radio-group [(ngModel)]="reportDraft.status" [nzDisabled]="!inputMode">
+        <label nz-radio [nzValue]="true">{{ 'core.on' | translate }}</label>
+        <label nz-radio [nzValue]="false">{{ 'core.off' | translate }}</label>
+      </nz-radio-group>
+    </div>
+
+    <div class="report-actions">
+      <button nz-button *ngIf="showCancelButton && inputMode" [nzShape]="'round'" (click)="inputMode = false">
+        {{ 'core.cancel' | translate }}
+      </button>
+      <button nz-button *ngIf="inputMode" [nzShape]="'round'" [nzType]="'primary'" (click)="submitReport()">
+        {{ 'reports.saveReport' | translate }}
+      </button>
+      <button nz-button *ngIf="!inputMode" [nzShape]="'round'" [nzType]="'primary'" (click)="inputMode = true">
+        {{ 'reports.editReport' | translate }}
+      </button>
+    </div>
   </div>
   <div class="card-div">
-    <nz-card style="width: 400px" nzTitle="Roles*">
+    <nz-card style="width: 400px" [nzTitle]="'reports.rolesRequired' | translate">
       <nz-checkbox-wrapper style="width: 100%">
         <div nz-row>
           <div nz-col nzSpan="24" *ngFor="let role of roles">
@@ -28,7 +115,7 @@
               nz-checkbox
               [nzValue]="role.id"
               [disabled]="!inputMode"
-              [ngModel]="reportHasRole(role.id)"
+              [ngModel]="roleIsSelected(role.id)"
               (ngModelChange)="assignRoleToReport(role, $event)"
               >{{ role.name }}</label
             >

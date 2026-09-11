@@ -3,7 +3,7 @@ import { FormattedScript, Scripts } from '../@types/scripts';
 
 export const ScriptColumns: TableColumn<Partial<FormattedScript>>[] = [
   {
-    title: 'Name',
+    title: 'forms.scripts.name',
     name: 'name',
     translationPath: 'tables.scripts.name',
     sort: true,
@@ -13,7 +13,7 @@ export const ScriptColumns: TableColumn<Partial<FormattedScript>>[] = [
     },
   },
   {
-    title: 'Version',
+    title: 'forms.scripts.version',
     name: 'version',
     translationPath: 'tables.scripts.version',
     sort: true,
@@ -23,7 +23,7 @@ export const ScriptColumns: TableColumn<Partial<FormattedScript>>[] = [
     },
   },
   {
-    title: 'Creator',
+    title: 'forms.scripts.creator',
     name: 'creator',
     translationPath: 'tables.scripts.creator',
     sort: true,
@@ -33,7 +33,7 @@ export const ScriptColumns: TableColumn<Partial<FormattedScript>>[] = [
     },
   },
   {
-    title: 'Reports',
+    title: 'forms.scripts.reports',
     name: 'formattedReports',
     translationPath: 'tables.scripts.reports',
     render: 'tag',
@@ -45,7 +45,7 @@ export const ScriptColumns: TableColumn<Partial<FormattedScript>>[] = [
     filterQuery: (q: number) => (q ? { id: { eq: q } } : { id: { is: null } }),
   },
   {
-    title: 'Repository Link',
+    title: 'forms.scripts.repositoryLink',
     name: 'repositoryLink',
     translationPath: 'tables.scripts.repositoryLink',
     sort: true,
@@ -55,7 +55,7 @@ export const ScriptColumns: TableColumn<Partial<FormattedScript>>[] = [
     },
   },
   {
-    title: 'Created At',
+    title: 'tables.reports.createdAt',
     name: 'createdAt',
     translationPath: 'tables.reports.createdAt',
     sort: true,

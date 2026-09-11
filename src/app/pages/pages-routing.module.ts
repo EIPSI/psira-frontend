@@ -40,6 +40,35 @@ const routes: Routes = [
     loadChildren: () => import('./assessment/assessment.module').then((m) => m.AssessmentModule),
   },
   {
+    path: 'calendar',
+    data: {
+      breadcrumbI18nKey: 'menu.calendar',
+    },
+    loadChildren: () => import('./calendar/calendar.module').then((m) => m.CalendarModule),
+  },
+  {
+    path: 'evaluation-schemes',
+    data: {
+      breadcrumbI18nKey: 'menu.evaluationSchemes',
+    },
+    loadChildren: () => import('./evaluation-schemes/evaluation-schemes.module').then((m) => m.EvaluationSchemesModule),
+  },
+  {
+    path: 'randomizations',
+    data: {
+      breadcrumbI18nKey: 'menu.randomizations',
+    },
+    loadChildren: () => import('./randomizations/randomizations.module').then((m) => m.RandomizationsModule),
+  },
+  {
+    path: 'evaluation-automations',
+    data: {
+      breadcrumbI18nKey: 'menu.evaluationAutomations',
+    },
+    loadChildren: () =>
+      import('./evaluation-automations/evaluation-automations.module').then((m) => m.EvaluationAutomationsModule),
+  },
+  {
     path: 'user-management',
     data: {},
     loadChildren: () => import('./user-management/user-management.module').then((m) => m.UserManagementModule),
@@ -50,6 +79,27 @@ const routes: Routes = [
       breadcrumbI18nKey: 'menu.administration',
     },
     loadChildren: () => import('./administration/administration.module').then((m) => m.AdministrationModule),
+  },
+  {
+    path: 'notifications',
+    data: {
+      breadcrumbI18nKey: 'menu.notifications',
+    },
+    loadChildren: () => import('./notifications/notifications.module').then((m) => m.NotificationsModule),
+  },
+  {
+    path: 'informed-consent',
+    data: {
+      breadcrumbI18nKey: 'menu.informedConsent',
+    },
+    loadChildren: () => import('./informed-consent/informed-consent.module').then((m) => m.InformedConsentModule),
+  },
+  {
+    path: 'reports',
+    data: {
+      breadcrumbI18nKey: 'menu.reports',
+    },
+    loadChildren: () => import('./reports/reports.module').then((m) => m.ReportsModule),
   },
   {
     path: 'feedback',

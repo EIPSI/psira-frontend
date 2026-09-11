@@ -4,5 +4,5 @@
   [ngClass]="{ active: isSelected(i) }"
   (click)="selectOption(i)"
 >
-  <p>{{ option.label }}</p>
+  <p>{{ option.label | translate }}</p>
 </div>

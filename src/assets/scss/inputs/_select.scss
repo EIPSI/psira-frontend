@@ -92,10 +92,18 @@
     border: 1px solid $input-border-color;
     border-radius: $input-border-radius;
     padding: 1px $select-tag-margin-y;
-    height: $select-height + 0.125rem;
+    height: auto;
+    min-height: $select-height + 0.125rem;
+  }
+
+  .ant-select-selection-overflow {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    max-width: 100%;
   }
 
   .ant-select-selection-item {
+    max-width: 100%;
     height: $select-tag-height;
     line-height: $select-tag-height - 0.125rem;
     margin-top: $select-tag-margin-y;
@@ -107,9 +115,21 @@
     border-radius: $border-radius;
   }
 
+  .ant-select-selection-item-content {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ant-select-selection-search {
+    max-width: 100%;
+  }
+
   &.ant-select-sm {
     .ant-select-selector {
-      height: $select-height-sm + 0.125rem;
+      min-height: $select-height-sm + 0.125rem;
     }
 
     .ant-select-selection-item {
@@ -120,7 +140,7 @@
 
   &.ant-select-lg {
     .ant-select-selector {
-      height: $select-height-lg + 0.125rem;
+      min-height: $select-height-lg + 0.125rem;
     }
 
     .ant-select-selection-item {

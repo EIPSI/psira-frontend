@@ -8,6 +8,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { SharedModule } from '@shared';
 
 @NgModule({
   declarations: [PatientDashboardComponent],
@@ -19,7 +20,8 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
     NzSpinModule,
     NzEmptyModule,
     NzTagModule,
-    NzButtonModule
+    NzButtonModule,
+    SharedModule
   ]
 })
 export class PatientDashboardModule { }

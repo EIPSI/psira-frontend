@@ -1,0 +1,61 @@
+.ci-pending {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.ci-document {
+  background: #fff;
+  color: #1f2933;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.ci-document--complete {
+  padding-top: 24px;
+}
+
+.ci-document-state {
+  padding: 18px 0;
+  color: #5f6b7a;
+}
+
+.ci-document-state--error {
+  color: #b42318;
+}
+
+.ci-section {
+  margin-bottom: 22px;
+}
+
+.ci-section h3 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.ci-rich-text {
+  ::ng-deep p {
+    margin: 0 0 12px;
+  }
+}
+
+.ci-question {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0;
+  padding: 16px 0;
+  border-top: 1px solid #edf0f2;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.ci-question p {
+  margin: 0;
+  color: #5f6b7a;
+}
+
+.ci-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-bottom: 20px;
+}

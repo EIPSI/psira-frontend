@@ -1,17 +1,31 @@
 import { Component } from '@angular/core';
-import { QuestionnaireVersion } from '../../pages/questionnaire-management/@types/questionnaire';
-import { AssessmentFormService } from '../assessment-form.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map, filter } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
+import { AssessmentStatus, FullAssessment } from '@app/pages/assessment/@types/assessment';
+import { QuestionnaireVersion } from '../../pages/questionnaire-management/@types/questionnaire';
+import { combineLatest, forkJoin } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Answer } from '../@types/answer';
 import { Question } from '../@types/question';
-import { SkipLogic } from '../skip-logic';
+import { AssessmentFormService } from '../assessment-form.service';
+import { AssessmentService } from '../../pages/assessment/@services/assessment.service';
 import { ErrorHandlerService } from '../../@shared/services/error-handler.service';
 import { PsiraTranslations } from '../../@core/psira-translations';
+import { SkipLogic } from '../skip-logic';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { TranslateService } from '@ngx-translate/core';
+
+interface AssessmentScreen {
+  id: string;
+  label: string;
+  sourceBundleId?: string;
+  headerHtml?: string;
+  footerHtml?: string;
+  bundleHeaderHtml?: string;
+  bundleNoticeHtml?: string;
+  questionnaires: any[];
+}
 
 @UntilDestroy()
 @Component({
@@ -20,171 +34,242 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./questionnaire-form.component.scss'],
 })
 export class QuestionnaireFormComponent {
-  public questionnaire: any;
-  public answers: Answer[];
-  public skipLogic: Array<{ questionId: string; visible: boolean }> = [];
+  public assessment: FullAssessment;
+  public screens: AssessmentScreen[] = [];
+  public currentScreenIdx = 0;
+  public currentScreen: AssessmentScreen;
+  public answers: Answer[] = [];
   public mapped: any = {};
-
-  public set currentGroupIdx(idx: number) {
-    this._currentGroupIdx = idx;
-    this.readSkipLogic();
-  }
-  public get currentGroupIdx() {
-    return this._currentGroupIdx;
-  }
-
-  private _currentGroupIdx = 0;
+  public completed = false;
+  public AssessmentStatus = AssessmentStatus;
 
   constructor(
-    private activtedRoute: ActivatedRoute,
+    private activatedRoute: ActivatedRoute,
     private assessmentFormService: AssessmentFormService,
+    private assessmentService: AssessmentService,
     private errorService: ErrorHandlerService,
     public translations: PsiraTranslations,
+    private messageService: NzMessageService,
     private modalService: NzModalService,
     private translate: TranslateService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     combineLatest([
-      this.activtedRoute.params.pipe(
+      this.activatedRoute.params.pipe(
         map((params) => +params?.questionnaireIndex),
         filter((idx) => !isNaN(idx))
       ),
       this.assessmentFormService.assessment$.pipe(filter((assessment) => !!assessment)),
     ])
       .pipe(untilDestroyed(this))
-      .subscribe(([idx, newAssessment]) => {
-        this.questionnaire = newAssessment?.questionnaireAssessment?.questionnaires?.[idx];
-        this.answers = newAssessment?.questionnaireAssessment?.answers;
-        this.answers.forEach(item => {
-          const questionKey = item.question;
-          this.mapped[questionKey] = item.textValue;
-        });
-        this.assessmentFormService.setQuestionnaire(this.questionnaire);
-        this.readSkipLogic();
+      .subscribe(([idx, assessment]) => {
+        this.assessment = assessment;
+        this.screens = this.buildScreens(assessment);
+        this.currentScreenIdx = Math.max(0, Math.min(idx, this.screens.length - 1));
+        this.currentScreen = this.screens[this.currentScreenIdx];
+        this.answers = assessment.questionnaireAssessment.answers || [];
+        this.mapped = this.buildMappedAnswers(this.answers);
+        this.assessmentFormService.setQuestionnaire(this.currentScreen?.questionnaires?.[0] || null);
       });
   }
-  
-  public isVisible(question: Question) {
+
+  public isVisible(questionnaire: any, question: Question): boolean {
     if (!question.relevant) return true;
-    return this.skipLogic.find((logic) => logic.questionId === question._id)?.visible ?? true;
+    try {
+      return SkipLogic.create(question, this.allQuestions(), this.currentOccurrenceAnswers(questionnaire));
+    } catch (err) {
+      this.errorService.handleError(err, {
+        prefix: `Unable to create skip logic of "${question.relevant}" for "${question.name}"`,
+      });
+      return true;
+    }
   }
 
-  async onNext(index: any){
-    const currentRequiredQuestions = this.questionnaire.questionGroups[index]?.uniqueQuestions
-    .map((el: { subQuestions: any; }) => el.subQuestions)
-    .flat()
-    .filter((el: any) => el.required === true);
+  public async next(): Promise<void> {
+    if (!await this.confirmScreenRequiredAnswers()) return;
 
-    const currentNonTableListRequiredQuestions = this.questionnaire.questionGroups[index]?.questions
-    // .map((el: { subQuestions: any; }) => el.subQuestions)
-    .flat()
-    .filter((el: any) => el.required === true);
-
-    const allRequiredQuestions = currentRequiredQuestions.concat(currentNonTableListRequiredQuestions);
-
-    const answersIds = this.answers.map((el: any) => el.question);
-
-    const unAnsweredRequiredQuestions = allRequiredQuestions.filter((el: any) => !answersIds.includes(el._id));
-
-    if (unAnsweredRequiredQuestions.length !== 0) {
-      const modal = this.modalService.confirm({
-        nzOnCancel: () => {
-          this.currentGroupIdx++;
-          setTimeout(() => {
-            this.scrollToTop();
-          }, 400);
-        },
-        nzOnOk: () => true,
-        nzCancelText: this.translate.instant('modal.cancel'),
-        nzOkText: this.translate.instant('modal.ok'),
-        nzTitle: this.translate.instant('modal.continue'),
-        nzWidth: 800,
-        nzClosable: false,
-        nzContent: this.translate.instant('modal.unansweredQuestions', { count: unAnsweredRequiredQuestions.length }),
-      });
-
-      // wait for modal to successfully complete
-      const confirmation = await modal.afterClose.toPromise();
-      if (!confirmation) return;
-
+    if (this.currentScreenIdx < this.screens.length - 1) {
+      this.goToScreen(this.currentScreenIdx + 1);
       return;
     }
 
-    this.currentGroupIdx++;
-    setTimeout(() => {
-      this.scrollToTop();
-    }, 400);
+    this.completeAssessment();
   }
 
-  async onNextOverview(index: any){
-    const currentRequiredQuestions = this.questionnaire.questionGroups[index]?.uniqueQuestions
-    .map((el: { subQuestions: any; }) => el.subQuestions)
-    .flat()
-    .filter((el: any) => el.required === true);
+  public previous(): void {
+    if (this.currentScreenIdx <= 0) return;
+    this.goToScreen(this.currentScreenIdx - 1);
+  }
 
-    const currentNonTableListRequiredQuestions = this.questionnaire.questionGroups[index]?.questions
-    // .map((el: { subQuestions: any; }) => el.subQuestions)
-    .flat()
-    .filter((el: any) => el.required === true);
+  public goToScreen(index: number): void {
+    this.router.navigate(['/assessment/questionnaire', index], {
+      queryParamsHandling: 'merge',
+    });
+    setTimeout(() => this.scrollToTop(), 200);
+  }
 
-    const allRequiredQuestions = currentRequiredQuestions.concat(currentNonTableListRequiredQuestions);
- 
-    const answersIds = this.answers.map((el: any) => el.question);
-
-    const unAnsweredRequiredQuestions = allRequiredQuestions.filter((el: any) => !answersIds.includes(el._id));
-
-    if (unAnsweredRequiredQuestions.length !== 0) {
-      const modal = this.modalService.confirm({
-        nzOnCancel: () => {
-          this.router.navigate(['../../overview'], { relativeTo: this.route });
+  public addTableAnswer(questionnaire: QuestionnaireVersion, questionId: string, value: string): void {
+    this.assessmentFormService
+      .addAnswerForQuestionnaire(questionnaire, { question: questionId, textValue: value?.toString() })
+      .subscribe(
+        (answers) => {
+          this.answers = answers;
+          this.mapped = this.buildMappedAnswers(answers);
         },
-        nzOnOk: () => true,
-        nzTitle: this.translate.instant('modal.continueOverview'),
-        nzContent: this.translate.instant('modal.unansweredQuestionsOverview', { count: unAnsweredRequiredQuestions.length }),
-        nzCancelText: this.translate.instant('modal.cancel'),
-        nzWidth: 800,
-        nzClosable: false,
-        nzOkText: this.translate.instant('modal.ok'),
-      });
-
-      // wait for modal to successfully complete
-      const confirmation = await modal.afterClose.toPromise();
-      if (!confirmation) return;
-
-      return;
-    }
-    this.router.navigate(['../../overview'], { relativeTo: this.route });
+        (err) => this.errorService.handleError(err, { prefix: 'Unable to answer question' })
+      );
   }
 
-  scrollToTop() {
-    window.scrollTo({top: 0, behavior: 'smooth'})
+  public mappedKey(questionnaire: any, questionId: string): string {
+    return `${questionnaire?.occurrenceId || 'single'}:${questionId}`;
   }
 
-  addAnswer(questionId: string, value: string){
-    value = value.toString();
-    this.assessmentFormService.addAnswer({question: questionId, textValue: value}).subscribe()
+  public isLastScreen(): boolean {
+    return this.currentScreenIdx >= this.screens.length - 1;
   }
 
-  private readSkipLogic() {
-    const assessment = this.assessmentFormService.assessmentSnapshot;
-    const currentQuestions = this.questionnaire.questionGroups[this.currentGroupIdx]?.questions;
-    const questions = assessment.questionnaireAssessment.questionnaires
-      .map((q) => q.questionGroups.map((g) => g.questions).flat())
+  public screenProgress(): string {
+    return `${this.currentScreenIdx + 1} / ${this.screens.length}`;
+  }
+
+  public hasHtml(value: string): boolean {
+    return !!this.htmlText(value);
+  }
+
+  public questionnaireTitle(questionnaire: any): string {
+    return questionnaire?.sourceBundleId
+      ? questionnaire?.questionnaireDisplayTitle || ''
+      : questionnaire?.name;
+  }
+
+  public shouldShowQuestionnaireTitle(questionnaire: any): boolean {
+    return questionnaire?.showQuestionnaireTitle !== false && this.hasHtml(this.questionnaireTitle(questionnaire));
+  }
+
+  public shouldShowBundleHeader(): boolean {
+    if (!this.hasHtml(this.currentScreen?.bundleHeaderHtml)) return false;
+    const previousScreen = this.screens[this.currentScreenIdx - 1];
+    return !previousScreen || previousScreen.sourceBundleId !== this.currentScreen.sourceBundleId;
+  }
+
+  public shouldShowScreenHeader(): boolean {
+    return !!this.currentScreen?.sourceBundleId || this.screens.length > 1;
+  }
+
+  private completeAssessment(): void {
+    const id = this.assessment.questionnaireAssessment._id;
+    forkJoin([
+      this.translate.get(this.translations.assessmentForm.complete),
+      this.assessmentService.changeAssessmentStatus(id, AssessmentStatus.COMPLETED),
+    ]).subscribe(
+      ([translation]) => {
+        this.messageService.success(translation, { nzDuration: 5000 });
+        this.completed = true;
+        this.assessment.questionnaireAssessment.status = AssessmentStatus.COMPLETED;
+      },
+      (err) => this.errorService.handleError(err, { prefix: `Unable to complete assessment with ID "${id}"` })
+    );
+  }
+
+  private async confirmScreenRequiredAnswers(): Promise<boolean> {
+    const missing = this.requiredQuestionsForScreen().filter(({ questionnaire, question }) => {
+      if (!this.isVisible(questionnaire, question)) return false;
+      return !this.findAnswer(questionnaire, question._id)?.valid;
+    });
+
+    if (!missing.length) return true;
+
+    const modal = this.modalService.confirm({
+      nzOnCancel: () => false,
+      nzOnOk: () => true,
+      nzCancelText: this.translate.instant('modal.cancel'),
+      nzOkText: this.translate.instant('modal.ok'),
+      nzTitle: this.translate.instant('modal.continue'),
+      nzWidth: 800,
+      nzClosable: false,
+      nzContent: this.translate.instant('modal.unansweredQuestions', { count: missing.length }),
+    });
+
+    const shouldContinue = await modal.afterClose.toPromise();
+    return !!shouldContinue;
+  }
+
+  private buildScreens(assessment: FullAssessment): AssessmentScreen[] {
+    const questionnaires = assessment.questionnaireAssessment.questionnaires || [];
+    const grouped = new Map<string, AssessmentScreen>();
+
+    questionnaires.forEach((questionnaire: any, index: number) => {
+      const screenId = questionnaire.screenId || `questionnaire-${questionnaire.occurrenceId || questionnaire._id || index}`;
+      const label = questionnaire.screenLabel || '';
+      if (!grouped.has(screenId)) {
+        grouped.set(screenId, {
+          id: screenId,
+          label,
+          sourceBundleId: questionnaire.sourceBundleId,
+          headerHtml: questionnaire.screenHeaderHtml,
+          footerHtml: questionnaire.screenFooterHtml,
+          bundleHeaderHtml: questionnaire.bundleHeaderHtml,
+          bundleNoticeHtml: questionnaire.bundleNoticeHtml,
+          questionnaires: [],
+        });
+      }
+      grouped.get(screenId).questionnaires.push(questionnaire);
+    });
+
+    return Array.from(grouped.values()).filter((screen) => screen.questionnaires.length);
+  }
+
+  private buildMappedAnswers(answers: Answer[]): any {
+    return (answers || []).reduce((mapped: any, answer: Answer) => {
+      mapped[`${answer.occurrenceId || 'single'}:${answer.question}`] = answer.textValue;
+      return mapped;
+    }, {});
+  }
+
+  private requiredQuestionsForScreen(): Array<{ questionnaire: any; question: Question }> {
+    return (this.currentScreen?.questionnaires || [])
+      .map((questionnaire: any) =>
+        this.questionsForQuestionnaire(questionnaire)
+          .filter((question: any) => question.required === true && question.type !== 'note')
+          .map((question: Question) => ({ questionnaire, question }))
+      )
       .flat();
+  }
 
-    this.skipLogic = currentQuestions
-      .filter((q: { relevant: any; }) => q.relevant)
-      .map((q: Question) => {
-        let visible = true;
-        try {
-          visible = SkipLogic.create(q, questions, this.answers);
-        } catch (err) {
-          this.errorService.handleError(err, {
-            prefix: `Unable to create skip logic of "${q.relevant}" for "${q.name}"`,
-          });
-        }
-        return { questionId: q._id, visible };
-      });
+  private questionsForQuestionnaire(questionnaire: any): Question[] {
+    return (questionnaire.questionGroups || [])
+      .map((group: any) => [
+        ...(group.questions || []),
+        ...(group.uniqueQuestions || []).map((unique: any) => unique.subQuestions || []).flat(),
+      ])
+      .flat();
+  }
+
+  private allQuestions(): Question[] {
+    return (this.assessment?.questionnaireAssessment?.questionnaires || [])
+      .map((questionnaire: any) => this.questionsForQuestionnaire(questionnaire))
+      .flat();
+  }
+
+  private currentOccurrenceAnswers(questionnaire: any): Answer[] {
+    const occurrenceId = questionnaire?.occurrenceId || null;
+    return (this.answers || []).filter((answer: any) => (answer.occurrenceId || null) === occurrenceId);
+  }
+
+  private findAnswer(questionnaire: any, questionId: string): Answer {
+    const occurrenceId = questionnaire?.occurrenceId || null;
+    return (this.answers || []).find(
+      (answer: any) => answer.question === questionId && (answer.occurrenceId || null) === occurrenceId
+    );
+  }
+
+  private scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private htmlText(value: string): string {
+    const document = new DOMParser().parseFromString(value || '', 'text/html');
+    return (document.body.textContent || '').split('\u00a0').join(' ').trim();
   }
 }

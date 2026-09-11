@@ -1,6 +1,6 @@
-$blue: #2c8aa7;
+$blue: #186fb5;
 $orange: #f3b013;
-$green: #89d180;
+$green: #89b3e0;
 
 .progress {
   position: fixed;
@@ -42,16 +42,4 @@ article section + section {
   flex-direction: column;
   min-height: 85vh;
   justify-content: space-between;
-}
-
-.disclaimer {
-  max-width: 900px;
-  text-align: center;
-  border: 1px solid grey;
-  padding: 5px;
-  border-radius: 5px;
-}
-
-.fas {
-  color: red;
 }

@@ -1,0 +1,181 @@
+<nz-modal
+  [nzVisible]="visible"
+  [nzTitle]="event?.title || ('calendar.event' | translate)"
+  [nzOkLoading]="saving"
+  [nzOkDisabled]="!canEdit"
+  (nzOnCancel)="close()"
+  (nzOnOk)="save.emit()"
+>
+  <ng-container *nzModalContent>
+  <div class="edit-form" *ngIf="event">
+    <div class="event-summary">
+      <nz-tag [nzColor]="event.type === 'SESSION' ? 'cyan' : 'blue'">{{ event.type }}</nz-tag>
+      <nz-tag *ngIf="event.sessionNumber">{{ 'dashboard.sessionNumber' | translate:{ number: event.sessionNumber } }}</nz-tag>
+      <nz-tag *ngIf="event.modality">{{ (event.modality === 'ONLINE' ? 'patientsManagement.online' : 'patientsManagement.inPerson') | translate }}</nz-tag>
+      <nz-tag>{{ event.status }}</nz-tag>
+      <nz-tag *ngIf="event.assessmentOrigin">{{ event.assessmentOrigin }}</nz-tag>
+    </div>
+    <div class="form-field" *ngIf="event.type === 'SESSION'">
+      <span>{{ 'calendar.sessionNumber' | translate }}</span>
+      <input
+        nz-input
+        type="number"
+        min="1"
+        [disabled]="!canEdit"
+        [ngModel]="sessionNumber"
+        (ngModelChange)="sessionNumberChange.emit($event ? +$event : undefined)"
+      />
+    </div>
+    <div class="form-field" *ngIf="event.type === 'SESSION'">
+      <span>{{ 'patientsManagement.modality' | translate }}</span>
+      <nz-select
+        [nzDisabled]="!canEdit"
+        [ngModel]="modality"
+        (ngModelChange)="modalityChange.emit($event)"
+      >
+        <nz-option
+          *ngFor="let option of modalityOptions"
+          [nzValue]="option.value"
+          [nzLabel]="option.label | translate"
+        ></nz-option>
+      </nz-select>
+    </div>
+    <div class="form-field">
+      <span>{{ 'calendar.startAt' | translate }}</span>
+      <nz-date-picker
+        [nzDisabled]="!canEdit"
+        [ngModel]="startAt"
+        (ngModelChange)="startAtChange.emit($event)"
+        nzShowTime
+      ></nz-date-picker>
+    </div>
+    <div class="form-field">
+      <span>{{ 'calendar.endAt' | translate }}</span>
+      <nz-date-picker
+        [nzDisabled]="!canEdit"
+        [ngModel]="endAt"
+        (ngModelChange)="endAtChange.emit($event)"
+        nzShowTime
+      ></nz-date-picker>
+    </div>
+    <div class="duration-actions">
+      <span>{{ 'evaluationSchemes.duration' | translate }}</span>
+      <button nz-button nzSize="small" [disabled]="!canEdit" (click)="durationChange.emit(30)">{{ 'calendar.duration30' | translate }}</button>
+      <button nz-button nzSize="small" [disabled]="!canEdit" (click)="durationChange.emit(60)">{{ 'calendar.duration60' | translate }}</button>
+      <button nz-button nzSize="small" [disabled]="!canEdit" (click)="durationChange.emit(90)">{{ 'calendar.duration90' | translate }}</button>
+    </div>
+    <div class="form-field" *ngIf="event.type === 'SESSION'">
+      <span>{{ (event.sessionKind === 'SUPERVISION' ? 'calendar.supervisionFollowUp' : 'calendar.clinicalFollowUp') | translate }}</span>
+      <textarea
+        nz-input
+        rows="5"
+        [disabled]="!canEdit"
+        [ngModel]="description"
+        (ngModelChange)="descriptionChange.emit($event)"
+      ></textarea>
+    </div>
+    <app-recurrence-form
+      *ngIf="event.type === 'SESSION'"
+      [enabled]="restructureEnabled"
+      (enabledChange)="restructureEnabledChange.emit($event)"
+      [every]="restructureEvery"
+      (everyChange)="restructureEveryChange.emit($event)"
+      [unit]="restructureUnit"
+      (unitChange)="restructureUnitChange.emit($event)"
+      [repeatOnDays]="restructureOnDays"
+      (repeatOnDaysChange)="restructureOnDaysChange.emit($event)"
+      [endMode]="restructureEndMode"
+      (endModeChange)="restructureEndModeChange.emit($event)"
+      [endDate]="restructureEndDate"
+      (endDateChange)="restructureEndDateChange.emit($event)"
+      [count]="restructureCount"
+      (countChange)="restructureCountChange.emit($event)"
+      [repeatUnits]="repeatUnits"
+      [weekDayOptions]="weekDayOptions"
+    ></app-recurrence-form>
+    <div class="form-field" *ngIf="event.type === 'SESSION' && activeSchemeApplications?.length">
+      <span>{{ 'calendar.activeSchemes' | translate }}</span>
+      <div class="scheme-application-list">
+        <div class="scheme-application-row" *ngFor="let application of activeSchemeApplications">
+          <div>
+            <strong>{{ application.scheme?.name || ('calendar.schemeWithId' | translate:{ id: application.schemeId }) }}</strong>
+            <small>
+              {{ (application.applicationMode === 'ORIGINAL_SESSION_NUMBER' ? 'patientsManagement.originalStructure' : 'patientsManagement.fromThisSession') | translate }}
+              <ng-container *ngIf="application.startSessionNumber"> · {{ 'calendar.fromSession' | translate:{ number: application.startSessionNumber } }}</ng-container>
+            </small>
+          </div>
+          <button
+            nz-button
+            nzSize="small"
+            nzDanger
+            [disabled]="!canEdit"
+            (click)="stopScheme.emit(application)"
+          >
+            {{ 'calendar.stopFromThisSession' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="form-field" *ngIf="event.type === 'SESSION'">
+      <span>{{ 'calendar.addEvaluationScheme' | translate }}</span>
+      <nz-select
+        [nzDisabled]="!canEdit"
+        [ngModel]="addSchemeIds"
+        (ngModelChange)="addSchemeIdsChange.emit($event || [])"
+        nzAllowClear
+        nzMode="multiple"
+        nzShowSearch
+      >
+        <nz-option
+          *ngFor="let scheme of schemeOptions"
+          [nzValue]="scheme.id"
+          [nzLabel]="scheme.name"
+        ></nz-option>
+      </nz-select>
+    </div>
+    <label class="inline-check" *ngIf="event.type === 'SESSION' && addSchemeIds?.length">
+      <input
+        type="checkbox"
+        [disabled]="!canEdit"
+        [ngModel]="overwriteExistingSchemes"
+        (ngModelChange)="overwriteExistingSchemesChange.emit($event)"
+      />
+      <span>{{ 'calendar.overwritePendingExistingScheme' | translate }}</span>
+    </label>
+    <label class="inline-check" *ngIf="event.type === 'SESSION' && addSchemeIds?.length && restructureEnabled">
+      <input
+        type="checkbox"
+        [disabled]="!canEdit"
+        [ngModel]="addSchemesPropagate"
+        (ngModelChange)="addSchemesPropagateChange.emit($event)"
+      />
+      <span>{{ 'calendar.propagateFutureRestructure' | translate }}</span>
+    </label>
+    <div class="form-field" *ngIf="event.type === 'SESSION' && addSchemeIds?.length">
+      <span>{{ 'calendar.applySchemeBy' | translate }}</span>
+      <nz-select
+        [nzDisabled]="!canEdit"
+        [ngModel]="addSchemesApplicationMode"
+        (ngModelChange)="addSchemesApplicationModeChange.emit($event)"
+      >
+        <nz-option
+          *ngFor="let option of addSchemeApplicationModeOptions"
+          [nzValue]="option.value"
+          [nzLabel]="option.label | translate"
+        ></nz-option>
+      </nz-select>
+    </div>
+    <div class="form-field" *ngIf="event.type === 'ASSESSMENT'">
+      <span>{{ 'core.assessments' | translate }}</span>
+      <input nz-input [ngModel]="event.assessmentId" disabled />
+    </div>
+    <div class="form-field" *ngIf="event.type === 'ASSESSMENT'">
+      <span>{{ 'plannedAssessments.origin' | translate }}</span>
+      <input nz-input [ngModel]="event.assessmentOrigin || '-'" disabled />
+    </div>
+    <button nz-button nzDanger *ngIf="event.deletable" (click)="discardEvent()">
+      {{ (event.type === 'ASSESSMENT' ? 'patientsManagement.discard' : 'patientsManagement.cancellation') | translate }}
+    </button>
+  </div>
+  </ng-container>
+</nz-modal>

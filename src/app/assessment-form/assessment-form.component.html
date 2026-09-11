@@ -18,14 +18,4 @@
       <router-outlet></router-outlet>
     </section>
   </div>
-
-  <span
-    class="disclaimer"
-    *ngIf="
-      AssessmentStatus[assessment.questionnaireAssessment.status] === AssessmentStatus.OPEN_FOR_COMPLETION ||
-      AssessmentStatus[assessment.questionnaireAssessment.status] === AssessmentStatus.PARTIALLY_COMPLETED
-    "
-  >
-    <i class="fas fa-exclamation-triangle"></i>{{ disclaimer?.description }}</span
-  >
 </article>

@@ -13,7 +13,7 @@ import { PermissionsQueries } from '../../../@graphql/queries/permissions';
 export class PermissionsService {
   constructor(private apollo: Apollo) {}
 
-  permissions(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting }): Observable<FetchResult<any>> {
+  permissions(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting | Sorting[] }): Observable<FetchResult<any>> {
     return this.apollo.query({
       query: PermissionsQueries.permissions,
       variables: {

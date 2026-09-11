@@ -15,7 +15,11 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.plannedAssessments',
           permissions: {
-            only: [PermissionKey.VIEW_ASSESSMENTS],
+            only: [
+              PermissionKey.ASSESSMENTS_VIEW_ALL,
+              PermissionKey.ASSESSMENTS_VIEW_DEPARTMENT,
+              PermissionKey.ASSESSMENTS_VIEW_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],
@@ -26,7 +30,14 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.planAssessment',
           permissions: {
-            only: [PermissionKey.VIEW_ASSESSMENTS, PermissionKey.MANAGE_ASSESSMENTS],
+            only: [
+              PermissionKey.ASSESSMENTS_CREATE_ALL,
+              PermissionKey.ASSESSMENTS_CREATE_DEPARTMENT,
+              PermissionKey.ASSESSMENTS_CREATE_ASSIGNED,
+              PermissionKey.ASSESSMENTS_EDIT_ALL,
+              PermissionKey.ASSESSMENTS_EDIT_DEPARTMENT,
+              PermissionKey.ASSESSMENTS_EDIT_ASSIGNED,
+            ],
           },
         },
         canActivate: [PermissionGuard],

@@ -8,12 +8,18 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .date-picker1 {
   // width: 233px;
   width: 100%;
   margin-right: 15px;
+}
+
+.evaluation-title {
+  width: 100%;
+  margin: 10px 0;
 }
 
 
@@ -35,13 +41,34 @@ nz-select{
   min-width: 200px !important;
 }
 
-input[readonly] {
+.unit-row {
+  display: flex;
+  gap: 8px;
+}
+
+.unit-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.unit-row nz-select {
+  flex: 0 0 132px;
+  min-width: 132px !important;
+}
+
+input[nz-input][readonly] {
   border: 0;
   padding: 0;
 }
 
-nz-date-picker [nzInputReadOnly] {
-  margin: 0 8px 12px 0;
+nz-date-picker {
+  max-width: 100%;
+  width: 100%;
+}
+
+nz-date-picker.ant-picker {
+  display: inline-flex;
+  min-width: 180px;
 }
 
 .buttons {
@@ -75,3 +102,52 @@ nz-date-picker [nzInputReadOnly] {
   align-items: center;
 }
 
+:host-context(.assessment-edit-modal) {
+  display: block;
+}
+
+:host-context(.assessment-edit-modal) div[nz-row] {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:host-context(.assessment-edit-modal) div[nz-col] {
+  flex: none;
+  max-width: 100%;
+  width: 100%;
+}
+
+:host-context(.assessment-edit-modal) form[nz-form] {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+:host-context(.assessment-edit-modal) nz-form-item,
+:host-context(.assessment-edit-modal) nz-form-control,
+:host-context(.assessment-edit-modal) nz-input-group,
+:host-context(.assessment-edit-modal) nz-select,
+:host-context(.assessment-edit-modal) nz-date-picker,
+:host-context(.assessment-edit-modal) .input-class,
+:host-context(.assessment-edit-modal) .date-picker1,
+:host-context(.assessment-edit-modal) .questionnaire {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+:host-context(.assessment-edit-modal) nz-date-picker.ant-picker {
+  min-width: 180px !important;
+}
+
+:host-context(.assessment-edit-modal) .date-picker,
+:host-context(.assessment-edit-modal) .email-label-wrapper {
+  align-items: stretch;
+  display: grid;
+  gap: 10px;
+  justify-content: stretch;
+}
+
+:host-context(.assessment-edit-modal) .button {
+  width: auto;
+}

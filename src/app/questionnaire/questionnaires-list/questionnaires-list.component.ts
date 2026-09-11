@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
-const CryptoJS = require('crypto-js');
 import { environment } from '@env/environment';
 import { NzModalService } from 'ng-zorro-antd';
+import { TranslateService } from '@ngx-translate/core';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 @Component({
   selector: 'app-questionnaires-list',
@@ -40,7 +41,7 @@ export class QuestionnairesListComponent implements OnInit {
   ];
   activeIndex: number;
 
-  constructor(private router: Router, private modal: NzModalService) {}
+  constructor(private router: Router, private modal: NzModalService, private translate: TranslateService) {}
 
   ngOnInit(): void {}
 
@@ -51,15 +52,12 @@ export class QuestionnairesListComponent implements OnInit {
   navigateToQuestionnaire() {
     if (this.activeIndex === undefined) {
       this.modal.error({
-        nzTitle: 'Cannot start Questionnaire!!',
-        nzContent: 'please select a questionnaire to be answered',
+        nzTitle: this.translate.instant('questionnaireRuntime.cannotStartQuestionnaire'),
+        nzContent: this.translate.instant('questionnaireRuntime.selectQuestionnaire'),
       });
       return;
     }
-    const dataString = CryptoJS.AES.encrypt(
-      JSON.stringify(this.questionnaires[this.activeIndex]),
-      environment.secretKey
-    ).toString();
+    const dataString = encryptRouteObject(this.questionnaires[this.activeIndex], environment.secretKey);
     this.router.navigate(['/assessment/questionnaire'], {
       queryParams: {
         questionnaire: dataString,

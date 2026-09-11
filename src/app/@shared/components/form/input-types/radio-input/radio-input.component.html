@@ -1,4 +1,4 @@
-<label>
+<label *ngIf="showLabel">
   <b>
     <ng-container *ngIf="field.translationPath; else plainTitle">
       <span [translate]="field.translationPath"></span>
@@ -10,12 +10,13 @@
 <ng-container *ngIf="inputMode" [formGroup]="inputGroup">
   <nz-radio-group
     [(ngModel)]="field.value"
+    [nzDisabled]="field.disabled"
     [formControlName]="field.name"
     [attr.autocomplete]="autoFill"
     [ngClass]="{ 'has-error': inputIsValid() === false, 'has-success': inputIsValid() === true }"
     (ngModelChange)="handleValueChange($event)"
   >
-    <label nz-radio *ngFor="let option of field.options" [nzValue]="option.value">{{ option.label }}</label>
+    <label nz-radio *ngFor="let option of field.options" [nzValue]="option.value">{{ option.label | translate }}</label>
   </nz-radio-group>
 </ng-container>
 <div class="field-value" *ngIf="!inputMode">
@@ -25,5 +26,5 @@
   *ngIf="this.inputGroup.controls[this.field.name].dirty && this.inputGroup.controls[this.field.name].invalid"
   translate
 >
-  {{ field.validationMessage }}
+  {{ field.validationMessage | translate }}
 </p>

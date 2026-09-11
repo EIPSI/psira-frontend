@@ -5,11 +5,11 @@ import { DisclaimersColumns } from '@app/pages/administration/@tables/disclaimer
 import { finalize } from 'rxjs/operators';
 import { DisclaimersService } from '@app/pages/administration/@services/disclaimers.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
-import { DisclaimerForm } from '../@forms/disclaimer.form';
 import { Convert } from '../../../@shared/classes/convert';
 import { UpdateOneUserInput, User } from '@app/pages/user-management/@types/user';
 import { UsersService } from '@app/pages/user-management/@services/users.service';
 import { AuthService } from '@app/auth/auth.service';
+import { AngularEditorConfig } from '@kolkov/angular-editor';
 
 @Component({
   selector: 'app-disclaimers',
@@ -20,20 +20,19 @@ export class DisclaimersComponent implements OnInit {
   public data: Partial<Disclaimers>[];
   public columns: TableColumn<Partial<Disclaimers>>[] = DisclaimersColumns;
   public disclaimers: Disclaimers;
-  public disclaimerForm = DisclaimerForm;
-  public showCancelButton = false;
-  public loadingMessage = '';
   public isLoading = false;
   public acceptedTerm = true;
   user: User;
+  public description = '';
+  public editorConfig: AngularEditorConfig = {
+    minHeight: '320px',
+    editable: true,
+    sanitize: false,
+  };
 
   // form properties
   public showCreateDisclaimer = false;
-  public populateForm = false;
-  public resetForm = false;
   public disclaimer: Disclaimers;
-
-  // public disclaimerForm = DisclaimerForm;
 
   constructor(
     private disclaimersService: DisclaimersService,
@@ -50,21 +49,18 @@ export class DisclaimersComponent implements OnInit {
   public openCreatePanel(disclaimer?: Disclaimers): void {
     if (disclaimer) {
       this.disclaimer = disclaimer;
+      this.description = disclaimer.description || '';
     }
     this.showCreateDisclaimer = true;
-    this.populateForm = true;
-    this.resetForm = true;
   }
 
   public closeCreatePanel(): void {
     this.disclaimer = null;
+    this.description = '';
     this.showCreateDisclaimer = false;
-    this.populateForm = false;
-    this.resetForm = false;
   }
 
   public handleRowClick(event: any) {
-    this.populateForm = true;
     this.openCreatePanel(event);
   }
 
@@ -99,14 +95,7 @@ export class DisclaimersComponent implements OnInit {
   }
 
   public updateDisclaimer() {
-    const inputValues: any = {};
-    this.disclaimerForm.groups[0]?.fields?.map((field) => {
-      inputValues[field.name] = field.value;
-    });
-
-    const { description } = inputValues;
-
-    const sendResult = { type: this.disclaimer.type, description };
+    const sendResult = { type: this.disclaimer.type, description: this.description || '' };
 
     return this.disclaimersService
       .updateDisclaimer(sendResult)
@@ -130,7 +119,6 @@ export class DisclaimersComponent implements OnInit {
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         ({ data }: any) => {
-          console.log(data);
           this.data = data.disclaimers.map((disclaimers: any) => Convert.toFormattedDisclaimer(disclaimers));
         },
         (err) => this.errorService.handleError(err, { prefix: 'Unable to load departments' })

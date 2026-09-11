@@ -1,0 +1,96 @@
+.department-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.template-tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.email-preview {
+  h2 {
+    font-size: 18px;
+    margin: 0 0 16px;
+  }
+}
+
+.email-preview__body {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+}
+
+.shortcut-groups {
+  display: grid;
+  gap: 16px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.shortcut-group {
+  display: grid;
+  gap: 8px;
+
+  h3 {
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+.shortcut-row {
+  align-items: start;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 16px;
+  height: auto;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: normal;
+  width: 100%;
+
+  &:hover {
+    border-color: #1677ff;
+  }
+
+  .shortcut-variable {
+    display: grid;
+    gap: 2px;
+    white-space: normal;
+  }
+
+  .shortcut-token {
+    align-items: center;
+    cursor: text;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    user-select: text;
+  }
+
+  code {
+    color: #1677ff;
+    user-select: text;
+    word-break: break-word;
+  }
+
+  .shortcut-description {
+    color: #667085;
+    font-size: 12px;
+    white-space: normal;
+  }
+
+  .shortcut-copy {
+    flex: 0 0 auto;
+    height: 24px;
+    line-height: 22px;
+    min-width: 24px;
+    padding: 0;
+    user-select: none;
+  }
+}

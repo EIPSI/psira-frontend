@@ -1,8 +1,111 @@
 <app-form
   [isLoading]="isLoading"
   [loadingMessage]="loadingMessage"
-  [inputMode]="perms.permissionsOnly([PK.MANAGE_SYSCONF])"
+  [inputMode]="perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
   [showEditButton]="false"
   (submitForm)="saveSettings($event)"
   [form]="settingsForm"
 ></app-form>
+
+<nz-card class="integration-card" [nzTitle]="'systemSettings.globalFeatures' | translate">
+  <div class="integration-status">
+    <nz-tag [nzColor]="featureSettings.notificationsEnabled !== false ? 'green' : 'default'">
+      {{ (featureSettings.notificationsEnabled !== false ? 'systemSettings.notificationsActive' : 'systemSettings.notificationsInactive') | translate }}
+    </nz-tag>
+    <nz-tag [nzColor]="featureSettings.informedConsentEnabled !== false ? 'green' : 'default'">
+      {{ (featureSettings.informedConsentEnabled !== false ? 'systemSettings.informedConsentActive' : 'systemSettings.informedConsentInactive') | translate }}
+    </nz-tag>
+  </div>
+
+  <label class="integration-field">
+    <span>{{ 'systemSettings.notifications' | translate }}</span>
+    <div class="feature-toggle-control">
+      <nz-switch
+        [(ngModel)]="featureSettings.notificationsEnabled"
+        [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+      ></nz-switch>
+      <small>{{ 'systemSettings.notificationsDescription' | translate }}</small>
+    </div>
+  </label>
+
+  <label class="integration-field">
+    <span>{{ 'systemSettings.informedConsent' | translate }}</span>
+    <div class="feature-toggle-control">
+      <nz-switch
+        [(ngModel)]="featureSettings.informedConsentEnabled"
+        [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+      ></nz-switch>
+      <small>{{ 'systemSettings.informedConsentDescription' | translate }}</small>
+    </div>
+  </label>
+
+  <button
+    nz-button
+    nzType="primary"
+    [nzLoading]="featureSaving"
+    [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+    (click)="saveFeatureSettings()"
+  >
+    {{ 'systemSettings.saveFeatures' | translate }}
+  </button>
+</nz-card>
+
+<nz-card class="integration-card" [nzTitle]="'systemSettings.googleCalendar' | translate">
+  <div class="integration-status">
+    <nz-tag [nzColor]="googleCalendarSettings.googleCalendarEnabled ? 'green' : 'default'">
+      {{ (googleCalendarSettings.googleCalendarEnabled ? 'core.active' : 'systemSettings.hidden') | translate }}
+    </nz-tag>
+    <span>
+      {{ 'systemSettings.googleCalendarDescription' | translate }}
+    </span>
+  </div>
+
+  <label class="integration-field">
+    <span>{{ 'systemSettings.enableIntegration' | translate }}</span>
+    <nz-switch
+      [(ngModel)]="googleCalendarSettings.googleCalendarEnabled"
+      [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+    ></nz-switch>
+  </label>
+
+  <label class="integration-field">
+    <span>{{ 'systemSettings.clientId' | translate }}</span>
+    <input
+      nz-input
+      [(ngModel)]="googleCalendarSettings.googleCalendarClientId"
+      [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+      [placeholder]="'systemSettings.clientIdPlaceholder' | translate"
+    />
+  </label>
+
+  <label class="integration-field">
+    <span>{{ 'systemSettings.clientSecret' | translate }}</span>
+    <input
+      nz-input
+      type="password"
+      [(ngModel)]="googleCalendarSettings.googleCalendarClientSecret"
+      [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+      [placeholder]="'systemSettings.clientSecretPlaceholder' | translate"
+    />
+  </label>
+
+  <label class="integration-field">
+    <span>{{ 'systemSettings.redirectUri' | translate }}</span>
+    <input
+      nz-input
+      [(ngModel)]="googleCalendarSettings.googleCalendarRedirectUri"
+      [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+      [placeholder]="'systemSettings.redirectUriPlaceholder' | translate"
+    />
+  </label>
+
+  <button
+    nz-button
+    nzType="primary"
+    [nzLoading]="googleCalendarSaving"
+    [disabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
+    (click)="saveGoogleCalendarSettings()"
+  >
+    {{ 'systemSettings.saveGoogleCalendar' | translate }}
+  </button>
+</nz-card>

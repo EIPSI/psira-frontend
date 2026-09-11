@@ -1,0 +1,26 @@
+<app-master-data-list
+  [columns]="columns"
+  [data]="filteredModels"
+  [loading]="loading"
+  [actions]="actions"
+  (executeAction)="onAction($event)"
+  (rowClick)="open($event.source)"
+  (sort)="onSort($event)"
+>
+  <div class="actions-left" actions-left>
+    <app-master-data-search (search)="onSearch($event)"></app-master-data-search>
+    <button nz-button type="button" (click)="resetFilters()">{{ 'core.reset' | translate }}</button>
+  </div>
+  <ng-container actions-right>
+    <button
+      nz-button
+      nzType="primary"
+      nzShape="circle"
+      (click)="create()"
+      [title]="'informedConsent.createModel' | translate"
+      *ngIf="perms.permissionsOnly(PK.INFORMED_CONSENT_MODELS_EDIT_DEPARTMENT)"
+    >
+      <i nz-icon nzType="plus"></i>
+    </button>
+  </ng-container>
+</app-master-data-list>

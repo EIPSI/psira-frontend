@@ -1,0 +1,79 @@
+.institutional-section {
+  margin-bottom: 24px;
+
+  h2 {
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 18px;
+    margin: 24px 0 0;
+    padding-bottom: 10px;
+  }
+}
+
+.institutional-definition-fields {
+  display: block;
+}
+
+.institutional-field {
+  align-items: flex-start;
+  border-bottom: 1px solid #eef0f3;
+  display: flex;
+  gap: 24px;
+  margin-bottom: 0;
+  min-height: 44px;
+  padding: 10px 0;
+  width: 100%;
+
+  input,
+  nz-select {
+    width: 100%;
+  }
+}
+
+.institutional-label {
+  color: #6b7280;
+  flex: 0 0 28%;
+  min-width: 180px;
+  padding-top: 6px;
+}
+
+.institutional-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.required-mark {
+  color: red;
+}
+
+.field-value {
+  min-height: 32px;
+  padding-top: 6px;
+}
+
+.automation-preview {
+  border-top: 1px solid #eef0f3;
+  margin-top: 24px;
+  max-width: 760px;
+  padding-top: 20px;
+}
+
+.automation-preview-help {
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.automation-trigger-group {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.automation-preview-item {
+  display: flex;
+  gap: 8px;
+
+  span {
+    color: #6b7280;
+    margin-left: 6px;
+  }
+}

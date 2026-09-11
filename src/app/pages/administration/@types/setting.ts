@@ -7,6 +7,15 @@ export interface Setting {
   maxLoginAttempts: number;
   passwordLifeTimeInDays: number;
   passwordReUseCutoffInDays: number;
-  sendWelcomeEmails: boolean;
-  welcomeEmailTemplateId: number;
+  notificationLogRetentionDays: number;
+  accessTokenRetentionDays: number;
+  evaluationAutomationRunRetentionDays: number;
+  treatmentFinalizationUndoWindowDays: number;
+  patientCaseManagerAssignableHierarchyRank: number;
+  notificationsEnabled?: boolean;
+  informedConsentEnabled?: boolean;
+  googleCalendarEnabled?: boolean;
+  googleCalendarClientId?: string;
+  googleCalendarClientSecret?: string;
+  googleCalendarRedirectUri?: string;
 }

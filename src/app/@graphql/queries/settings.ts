@@ -11,8 +11,16 @@ const settings = gql`
       maxLoginAttempts
       passwordLifeTimeInDays
       passwordReUseCutoffInDays
-      sendWelcomeEmails
-      welcomeEmailTemplateId
+      notificationLogRetentionDays
+      accessTokenRetentionDays
+      evaluationAutomationRunRetentionDays
+      treatmentFinalizationUndoWindowDays
+      patientCaseManagerAssignableHierarchyRank
+      notificationsEnabled
+      informedConsentEnabled
+      googleCalendarEnabled
+      googleCalendarClientId
+      googleCalendarRedirectUri
     }
   }
 `;

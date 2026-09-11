@@ -3,22 +3,25 @@ import { FormattedQuestionnaireVersion, QuestionnaireStatus } from '../@types/qu
 
 export const QuestionnaireVersionsColumns: TableColumn<FormattedQuestionnaireVersion>[] = [
   {
-    title: 'Abbreviation',
+    title: 'questionnaires.abbreviation',
     name: 'abbreviation',
     translationPath: 'questionnaires.abbreviation',
+    sort: true,
   },
   {
-    title: 'Language',
+    title: 'questionnaires.language',
     name: 'language',
     translationPath: 'questionnaires.language',
+    sort: true,
   },
   {
     title: 'ID',
     name: '_id',
     translationPath: 'questionnaires.id',
+    sort: true,
   },
   {
-    title: 'Name',
+    title: 'questionnaires.name',
     name: 'name',
     translationPath: 'questionnaires.name',
     sort: true,
@@ -28,7 +31,7 @@ export const QuestionnaireVersionsColumns: TableColumn<FormattedQuestionnaireVer
     },
   },
   {
-    title: 'Status',
+    title: 'questionnaires.formattedStatus',
     name: 'formattedStatus',
     translationPath: 'questionnaires.formattedStatus',
     altName: 'status',
@@ -46,33 +49,38 @@ export const QuestionnaireVersionsColumns: TableColumn<FormattedQuestionnaireVer
     },
   },
   {
-    title: 'Keywords',
+    title: 'questionnaires.keywords',
     name: 'keywords',
     translationPath: 'questionnaires.keywords',
     render: 'array',
+    sort: true,
   },
   {
-    title: 'Time to complete',
+    title: 'questionnaires.timeToComplete',
     name: 'timeToComplete',
     translationPath: 'questionnaires.timeToComplete',
+    sort: true,
   },
   {
-    title: 'Copyright',
+    title: 'questionnaires.copyright',
     name: 'copyright',
     translationPath: 'questionnaires.copyright',
+    sort: true,
   },
   {
-    title: 'Website',
+    title: 'questionnaires.website',
     name: 'website',
     translationPath: 'questionnaires.website',
+    sort: true,
   },
   {
-    title: 'License',
+    title: 'questionnaires.license',
     name: 'license',
     translationPath: 'questionnaires.license',
+    sort: true,
   },
   {
-    title: 'Created at',
+    title: 'questionnaires.createdAt',
     name: 'createdAt',
     translationPath: 'questionnaires.createdAt',
     render: 'date',

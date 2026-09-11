@@ -9,8 +9,8 @@ import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { environment } from '@env/environment';
 import { Router } from '@angular/router';
 import { LocationStrategy } from '@angular/common';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-patient-dashboard',
@@ -78,7 +78,7 @@ export class PatientDashboardComponent implements OnInit {
   }
 
   startAssessment(assessment: FormattedAssessment) {
-    const cryptoId = CryptoJS.AES.encrypt(assessment.uuid, environment.secretKey).toString();
+    const cryptoId = encryptRoutePayload(assessment.uuid, environment.secretKey);
     const tree = this.router.createUrlTree(['/assessment/overview'], {
       queryParams: {
         assessment: cryptoId

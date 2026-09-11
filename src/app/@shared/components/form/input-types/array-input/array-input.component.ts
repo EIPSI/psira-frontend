@@ -13,6 +13,8 @@ export class ArrayInputComponent implements OnInit {
   @Output() rowRemoved: EventEmitter<any> = new EventEmitter<any>();
   @Input() inputMode = false;
   @Input() autoFill = false;
+  @Input() showLabel = true;
+  @Input() formalLayout = false;
   inputsString: string;
 
   constructor() {}

@@ -1,0 +1,239 @@
+<nz-spin [nzSpinning]="loading">
+  <div class="ci-page-header">
+    <div>
+      <h2>{{ (modelId ? 'informedConsent.editModel' : 'informedConsent.newModel') | translate }}</h2>
+      <p>{{ 'informedConsent.modelEditorHelp' | translate }}</p>
+    </div>
+    <div>
+      <button nz-button type="button" *ngIf="modelId" (click)="showVersions()">{{ 'questionnaires.versions' | translate }}</button>
+      <button nz-button type="button" (click)="previewCurrent()">{{ 'questionnaireBundles.preview' | translate }}</button>
+      <button nz-button type="button" (click)="cancel()">{{ 'core.cancel' | translate }}</button>
+      <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="save()">{{ 'core.save' | translate }}</button>
+    </div>
+  </div>
+
+  <form nz-form [formGroup]="form" class="ci-form">
+    <nz-form-item>
+      <nz-form-label nzRequired>{{ 'core.name' | translate }}</nz-form-label>
+      <nz-form-control [nzErrorTip]="'forms.common.requiredField' | translate"><input nz-input formControlName="name" /></nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label nzRequired>{{ 'informedConsent.versionTitle' | translate }}</nz-form-label>
+      <nz-form-control><input nz-input formControlName="versionTitle" (input)="markVersionTitleTouched()" /></nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label nzRequired>{{ 'informedConsent.submitButtonLabel' | translate }}</nz-form-label>
+      <nz-form-control [nzErrorTip]="'forms.common.requiredField' | translate"><input nz-input formControlName="submitButtonLabel" /></nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>{{ 'informedConsent.thankYouPage' | translate }}</nz-form-label>
+      <nz-form-control>
+        <angular-editor
+          [config]="editorConfig"
+          [placeholder]="'informedConsent.thankYouPlaceholder' | translate"
+          formControlName="thankYouHtml"
+        ></angular-editor>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>{{ 'departments.departments' | translate }}</nz-form-label>
+      <nz-form-control>
+        <nz-select formControlName="departmentIds" nzMode="multiple" nzAllowClear nzShowSearch [nzPlaceHolder]="'informedConsent.noDepartmentsModelDefault' | translate">
+          <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
+        </nz-select>
+        <div class="department-actions">
+          <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">{{ 'core.addAll' | translate }}</button>
+          <button nz-button nzSize="small" type="button" (click)="removeDepartments()">{{ 'core.removeAll' | translate }}</button>
+        </div>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>{{ 'core.description' | translate }}</nz-form-label>
+      <nz-form-control><textarea nz-input rows="2" formControlName="description"></textarea></nz-form-control>
+    </nz-form-item>
+    <div class="ci-switch-row">
+      <label><nz-switch formControlName="active"></nz-switch> {{ 'core.active' | translate }}</label>
+    </div>
+
+    <h3>{{ 'informedConsent.blocks' | translate }}</h3>
+    <div class="block-actions">
+      <button nz-button type="button" (click)="addBlock('TEXT')">{{ 'informedConsent.addText' | translate }}</button>
+      <button nz-button type="button" (click)="addBlock('QUESTION')">{{ 'informedConsent.addQuestion' | translate }}</button>
+    </div>
+    <div formArrayName="blocks">
+      <div class="ci-card" *ngFor="let block of blocks.controls; let i = index" [formGroupName]="i">
+        <div class="ci-card__header">
+          <strong>{{ 'informedConsent.blockNumber' | translate: { number: i + 1 } }}</strong>
+          <div>
+            <nz-select formControlName="blockType" nzSize="small" (ngModelChange)="changeBlockType(i, $event)">
+              <nz-option *ngFor="let type of blockTypes" [nzValue]="type.value" [nzLabel]="type.label | translate"></nz-option>
+            </nz-select>
+            <button nz-button nzType="link" type="button" (click)="removeBlock(i)">{{ 'core.delete' | translate }}</button>
+          </div>
+        </div>
+
+        <ng-container [ngSwitch]="block.get('blockType')?.value">
+          <div *ngSwitchCase="'TEXT'" class="text-block">
+            <input nz-input formControlName="title" [placeholder]="'questionnaireBundles.optionalVisibleTitle' | translate" />
+            <div class="text-block__editor">
+              <angular-editor [config]="editorConfig" [placeholder]="'informedConsent.consentText' | translate" formControlName="content"></angular-editor>
+            </div>
+            <div class="text-block__actions">
+              <button nz-button nzSize="small" type="button" class="text-block__shortcuts" (click)="showBlockShortcuts(i)">
+                {{ 'language.variables' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <div *ngSwitchCase="'QUESTION'" class="question-block">
+            <nz-select formControlName="kinds" nzMode="multiple" nzAllowClear [nzPlaceHolder]="'informedConsent.relatedConsentKinds' | translate">
+              <nz-option *ngFor="let kind of kinds" [nzValue]="kind" [nzLabel]="kindLabel[kind] | translate"></nz-option>
+            </nz-select>
+            <input nz-input formControlName="label" [placeholder]="'informedConsent.question' | translate" />
+            <textarea nz-input rows="2" formControlName="helpText" [placeholder]="'informedConsent.optionalHelpText' | translate"></textarea>
+            <nz-select formControlName="questionType">
+              <nz-option *ngFor="let type of questionTypes" [nzValue]="type" [nzLabel]="type"></nz-option>
+            </nz-select>
+            <label><nz-switch formControlName="required"></nz-switch> {{ 'evaluationSchemes.required' | translate }}</label>
+            <div formArrayName="answerOptions">
+              <div class="ci-option" *ngFor="let option of options(i).controls; let oi = index" [formGroupName]="oi">
+                <input nz-input formControlName="label" [placeholder]="'informedConsent.answer' | translate" />
+                <nz-select formControlName="resolution">
+                  <nz-option *ngFor="let resolution of resolutions" [nzValue]="resolution" [nzLabel]="resolution"></nz-option>
+                </nz-select>
+                <label class="ci-option__switch">
+                  <nz-switch formControlName="blocksUsageOnSelection"></nz-switch>
+                  {{ 'informedConsent.blocksPsiraOnSelection' | translate }}
+                </label>
+                <button nz-button nzType="link" type="button" (click)="removeOption(i, oi)">{{ 'core.delete' | translate }}</button>
+              </div>
+            </div>
+            <button nz-button type="button" (click)="addOption(i)">{{ 'informedConsent.addAnswer' | translate }}</button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </form>
+</nz-spin>
+
+<nz-modal
+  [(nzVisible)]="shortcutsVisible"
+  [nzTitle]="'language.availableVariables' | translate"
+  [nzOkText]="'core.close' | translate"
+  [nzCancelText]="null"
+  [nzWidth]="920"
+  (nzOnCancel)="shortcutsVisible = false"
+  (nzOnOk)="shortcutsVisible = false"
+>
+  <div *nzModalContent class="ci-shortcuts">
+    <div *ngFor="let group of shortcutGroups; trackBy: trackShortcutGroup" class="ci-shortcuts__group">
+      <h4>{{ shortcutGroupTitle(group.group) }}</h4>
+      <div
+        class="ci-shortcuts__row"
+        role="button"
+        tabindex="0"
+        *ngFor="let shortcut of group.items; trackBy: trackShortcut"
+        (click)="insertShortcut(shortcut.token)"
+        (keydown.enter)="insertShortcut(shortcut.token)"
+        (keydown.space)="insertShortcut(shortcut.token); $event.preventDefault()"
+      >
+        <span class="shortcut-variable">
+          <strong>{{ shortcut.label || shortcut.token }}</strong>
+          <span class="shortcut-token" (mousedown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
+            <code>{{ shortcut.token }}</code>
+            <button
+              nz-button
+              nzSize="small"
+              nzShape="circle"
+              type="button"
+              class="shortcut-copy"
+              [title]="'language.copyVariable' | translate"
+              (mousedown)="$event.stopPropagation()"
+              (click)="copyShortcut(shortcut.token, $event)"
+            >
+              <span nz-icon nzType="copy" nzTheme="outline"></span>
+            </button>
+          </span>
+        </span>
+        <span class="shortcut-description">{{ shortcut.description }}</span>
+      </div>
+    </div>
+  </div>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="previewVisible"
+  [nzTitle]="previewTitle"
+  [nzOkText]="'core.close' | translate"
+  [nzCancelText]="null"
+  [nzWidth]="860"
+  (nzOnCancel)="previewVisible = false"
+  (nzOnOk)="previewVisible = false"
+>
+  <div *nzModalContent class="ci-consent-preview">
+    <nz-tabset>
+      <nz-tab [nzTitle]="'userManagement.user' | translate">
+        <ng-container *ngTemplateOutlet="consentPreview; context: { blocks: previewBlocks, technical: false }"></ng-container>
+      </nz-tab>
+      <nz-tab [nzTitle]="'informedConsent.technical' | translate">
+        <ng-container *ngTemplateOutlet="consentPreview; context: { blocks: previewBlocks, technical: true }"></ng-container>
+      </nz-tab>
+    </nz-tabset>
+  </div>
+</nz-modal>
+
+<nz-drawer
+  [nzVisible]="versionsVisible"
+  [nzTitle]="'questionnaires.versions' | translate"
+  nzPlacement="right"
+  [nzWidth]="720"
+  (nzOnClose)="versionsVisible = false"
+>
+  <div *nzDrawerContent class="ci-version-browser">
+    <aside>
+      <button
+        nz-button
+        type="button"
+        *ngFor="let version of sortedVersions()"
+        [nzType]="selectedVersion?.id === version.id ? 'primary' : 'default'"
+        (click)="selectVersion(version)"
+      >
+        v{{ version.versionNumber }} - {{ version.title }}
+        <small>{{ version.publishedAt | formatDateTime }}</small>
+      </button>
+    </aside>
+    <section *ngIf="selectedVersion">
+      <h3>{{ selectedVersion.title }}</h3>
+      <nz-tabset>
+        <nz-tab [nzTitle]="'userManagement.user' | translate">
+          <ng-container *ngTemplateOutlet="consentPreview; context: { blocks: versionBlocks(selectedVersion), technical: false }"></ng-container>
+        </nz-tab>
+        <nz-tab [nzTitle]="'informedConsent.technical' | translate">
+          <ng-container *ngTemplateOutlet="consentPreview; context: { blocks: versionBlocks(selectedVersion), technical: true }"></ng-container>
+        </nz-tab>
+      </nz-tabset>
+    </section>
+  </div>
+</nz-drawer>
+
+<ng-template #consentPreview let-blocks="blocks" let-technical="technical">
+  <article class="ci-preview-block" *ngFor="let block of blocks">
+    <ng-container [ngSwitch]="block.blockType">
+      <section *ngSwitchCase="'TEXT'">
+        <h4 *ngIf="block.title">{{ block.title }}</h4>
+        <div class="ci-preview-text" [innerHTML]="block.content"></div>
+      </section>
+      <section *ngSwitchCase="'QUESTION'" class="ci-preview-question">
+        <h4>{{ block.label }}</h4>
+        <p *ngIf="block.helpText">{{ block.helpText }}</p>
+        <p class="ci-preview-kind" *ngIf="technical">{{ 'informedConsent.consentKind' | translate }}: {{ consentKindNames(block.kinds, block.kind) }}</p>
+        <ul>
+          <li *ngFor="let option of block.answerOptions">
+            <span>{{ option.label }}</span>
+            <small *ngIf="technical">{{ resolutionLabel(option.resolution) }}</small>
+          </li>
+        </ul>
+      </section>
+    </ng-container>
+  </article>
+</ng-template>

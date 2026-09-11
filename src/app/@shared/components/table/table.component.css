@@ -32,3 +32,39 @@
   font-size: 2em;
   text-shadow: 0 1px 2px #fff;
 }
+
+.responsive-table-toolbar {
+  row-gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .responsive-table-toolbar {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .responsive-table-toolbar > div,
+  .responsive-table-toolbar nz-input-group,
+  .responsive-table-toolbar nz-range-picker,
+  .responsive-table-toolbar button {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .responsive-table-toolbar > div:last-child > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .responsive-paging {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .responsive-paging > div {
+    flex: 1 1 140px;
+  }
+}

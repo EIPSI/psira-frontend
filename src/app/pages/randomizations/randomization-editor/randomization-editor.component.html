@@ -1,0 +1,152 @@
+<button nz-button routerLink="/psira/randomizations" nzType="secondary">{{ 'core.back' | translate }}</button>
+
+<form nz-form [formGroup]="form" class="randomization-form">
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'randomizations.title' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <input nz-input formControlName="name" [placeholder]="'randomizations.namePlaceholder' | translate" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'core.status' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <nz-switch
+        formControlName="active"
+        [nzCheckedChildren]="'core.active' | translate"
+        [nzUnCheckedChildren]="'core.inactive' | translate"
+      ></nz-switch>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'randomizations.type' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <nz-select formControlName="type" (ngModelChange)="onTypeChange($event)">
+        <nz-option [nzValue]="RT.LOW_LEVEL" [nzLabel]="typeLabel[RT.LOW_LEVEL]"></nz-option>
+        <nz-option [nzValue]="RT.HIGH_LEVEL" [nzLabel]="typeLabel[RT.HIGH_LEVEL]"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'core.departments' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="selectAllDepartments()">
+        {{ 'core.selectAll' | translate }}
+      </button>
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="removeAllDepartments()">
+        {{ 'core.clearAll' | translate }}
+      </button>
+      <nz-checkbox-wrapper class="department-list">
+        <label
+          *ngFor="let option of listOfDepartments"
+          [nzValue]="option.id"
+          [ngModel]="departmentIsSelected(option.id)"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="toggleDepartment(option.id, $event)"
+          nz-checkbox
+        >
+          {{ option.name }}
+        </label>
+      </nz-checkbox-wrapper>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-alert
+    nzType="info"
+    nzShowIcon
+    class="randomization-notice"
+    [nzMessage]="'randomizations.notice' | translate"
+  ></nz-alert>
+
+  <section class="structure-header">
+    <div>
+      <h3>{{ 'randomizations.itemsToRandomize' | translate }}</h3>
+      <p>{{ typeLabel[selectedType] }} / {{ itemCountLabel }} / {{ 'randomizations.singleSelection' | translate }}</p>
+    </div>
+    <div class="toolbar" *ngIf="selectedType === RT.LOW_LEVEL">
+      <button type="button" nz-button nzSize="small" (click)="addQuestionnaire()">{{ 'randomizations.addQuestionnaire' | translate }}</button>
+      <button type="button" nz-button nzSize="small" (click)="addQuestionnaireBundle()">{{ 'randomizations.addBundle' | translate }}</button>
+    </div>
+    <div class="toolbar" *ngIf="selectedType === RT.HIGH_LEVEL">
+      <button type="button" nz-button nzSize="small" (click)="addEvaluationScheme()">{{ 'randomizations.addFixedScheme' | translate }}</button>
+    </div>
+  </section>
+
+  <section class="randomization-builder">
+    <div class="item-row header-row">
+      <span>{{ 'randomizations.item' | translate }}</span>
+      <span>{{ 'randomizations.selection' | translate }}</span>
+      <span>{{ 'randomizations.proportion' | translate }}</span>
+      <span>{{ 'randomizations.order' | translate }}</span>
+    </div>
+
+    <div class="item-row" *ngFor="let item of items; let i = index">
+      <span class="item-kind">
+        {{
+          item.itemType === RIT.QUESTIONNAIRE
+            ? ('core.questionnaire' | translate)
+            : item.itemType === RIT.QUESTIONNAIRE_BUNDLE
+            ? ('randomizations.bundle' | translate)
+            : ('randomizations.fixedScheme' | translate)
+        }}
+      </span>
+
+      <ng-container [ngSwitch]="item.itemType">
+        <nz-select
+          *ngSwitchCase="RIT.QUESTIONNAIRE"
+          [(ngModel)]="item.questionnaireId"
+          [ngModelOptions]="{ standalone: true }"
+          nzShowSearch
+        >
+          <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
+        </nz-select>
+
+        <nz-select
+          *ngSwitchCase="RIT.QUESTIONNAIRE_BUNDLE"
+          [(ngModel)]="item.questionnaireBundleId"
+          [ngModelOptions]="{ standalone: true }"
+          nzShowSearch
+        >
+          <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+        </nz-select>
+
+        <nz-select
+          *ngSwitchCase="RIT.EVALUATION_SCHEME"
+          [(ngModel)]="item.evaluationSchemeId"
+          [ngModelOptions]="{ standalone: true }"
+          nzShowSearch
+        >
+          <nz-option *ngFor="let scheme of fixedSchemes" [nzValue]="scheme.id" [nzLabel]="scheme.name"></nz-option>
+        </nz-select>
+      </ng-container>
+
+      <nz-input-number
+        [(ngModel)]="item.weight"
+        [ngModelOptions]="{ standalone: true }"
+        [nzMin]="1"
+        [nzStep]="1"
+      ></nz-input-number>
+
+      <div class="row-actions">
+        <button type="button" nz-button nzShape="circle" (click)="moveItem(i, -1)" [disabled]="i === 0">
+          <i nz-icon nzType="up"></i>
+        </button>
+        <button type="button" nz-button nzShape="circle" (click)="moveItem(i, 1)" [disabled]="i === items.length - 1">
+          <i nz-icon nzType="down"></i>
+        </button>
+        <button type="button" nz-button nzDanger nzShape="circle" (click)="removeItem(i)">
+          <i nz-icon nzType="delete"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="form-actions">
+    <button nz-button routerLink="/psira/randomizations">{{ 'core.cancel' | translate }}</button>
+    <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="save()">
+      {{ (isUpdateMode ? 'core.update' : 'core.create') | translate }}
+    </button>
+  </div>
+</form>

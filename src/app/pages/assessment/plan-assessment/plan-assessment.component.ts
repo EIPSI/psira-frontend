@@ -24,15 +24,22 @@ import { AssessmentAdministrationService } from '@app/pages/administration/@serv
 import { AssessmentAdministration } from '@app/pages/administration/@types/assessment-administration';
 import { LocationStrategy } from '@angular/common';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { EmailTemplatesService } from '@app/pages/administration/@services/email-templates.service';
-import { DEFAULT_PAGE_SIZE } from '@app/@shared/@modules/master-data/@types/list';
 import { QuestionnaireBundlesService } from '@app/pages/questionnaire-management/@services/questionnaire-bundles.service';
 import { RolesService } from '@app/pages/administration/@services/roles.service';
 import { Role } from '@app/pages/administration/@types/role';
 import { UsersService } from '@app/pages/user-management/@services/users.service';
 import { CaregiversPatientService } from '@app/pages/patients-management/@services/caregivers-patient.service';
+import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
+import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
+import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
+
+enum AssessmentContentType {
+  QUESTIONNAIRE = 'QUESTIONNAIRE',
+  QUESTIONNAIRE_BUNDLE = 'QUESTIONNAIRE_BUNDLE',
+  RANDOMIZATION = 'RANDOMIZATION',
+}
 
 @Component({
   selector: 'app-plan-assessment',
@@ -45,6 +52,17 @@ export class PlanAssessmentComponent implements OnInit {
   public selectedAssessment: any = null;
   listOfBundles: any = [];
   listOfSelectedBundles: any = [];
+  listOfRandomizations: RandomizationRule[] = [];
+  listOfSelectedRandomizations: number[] = [];
+  public assessmentContentType = AssessmentContentType.QUESTIONNAIRE;
+  public ACT = AssessmentContentType;
+  public timeUnits = [
+    { value: 'MINUTES', label: 'time.minutes' },
+    { value: 'HOURS', label: 'time.hours' },
+    { value: 'DAYS', label: 'time.days' },
+    { value: 'WEEKS', label: 'time.weeks' },
+    { value: 'MONTHS', label: 'time.months' },
+  ];
   public typeSelected: any = 'PATIENT';
   public dataToSelect: any = [];
   public users: User[] = [];
@@ -64,111 +82,107 @@ export class PlanAssessmentComponent implements OnInit {
   @Input() public caregivers: SelectedCaregiver[] = [];
   public selectedInformant: any = null;
   public selectedClinician: User;
+  public selectedResponsibleUserIds: number[] = [];
+  public responsibleUserOptions: User[] = [];
   public fullAssessment: FullAssessment;
   public assessmentForm: FormGroup;
   public editMode = true;
   public isLoading = false;
   public departments: Department[] = [];
-  public emailTemplates: any[] = [];
-  public emailTemplatesRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
-    paging: { first: DEFAULT_PAGE_SIZE },
-    filter: {},
-    sorting: [],
-  };
+  public contentTargetMessage = 'planAssessment.selectTargetForContent';
   public deliveryDate: any = null;
   public expireDate: any = null;
   public maxLength = 200;
   public checked = false;
   public isUpdate: boolean;
-  public hasEmail = false;
   url: any = '';
   options = [
     {
-      label: 'Mother',
+      label: 'planAssessment.relations.mother',
       value: 'Mother',
     },
     {
-      label: 'Father',
+      label: 'planAssessment.relations.father',
       value: 'Father',
     },
     {
-      label: 'Grandparent',
+      label: 'planAssessment.relations.grandparent',
       value: 'Grandparent',
     },
     {
-      label: 'Uncle/Aunt',
+      label: 'planAssessment.relations.uncleAunt',
       value: 'Uncle/Aunt',
     },
     {
-      label: 'Extended Family',
+      label: 'planAssessment.relations.extendedFamily',
       value: 'Extended Family',
     },
     {
-      label: 'Legal Guardian',
+      label: 'planAssessment.relations.legalGuardian',
       value: 'Legal Guardian',
     },
     {
-      label: 'Family Doctor',
+      label: 'planAssessment.relations.familyDoctor',
       value: 'Family Doctor',
     },
     {
-      label: 'External Paediatrician',
+      label: 'planAssessment.relations.externalPaediatrician',
       value: 'External Paediatrician',
     },
     {
-      label: 'External Psychotherapist',
+      label: 'planAssessment.relations.externalPsychotherapist',
       value: 'External Psychotherapist',
     },
     {
-      label: 'External Psychologist',
+      label: 'planAssessment.relations.externalPsychologist',
       value: 'External Psychologist',
     },
     {
-      label: 'External Social Worker',
+      label: 'planAssessment.relations.externalSocialWorker',
       value: 'External Social Worker',
     },
     {
-      label: 'External Nurse',
+      label: 'planAssessment.relations.externalNurse',
       value: 'External Nurse',
     },
     {
-      label: 'Emergency Department',
+      label: 'planAssessment.relations.emergencyDepartment',
       value: 'Emergency Department',
     },
     {
-      label: 'Friend',
+      label: 'planAssessment.relations.friend',
       value: 'Friend',
     },
     {
-      label: 'Neighbour',
+      label: 'planAssessment.relations.neighbour',
       value: 'Neighbour',
     },
     {
-      label: 'Teacher',
+      label: 'planAssessment.relations.teacher',
       value: 'Teacher',
     },
     {
-      label: 'School Representative',
+      label: 'planAssessment.relations.schoolRepresentative',
       value: 'School Representative',
     },
     {
-      label: 'Advisor',
+      label: 'planAssessment.relations.advisor',
       value: 'Advisor',
     },
     {
-      label: 'Legal Advisor',
+      label: 'planAssessment.relations.legalAdvisor',
       value: 'Legal Advisor',
     },
     {
-      label: 'Assistance',
+      label: 'planAssessment.relations.assistance',
       value: 'Assistance',
     },
     {
-      label: 'Supervisor',
+      label: 'planAssessment.relations.supervisor',
       value: 'Supervisor',
     },
     {
-      label: 'Other',
+      label: 'planAssessment.relations.other',
       value: 'Other',
     },
   ];
@@ -179,17 +193,18 @@ export class PlanAssessmentComponent implements OnInit {
     private nzMessage: NzMessageService,
     private errorService: ErrorHandlerService,
     private activatedRoute: ActivatedRoute,
-    private emailTemplatesService: EmailTemplatesService,
     private bundlesService: QuestionnaireBundlesService,
     private departmentsService: DepartmentsService,
     private assessmentAdministrationService: AssessmentAdministrationService,
     private rolesService: RolesService,
     private usersService: UsersService,
     private caregiversPatientService: CaregiversPatientService,
+    private randomizationsService: RandomizationsService,
     public perms: AppPermissionsService,
     private router: Router,
     private locationStrategy: LocationStrategy,
-    private clipboard: Clipboard
+    private clipboard: Clipboard,
+    private translate: TranslateService
   ) {}
 
   public ngOnInit(): void {
@@ -197,7 +212,7 @@ export class PlanAssessmentComponent implements OnInit {
     this.getRoles();
     this.initAssessment();
     this.userAutoSelect();
-    this.hasEmail = environment.email;
+    if (this.patient?.id && !this.isUpdate) this.onPatientSelect(this.patient);
   }
 
   get datesFieldAsFormArray(): FormArray {
@@ -209,6 +224,7 @@ export class PlanAssessmentComponent implements OnInit {
       this.formBuilder.group({
         expirationDate: [null],
         deliveryDate: [null],
+        reminderMinutes: [''],
       })
     );
   }
@@ -230,18 +246,33 @@ export class PlanAssessmentComponent implements OnInit {
   public userAutoSelect() {
     const userLocalStorage = JSON.parse(localStorage.getItem('user')) as User;
     this.selectedClinician = userLocalStorage;
+    this.selectedResponsibleUserIds = userLocalStorage?.id ? [userLocalStorage.id] : [];
+    this.assessmentForm?.patchValue({
+      clinicianId: userLocalStorage?.id,
+      responsibleUserIds: this.selectedResponsibleUserIds,
+    });
   }
 
   public onSubmitAssessment() {
+    this.syncResponsibleUsers();
     if (this.assessmentForm.invalid) return;
-    const questionnaires = this.selectedQuestionnaires.map((q) => q._id);
+    if (!this.primaryResponsibleUserId()) return;
+    const content = this.assessmentContentPayload();
     const { informant, informantPatient, ...rest } = this.assessmentForm.value;
     this.applySelectedResponder();
     const newAssessmentData = {
       ...rest,
-      questionnaires,
+      ...content,
+      clinicianId: this.primaryResponsibleUserId(),
+      responsibleUserIds: this.selectedResponsibleUserIds,
     };
-
+    newAssessmentData.dates = (newAssessmentData.dates || []).slice(0, 1).map((date: any) => ({
+      ...date,
+      reminderMinutes: this.parseReminderMinutes(date.reminderMinutes, date.reminderUnit),
+      reminderUnit: date.reminderUnit || 'MINUTES',
+    }));
+    newAssessmentData.reminderMinutes = this.parseReminderMinutes(newAssessmentData.reminderMinutes, newAssessmentData.reminderUnit);
+    newAssessmentData.reminderUnit = newAssessmentData.reminderUnit || 'MINUTES';
     if (this.responderRoleCode !== `CAREGIVER`) {
       newAssessmentData.informantCaregiverRelation = null;
     }
@@ -268,11 +299,11 @@ export class PlanAssessmentComponent implements OnInit {
 
     action.subscribe(
       () => {
-        this.nzMessage.success('Assessment created', { nzDuration: 3000 });
+        this.nzMessage.success(this.translate.instant('planAssessment.assessmentSaved'), { nzDuration: 3000 });
         this.editMode = false;
         this.router.navigate(['/psira/assessments/planned-assessments']);
       },
-      (err) => this.errorService.handleError(err, { prefix: 'Unable to create assessment ' })
+      (err) => this.errorService.handleError(err, { prefix: this.translate.instant('planAssessment.unableCreateAssessment') })
     );
   }
 
@@ -281,10 +312,33 @@ export class PlanAssessmentComponent implements OnInit {
     this.assessmentForm.patchValue({ questionnaires });
   }
 
+  public onAssessmentContentTypeChange(type: AssessmentContentType): void {
+    this.assessmentContentType = type;
+    if (type !== AssessmentContentType.QUESTIONNAIRE) this.selectedQuestionnaires = [];
+    if (type !== AssessmentContentType.QUESTIONNAIRE_BUNDLE) this.listOfSelectedBundles = [];
+    if (type !== AssessmentContentType.RANDOMIZATION) this.listOfSelectedRandomizations = [];
+    this.assessmentForm.patchValue({
+      questionnaires: this.selectedQuestionnaires,
+      questionnaireBundles: this.selectedBundleIds(),
+      randomizationRuleIds: this.selectedRandomizationRuleIds(),
+    });
+  }
+
   public onUserSelect(user: User) {
     this.assessmentForm.patchValue({
       clinicianId: user?.id,
     });
+  }
+
+  public userLabel(user: User): string {
+    return [user?.firstName, user?.middleName, user?.lastName]
+      .filter((part) => !!part)
+      .join(' ') || user?.username || user?.email || this.translate.instant('planAssessment.userWithId', {id: user?.id});
+  }
+
+  public onResponsibleUsersChange(userIds: number[]): void {
+    this.selectedResponsibleUserIds = userIds || [];
+    this.syncResponsibleUsers();
   }
 
   public onTargetUserSelect(user: User) {
@@ -294,6 +348,9 @@ export class PlanAssessmentComponent implements OnInit {
     });
     this.defaultResponderToTargetRole();
     this.populateResponderOptions();
+    this.departments = user?.departments || [];
+    this.clearAssessmentContent();
+    this.loadContentOptions();
   }
 
   public onTargetRoleChange(roleCode: string): void {
@@ -307,6 +364,8 @@ export class PlanAssessmentComponent implements OnInit {
     this.targetUsers = [];
     this.responderOptions = [];
     this.selectedInformant = null;
+    this.departments = [];
+    this.clearAssessmentContent();
     this.defaultResponderToTargetRole();
     this.assessmentForm.patchValue({
       patientId: null,
@@ -348,7 +407,7 @@ export class PlanAssessmentComponent implements OnInit {
         ({ data }: any) => {
           this.targetUsers = data.users.edges.map((edge: any) => edge.node);
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load users' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadUsers') })
       );
   }
 
@@ -363,6 +422,10 @@ export class PlanAssessmentComponent implements OnInit {
     });
     this.defaultResponderToTargetRole();
     this.populateResponderOptions();
+    this.departments = user.departments || [];
+    this.loadSupervisorResponsibleUsers(user.id);
+    this.clearAssessmentContent();
+    this.loadContentOptions();
   }
 
   public onTargetTypeChange(type: 'patient' | 'user') {
@@ -381,6 +444,67 @@ export class PlanAssessmentComponent implements OnInit {
     this.assessmentForm.get('targetUserId').updateValueAndValidity();
   }
 
+  private initializePatientResponsibleUsers(): void {
+    this.responsibleUserOptions = this.patient?.caseManagers || [];
+    this.initializeResponsibleUsersFromOptions();
+  }
+
+  private loadSupervisorResponsibleUsers(therapistId: number): void {
+    if (!therapistId) return;
+    this.usersService.getSupervisors({ first: 50, therapistId }).subscribe(
+      ({ data }: any) => {
+        this.responsibleUserOptions = (data?.supervisors?.edges || []).map((edge: any) => edge.node);
+        this.initializeResponsibleUsersFromOptions();
+      },
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadSupervisors') })
+    );
+  }
+
+  private initializeResponsibleUsersFromOptions(): void {
+    if (this.isUpdate && this.fullAssessment) {
+      this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
+    } else {
+      const currentUser = JSON.parse(localStorage.getItem('user')) as User;
+      if (currentUser?.id && this.responsibleUserOptions.some((user) => user.id === currentUser.id)) {
+        this.selectedResponsibleUserIds = [currentUser.id];
+      } else {
+        this.selectedResponsibleUserIds = this.responsibleUserOptions[0]?.id ? [this.responsibleUserOptions[0].id] : [];
+      }
+    }
+    this.syncResponsibleUsers();
+  }
+
+  private assessmentResponsibleUserIds(): number[] {
+    const responsibleUsers = (this.fullAssessment as any)?.responsibleUsers || [];
+    const ids: number[] = responsibleUsers.map((user: User) => user.id);
+    if (!ids.length && this.fullAssessment?.clinicianId) ids.push(this.fullAssessment.clinicianId);
+    return Array.from(new Set(ids.filter((id: number) => !!id)));
+  }
+
+  private syncResponsibleUsers(): void {
+    const allowedIds = this.responsibleUserOptions.map((user) => user.id);
+    const selectedIds = this.selectedResponsibleUserIds || [];
+    const hasRestrictedTarget = !!this.assessmentForm?.value?.patientId || !!this.assessmentForm?.value?.targetUserId;
+    const filteredIds = allowedIds.length
+      ? selectedIds.filter((id: number) => allowedIds.includes(id))
+      : hasRestrictedTarget ? [] : selectedIds;
+    this.selectedResponsibleUserIds = Array.from(new Set(filteredIds));
+    this.selectedClinician = this.primaryResponsibleUser() || this.selectedClinician;
+    this.assessmentForm.patchValue({
+      clinicianId: this.primaryResponsibleUserId(),
+      responsibleUserIds: this.selectedResponsibleUserIds,
+    });
+  }
+
+  private primaryResponsibleUserId(): number | undefined {
+    return this.selectedResponsibleUserIds[0];
+  }
+
+  private primaryResponsibleUser(): User | undefined {
+    const userId = this.primaryResponsibleUserId();
+    return this.responsibleUserOptions.find((user) => user.id === userId);
+  }
+
   public onPatientSelect(patient: Patient) {
     this.patient = patient;
     this.selectedPatient = patient;
@@ -389,7 +513,9 @@ export class PlanAssessmentComponent implements OnInit {
       targetUserId: patient?.userId,
     });
     this.defaultResponderToTargetRole();
+    this.initializePatientResponsibleUsers();
     this.users = [];
+    this.clearAssessmentContent();
 
     if (this.fullAssessment?.patientId || this.patient?.id) {
       this.getUserDepartments({
@@ -399,8 +525,6 @@ export class PlanAssessmentComponent implements OnInit {
       this.populateResponderOptions();
     }
 
-    this.emailTemplates = [];
-    this.getPatientEmailTemplates(this.fullAssessment?.patientId || this.patient?.id);
   }
 
   goBack() {
@@ -433,34 +557,69 @@ export class PlanAssessmentComponent implements OnInit {
             });
           });
 
-          this.getBundles();
+          this.loadContentOptions();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load departments' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadDepartments') })
       );
   }
 
-  getPatientEmailTemplates(id: number) {
-    this.emailTemplatesService.getPatientEmailTemplates(id).subscribe((data: any) => {
-      this.emailTemplates = data?.data?.getPatientEmailTemplates;
-      if (this.editMode === true) {
-        this.assessmentForm.patchValue({ mailTemplateId: this.emailTemplates[0]?.id });
-      }
-    });
-  }
-
   getBundles() {
+    if (!this.hasContentTarget()) {
+      this.listOfBundles = [];
+      return;
+    }
     const departmentIds = this.departments.map((el) => el.id);
     this.bundlesService.getQuestionnairesBundles({ departmentIds }).subscribe((data: any) => {
       this.listOfBundles = data.data.getQuestionnaireBundles.edges;
     });
   }
 
-  onBundleSelection() {
-    this.selectedQuestionnaires = this.selectedQuestionnaires.concat(
-      this.listOfSelectedBundles.map((bundle: any) => bundle.node.questionnaires).flat()
-    );
-    this.selectedQuestionnaires = this.filterUniqueQuestionnaires(this.selectedQuestionnaires);
-    this.assessmentForm.patchValue({ questionnaires: this.selectedQuestionnaires });
+  getRandomizations() {
+    if (!this.hasContentTarget()) {
+      this.listOfRandomizations = [];
+      return;
+    }
+    const departmentIds = this.departments.map((el) => el.id);
+    this.randomizationsService
+      .getRandomizations({
+        paging: { first: 50 },
+        departmentIds,
+        filter: {
+          type: { eq: RandomizationRuleType.LOW_LEVEL },
+        },
+      })
+      .subscribe(
+        ({ edges }) => {
+          this.listOfRandomizations = edges.map((edge: any) => edge.node).filter((rule: RandomizationRule) => rule.active);
+        },
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadRandomizations') })
+      );
+  }
+
+  onBundleSelection(selection?: any) {
+    if (selection !== undefined) {
+      this.listOfSelectedBundles = selection ? [selection] : [];
+    }
+    this.assessmentForm.patchValue({ questionnaireBundles: this.selectedBundleIds() });
+  }
+
+  onRandomizationSelection(selection?: any) {
+    if (selection !== undefined) {
+      this.listOfSelectedRandomizations = selection ? [selection] : [];
+    }
+    this.assessmentForm.patchValue({ randomizationRuleIds: this.selectedRandomizationRuleIds() });
+  }
+
+  selectedBundleIds(): string[] {
+    return (this.listOfSelectedBundles || [])
+      .map((bundle: any) => bundle?.node?._id || bundle?._id || bundle)
+      .filter((id: string) => !!id);
+  }
+
+  selectedRandomizationRuleIds(): number[] {
+    return (this.listOfSelectedRandomizations || [])
+      .map((randomization: any) => randomization?.id || randomization)
+      .filter((id: number) => !!id);
   }
 
   filterUniqueQuestionnaires(questionnaires: any) {
@@ -506,25 +665,28 @@ export class PlanAssessmentComponent implements OnInit {
 
     try {
       const raw = this.activatedRoute.snapshot.queryParamMap.get('assessment');
-      const bytes = CryptoJS.AES.decrypt(raw, environment.secretKey);
-      assessmentId = JSON.parse(bytes.toString(CryptoJS.enc.Utf8)).id;
+      const bytes = decryptRoutePayload(raw, environment.secretKey);
+      assessmentId = JSON.parse(bytes).id;
 
       this.isUpdate = true;
 
       this.assessmentForm = this.formBuilder.group({
         assessmentTypeId: [null, Validators.required],
+        name: [null],
         patientId: [null, Validators.required],
         targetUserId: [null],
         responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
-        questionnaires: [null, Validators.required],
+        responsibleUserIds: [[]],
+        questionnaires: [[]],
+        questionnaireBundles: [[]],
+        randomizationRuleIds: [[]],
         informantType: [null],
         informantPatient: [null],
         informantClinicianId: [null],
         informantCaregiverRelation: [null],
-        emailReminder: [null],
-        receiverEmail: [null],
-        mailTemplateId: [null],
+        reminderMinutes: [''],
+        reminderUnit: ['MINUTES'],
         deliveryDate: [null],
         expirationDate: [null],
         dates: this.formBuilder.array([]),
@@ -533,22 +695,27 @@ export class PlanAssessmentComponent implements OnInit {
     } catch {
       this.assessmentForm = this.formBuilder.group({
         assessmentTypeId: [null, Validators.required],
+        name: [null],
         patientId: [null, Validators.required],
         targetUserId: [null],
         responderUserId: [null, Validators.required],
         clinicianId: [null, Validators.required],
-        questionnaires: [null, Validators.required],
+        responsibleUserIds: [[]],
+        questionnaires: [[]],
+        questionnaireBundles: [[]],
+        randomizationRuleIds: [[]],
         informantType: [null],
         informantPatient: [null],
         informantClinicianId: [null],
         informantCaregiverRelation: [null],
-        emailReminder: [null],
-        receiverEmail: [null],
-        mailTemplateId: [null],
+        reminderMinutes: [''],
+        reminderUnit: ['MINUTES'],
         dates: this.formBuilder.array([
           this.formBuilder.group({
             expirationDate: [null],
             deliveryDate: [null],
+            reminderMinutes: [''],
+            reminderUnit: ['MINUTES'],
           }),
         ]),
         note: [null],
@@ -570,7 +737,7 @@ export class PlanAssessmentComponent implements OnInit {
           this.selectedPatient = this.fullAssessment.patient;
         }
         this.assessmentForm.patchValue({
-          emailReminder: this.fullAssessment.emailReminder,
+          name: this.fullAssessment.name || null,
           assessmentTypeId: {
             label: this.fullAssessment.assessmentType?.name,
             value: this.fullAssessment.assessmentType?.id,
@@ -580,31 +747,53 @@ export class PlanAssessmentComponent implements OnInit {
           targetUserId: this.fullAssessment.targetUserId,
           responderUserId: this.fullAssessment.responderUserId,
           clinicianId: this.fullAssessment.clinicianId,
+          responsibleUserIds: this.assessmentResponsibleUserIds(),
           informantPatient: this.fullAssessment.patient,
           informantClinicianId: this.fullAssessment.informantClinician?.id || null,
           informantCaregiverRelation: this.fullAssessment.informantCaregiverRelation,
           deliveryDate: this.fullAssessment.deliveryDate,
           expirationDate: this.fullAssessment.expirationDate,
-          receiverEmail: this.fullAssessment.receiverEmail,
-          mailTemplateId: this.fullAssessment.mailTemplateId,
+          reminderMinutes: this.minutesListToUnitText(this.fullAssessment.reminderMinutes || [], this.fullAssessment.reminderUnit),
+          reminderUnit: this.fullAssessment.reminderUnit || 'MINUTES',
           note: this.fullAssessment.note,
           questionnaires: this.fullAssessment.questionnaireAssessment?.questionnaires,
+          questionnaireBundles: (this.fullAssessment.questionnaireAssessment as any)?.questionnaireBundles?.map(
+            (bundle: any) => bundle._id
+          ) || [],
+          randomizationRuleIds: (this.fullAssessment.questionnaireAssessment as any)?.randomizationRuleIds || [],
         });
         // @ts-ignore
         this.dates.push(
           this.formBuilder.group({
             deliveryDate: this.fullAssessment.deliveryDate,
             expirationDate: this.fullAssessment.expirationDate,
+            reminderMinutes: this.minutesListToUnitText(this.fullAssessment.reminderMinutes || [], this.fullAssessment.reminderUnit),
+            reminderUnit: this.fullAssessment.reminderUnit || 'MINUTES',
           })
         );
 
         this.selectedQuestionnaires = this.fullAssessment.questionnaireAssessment?.questionnaires;
+        this.listOfSelectedBundles = (this.fullAssessment.questionnaireAssessment as any)?.questionnaireBundles?.map(
+          (bundle: any) => bundle._id
+        ) || [];
+        this.listOfSelectedRandomizations = (this.fullAssessment.questionnaireAssessment as any)?.randomizationRuleIds || [];
+        this.assessmentContentType = this.inferAssessmentContentType();
         this.selectedPatient = this.fullAssessment.patient;
+        this.selectedResponsibleUserIds = this.assessmentResponsibleUserIds();
         this.selectedClinician = this.fullAssessment.clinician;
         this.fullAssessment = this.fullAssessment;
         this.patient = this.fullAssessment.patient;
+        this.departments = this.fullAssessment.patientId
+          ? (this.fullAssessment.patient?.departments || [])
+          : (this.fullAssessment.targetUser?.departments || []);
+        this.loadContentOptions();
         this.selectedAssessment = this.fullAssessment.assessmentType?.id;
         this.targetRoleCode = this.fullAssessment.patientId ? 'PATIENT' : this.fullAssessment.targetUser?.roles?.[0]?.code ?? 'PATIENT';
+        if (this.fullAssessment.patientId) {
+          this.initializePatientResponsibleUsers();
+        } else if (this.fullAssessment.targetUserId) {
+          this.loadSupervisorResponsibleUsers(this.fullAssessment.targetUserId);
+        }
         this.responderRoleCode = this.fullAssessment.informantType || 'PATIENT';
         this.typeSelected = this.responderRoleCode;
         if (this.fullAssessment.informantClinician) {
@@ -639,7 +828,7 @@ export class PlanAssessmentComponent implements OnInit {
         }
       },
       (error) =>
-        this.errorService.handleError(error, { prefix: `Unable to load the assessment with ID "${assessmentId}"` })
+        this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadAssessmentById', {id: assessmentId}) })
     );
   }
 
@@ -665,9 +854,9 @@ export class PlanAssessmentComponent implements OnInit {
     const canAssignAnyAssessmentUser =
       currentUser?.isSuperUser ||
       currentUser?.roles?.some((role) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
-      currentUser?.permissions?.some((permission) => permission.name === PermissionKey.ASSIGN_ANY_ASSESSMENT_USER) ||
+      currentUser?.permissions?.some((permission) => permission.name === PermissionKey.ASSESSMENTS_ASSIGN_ALL) ||
       currentUser?.roles?.some((role) =>
-        role.permissions?.some((permission) => permission.name === PermissionKey.ASSIGN_ANY_ASSESSMENT_USER)
+        role.permissions?.some((permission) => permission.name === PermissionKey.ASSESSMENTS_ASSIGN_ALL)
       );
 
     this.rolesService.roles({ paging: { first: 50 } }).subscribe(
@@ -685,7 +874,7 @@ export class PlanAssessmentComponent implements OnInit {
           this.onTargetRoleChange(defaultRole.code);
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadRoles') })
     );
   }
 
@@ -706,7 +895,7 @@ export class PlanAssessmentComponent implements OnInit {
             this.populateResponderOptions();
           }
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load caregivers' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadCaregivers') })
       );
   }
 
@@ -758,6 +947,63 @@ export class PlanAssessmentComponent implements OnInit {
     }
   }
 
+  private inferAssessmentContentType(): AssessmentContentType {
+    if (this.listOfSelectedRandomizations.length) return AssessmentContentType.RANDOMIZATION;
+    if (this.listOfSelectedBundles.length) return AssessmentContentType.QUESTIONNAIRE_BUNDLE;
+    return AssessmentContentType.QUESTIONNAIRE;
+  }
+
+  private assessmentContentPayload(): {
+    questionnaires: string[];
+    questionnaireBundles: string[];
+    randomizationRuleIds: number[];
+  } {
+    return {
+      questionnaires:
+        this.assessmentContentType === AssessmentContentType.QUESTIONNAIRE
+          ? this.selectedQuestionnaires.map((q) => q._id)
+              .slice(0, 1)
+          : [],
+      questionnaireBundles:
+        this.assessmentContentType === AssessmentContentType.QUESTIONNAIRE_BUNDLE
+          ? this.selectedBundleIds().slice(0, 1)
+          : [],
+      randomizationRuleIds:
+        this.assessmentContentType === AssessmentContentType.RANDOMIZATION
+          ? this.selectedRandomizationRuleIds().slice(0, 1)
+          : [],
+    };
+  }
+
+  public hasContentTarget(): boolean {
+    return !!(this.selectedPatient?.id || this.selectedTargetUser?.id || this.fullAssessment?.id);
+  }
+
+  public targetDepartmentIds(): number[] {
+    return (this.departments || []).map((department) => department.id);
+  }
+
+  private loadContentOptions(): void {
+    if (!this.hasContentTarget()) {
+      this.listOfBundles = [];
+      this.listOfRandomizations = [];
+      return;
+    }
+    this.getBundles();
+    this.getRandomizations();
+  }
+
+  private clearAssessmentContent(): void {
+    this.selectedQuestionnaires = [];
+    this.listOfSelectedBundles = [];
+    this.listOfSelectedRandomizations = [];
+    this.assessmentForm.patchValue({
+      questionnaires: [],
+      questionnaireBundles: [],
+      randomizationRuleIds: [],
+    });
+  }
+
   private loadDepartmentResponders(patientId: number, roleCode: string): void {
     this.departmentsService
       .departments({ filter: { and: [{ patients: { id: { eq: patientId } } }] } })
@@ -784,7 +1030,7 @@ export class PlanAssessmentComponent implements OnInit {
           this.selectedInformant = this.responderOptions.length ? this.responderOptions[0].value : null;
           this.applySelectedResponder();
         },
-        (error) => this.errorService.handleError(error, { prefix: 'Unable to load responders' })
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('planAssessment.unableLoadResponders') })
       );
   }
 
@@ -800,7 +1046,7 @@ export class PlanAssessmentComponent implements OnInit {
   }
 
   private generateAssessmentURL(assesmentUuid: string): string {
-    const cryptoId = CryptoJS.AES.encrypt(assesmentUuid, environment.secretKey).toString();
+    const cryptoId = encryptRoutePayload(assesmentUuid, environment.secretKey);
     const tree = this.router.createUrlTree(['/assessment/overview'], { queryParams: { assessment: cryptoId } });
     return this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
   }
@@ -814,7 +1060,52 @@ export class PlanAssessmentComponent implements OnInit {
         ({ data }: any) => {
           this.data = data.activeAssessmentTypes;
         },
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to load assessment type' })
+        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('planAssessment.unableLoadAssessmentType') })
       );
+  }
+
+  private parseReminderMinutes(value: string | number[], unit: string = 'MINUTES'): number[] {
+    if (Array.isArray(value)) {
+      return value.filter((part) => Number.isFinite(part) && part >= 0);
+    }
+    return (value || '')
+      .split(',')
+      .map((part) => Number(part.trim()))
+      .filter((part) => Number.isFinite(part) && part >= 0)
+      .map((part) => this.unitAmountToMinutes(part, unit));
+  }
+
+  private unitAmountToMinutes(value: number, unit: string = 'MINUTES'): number {
+    switch (unit) {
+      case 'HOURS':
+        return value * 60;
+      case 'DAYS':
+        return value * 24 * 60;
+      case 'WEEKS':
+        return value * 7 * 24 * 60;
+      case 'MONTHS':
+        return value * 30 * 24 * 60;
+      default:
+        return value;
+    }
+  }
+
+  private minutesToUnitAmount(minutes: number, unit: string = 'MINUTES'): number {
+    switch (unit) {
+      case 'HOURS':
+        return Number(minutes || 0) / 60;
+      case 'DAYS':
+        return Number(minutes || 0) / (24 * 60);
+      case 'WEEKS':
+        return Number(minutes || 0) / (7 * 24 * 60);
+      case 'MONTHS':
+        return Number(minutes || 0) / (30 * 24 * 60);
+      default:
+        return Number(minutes || 0);
+    }
+  }
+
+  private minutesListToUnitText(minutes: number[] = [], unit: string = 'MINUTES'): string {
+    return (minutes || []).map((minute) => this.minutesToUnitAmount(minute, unit)).join(', ');
   }
 }

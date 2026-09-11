@@ -31,6 +31,7 @@ const createPatient = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }
@@ -112,6 +113,7 @@ const archiveOnePatient = gql`
         lastName
         phone
         email
+        caregiverId
         createdAt
         updatedAt
       }
@@ -193,6 +195,89 @@ const updatePatient = gql`
         lastName
         phone
         email
+        caregiverId
+        createdAt
+        updatedAt
+      }
+      informants {
+        id
+        firstName
+        middleName
+        lastName
+        phone
+        email
+        address
+        createdAt
+        updatedAt
+      }
+      caseManagers {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+        deletedAt
+      }
+      departments {
+        id
+        name
+        description
+        createdAt
+        updatedAt
+      }
+      status {
+        id
+        name
+        description
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+const changePatientStatus = gql`
+  mutation($input: ChangePatientStatusInput!) {
+    changePatientStatus(input: $input) {
+      id
+      statusId
+      medicalRecordNo
+      firstName
+      middleName
+      lastName
+      phone
+      phone2
+      email
+      addressStreet
+      addressNumber
+      addressApartment
+      addressPlace
+      addressPostalCode
+      addressCountryCode
+      gender
+      birthDate
+      birthCountryCode
+      nationality
+      createdAt
+      updatedAt
+      emergencyContacts {
+        id
+        firstName
+        middleName
+        lastName
+        phone
+        email
+        caregiverId
         createdAt
         updatedAt
       }
@@ -340,6 +425,7 @@ export const PatientsMutations = {
   archiveOnePatient,
   restorePatient,
   updatePatient,
+  changePatientStatus,
   deletePatient,
   addInformantsToPatient,
   removeStatusFromPatient,

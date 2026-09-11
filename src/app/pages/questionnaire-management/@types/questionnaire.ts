@@ -18,6 +18,7 @@ export interface UpdateQuestionnaireInput {
   description?: string;
   status?: QuestionnaireStatus;
   keywords?: string[];
+  departmentIds?: number[];
 }
 
 export interface CreateQuestionnaireInput extends UpdateQuestionnaireInput {
@@ -41,6 +42,7 @@ export interface QuestionnaireVersion {
     language: string;
     abbreviation: string;
   };
+  departmentIds?: number[];
   questionGroups: Array<{
     label: string;
     questions: Question[];
@@ -53,4 +55,5 @@ export interface FormattedQuestionnaireVersion extends QuestionnaireVersion {
   language: string;
   abbreviation: string;
   questionnaireTitle?: string;
+  departmentNames?: string;
 }

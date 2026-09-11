@@ -18,24 +18,25 @@ export class ReportsComponent implements OnInit {
   public isLoading = false;
   public columns: TableColumn<Partial<Reports>>[] = [
     {
-      title: 'Name',
+      title: 'core.name',
       name: 'name',
       translationPath: 'tables.reports.name',
       sort: true,
     },
     {
-      title: 'Description',
+      title: 'tables.reports.description',
       name: 'description',
       translationPath: 'tables.reports.description',
+      sort: true,
     },
     {
-      title: 'Report Type',
+      title: 'tables.reports.resources',
       name: 'resources',
       translationPath: 'tables.reports.resources',
       sort: true,
     },
     {
-      title: 'Shiny App',
+      title: 'tables.reports.appName',
       name: 'appName',
       translationPath: 'tables.reports.appName',
       sort: true,

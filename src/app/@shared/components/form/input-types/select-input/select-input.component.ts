@@ -1,27 +1,38 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Field } from '@shared/components/form/@types/field';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-select-input',
   templateUrl: './select-input.component.html',
   styleUrls: ['./select-input.component.scss'],
 })
-export class SelectInputComponent implements OnInit {
+export class SelectInputComponent implements OnInit, OnChanges, OnDestroy {
   @Input() field: Field;
   @Input() inputMode = false;
   @Input() autoFill = false;
   @Input() inputModel: any;
+  @Input() showLabel = true;
   @Output() valueChange: EventEmitter<any> = new EventEmitter<any>();
   inputGroup: FormGroup;
+  private valueChangesSubscription?: Subscription;
 
-  constructor() {}
+  constructor(private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.initializeInput();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.inputGroup && changes.field) {
+      this.inputGroup.controls[this.field.name]?.setValue(this.field.value, { emitEvent: false });
+    }
+  }
+
   initializeInput() {
+    this.valueChangesSubscription?.unsubscribe();
     let control: FormControl | FormGroup;
     if (this.field.isRequired) {
       if (this.field.pattern) {
@@ -45,6 +56,16 @@ export class SelectInputComponent implements OnInit {
       }
     }
     this.inputGroup = new FormGroup({ [this.field.name]: control });
+    this.inputGroup.controls[this.field.name].setValue(this.field.value, { emitEvent: false });
+    this.valueChangesSubscription = this.inputGroup.controls[this.field.name].valueChanges.subscribe((value) => {
+      if (this.valuesAreEqual(this.field.value, value)) return;
+      this.field.value = value;
+      this.valueChange.emit(value);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.valueChangesSubscription?.unsubscribe();
   }
 
   inputIsValid(): boolean {
@@ -53,7 +74,17 @@ export class SelectInputComponent implements OnInit {
   }
 
   handleValueChange(input: any) {
+    if (this.valuesAreEqual(this.field.value, input)) return;
+    this.field.value = input;
+    this.inputGroup.controls[this.field.name]?.setValue(input, { emitEvent: false });
     this.valueChange.emit(input);
+  }
+
+  private valuesAreEqual(current: any, next: any): boolean {
+    if (Array.isArray(current) || Array.isArray(next)) {
+      return JSON.stringify(current || []) === JSON.stringify(next || []);
+    }
+    return current === next;
   }
 
   getSelectedLabel(): string {
@@ -65,7 +96,7 @@ export class SelectInputComponent implements OnInit {
     }
     const findLabel = (val: any) => {
       const option = this.field.options.find((opt: any) => opt.value === val);
-      return option ? option.label : val;
+      return option ? this.translate.instant(option.label) : val;
     };
     if (Array.isArray(this.field.value)) {
       return (this.field.value as any[]).map((val: any) => findLabel(val)).join(', ');

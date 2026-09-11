@@ -1,0 +1,231 @@
+<div class="sessions-toolbar">
+  <button nz-button (click)="toggleCancelled()">
+    {{ (includeCancelled ? 'calendar.hideCancelled' : 'calendar.showCancelled') | translate }}
+  </button>
+</div>
+
+<nz-spin [nzSpinning]="loading">
+  <nz-table #sessionsTable [nzData]="sessions" [nzFrontPagination]="false" nzSize="small">
+    <thead>
+      <tr>
+        <th [nzSortFn]="numberSort('sessionNumber')">{{ 'calendar.number' | translate }}</th>
+        <th [nzSortFn]="sessionDateSort('startAt')">{{ 'calendar.startAt' | translate }}</th>
+        <th [nzSortFn]="sessionDateSort('endAt')">{{ 'calendar.endAt' | translate }}</th>
+        <th [nzSortFn]="stringSort('clinicalStatus')">{{ 'core.status' | translate }}</th>
+        <th [nzSortFn]="personSort('patient')">{{ 'calendar.patient' | translate }}</th>
+        <th [nzSortFn]="personSort('therapist')">{{ 'calendar.therapist' | translate }}</th>
+        <th [nzSortFn]="personSort('supervisor')">{{ 'calendar.supervisor' | translate }}</th>
+        <th [nzSortFn]="resourceCountSort">{{ 'core.assessments' | translate }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let session of sessionsTable.data"
+        class="session-row"
+        (click)="openEdit(session)"
+        (contextmenu)="openContextMenu($event, sessionContextMenu, session)"
+      >
+        <td>{{ session.sessionNumber || '-' }}</td>
+        <td>{{ session.calendarOccurrence?.startAt | formatDateTime }}</td>
+        <td>{{ session.calendarOccurrence?.endAt | formatDateTime }}</td>
+        <td><nz-tag>{{ session.clinicalStatus }}</nz-tag></td>
+        <td>{{ session.patient?.medicalRecordNo }} {{ personName(session.patient) }}</td>
+        <td>{{ personName(session.therapist) }}</td>
+        <td>{{ personName(session.supervisor) }}</td>
+        <td>{{ session.resources?.length || 0 }}</td>
+        <td class="row-hint">{{ (canEditSession(session) ? 'calendar.clickToEdit' : 'calendar.readOnly') | translate }}</td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-spin>
+
+<nz-dropdown-menu #sessionContextMenu="nzDropdownMenu">
+  <ul nz-menu>
+    <li nz-menu-item *ngIf="canEditSession(contextSession)" (click)="discardContextSession()">{{ 'patientsManagement.cancellation' | translate }}</li>
+  </ul>
+</nz-dropdown-menu>
+
+<nz-modal
+  [(nzVisible)]="editModalVisible"
+  [nzTitle]="editingSession?.historyLabel || ('calendar.followUp' | translate)"
+  [nzOkLoading]="saving"
+  [nzOkDisabled]="!canEditSession(editingSession)"
+  (nzOnCancel)="editModalVisible = false"
+  (nzOnOk)="saveEdit()"
+>
+  <ng-container *nzModalContent>
+  <div class="session-editor" *ngIf="editingSession">
+    <div class="form-field">
+      <span>{{ 'calendar.sessionNumber' | translate }}</span>
+      <input nz-input type="number" min="1" [disabled]="!canEditSession(editingSession)" [(ngModel)]="editSessionNumber" />
+    </div>
+    <div class="form-field">
+      <span>{{ 'calendar.startAt' | translate }}</span>
+      <nz-date-picker [nzDisabled]="!canEditSession(editingSession)" [(ngModel)]="editStartAt" nzShowTime></nz-date-picker>
+    </div>
+    <div class="form-field">
+      <span>{{ 'calendar.endAt' | translate }}</span>
+      <nz-date-picker [nzDisabled]="!canEditSession(editingSession)" [(ngModel)]="editEndAt" nzShowTime></nz-date-picker>
+    </div>
+    <div class="form-field history-field">
+      <span>{{ editingSession.historyLabel }}</span>
+      <textarea nz-input rows="5" [disabled]="!canEditSession(editingSession)" [(ngModel)]="editHistory"></textarea>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field" *ngIf="activeSchemeApplications.length">
+        <span>{{ 'calendar.activeSchemes' | translate }}</span>
+        <div class="scheme-application-list">
+          <div class="scheme-application-row" *ngFor="let application of activeSchemeApplications">
+            <div>
+              <strong>{{ application.scheme?.name || ('calendar.schemeWithId' | translate:{ id: application.schemeId }) }}</strong>
+              <small>
+                {{ (application.applicationMode === 'ORIGINAL_SESSION_NUMBER' ? 'patientsManagement.originalStructure' : 'patientsManagement.fromThisSession') | translate }}
+                <ng-container *ngIf="application.startSessionNumber"> · {{ 'calendar.fromSession' | translate:{ number: application.startSessionNumber } }}</ng-container>
+              </small>
+            </div>
+            <button
+              nz-button
+              nzSize="small"
+              nzDanger
+              [disabled]="!canEditSession(editingSession)"
+              (click)="stopActiveScheme(application)"
+            >
+              {{ 'calendar.stopFromThisSession' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="form-field">
+        <span>{{ 'calendar.addEvaluationScheme' | translate }}</span>
+        <nz-select
+          [(ngModel)]="editAddSchemeIds"
+          [nzDisabled]="!canEditSession(editingSession)"
+          nzAllowClear
+          nzMode="multiple"
+          nzShowSearch
+        >
+          <nz-option
+            *ngFor="let scheme of sessionSchemes"
+            [nzValue]="scheme.id"
+            [nzLabel]="scheme.name"
+          ></nz-option>
+        </nz-select>
+      </div>
+      <div class="form-field" *ngIf="editAddSchemeIds.length">
+        <span>{{ 'calendar.applySchemeBy' | translate }}</span>
+        <nz-select
+          [(ngModel)]="editAddSchemesApplicationMode"
+          [nzDisabled]="!canEditSession(editingSession)"
+        >
+          <nz-option
+            *ngFor="let option of addSchemeApplicationModeOptions"
+            [nzValue]="option.value"
+            [nzLabel]="option.label | translate"
+          ></nz-option>
+        </nz-select>
+      </div>
+    </div>
+
+    <label class="inline-check" *ngIf="editAddSchemeIds.length">
+      <input
+        type="checkbox"
+        [disabled]="!canEditSession(editingSession)"
+        [(ngModel)]="editOverwriteExistingSchemes"
+      />
+      <span>{{ 'calendar.overwritePendingExistingScheme' | translate }}</span>
+    </label>
+
+    <label class="inline-check" *ngIf="editAddSchemeIds.length">
+      <input
+        type="checkbox"
+        [disabled]="!canEditSession(editingSession)"
+        [(ngModel)]="editAddSchemesPropagate"
+      />
+      <span>{{ 'calendar.propagateFutureSessions' | translate }}</span>
+    </label>
+
+    <nz-table #resourcesTable [nzData]="editingSession.resources || []" [nzFrontPagination]="false" nzSize="small">
+      <thead>
+        <tr>
+          <th [nzSortFn]="resourceStringSort('resourceKind')">{{ 'patientsManagement.resource' | translate }}</th>
+          <th [nzSortFn]="resourceAssessmentSort">{{ 'core.assessments' | translate }}</th>
+          <th [nzSortFn]="resourceDateSort('activationAt')">{{ 'calendar.activationAt' | translate }}</th>
+          <th [nzSortFn]="resourceDateSort('expirationAt')">{{ 'calendar.expiresAt' | translate }}</th>
+          <th [nzSortFn]="resourceStringSort('status')">{{ 'core.status' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let resource of resourcesTable.data"
+          class="resource-row"
+          (click)="canEditSession(editingSession) && openResourceEdit(resource, $event)"
+        >
+          <td>{{ resource.resourceKind }}</td>
+          <td>{{ resource.assessment?.assessmentType?.name || '-' }}</td>
+          <td>{{ resource.activationAt | formatDateTime }}</td>
+          <td>{{ resource.expirationAt | formatDateTime }}</td>
+          <td><nz-tag>{{ resource.status }}</nz-tag></td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </div>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="resourceModalVisible"
+  [nzTitle]="resourceAssessmentName(editingResource)"
+  [nzOkLoading]="resourceSaving"
+  [nzOkDisabled]="!canEditSession(editingSession)"
+  (nzOnCancel)="resourceModalVisible = false"
+  (nzOnOk)="saveResourceEdit()"
+>
+  <ng-container *nzModalContent>
+  <div class="session-editor" *ngIf="editingResource">
+    <div class="form-field">
+      <span>{{ 'calendar.resourceType' | translate }}</span>
+      <nz-select [(ngModel)]="editResourceKind">
+        <nz-option *ngFor="let kind of resourceKinds" [nzValue]="kind" [nzLabel]="kind"></nz-option>
+      </nz-select>
+    </div>
+    <div class="form-field">
+      <span>{{ 'core.status' | translate }}</span>
+      <nz-select [(ngModel)]="editResourceStatus">
+        <nz-option *ngFor="let status of resourceStatuses" [nzValue]="status" [nzLabel]="status"></nz-option>
+      </nz-select>
+    </div>
+    <div class="form-field">
+      <span>{{ 'calendar.activationAnchor' | translate }}</span>
+      <nz-select [(ngModel)]="editActivationAnchor">
+        <nz-option *ngFor="let anchor of activationAnchors" [nzValue]="anchor" [nzLabel]="anchor"></nz-option>
+      </nz-select>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <span>{{ 'calendar.activationOffsetMinutes' | translate }}</span>
+        <input nz-input type="number" [(ngModel)]="editActivationOffsetMinutes" />
+      </div>
+      <div class="form-field">
+        <span>{{ 'calendar.availabilityDurationMinutes' | translate }}</span>
+        <input nz-input type="number" min="0" [(ngModel)]="editAvailabilityDurationMinutes" />
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <span>{{ 'calendar.activationAt' | translate }}</span>
+        <nz-date-picker [(ngModel)]="editActivationAt" nzShowTime></nz-date-picker>
+      </div>
+      <div class="form-field">
+        <span>{{ 'calendar.expiresAt' | translate }}</span>
+        <nz-date-picker [(ngModel)]="editExpirationAt" nzShowTime></nz-date-picker>
+      </div>
+    </div>
+    <div class="form-field">
+      <span>{{ 'calendar.remindersInMinutes' | translate }}</span>
+      <input nz-input [(ngModel)]="editReminderMinutes" />
+    </div>
+  </div>
+  </ng-container>
+</nz-modal>

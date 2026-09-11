@@ -1,4 +1,4 @@
-<label>
+<label *ngIf="showLabel">
   <b>
     <ng-container *ngIf="field.translationPath; else plainTitle">
       <span [translate]="field.translationPath"></span>
@@ -27,5 +27,5 @@
   *ngIf="this.inputGroup.controls[this.field.name].dirty && this.inputGroup.controls[this.field.name].invalid"
   translate
 >
-  {{ field.validationMessage }}
+  {{ field.validationMessage | translate }}
 </p>

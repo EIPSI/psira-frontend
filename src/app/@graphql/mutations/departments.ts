@@ -7,6 +7,8 @@ const createOneDepartment = gql`
       name
       description
       active
+      appliedRoleCodes
+      defaultRoleCodes
       createdAt
       updatedAt
     }
@@ -20,6 +22,8 @@ const createManyDepartments = gql`
       name
       description
       active
+      appliedRoleCodes
+      defaultRoleCodes
       createdAt
       updatedAt
     }
@@ -33,6 +37,8 @@ const updateOneDepartment = gql`
       name
       description
       active
+      appliedRoleCodes
+      defaultRoleCodes
       createdAt
       updatedAt
     }
@@ -46,6 +52,8 @@ const updateManyDepartments = gql`
       name
       description
       active
+      appliedRoleCodes
+      defaultRoleCodes
       createdAt
       updatedAt
     }
@@ -59,6 +67,8 @@ const deleteOneDepartment = gql`
       name
       description
       active
+      appliedRoleCodes
+      defaultRoleCodes
       createdAt
       updatedAt
     }

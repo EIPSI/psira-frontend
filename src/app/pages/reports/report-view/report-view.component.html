@@ -2,24 +2,24 @@
   <div class="report-toolbar">
     <button nz-button nzType="default" (click)="goBack()">
       <i nz-icon nzType="arrow-left"></i>
-      Back
+      {{ 'core.back' | translate }}
     </button>
     <div class="report-title">
-      <h2>{{ report?.name || 'Report' }}</h2>
+      <h2>{{ report?.name || ('reports.report' | translate) }}</h2>
       <p *ngIf="report?.description">{{ report.description }}</p>
     </div>
   </div>
 
   <nz-spin [nzSpinning]="isLoading">
     <div *ngIf="notFound" class="empty-state">
-      Report not found or unavailable.
+      {{ 'reports.notFound' | translate }}
     </div>
 
     <iframe
       *ngIf="reportUrl && !notFound"
       class="report-frame"
       [src]="reportUrl"
-      title="Report"
+      [title]="'reports.report' | translate"
     ></iframe>
   </nz-spin>
 </section>

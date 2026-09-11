@@ -13,6 +13,7 @@ const emergencyContacts = gql`
           lastName
           phone
           email
+          caregiverId
           createdAt
           updatedAt
           deletedAt

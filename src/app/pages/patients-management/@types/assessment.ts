@@ -18,8 +18,10 @@ export interface Assessment {
   assessmentType: AssessmentAdministration;
   patientId: number;
   clinicianId: number;
+  responsibleUserIds?: number[];
   patient: Patient;
   clinician?: User;
+  responsibleUsers?: User[];
   informant: string;
   questionnaireAssessmentId?: string;
   createdAt?: Date;

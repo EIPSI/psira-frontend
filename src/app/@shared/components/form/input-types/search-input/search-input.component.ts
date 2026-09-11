@@ -13,6 +13,7 @@ export class SearchInputComponent implements OnInit {
   @Input() field: Field;
   @Input() inputMode = false;
   @Input() autoFill = false;
+  @Input() showLabel = true;
   @Output() valueChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() searchOptions: EventEmitter<any> = new EventEmitter<any>();
   inputGroup: FormGroup;

@@ -4,7 +4,7 @@ import { Patient } from '@app/pages/patients-management/@types/patient';
 
 export const CaregiverTable: TableColumn<Caregiver>[] = [
   {
-    title: 'First name',
+    title: 'tables.patients.firstName',
     name: 'firstName',
     translationPath: 'tables.contact.firstName',
     sort: true,
@@ -14,7 +14,7 @@ export const CaregiverTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Middle name',
+    title: 'tables.patients.middleName',
     name: 'middleName',
     translationPath: 'tables.contact.middleName',
     sort: true,
@@ -24,7 +24,7 @@ export const CaregiverTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Last name',
+    title: 'tables.patients.lastName',
     name: 'lastName',
     translationPath: 'tables.contact.lastName',
     sort: true,
@@ -34,7 +34,7 @@ export const CaregiverTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'E-mail',
+    title: 'tables.contact.email',
     name: 'email',
     sort: true,
     filterField: {
@@ -43,7 +43,7 @@ export const CaregiverTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Phone',
+    title: 'forms.patients.phone',
     name: 'phone',
     translationPath: 'tables.contact.phone',
     sort: true,
@@ -53,10 +53,11 @@ export const CaregiverTable: TableColumn<Caregiver>[] = [
     },
   },
   {
-    title: 'Patients',
+    title: 'core.patients',
     name: 'patients',
     translationPath: 'tables.contact.patients',
     render: 'avatar',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,

@@ -18,7 +18,7 @@ export class QuestionnaireBundlesService {
     paging?: Paging;
     filter?: Filter;
     sorting?: Sorting[];
-    departmentIds: any[];
+    departmentIds?: any[];
   }): Observable<FetchResult<any>> {
     return this.apollo.query({
       query: BundleQueries.getQuestionnaireBundles,
@@ -26,7 +26,7 @@ export class QuestionnaireBundlesService {
         paging: params && params.paging ? params.paging : undefined,
         filter: params && params.filter ? params.filter : undefined,
         sorting: params && params.sorting ? params.sorting : undefined,
-        departmentIds: params && params.departmentIds ? params.departmentIds : undefined,
+        departmentIds: params?.departmentIds?.length ? params.departmentIds : undefined,
       },
       fetchPolicy: 'no-cache',
     });
@@ -61,7 +61,11 @@ export class QuestionnaireBundlesService {
         input: {
           _id: bundle._id,
           name: bundle.name,
-          questionnaireIds: bundle.questionnaireIds,
+          active: bundle.active,
+          structure: bundle.structure,
+          structureJson: bundle.structureJson,
+          headerHtml: bundle.headerHtml,
+          noticeHtml: bundle.noticeHtml,
           departmentIds: bundle.departmentIds,
         },
       },
@@ -76,6 +80,19 @@ export class QuestionnaireBundlesService {
         _id,
       },
       fetchPolicy: 'no-cache',
+    });
+  }
+
+  public duplicateQuestionnaireBundle(bundle: any): Observable<FetchResult<any>> {
+    const structure = bundle.structure || JSON.parse(bundle.structureJson || '[]');
+    return this.createQuestionnaireBundle({
+      name: `${bundle.name} copy`,
+      active: bundle.active !== false,
+      departmentIds: bundle.departmentIds || [],
+      structure,
+      structureJson: JSON.stringify(structure),
+      headerHtml: bundle.headerHtml || '',
+      noticeHtml: bundle.noticeHtml || '',
     });
   }
 }

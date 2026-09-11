@@ -6,19 +6,19 @@
   (nzOnOk)="handleOkHandler()"
 >
   <ng-container *nzModalContent>
-    <p class="bold-text">Language</p>
+    <p class="bold-text">{{ 'questionnaires.language' | translate }}</p>
     <p>{{ questionnaire?.questionnaire?.language }}</p>
-    <p class="bold-text">Status</p>
+    <p class="bold-text">{{ 'questionnaires.formattedStatus' | translate }}</p>
     <p>{{ questionnaire?.status }}</p>
-    <p class="bold-text">Copyright</p>
+    <p class="bold-text">{{ 'questionnaires.copyright' | translate }}</p>
     <p>{{ questionnaire?.copyright }}</p>
-    <p class="bold-text">Keywords</p>
+    <p class="bold-text">{{ 'questionnaires.keywords' | translate }}</p>
     <p>
       <span *ngFor="let keyword of questionnaire?.keywords">{{ keyword }}, </span>
     </p>
-    <p class="bold-text">License</p>
+    <p class="bold-text">{{ 'questionnaires.license' | translate }}</p>
     <p>{{ questionnaire?.license }}</p>
-    <p class="bold-text">Website</p>
+    <p class="bold-text">{{ 'questionnaires.website' | translate }}</p>
     <p>{{ questionnaire?.website }}</p>
   </ng-container>
 </nz-modal>

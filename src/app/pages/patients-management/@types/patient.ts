@@ -10,6 +10,7 @@ export interface Patient {
   statusId?: number;
   departmentIds?: number[];
   caseManagerIds?: number[];
+  skippedAutomationIds?: number[];
   medicalRecordNo?: string;
   firstName?: string;
   middleName?: string;

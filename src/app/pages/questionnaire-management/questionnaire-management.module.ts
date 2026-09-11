@@ -25,9 +25,15 @@ import { QuestionnaireBundlesListComponent } from './questionnaire-bundles-list/
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { AssessmentModule } from '../assessment/assessment.module';
 import { AngularEditorModule } from '@kolkov/angular-editor';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { SharedModule } from '@shared';
 
 @NgModule({
     declarations: [
@@ -58,9 +64,15 @@ import { AngularEditorModule } from '@kolkov/angular-editor';
         NzToolTipModule,
         NzFormModule,
         NzInputModule,
+        NzInputNumberModule,
+        NzDatePickerModule,
         TranslateModule,
         AssessmentModule,
-        AngularEditorModule
+        AngularEditorModule,
+        DragDropModule,
+        NzSwitchModule,
+        NzModalModule,
+        SharedModule,
     ],
     // Needs to be provided in root, since it will be required by assessment and patient modules.
     // providers:[

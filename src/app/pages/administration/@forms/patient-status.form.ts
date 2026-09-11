@@ -1,8 +1,8 @@
 import { Form } from '../../../@shared/components/form/@types/form';
 
 export const PatientStatusForm: Form = {
-  submitButtonText: 'Submit PatientStatus',
-  editButtonText: 'Submit PatientStatus',
+  submitButtonText: 'patientStatuses.submitPatientStatus',
+  editButtonText: 'patientStatuses.submitPatientStatus',
   submitButtonClass: 'full-width',
   groups: [
     {
@@ -10,12 +10,12 @@ export const PatientStatusForm: Form = {
         {
           value: '',
           name: 'name',
-          title: 'PatientStatus Name',
-          label: 'PatientStatus Name',
-          description: 'enter company name',
+          title: 'forms.patientStatuses.name',
+          label: 'forms.patientStatuses.name',
+          description: 'patientStatuses.nameDescription',
           translationPath: 'forms.patientStatuses.name',
           type: 'text',
-          validationMessage: 'please enter  company name',
+          validationMessage: 'patientStatuses.nameValidation',
           isRequired: true,
           span: 24,
           options: [],
@@ -23,12 +23,12 @@ export const PatientStatusForm: Form = {
         {
           value: '',
           name: 'description',
-          title: 'PatientStatus Description',
-          label: 'PatientStatus Description',
+          title: 'forms.patientStatuses.description',
+          label: 'forms.patientStatuses.description',
           translationPath: 'forms.patientStatuses.description',
-          description: 'enter Description',
+          description: 'patientStatuses.descriptionHelp',
           type: 'text',
-          validationMessage: 'please enter  Description',
+          validationMessage: 'patientStatuses.descriptionValidation',
           isRequired: false,
           span: 24,
           options: [],

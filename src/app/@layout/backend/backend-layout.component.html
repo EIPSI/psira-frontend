@@ -1,4 +1,11 @@
-<nz-layout class="layout">
+<nz-layout class="layout" [class.mobile-layout]="isMobile" [class.mobile-menu-open]="isMobile && !isCollapsed">
+  <button
+    *ngIf="isMobile && !isCollapsed"
+    type="button"
+    class="mobile-menu-backdrop"
+    [attr.aria-label]="'core.close' | translate"
+    (click)="closeMobileSider()"
+  ></button>
   <nz-sider nzCollapsible [(nzCollapsed)]="isCollapsed" [nzTrigger]="null" nzWidth="250px">
     <div class="logo">
       <div nz-row>
@@ -6,12 +13,12 @@
           <img *ngIf="!isCollapsed" width="36px" src="../../../assets/images/logo.svg" />
         </div>
         <div nz-col>
-          <i class="trigger" nz-icon [nzType]="isCollapsed ? 'menu' : 'menu'" (click)="isCollapsed = !isCollapsed"></i>
+          <i class="trigger" nz-icon [nzType]="isCollapsed ? 'menu' : 'menu'" (click)="toggleSider()"></i>
         </div>
       </div>
     </div>
     <div class="nav-menu">
-      <app-side-nav [isCollapsed]="isCollapsed"></app-side-nav>
+      <app-side-nav [isCollapsed]="isCollapsed" (navigated)="closeMobileSider()"></app-side-nav>
     </div>
   </nz-sider>
   <nz-layout
@@ -19,6 +26,9 @@
     [ngClass]="{ 'side-bar-collapsed': isCollapsed, 'side-bar-not-collapsed': !isCollapsed }"
   >
     <nz-header>
+      <button *ngIf="isMobile" type="button" class="mobile-menu-trigger" (click)="toggleSider()">
+        <i nz-icon nzType="menu" nzTheme="outline"></i>
+      </button>
       <app-header></app-header>
     </nz-header>
     <nz-content>

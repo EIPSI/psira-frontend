@@ -5,6 +5,7 @@ import { PermissionKey } from '@shared/@types/permission';
 export interface Permission {
   id: number;
   name: PermissionKey;
+  group?: string;
   createdAt?: number;
   updatedAt?: number;
   users?: User[];

@@ -13,6 +13,8 @@ export interface Caregiver {
   relation?: string;
   emergency?: boolean;
   note?: string;
+  skipEmergencyContactCreation?: boolean;
+  emergencyContactId?: number;
   street: string;
   number: string;
   apartment: string;

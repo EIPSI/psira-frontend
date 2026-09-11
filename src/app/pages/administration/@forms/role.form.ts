@@ -1,8 +1,8 @@
 import { Form } from '@shared/components/form/@types/form';
 
 export const RoleForm: Form = {
-  submitButtonText: 'Save Role',
-  editButtonText: 'Edit Role',
+  submitButtonText: 'roles.saveRole',
+  editButtonText: 'roles.editRole',
   submitButtonClass: 'full-width',
   groups: [
     {
@@ -10,11 +10,11 @@ export const RoleForm: Form = {
         {
           value: '',
           name: 'name',
-          title: 'Role Name',
-          label: 'Role Name',
-          description: 'enter permission name',
+          title: 'tables.roles.name',
+          label: 'tables.roles.name',
+          description: 'roles.nameDescription',
           type: 'text',
-          validationMessage: 'please enter permission name',
+          validationMessage: 'roles.nameValidation',
           isRequired: true,
           span: 24,
           options: [],
@@ -22,13 +22,13 @@ export const RoleForm: Form = {
         {
           value: '',
           name: 'hierarchy',
-          title: 'Role hierarchy',
-          label: 'Role hierarchy',
-          description: 'Enter Role hierarchy',
+          title: 'tables.roles.hierarchy',
+          label: 'tables.roles.hierarchy',
+          description: 'roles.hierarchyDescription',
           type: 'number',
           min: 1,
           max: 1000,
-          validationMessage: 'please Enter Role hierarchy',
+          validationMessage: 'roles.hierarchyValidation',
           isRequired: true,
           disabled: true,
           span: 24,

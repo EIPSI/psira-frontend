@@ -25,8 +25,9 @@ import {NzModalService} from 'ng-zorro-antd/modal';
 import {ClipboardService} from 'ngx-clipboard';
 import {NzMessageService} from 'ng-zorro-antd/message';
 import {LocationStrategy} from '@angular/common';
+import {TranslateService} from '@ngx-translate/core';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
     SHOW_ASSESSMENT,
@@ -51,13 +52,13 @@ export class AssessmentsListComponent {
     public actions : Action < ActionKey > [] = [
         {
             key: ActionKey.SHOW_ASSESSMENT,
-            title: 'Start Session'
+            title: 'plannedAssessments.startSession'
         }, {
             key: ActionKey.COPY_ASSESSMENT_LINK,
-            title: 'Copy Session Link'
+            title: 'plannedAssessments.copySessionLink'
         }, {
             key: ActionKey.SCAN_QR_CODE,
-            title: 'Scan QR Code'
+            title: 'plannedAssessments.scanQrCode'
         },
     ];
     public onlyMyAssessments = (localStorage.getItem('onlyMyAssessments') === 'true');
@@ -80,19 +81,19 @@ export class AssessmentsListComponent {
     newUrl : URL;
 
     // tslint:disable
-    constructor(private assessmentService : AssessmentService, private router : Router, private modalService : NzModalService, private errorService : ErrorHandlerService, private clipboardService : ClipboardService, private messageService : NzMessageService, private locationStrategy : LocationStrategy, public perms : AppPermissionsService) {
+    constructor(private assessmentService : AssessmentService, private router : Router, private modalService : NzModalService, private errorService : ErrorHandlerService, private clipboardService : ClipboardService, private messageService : NzMessageService, private locationStrategy : LocationStrategy, public perms : AppPermissionsService, private translate : TranslateService) {
         this.getAssessments();
 
-        if (this.perms.permissionsOnly(PermissionKey.MANAGE_ASSESSMENTS)) {
-            this.actions.push({key: ActionKey.CANCEL_SESSION, title: 'Cancel Session'});
-            this.actions.push({key: ActionKey.RESTORE_ASSESSMENT, title: 'Restore Assessment'});
-            this.actions.push({key: ActionKey.ARCHIVE_ASSESSMENT, title: 'Archive Assessment'});
+        if (this.perms.permissionsOnly(PermissionKey.ASSESSMENTS_EDIT_DEPARTMENT)) {
+            this.actions.push({key: ActionKey.CANCEL_SESSION, title: 'plannedAssessments.cancelSession'});
+            this.actions.push({key: ActionKey.RESTORE_ASSESSMENT, title: 'plannedAssessments.restoreAssessment'});
+            this.actions.push({key: ActionKey.ARCHIVE_ASSESSMENT, title: 'plannedAssessments.archiveAssessment'});
         }
-        if (this.perms.permissionsOnly(PermissionKey.DELETE_ASSESSMENTS)) {
-            this.actions.push({key: ActionKey.DELETE_ASSESSMENT, title: 'Delete Session'});
+        if (this.perms.permissionsOnly(PermissionKey.ASSESSMENTS_DELETE_DEPARTMENT)) {
+            this.actions.push({key: ActionKey.DELETE_ASSESSMENT, title: 'plannedAssessments.deleteSession'});
         }
         if(environment.email){
-            this.actions.push({key: ActionKey.SENT_EMAIL, title: 'Send Email'});
+            this.actions.push({key: ActionKey.SENT_EMAIL, title: 'plannedAssessments.sendEmail'});
         }
 
         if(!localStorage.getItem('onlyMyAssessments')){
@@ -160,6 +161,14 @@ export class AssessmentsListComponent {
     }
 
     public onAction({action, context: assessment} : ActionArgs < FormattedAssessment, ActionKey >): void {
+        if (!assessment.editableFromAssessmentList && ![
+            ActionKey.SHOW_ASSESSMENT,
+            ActionKey.SCAN_QR_CODE,
+        ].includes(action.key)) {
+            this.openLinkedSession(assessment);
+            return;
+        }
+
         switch (action.key) {
             case ActionKey.SHOW_ASSESSMENT:
                 this.showAssessment(assessment);
@@ -191,7 +200,11 @@ export class AssessmentsListComponent {
     }
 
     public onAssessmentSelect(assessment : FormattedAssessment): void {
-        const dataString = CryptoJS.AES.encrypt(JSON.stringify(assessment), environment.secretKey).toString();
+        if (!assessment.editableFromAssessmentList) {
+            this.openLinkedSession(assessment);
+            return;
+        }
+        const dataString = encryptRouteObject(assessment, environment.secretKey);
         this.router.navigate(['/psira/assessments/plan-assessments'], {
             queryParams: {
                 assessment: dataString
@@ -275,19 +288,15 @@ export class AssessmentsListComponent {
         this.assessmentService.getAssessments(options).pipe(finalize(() => (this.loading = false))).subscribe(({edges, pageInfo}) => {
             this.data = edges.map((e : any) => Convert.toFormattedAssessment(e.node));
             this.pageInfo = pageInfo;
-        }, (error) => this.errorService.handleError(error, {prefix: 'Unable to load assessments'}));
+        }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableLoadAssessments')}));
     }
 
     private async deleteAssessment(assessment : FormattedAssessment, statusCancel : boolean): Promise < void > { // create confirmation modal
         const modal = this.modalService.confirm(
             {
                 nzOnOk: () => true,
-                nzTitle: 'Delete Assessment',
-                nzContent: `
-        Are you sure you want to delete ${
-                    assessment.name
-                }? This action is irreversible
-      `
+                nzTitle: this.translate.instant('plannedAssessments.deleteAssessmentTitle'),
+                nzContent: this.translate.instant('plannedAssessments.deleteAssessmentConfirm', {name: assessment.name})
             }
         );
 
@@ -304,19 +313,14 @@ export class AssessmentsListComponent {
             } else {
                 this.getAssessments();
             }
-        }, (error) => this.errorService.handleError(error, {prefix: `Unable to delete assessment "${
-                assessment.name
-            }"`}));
+        }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableDeleteAssessment', {name: assessment.name})}));
     }
 
     private async archiveAssessment(assessment : FormattedAssessment) {
         const modal = this.modalService.confirm({
             nzOnOk: () => true,
-            nzTitle: 'Archive Assessment',
-            nzContent: `
-            Are you sure you want to archive ${
-                assessment.name
-            }?`
+            nzTitle: this.translate.instant('plannedAssessments.archiveAssessmentTitle'),
+            nzContent: this.translate.instant('plannedAssessments.archiveAssessmentConfirm', {name: assessment.name})
         });
 
         const confirmation = await modal.afterClose.toPromise();
@@ -331,19 +335,14 @@ export class AssessmentsListComponent {
             } else {
                 this.getAssessments();
             }
-        }, (error) => this.errorService.handleError(error, {prefix: `Unable to archive assessment "${
-                assessment.name
-            }"`}));
+        }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableArchiveAssessment', {name: assessment.name})}));
     }
 
     private async restoreAssessment(assessment : FormattedAssessment) {
         const modal = this.modalService.confirm({
             nzOnOk: () => true,
-            nzTitle: 'Restore Assessment',
-            nzContent: `
-            Are you sure you want to restore ${
-                assessment?.name
-            }?`
+            nzTitle: this.translate.instant('plannedAssessments.restoreAssessmentTitle'),
+            nzContent: this.translate.instant('plannedAssessments.restoreAssessmentConfirm', {name: assessment?.name})
         });
 
         const confirmation = await modal.afterClose.toPromise();
@@ -358,17 +357,14 @@ export class AssessmentsListComponent {
             } else {
                 this.getAssessments();
             }
-        }, (error) => this.errorService.handleError(error, {prefix: `Unable to restore assessment "${
-                assessment.name
-            }"`}));
+        }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableRestoreAssessment', {name: assessment.name})}));
     }
 
     private async sendAssessmentEmail(assessment : FormattedAssessment) {
         const modal = this.modalService.confirm({
             nzOnOk: () => true,
-            nzTitle: 'Send Assessment Email',
-            nzContent: `
-            Are you sure you want to send the email?`
+            nzTitle: this.translate.instant('plannedAssessments.sendAssessmentEmailTitle'),
+            nzContent: this.translate.instant('plannedAssessments.sendAssessmentEmailConfirm')
         });
 
         const confirmation = await modal.afterClose.toPromise();
@@ -383,7 +379,7 @@ export class AssessmentsListComponent {
             } else {
                 this.getAssessments();
             }
-        }, (error) => this.errorService.handleError(error, {prefix: `Unable to send email at this moment.`}));
+        }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableSendEmail')}));
     }
 
 
@@ -453,14 +449,38 @@ export class AssessmentsListComponent {
         window.open(this.generateAssessmentURL(uuid));
     }
 
+    private showLinkedSessionNotice(assessment: FormattedAssessment): void {
+        this.modalService.info({
+            nzTitle: this.translate.instant('plannedAssessments.linkedSessionAssessmentTitle'),
+            nzContent: this.translate.instant('plannedAssessments.linkedSessionAssessmentMessage', {
+                session: assessment.linkedSessionLabel || assessment.clinicalSessionId || ''
+            }),
+        });
+    }
+
+    private openLinkedSession(assessment: FormattedAssessment): void {
+        if (!assessment.patient) {
+            this.showLinkedSessionNotice(assessment);
+            return;
+        }
+
+        const dataString = encryptRouteObject(assessment.patient, environment.secretKey);
+        this.router.navigate(['/psira/case-management/profile'], {
+            queryParams: {
+                profile: dataString,
+                tab: 'sessions',
+            },
+        });
+    }
+
     private copyAssessmentLink({uuid} : FormattedAssessment): void {
         const url = new URL(this.generateAssessmentURL(uuid), window.location.origin);
         this.clipboardService.copy(url.toString());
-        this.messageService.create('success', 'Assessment link copied to clipboard');
+        this.messageService.create('success', this.translate.instant('plannedAssessments.assessmentLinkCopied'));
     }
 
     private generateAssessmentURL(assesmentUuid : string): string {
-        const cryptoId = CryptoJS.AES.encrypt(assesmentUuid, environment.secretKey).toString();
+        const cryptoId = encryptRoutePayload(assesmentUuid, environment.secretKey);
         const tree = this.router.createUrlTree(['/assessment/overview'], {
             queryParams: {
                 assessment: cryptoId

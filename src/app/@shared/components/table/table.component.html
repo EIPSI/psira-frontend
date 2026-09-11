@@ -2,7 +2,7 @@
 <nz-spin [nzSpinning]="loading" [nzIndicator]="indicatorTemplate">
   <div
     *ngIf="showSearch || setOfCheckedId.size > 0 || showImport || showExport || showButton || showFilterButton"
-    class="p-b-30 p-t-30"
+    class="p-b-30 p-t-30 responsive-table-toolbar"
     nz-row
   >
     <div nz-col nzFlex="300px">
@@ -12,7 +12,7 @@
           (emptyInput)="handleEmptySearch()"
           [debounceTime]="300"
           nz-input
-          placeholder="Search"
+          [placeholder]="'core.search' | translate"
           type="text"
         />
       </nz-input-group>
@@ -49,7 +49,7 @@
           (click)="onImportAction()"
           [nzSize]="'normal'"
         >
-          <i nz-icon nzType="upload"></i>Import
+          <i nz-icon nzType="upload"></i>{{ 'core.import' | translate }}
         </button>
 
         <button
@@ -61,7 +61,7 @@
           (click)="onExportAction()"
           [nzSize]="'normal'"
         >
-          <i nz-icon nzType="file-excel"></i>Export
+          <i nz-icon nzType="file-excel"></i>{{ 'core.export' | translate }}
         </button>
         <button
           nzShape="round"
@@ -75,7 +75,7 @@
           nzType="primary"
           [nzSize]="'normal'"
         >
-          Export <i nz-icon nzType="down"></i>
+          {{ 'core.export' | translate }} <i nz-icon nzType="down"></i>
         </button>
         <nz-dropdown-menu #exportOptions="nzDropdownMenu">
           <ul nz-menu>
@@ -112,6 +112,7 @@
     </div>
   </div>
   <nz-table
+    class="responsive-table"
     #rowSelectionTable
     [nzShowPagination]="showPagination"
     nzShowSizeChanger
@@ -138,7 +139,7 @@
           [nzColumnKey]="column.name"
           [nzSortDirections]="column.sortDirections"
         >
-          {{ column.title }}
+          {{ (column.translationPath || column.title) | translate }}
           <nz-filter-trigger *ngIf="column.isFilterable" [nzActive]="searchValue.length > 0" [nzDropdownMenu]="menu">
             <i nz-icon nzType="search"></i>
           </nz-filter-trigger>
@@ -146,7 +147,12 @@
             <div class="ant-table-filter-dropdown">
               <div class="search-box">
                 <label>
-                  <input type="text" nz-input [placeholder]="'Search ' + column.title" [(ngModel)]="searchValue" />
+                  <input
+                    type="text"
+                    nz-input
+                    [placeholder]="'core.searchWithValue' | translate: { value: (column.translationPath || column.title) | translate }"
+                    [(ngModel)]="searchValue"
+                  />
                 </label>
                 <button
                   nz-button
@@ -155,20 +161,20 @@
                   (click)="onFilterSearch(column.name)"
                   class="search-button"
                 >
-                  Search
+                  {{ 'core.search' | translate }}
                 </button>
-                <button nz-button nzSize="small" (click)="reset()">Reset</button>
+                <button nz-button nzSize="small" (click)="reset()">{{ 'core.reset' | translate }}</button>
               </div>
             </div>
           </nz-dropdown-menu>
           <ng-container *ngIf="column.isList">
             <nz-divider class="m-v-10"></nz-divider>
             <div [attr.width]="listColumn.width" *ngFor="let listColumn of column.listColumns">
-              {{ listColumn.title }}
+              {{ (listColumn.translationPath || listColumn.title) | translate }}
             </div>
           </ng-container>
         </th>
-        <th *ngIf="showActionColumn" [nzWidth]="'100px'">Actions</th>
+        <th *ngIf="showActionColumn" [nzWidth]="'100px'">{{ 'core.actions' | translate }}</th>
       </tr>
     </thead>
     <tbody>
@@ -220,16 +226,16 @@
     </tbody>
   </nz-table>
   <div *ngIf="!showPagination && showNext" style="margin-top: 10px">
-    <div nz-row nzAlign="middle" class="m-v-10">
+    <div nz-row nzAlign="middle" class="m-v-10 responsive-paging">
       <div nz-col nzFlex="300px">
         <button nzShape="round" [disabled]="!hasPreviousPage" (click)="onPreviousAction()" nz-button nzType="primary">
-          Previous
+          {{ 'core.previous' | translate }}
         </button>
       </div>
       <div nz-col nzFlex="auto">
         <div nz-row nzJustify="end">
           <button nzShape="round" [disabled]="!hasNextPage" (click)="onNextAction()" nz-button nzType="primary">
-            Next
+            {{ 'core.next' | translate }}
           </button>
         </div>
       </div>

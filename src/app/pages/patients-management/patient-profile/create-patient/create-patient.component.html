@@ -1,3 +1,66 @@
+<section class="institutional-section">
+  <h2>{{ 'patientsManagement.institutional' | translate }}</h2>
+  <div class="institutional-definition-fields">
+    <div class="institutional-field">
+      <label class="institutional-label">
+        <b><span translate>forms.patients.id</span></b>
+      </label>
+      <div class="institutional-control">
+        <input
+          *ngIf="inputMode"
+          nz-input
+          [placeholder]="'patientsManagement.enterMedicalRecordNumber' | translate"
+          [(ngModel)]="medicalRecordNo"
+        />
+        <div class="field-value" *ngIf="!inputMode">{{ medicalRecordNo || '-' }}</div>
+      </div>
+    </div>
+
+    <div class="institutional-field">
+      <label class="institutional-label">
+        <b><span translate>forms.patients.department</span> <span class="required-mark" *ngIf="inputMode">*</span></b>
+      </label>
+      <div class="institutional-control">
+        <nz-select
+          *ngIf="inputMode"
+          nzMode="multiple"
+          nzShowSearch
+          nzAllowClear
+          [nzPlaceHolder]="'patientsManagement.selectDepartment' | translate"
+          [nzDisabled]="getAccessScope() === 'ASSIGNED'"
+          [(ngModel)]="selectedDepartmentIds"
+          (ngModelChange)="handleDepartmentSelection($event)"
+        >
+          <nz-option *ngFor="let option of departmentOptions" [nzValue]="option.value" [nzLabel]="option.label">
+          </nz-option>
+        </nz-select>
+        <div class="field-value" *ngIf="!inputMode">{{ selectedDepartmentLabels() }}</div>
+      </div>
+    </div>
+
+    <div class="institutional-field">
+      <label class="institutional-label">
+        <b><span translate>forms.patients.caseManager</span> <span class="required-mark" *ngIf="inputMode">*</span></b>
+      </label>
+      <div class="institutional-control">
+        <nz-select
+          *ngIf="inputMode"
+          nzMode="multiple"
+          nzShowSearch
+          nzAllowClear
+          [nzPlaceHolder]="'patientsManagement.selectCaseManager' | translate"
+          [nzDisabled]="getAccessScope() === 'ASSIGNED'"
+          [(ngModel)]="selectedCaseManagerIds"
+        >
+          <nz-option *ngFor="let option of caseManagerOptions" [nzValue]="option.value" [nzLabel]="option.label">
+          </nz-option>
+        </nz-select>
+        <div class="field-value" *ngIf="!inputMode">{{ selectedCaseManagerLabel() }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <app-form
   class="mt-3"
   [form]="patient?.id ? patientUpdateForm : patientForm"
@@ -5,10 +68,44 @@
   [isLoading]="isLoading"
   [inputMode]="inputMode"
   [resetForm]="resetForm"
-  [showEditButton]="perms.permissionsOnly(PK.MANAGE_PATIENTS)"
+  [showEditButton]="perms.permissionsOnly(PK.PATIENTS_EDIT_DEPARTMENT)"
   [showCancelButton]="showCancelButton"
+  layoutMode="definition"
   [populateForm]="populateForm"
   [loadingMessage]="loadingMessage"
+  (inputModeChanged)="handleInputModeChanged($event)"
   (submitForm)="submitForm($event)"
 >
 </app-form>
+
+<div class="automation-preview" *ngIf="!patient">
+  <nz-spin [nzSpinning]="automationPreviewLoading">
+    <nz-alert
+      *ngIf="!automationPreview.length"
+      nzType="info"
+      nzShowIcon
+      [nzMessage]="'menu.evaluationAutomations' | translate"
+      [nzDescription]="'patientsManagement.noPatientAutomations' | translate"
+    ></nz-alert>
+
+    <div *ngIf="automationPreview.length">
+      <h3>{{ 'patientsManagement.automationsAppliedAutomatically' | translate }}</h3>
+      <p class="automation-preview-help">
+        {{ 'patientsManagement.patientAutomationsHelp' | translate }}
+      </p>
+      <div class="automation-trigger-group" *ngFor="let triggerPoint of automationPreviewTriggerPoints()">
+        <h4>{{ triggerPointLabel[triggerPoint] || triggerPoint }}</h4>
+        <label
+          nz-checkbox
+          class="automation-preview-item"
+          *ngFor="let automation of automationsForTrigger(triggerPoint)"
+          [ngModel]="automationPreviewChecked(automation.automationId)"
+          (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+        >
+          <strong>{{ automation.title }}</strong>
+          <span>{{ 'patientsManagement.resource' | translate }}: {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+        </label>
+      </div>
+    </div>
+  </nz-spin>
+</div>

@@ -1,0 +1,61 @@
+.notification-preferences {
+  max-width: 820px;
+}
+
+.notification-preferences section {
+  border-bottom: 1px solid #edf0f3;
+  padding: 18px 0;
+}
+
+.notification-preferences h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.section-help {
+  color: #667085;
+  font-size: 13px;
+  margin: -6px 0 12px;
+}
+
+.preference-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.preference-row span {
+  color: #667085;
+  display: block;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.notification-title {
+  display: block;
+  font-weight: 600;
+}
+
+.event-help-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.nested-section {
+  border: 1px solid #edf0f3;
+  border-radius: 6px;
+  margin: 8px 0 14px;
+  padding: 14px;
+}
+
+.notification-preferences section .nested-section {
+  border-bottom: 1px solid #edf0f3;
+}
+
+.actions {
+  padding-top: 18px;
+}

@@ -1,27 +1,84 @@
 <ng-template #indicatorTemplate><i nz-icon class="loadingSpinner" nzType="loading"></i></ng-template>
 <nz-spin [nzSpinning]="loading" [nzIndicator]="indicatorTemplate">
-  <nz-table [nzShowPagination]="false" [nzBordered]="true" [nzData]="matrix.permissions" nzSize="middle">
-    <thead>
-      <tr>
-        <th rowspan="2">{{ 'rolesPermissions.permissions' | translate }}</th>
-        <th [colspan]="matrix.roles.length" class="text-center">{{ 'rolesPermissions.roles' | translate }}</th>
-      </tr>
-      <tr>
-        <th *ngFor="let role of matrix.roles" nzAlign="center">{{ role.name }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let permission of matrix.permissions">
-        <td nzLeft>{{ permission.name }}</td>
-        <td *ngFor="let role of matrix.roles" nzAlign="center">
-          <div
-            nz-checkbox
-            [disabled]="role.isSuperAdmin || !perms.permissionsOnly([PK.MANAGE_ROLES_PERMISSIONS]) || role.hierarchy <= perms.getUserHierarchy() || !getUserPermissions(permission.name)"
-            [ngModel]="permissionInRole(permission, role)"
-            (ngModelChange)="assignPermissionToRole(permission, role, $event)"
-          ></div>
-        </td>
-      </tr>
-    </tbody>
-  </nz-table>
+  <nz-collapse nzAccordion>
+    <nz-collapse-panel
+      *ngFor="let group of permissionGroups"
+      [nzHeader]="group.name + ' (' + group.permissions.length + ')'"
+    >
+      <nz-table [nzShowPagination]="false" [nzBordered]="true" [nzData]="group.permissions" nzSize="middle">
+        <thead>
+          <tr>
+            <th rowspan="2">{{ 'rolesPermissions.permissions' | translate }}</th>
+            <th [colspan]="matrix.roles.length" class="text-center">{{ 'rolesPermissions.roles' | translate }}</th>
+          </tr>
+          <tr>
+            <th *ngFor="let role of matrix.roles" nzAlign="center">{{ role.name }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let permission of group.permissions">
+            <td nzLeft>
+              <button nz-button nzType="link" class="permission-link" (click)="openPermissionDetail(permission)">
+                {{ permission.name }}
+              </button>
+            </td>
+            <td *ngFor="let role of matrix.roles" nzAlign="center">
+              <div
+                nz-checkbox
+                [disabled]="role.isSuperAdmin || !perms.permissionsOnly([PK.ROLES_EDIT_ALL]) || role.hierarchy <= perms.getUserHierarchy() || !getUserPermissions(permission.name)"
+                [ngModel]="permissionInRole(permission, role)"
+                (ngModelChange)="assignPermissionToRole(permission, role, $event)"
+              ></div>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </nz-collapse-panel>
+  </nz-collapse>
 </nz-spin>
+
+<nz-modal
+  [(nzVisible)]="permissionDetailVisible"
+  [nzTitle]="selectedPermissionDetail?.title"
+  [nzFooter]="null"
+  (nzOnCancel)="permissionDetailVisible = false"
+  nzWidth="760px"
+>
+  <ng-container *nzModalContent>
+  <ng-container *ngIf="selectedPermissionDetail">
+    <div class="permission-detail">
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'rolesPermissions.resource' | translate }}</span>
+          <strong>{{ selectedPermissionDetail.resource }}</strong>
+        </div>
+        <div>
+          <span>{{ 'rolesPermissions.action' | translate }}</span>
+          <strong>{{ selectedPermissionDetail.action }}</strong>
+        </div>
+        <div>
+          <span>{{ 'rolesPermissions.scope' | translate }}</span>
+          <strong>{{ selectedPermissionDetail.scope }}</strong>
+        </div>
+      </div>
+
+      <p>{{ selectedPermissionDetail.description }}</p>
+
+      <h4>{{ 'rolesPermissions.enabledByPermission' | translate }}</h4>
+      <ul>
+        <li *ngFor="let item of selectedPermissionDetail.enabled">{{ item }}</li>
+      </ul>
+
+      <h4>{{ 'rolesPermissions.limits' | translate }}</h4>
+      <ul>
+        <li *ngFor="let item of selectedPermissionDetail.limits">{{ item }}</li>
+      </ul>
+
+      <h4>{{ 'rolesPermissions.scopeExamples' | translate }}</h4>
+      <ul>
+        <li *ngFor="let item of selectedPermissionDetail.examples">{{ item }}</li>
+      </ul>
+    </div>
+  </ng-container>
+  </ng-container>
+</nz-modal>

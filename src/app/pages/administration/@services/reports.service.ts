@@ -55,10 +55,31 @@ export class ReportsService {
     });
   }
 
-  startReportSession(reportId: number, patientId?: number): Observable<FetchResult<any>> {
+  reportSessions(filters: {
+    reportId?: number;
+    userId?: number;
+    patientId?: number;
+    contextType?: string;
+    active?: boolean;
+    from?: string;
+    to?: string;
+  } = {}): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: ReportsQueries.reportSessions,
+      variables: filters,
+      fetchPolicy: 'no-cache',
+    });
+  }
+
+  startReportSession(
+    reportId: number,
+    patientId?: number,
+    contextType?: string,
+    contextParams?: string
+  ): Observable<FetchResult<any>> {
     return this.apollo.mutate({
       mutation: ReportsMutations.startReportSession,
-      variables: { reportId, patientId },
+      variables: { reportId, patientId, contextType, contextParams },
       fetchPolicy: 'no-cache',
     });
   }

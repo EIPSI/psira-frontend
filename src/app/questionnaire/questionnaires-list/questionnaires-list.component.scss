@@ -4,7 +4,7 @@
 
 .patient-details {
   h4 {
-    color: #2c8aa7;
+    color: #186fb5;
     margin-bottom: 0;
   }
 
@@ -18,7 +18,7 @@
   i {
     position: relative;
     bottom: 3px;
-    color: #89d17f;
+    color: #89b3e0;
     font-size: 25px;
   }
   .time-text {
@@ -33,12 +33,12 @@
   .questionnaire-description {
     .ant-alert-info {
       background-color: transparent;
-      border: 1px solid #51a1b9;
+      border: 1px solid #186fb5;
       border-radius: 10px;
       color: #172b4d;
       font-weight: bold;
       .ant-alert-icon {
-        color: #51a1b9;
+        color: #186fb5;
       }
     }
   }
@@ -47,8 +47,8 @@
     padding: 15px;
     cursor: pointer;
     .ant-card {
-      background-color: #f1f4ff;
-      border: 2px solid #89d17f;
+      background-color: #eef4fb;
+      border: 2px solid #89b3e0;
       border-radius: 10px;
     }
     .active {
@@ -87,7 +87,7 @@
       }
       i {
         font-size: 25px;
-        color: #2c8aa7;
+        color: #186fb5;
       }
     }
   }

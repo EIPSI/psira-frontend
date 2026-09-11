@@ -18,6 +18,7 @@ export class EmailTemplatesService {
             paging?: Paging;
             filter?: Filter;
             sorting?: Sorting[];
+            departmentIds?: number[];
         }
     ): Observable<FetchResult<any>>
     {
@@ -27,6 +28,7 @@ export class EmailTemplatesService {
                 paging: params && params.paging ? params.paging : undefined,
                 filter: params && params.filter ? params.filter : undefined,
                 sorting: params && params.sorting ? params.sorting : undefined,
+                departmentIds: params?.departmentIds?.length ? params.departmentIds : undefined,
             },
             fetchPolicy: 'no-cache',
         })
@@ -76,7 +78,8 @@ export class EmailTemplatesService {
                         name: emailTemplate.name,
                         status: emailTemplate.status,
                         subject: emailTemplate.subject,
-                        module: emailTemplate.module,
+                        senderName: emailTemplate.senderName,
+                        purpose: emailTemplate.purpose,
                         body: emailTemplate.body,
                         isPublic: emailTemplate.isPublic,
                         departmentIds: emailTemplate.departmentIds

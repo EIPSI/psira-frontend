@@ -1,0 +1,18 @@
+<h1>{{ 'core.createCaregiver' | translate }}</h1>
+
+<app-form
+  class="mt-3"
+  [form]="caregiverForm"
+  [formData]="caregiver"
+  [isLoading]="isLoading"
+  [populateForm]="populateForm"
+  [resetForm]="resetForm"
+  [inputMode]="true"
+  [showCancelButton]="true"
+  layoutMode="definition"
+  [loadingMessage]="loadingMessage"
+  (searchOptions)="searchPatients($event)"
+  (submitForm)="submitForm($event)"
+  (cancel)="cancel()"
+>
+</app-form>

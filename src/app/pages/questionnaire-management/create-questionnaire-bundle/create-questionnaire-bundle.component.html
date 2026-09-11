@@ -1,33 +1,319 @@
-<button nz-button routerLink="/psira/questionnaire-management/questionnaire-bundles-list" nzType="secondary">Go back</button>
-<div nz-row>
-    <div nz-col nzSpan="24">
-        <form nz-form [formGroup]="bundleForm">
-            <nz-form-item>
-              <nz-form-label [nzSpan]="6">{{'emailTemplates.name' | translate}}</nz-form-label>
-              <nz-form-control [nzSpan]="14">
-                <input placeholder="Select bundle name..." formControlName="name" nz-input name="name" type="text" id="name">
-              </nz-form-control>
-            </nz-form-item >
-            <nz-form-item>
-                <nz-form-label [nzSpan]="6">Questionnaires</nz-form-label>
-                <nz-form-control [nzSpan]="14">
-                    <app-questionnaire-selection 
-                        [selectedQuestionnaires]="selectedQuestionnaires"
-                        (selectionChange)="onQuestionnaireSelected($event)">
-                    </app-questionnaire-selection>
-                </nz-form-control>
-              </nz-form-item >
-            <nz-form-item>
-              <nz-form-label [nzSpan]="6">Departments</nz-form-label>
-              <nz-form-control [nzSpan]="14">
-                  <nz-checkbox-wrapper style="width: 100%; margin-top: 5px;" (nzOnChange)="selectDepartments($event)">
-                      <label style="align-items: center;" [ngModel]="bundleHasDepartment(option.id)" [ngModelOptions]="{standalone: true}" *ngFor="let option of listOfDepartments" [nzValue]="option.id" nz-checkbox>{{option.name}}</label>
-                  </nz-checkbox-wrapper><br><br>
-              </nz-form-control>
-            </nz-form-item>
-            <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="submit" nzType="primary">Submit</button>
-            <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button nzType="primary">Update</button>
-        </form>
-    </div>
-</div>
+<button nz-button routerLink="/psira/questionnaire-management/questionnaire-bundles-list" nzType="secondary">
+  {{ 'core.back' | translate }}
+</button>
 
+<form nz-form [formGroup]="bundleForm" class="bundle-form">
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'emailTemplates.name' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <input [placeholder]="'questionnaireBundles.selectBundleName' | translate" formControlName="name" nz-input name="name" type="text" id="name" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'core.status' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <nz-switch
+        formControlName="active"
+        [nzCheckedChildren]="'core.active' | translate"
+        [nzUnCheckedChildren]="'core.inactive' | translate"
+      ></nz-switch>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'questionnaireBundles.packageHeader' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <angular-editor
+        [config]="editorConfig"
+        [placeholder]="'questionnaireBundles.packageHeaderPlaceholder' | translate"
+        formControlName="headerHtml"
+      ></angular-editor>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'questionnaireBundles.footerNotice' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <angular-editor
+        [config]="editorConfig"
+        [placeholder]="'questionnaireBundles.footerNoticePlaceholder' | translate"
+        formControlName="noticeHtml"
+      ></angular-editor>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'core.departments' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="selectAllDepartments()">
+        {{ 'core.selectAll' | translate }}
+      </button>
+      <button type="button" nz-button nzSize="small" class="department-action" (click)="removeAllDepartments()">
+        {{ 'questionnaireBundles.removeDepartments' | translate }}
+      </button>
+      <nz-checkbox-wrapper style="width: 100%; margin-top: 5px;">
+        <label
+          style="align-items: center;"
+          *ngFor="let option of listOfDepartments"
+          [nzValue]="option.id"
+          [ngModel]="departmentIsSelected(option.id)"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="toggleDepartment(option.id, $event)"
+          nz-checkbox
+        >
+          {{ option.name }}
+        </label>
+      </nz-checkbox-wrapper>
+    </nz-form-control>
+  </nz-form-item>
+
+  <section class="structure-header">
+    <div>
+      <h3>{{ 'questionnaireBundles.sequenceStructure' | translate }}</h3>
+      <p>{{ 'questionnaireBundles.sequenceSummary' | translate:{ questionnaires: countQuestionnaires(), screens: countScreens(), groups: countGroups() } }}</p>
+    </div>
+    <button nz-button type="button" (click)="openPreview()">{{ 'questionnaireBundles.preview' | translate }}</button>
+  </section>
+
+  <section class="root-node" *ngIf="rootNode as root">
+    <div class="node-row root-row">
+      <span class="drag-placeholder"></span>
+      <span class="node-kind">{{ 'questionnaireBundles.rootGroup' | translate }}</span>
+      <input
+        class="group-label"
+        nz-input
+        [(ngModel)]="root.label"
+        [ngModelOptions]="{ standalone: true }"
+        [placeholder]="'questionnaireBundles.rootGroupLabel' | translate"
+      />
+      <nz-select class="mode-select" [ngModel]="root.type" [ngModelOptions]="{ standalone: true }" (ngModelChange)="setRootType($event)">
+        <nz-option nzValue="FIXED_GROUP" [nzLabel]="'questionnaireBundles.fixedGroup' | translate"></nz-option>
+        <nz-option nzValue="RANDOM_GROUP" [nzLabel]="'questionnaireBundles.randomizedGroup' | translate"></nz-option>
+      </nz-select>
+      <ng-container *ngIf="root.type === 'RANDOM_GROUP'">
+        <nz-select class="mode-select" [(ngModel)]="root.randomizationMode" [ngModelOptions]="{ standalone: true }">
+          <nz-option nzValue="RANDOM_ORDER" [nzLabel]="'questionnaireBundles.randomOrder' | translate"></nz-option>
+          <nz-option nzValue="REPLACEMENT" [nzLabel]="'questionnaireBundles.replacement' | translate"></nz-option>
+        </nz-select>
+        <label class="number-field" *ngIf="root.randomizationMode === 'REPLACEMENT'">
+          <span>{{ 'questionnaireBundles.itemsToSelect' | translate }}</span>
+          <nz-input-number
+            [(ngModel)]="root.selectionCount"
+            [ngModelOptions]="{ standalone: true }"
+            [nzMin]="1"
+          ></nz-input-number>
+        </label>
+      </ng-container>
+    </div>
+
+    <div class="child-toolbar">
+      <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(root)">{{ 'questionnaireBundles.addQuestionnaire' | translate }}</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildScreen(root)">{{ 'questionnaireBundles.addScreen' | translate }}</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(root)">{{ 'questionnaireBundles.addFixedGroup' | translate }}</button>
+      <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(root)">{{ 'questionnaireBundles.addRandomizedGroup' | translate }}</button>
+    </div>
+    <p class="random-help" *ngIf="root.type === 'RANDOM_GROUP'">
+      {{ 'questionnaireBundles.randomHelp' | translate }}
+    </p>
+
+    <ng-container
+      *ngTemplateOutlet="nodeList; context: { nodes: root.children, parent: root, level: 1, inRandomGroup: root.type === 'RANDOM_GROUP' }"
+    ></ng-container>
+  </section>
+
+  <button *ngIf="!isUpdateMode" (click)="onFormSubmit()" nz-button type="button" nzType="primary">{{ 'core.submit' | translate }}</button>
+  <button *ngIf="isUpdateMode" (click)="onFormUpdateSubmit()" nz-button type="button" nzType="primary">{{ 'core.update' | translate }}</button>
+</form>
+
+<ng-template #nodeList let-nodes="nodes" let-parent="parent" let-level="level" let-inRandomGroup="inRandomGroup">
+  <div
+    class="node-list"
+    cdkDropList
+    [id]="dropListId(parent)"
+    [cdkDropListData]="nodes"
+    [cdkDropListConnectedTo]="dropListIds()"
+    (cdkDropListDropped)="dropNode($event)"
+    [style.--level]="level"
+  >
+    <div class="node" *ngFor="let node of nodes; let i = index" cdkDrag>
+      <div class="node-row">
+        <button type="button" nz-button nzShape="circle" class="drag-handle" cdkDragHandle>
+          <i nz-icon nzType="drag"></i>
+        </button>
+        <span class="node-kind">{{ node.type }}</span>
+
+        <ng-container [ngSwitch]="node.type">
+          <nz-select
+            *ngSwitchCase="'QUESTIONNAIRE'"
+            class="questionnaire-select"
+            [(ngModel)]="node.questionnaireId"
+            [ngModelOptions]="{ standalone: true }"
+            nzShowSearch
+          >
+            <nz-option *ngFor="let questionnaire of questionnaires" [nzValue]="questionnaire._id" [nzLabel]="questionnaire.name"></nz-option>
+          </nz-select>
+
+          <ng-container *ngSwitchDefault>
+            <input
+              class="group-label"
+              nz-input
+              [(ngModel)]="node.label"
+              [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'questionnaireBundles.internalName' | translate"
+            />
+            <input
+              class="group-label"
+              nz-input
+              [(ngModel)]="node.displayTitle"
+              [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'questionnaireBundles.visibleTitle' | translate"
+            />
+          </ng-container>
+        </ng-container>
+
+        <input
+          *ngIf="node.type === 'QUESTIONNAIRE'"
+          class="group-label"
+          nz-input
+          [(ngModel)]="node.displayTitle"
+          [ngModelOptions]="{ standalone: true }"
+          [placeholder]="'questionnaireBundles.optionalVisibleTitle' | translate"
+        />
+        <label class="inline-toggle" *ngIf="node.type === 'QUESTIONNAIRE'">
+          <nz-switch
+            [(ngModel)]="node.showTitle"
+            [ngModelOptions]="{ standalone: true }"
+            [nzCheckedChildren]="'questionnaireBundles.titleVisible' | translate"
+            [nzUnCheckedChildren]="'questionnaireBundles.titleHidden' | translate"
+          ></nz-switch>
+        </label>
+
+        <ng-container *ngIf="node.type === 'RANDOM_GROUP'">
+          <nz-select class="mode-select" [(ngModel)]="node.randomizationMode" [ngModelOptions]="{ standalone: true }">
+            <nz-option nzValue="RANDOM_ORDER" [nzLabel]="'questionnaireBundles.randomOrder' | translate"></nz-option>
+            <nz-option nzValue="REPLACEMENT" [nzLabel]="'questionnaireBundles.replacement' | translate"></nz-option>
+          </nz-select>
+          <label class="number-field" *ngIf="node.randomizationMode === 'REPLACEMENT'">
+            <span>{{ 'questionnaireBundles.itemsToSelect' | translate }}</span>
+            <nz-input-number
+              [(ngModel)]="node.selectionCount"
+              [ngModelOptions]="{ standalone: true }"
+              [nzMin]="1"
+            ></nz-input-number>
+          </label>
+        </ng-container>
+
+        <label class="number-field" *ngIf="inRandomGroup">
+          <span>{{ 'questionnaireBundles.relativeWeight' | translate }}</span>
+          <nz-input-number
+            [(ngModel)]="node.weight"
+            [ngModelOptions]="{ standalone: true }"
+            [nzMin]="0"
+            nzPlaceHolder="1"
+          ></nz-input-number>
+        </label>
+
+        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, -1)" [disabled]="i === 0">
+          <i nz-icon nzType="up"></i>
+        </button>
+        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, 1)" [disabled]="i === nodes.length - 1">
+          <i nz-icon nzType="down"></i>
+        </button>
+        <button type="button" nz-button nzDanger nzShape="circle" (click)="removeNode(nodes, i)">
+          <i nz-icon nzType="delete"></i>
+        </button>
+      </div>
+
+      <div class="screen-rich-texts" *ngIf="node.type === 'SCREEN'">
+        <label>
+          <span>{{ 'questionnaireBundles.screenHeader' | translate }}</span>
+          <angular-editor
+            [config]="editorConfig"
+            [placeholder]="'questionnaireBundles.screenHeaderPlaceholder' | translate"
+            [(ngModel)]="node.headerHtml"
+            [ngModelOptions]="{ standalone: true }"
+          ></angular-editor>
+        </label>
+        <label>
+          <span>{{ 'questionnaireBundles.screenFooter' | translate }}</span>
+          <angular-editor
+            [config]="editorConfig"
+            [placeholder]="'questionnaireBundles.screenFooterPlaceholder' | translate"
+            [(ngModel)]="node.footerHtml"
+            [ngModelOptions]="{ standalone: true }"
+          ></angular-editor>
+        </label>
+      </div>
+
+      <div class="child-toolbar" *ngIf="node.type !== 'QUESTIONNAIRE'">
+        <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(node)">{{ 'questionnaireBundles.addChildQuestionnaire' | translate }}</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildScreen(node)">{{ 'questionnaireBundles.addChildScreen' | translate }}</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(node)">{{ 'questionnaireBundles.addChildFixedGroup' | translate }}</button>
+        <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(node)">{{ 'questionnaireBundles.addChildRandomizedGroup' | translate }}</button>
+      </div>
+      <p class="random-help" *ngIf="node.type === 'RANDOM_GROUP'">
+        {{ 'questionnaireBundles.randomHelp' | translate }}
+      </p>
+
+      <ng-container *ngIf="node.type !== 'QUESTIONNAIRE'">
+        <ng-container
+          *ngTemplateOutlet="
+            nodeList;
+            context: { nodes: node.children, parent: node, level: level + 1, inRandomGroup: node.type === 'RANDOM_GROUP' }
+          "
+        ></ng-container>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<nz-modal
+  [(nzVisible)]="previewVisible"
+  [nzTitle]="bundleForm.value.name || ('questionnaireBundles.previewTitle' | translate)"
+  [nzFooter]="previewFooter"
+  [nzWidth]="900"
+  [nzClosable]="true"
+  (nzOnCancel)="previewVisible = false"
+>
+  <div *nzModalContent class="bundle-preview">
+    <section class="bundle-preview__header" *ngIf="bundleForm.value.headerHtml" [innerHTML]="bundleForm.value.headerHtml"></section>
+    <article class="bundle-preview__screen" *ngFor="let screen of previewScreenItems; let i = index">
+      <span class="screen-progress">{{ i + 1 }} / {{ previewScreenItems.length }}</span>
+      <h2 *ngIf="screen.title">{{ screen.title }}</h2>
+      <div class="bundle-preview__copy" *ngIf="screen.headerHtml" [innerHTML]="screen.headerHtml"></div>
+      <div class="bundle-preview__questionnaire" *ngFor="let questionnaire of screen.questionnaires">
+        <h3 *ngIf="questionnaire.title">{{ questionnaire.title }}</h3>
+        <section class="bundle-preview__group" *ngFor="let group of questionnaire.questionGroups">
+          <h4 *ngIf="group.label">{{ group.label }}</h4>
+          <article class="bundle-preview__question" *ngFor="let question of group.questions">
+            <strong>{{ question.label || question.name }}</strong>
+            <ng-container [ngSwitch]="question.type">
+              <nz-radio-group *ngSwitchCase="'select_one'" [ngModel]="null" [ngModelOptions]="{ standalone: true }">
+                <label nz-radio disabled *ngFor="let choice of question.choices" [nzValue]="choice.name">
+                  {{ choice.label || choice.name }}
+                </label>
+              </nz-radio-group>
+              <div *ngSwitchCase="'select_multiple'" class="bundle-preview__options">
+                <label nz-checkbox disabled *ngFor="let choice of question.choices">
+                  {{ choice.label || choice.name }}
+                </label>
+              </div>
+              <textarea *ngSwitchCase="'text'" nz-input disabled rows="3" [placeholder]="'questionnaireBundles.answerPlaceholder' | translate"></textarea>
+              <nz-input-number *ngSwitchCase="'integer'" disabled></nz-input-number>
+              <nz-input-number *ngSwitchCase="'decimal'" disabled [nzStep]="0.1"></nz-input-number>
+              <nz-date-picker *ngSwitchCase="'date'" disabled></nz-date-picker>
+              <input *ngSwitchDefault nz-input disabled [placeholder]="'questionnaireBundles.answerPlaceholder' | translate" />
+            </ng-container>
+          </article>
+        </section>
+      </div>
+      <div class="bundle-preview__copy" *ngIf="screen.footerHtml" [innerHTML]="screen.footerHtml"></div>
+      <div class="bundle-preview__notice" *ngIf="bundleForm.value.noticeHtml" [innerHTML]="bundleForm.value.noticeHtml"></div>
+    </article>
+  </div>
+</nz-modal>
+
+<ng-template #previewFooter>
+  <button nz-button type="button" (click)="previewVisible = false">{{ 'core.close' | translate }}</button>
+</ng-template>

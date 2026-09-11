@@ -1,9 +1,27 @@
-article {
-  .head-row {
-    display: flex;
-    justify-content: space-between;
-  }
+.package-header,
+.screen-copy,
+.package-notice {
+  margin: 0 0 18px;
+}
 
+.package-header,
+.package-notice {
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  background: #f8fafc;
+  padding: 14px 16px;
+}
+
+.screen-copy {
+  color: #344054;
+}
+
+.head-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+article {
   section,
   .group-title {
     margin: 2rem 0;
@@ -15,6 +33,53 @@ article {
   }
 }
 
+.screen-progress {
+  display: inline-block;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.screen-questionnaire {
+  border-top: 1px solid #e4e7ec;
+  padding-top: 18px;
+}
+
+.screen-questionnaire h3 {
+  margin: 0 0 12px;
+}
+
+.question-group {
+  margin: 1.5rem 0;
+}
+
+.table-list {
+  width: 100%;
+  margin: 1rem 0 2rem;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.table-list td {
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.table-list nz-radio-group {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.completed-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  text-align: center;
+}
+
 .controls {
   display: flex;
   justify-content: space-between;
@@ -22,5 +87,42 @@ article {
 
   .nav-pills {
     margin: 0 1em;
+  }
+}
+
+@media (max-width: 767px) {
+  .head-row,
+  .controls {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  article {
+    section,
+    .group-title {
+      margin: 1.25rem 0;
+    }
+
+    .question {
+      margin: 2rem 0;
+    }
+  }
+
+  .package-header,
+  .package-notice {
+    padding: 12px;
+  }
+
+  .table-list {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-list nz-radio-group {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 }

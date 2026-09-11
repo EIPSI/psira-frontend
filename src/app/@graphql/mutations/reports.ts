@@ -97,12 +97,20 @@ const addRolesToReport = gql`
 `;
 
 const startReportSession = gql`
-  mutation($reportId: Int!, $patientId: Int) {
-    startReportSession(reportId: $reportId, patientId: $patientId) {
+  mutation($reportId: Int!, $patientId: Int, $contextType: String, $contextParams: String) {
+    startReportSession(
+      reportId: $reportId
+      patientId: $patientId
+      contextType: $contextType
+      contextParams: $contextParams
+    ) {
       id
       reportId
       userId
       patientId
+      contextType
+      contextParams
+      closedBy
       startedAt
       lastSeenAt
       endedAt
@@ -119,6 +127,9 @@ const heartbeatReportSession = gql`
       reportId
       userId
       patientId
+      contextType
+      contextParams
+      closedBy
       startedAt
       lastSeenAt
       endedAt
@@ -135,6 +146,9 @@ const endReportSession = gql`
       reportId
       userId
       patientId
+      contextType
+      contextParams
+      closedBy
       startedAt
       lastSeenAt
       endedAt

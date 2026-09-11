@@ -8,6 +8,8 @@ export class UserModel {
       title: json.active ? 'ACTIVE' : 'INACTIVE',
     };
 
+    json.roles = json.roles || [];
+    json.departments = json.departments || [];
     json.formattedRoles = json.roles.map((role) => ({ color: 'blue', title: role.name }));
     json.formattedDepartments = json.departments.map((dep) => ({ color: 'cyan', title: dep.name }));
     return json;

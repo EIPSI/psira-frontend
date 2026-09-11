@@ -130,7 +130,11 @@
                   <nz-form-control [nzErrorTip]="formItem.validationMessage">
                     <nz-input-group>
                       <label>
-                        <input nz-input formControlName="name" placeholder="{{ formItem.name }} {{ i + 1 }}" />
+                        <input
+                          nz-input
+                          formControlName="name"
+                          [placeholder]="'forms.dynamic.indexedName' | translate: { name: formItem.name, index: i + 1 }"
+                        />
                       </label>
                     </nz-input-group>
                   </nz-form-control>
@@ -162,7 +166,11 @@
                   <nz-form-control [nzErrorTip]="formItem.validationMessage">
                     <nz-input-group>
                       <label>
-                        <input nz-input formControlName="name" placeholder="name {{ i + 1 }}" />
+                        <input
+                          nz-input
+                          formControlName="name"
+                          [placeholder]="'forms.dynamic.name' | translate: { index: i + 1 }"
+                        />
                       </label>
                     </nz-input-group>
                   </nz-form-control>
@@ -171,7 +179,11 @@
                   <nz-form-control [nzErrorTip]="formItem.validationMessage">
                     <nz-input-group>
                       <label>
-                        <input nz-input formControlName="value" placeholder="value {{ i + 1 }}" />
+                        <input
+                          nz-input
+                          formControlName="value"
+                          [placeholder]="'forms.dynamic.value' | translate: { index: i + 1 }"
+                        />
                       </label>
                     </nz-input-group>
                   </nz-form-control>

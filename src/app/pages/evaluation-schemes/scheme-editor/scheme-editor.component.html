@@ -1,0 +1,686 @@
+<nz-spin [nzSpinning]="loading">
+  <div class="editor-shell">
+    <div class="editor-header">
+      <div>
+        <h1>{{ scheme?.id ? ('evaluationSchemes.edit' | translate) : ('evaluationSchemes.create' | translate) }}</h1>
+        <p>{{ 'menu.evaluationSchemes' | translate }}</p>
+      </div>
+      <button nz-button routerLink="/psira/evaluation-schemes">{{ 'core.cancel' | translate }}</button>
+    </div>
+
+    <section class="editor-section">
+      <form nz-form [formGroup]="baseForm" class="base-grid">
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.name' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="name" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.type' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="schemeType">
+              <nz-option
+                *ngFor="let type of schemeTypes"
+                [nzValue]="type"
+                [nzLabel]="schemeTypeLabel[type]"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item class="description-field">
+          <nz-form-label>{{ 'evaluationSchemes.description' | translate }}</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input rows="3" formControlName="description"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.active' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-switch formControlName="active"></nz-switch>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item class="description-field">
+          <nz-form-label>{{ 'departments.departments' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="departmentIds" nzMode="multiple" nzShowSearch nzAllowClear>
+              <nz-option
+                *ngFor="let department of departments"
+                [nzValue]="department.id"
+                [nzLabel]="department.name"
+              ></nz-option>
+            </nz-select>
+            <div class="department-actions">
+              <button nz-button nzSize="small" type="button" (click)="selectAllDepartments()">{{ 'departments.selectAll' | translate }}</button>
+              <button nz-button nzSize="small" type="button" (click)="removeDepartments()">{{ 'departments.removeAll' | translate }}</button>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+
+      </form>
+
+    </section>
+
+    <section class="editor-section" *ngIf="isSessionBased">
+      <div class="section-title">
+        <h2>{{ 'evaluationSchemes.sessionBased' | translate }}</h2>
+        <p>{{ 'evaluationSchemes.sessionBasedHelper' | translate }}</p>
+      </div>
+
+      <form nz-form [formGroup]="sessionResourceForm" class="rule-grid">
+        <div class="rule-subtitle">{{ 'evaluationSchemes.assessmentContent' | translate }}</div>
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.resourceKind' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="resourceKind" (ngModelChange)="onResourceKindChange($event)">
+              <nz-option *ngFor="let kind of resourceKinds" [nzValue]="kind" [nzLabel]="kind"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.assessmentTypeId' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="assessmentTypeId" nzShowSearch>
+              <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'calendar.assessmentNameOptional' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="name" [placeholder]="'calendar.assessmentNameFallbackHint' | translate" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'calendar.content' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="contentType" (ngModelChange)="onContentTypeChange(sessionResourceForm, $event)">
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE" [nzLabel]="'questionnaires.questionnaire' | translate"></nz-option>
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" [nzLabel]="'questionnaireBundles.bundle' | translate"></nz-option>
+              <nz-option [nzValue]="ACT.RANDOMIZATION" [nzLabel]="'randomizations.randomization' | translate"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionResourceForm.get('contentType')?.value === ACT.QUESTIONNAIRE">
+          <nz-form-label>{{ 'evaluationSchemes.questionnaires' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="questionnaireId"
+              nzShowSearch
+              nzServerSearch
+              nzAllowClear
+              (nzOnSearch)="searchQuestionnaires($event)"
+            >
+              <nz-option
+                *ngFor="let questionnaire of foundQuestionnaires"
+                [nzValue]="questionnaire._id"
+                [nzLabel]="questionnaire.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionResourceForm.get('contentType')?.value === ACT.QUESTIONNAIRE_BUNDLE">
+          <nz-form-label>{{ 'questionnaireBundles.bundles' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="questionnaireBundleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionResourceForm.get('contentType')?.value === ACT.RANDOMIZATION">
+          <nz-form-label>{{ 'randomizations.randomization' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="randomizationRuleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="rule-subtitle">{{ 'evaluationSchemes.sessionScheduling' | translate }}</div>
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.scheduling' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="sessionTargetMode" (ngModelChange)="onSessionTargetModeChange($event)">
+              <nz-option [nzValue]="STM.SPECIFIC" [nzLabel]="'evaluationSchemes.specificSessions' | translate"></nz-option>
+              <nz-option [nzValue]="STM.FREQUENCY" [nzLabel]="'evaluationSchemes.sessionFrequency' | translate"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.SPECIFIC">
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.specificSessions' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="sessionSelector" placeholder="2, 5, 7-10" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.FREQUENCY">
+          <nz-form-label>{{ 'evaluationSchemes.everyNSessions' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="everyNSessions" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.FREQUENCY">
+          <nz-form-label>{{ 'evaluationSchemes.fromSession' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="startSessionNumber" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="sessionTargetMode === STM.FREQUENCY">
+          <nz-form-label>{{ 'evaluationSchemes.toSession' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="endSessionNumber" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.activationMinutes' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input type="number" formControlName="activationOffsetMinutes" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'plannedAssessments.expiration' | translate }}</nz-form-label>
+          <nz-form-control>
+            <div class="unit-row">
+              <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+              <nz-select formControlName="availabilityDurationUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
+              </nz-select>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'plannedAssessments.reminders' | translate }}</nz-form-label>
+          <nz-form-control>
+            <div class="unit-row">
+              <input nz-input formControlName="reminderMinutes" [placeholder]="'calendar.remindersPlaceholder' | translate" />
+              <nz-select formControlName="reminderUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
+              </nz-select>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'plannedAssessments.responder' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="responderRoles" nzMode="multiple" nzAllowClear>
+              <nz-option
+                *ngFor="let role of responderRoleOptions"
+                [nzValue]="role.value"
+                [nzLabel]="role.label"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+
+      <div class="section-actions">
+        <button nz-button *ngIf="editingResourceId" (click)="resetSessionResourceForm()">{{ 'evaluationSchemes.cancelEditing' | translate }}</button>
+        <button nz-button nzType="primary" [nzLoading]="saving" (click)="addSessionResource()">
+          {{ editingResourceId ? ('evaluationSchemes.updateAssessment' | translate) : ('evaluationSchemes.addResource' | translate) }}
+        </button>
+      </div>
+
+      <nz-table
+        #sessionResourceTable
+        class="resource-table"
+        [nzData]="sessionResources()"
+        [nzFrontPagination]="false"
+        [nzShowPagination]="false"
+      >
+        <thead>
+          <tr>
+            <th [nzSortFn]="resourceStringSort('resourceKind')">{{ 'calendar.type' | translate }}</th>
+            <th [nzSortFn]="resourceContentSort">{{ 'plannedAssessments.assessment' | translate }}</th>
+            <th [nzSortFn]="resourceTargetSort">{{ 'calendar.sessions' | translate }}</th>
+            <th [nzSortFn]="resourceNumberSort('activationOffsetMinutes')">{{ 'calendar.activationAt' | translate }}</th>
+            <th [nzSortFn]="resourceDurationSort">{{ 'plannedAssessments.expiration' | translate }}</th>
+            <th [nzSortFn]="resourceResponderSort">{{ 'plannedAssessments.responder' | translate }}</th>
+            <th [nzSortFn]="resourceReminderSort">{{ 'plannedAssessments.reminders' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let resource of sessionResourceTable.data"
+            (click)="editSessionResource(resource)"
+            (contextmenu)="openResourceContextMenu($event, resource, resourceMenu)"
+          >
+            <td>{{ resource.resourceKind }}</td>
+            <td>{{ resourceContentLabel(resource) }}</td>
+            <td>{{ resourceTargetLabel(resource) }}</td>
+            <td>{{ resource.activationOffsetMinutes }} min</td>
+            <td>{{ durationLabel(resource.availabilityDurationMinutes, resource.availabilityDurationUnit) }}</td>
+            <td>{{ resourceResponderLabel(resource) }}</td>
+            <td>{{ reminderLabel(resource.reminderMinutes, resource.reminderUnit) }}</td>
+          </tr>
+        </tbody>
+      </nz-table>
+
+      <nz-dropdown-menu #resourceMenu="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-item (click)="deleteContextResource()">{{ 'core.delete' | translate }}</li>
+        </ul>
+      </nz-dropdown-menu>
+    </section>
+
+    <section class="editor-section" *ngIf="isFixedScheme">
+      <div class="section-title">
+        <h2>{{ 'evaluationSchemes.fixedScheme' | translate }}</h2>
+        <p>{{ 'evaluationSchemes.fixedSchemeHelper' | translate }}</p>
+      </div>
+
+      <div class="fixed-builder-toolbar">
+        <div>
+          <strong>{{ 'time.days' | translate }} {{ weekStartDay + 1 }} - {{ weekStartDay + visibleFixedDays.length }}</strong>
+          <span>{{ 'evaluationSchemes.scheduledInteractionsCount' | translate: { count: fixedSlots().length } }}</span>
+        </div>
+        <div class="fixed-nav">
+          <button nz-button nzType="primary" (click)="openRepeatRuleModal()">{{ 'evaluationSchemes.repeatRules' | translate }}</button>
+          <button nz-button nzDanger [disabled]="!fixedSlots().length" (click)="clearFixedSlots()">{{ 'core.clearAll' | translate }}</button>
+          <button nz-button (click)="goToPreviousFixedWeek()" [disabled]="weekStartDay === 0">{{ 'core.previous' | translate }}</button>
+          <button nz-button (click)="weekStartDay = 0">{{ 'evaluationSchemes.dayOne' | translate }}</button>
+          <button
+            nz-button
+            (click)="goToNextFixedWeek()"
+          >
+            {{ 'core.next' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="fixed-layout">
+        <div class="relative-calendar" [style.grid-template-columns]="fixedCalendarGridTemplate">
+          <div class="corner"></div>
+          <div class="day-header" *ngFor="let day of visibleFixedDays">{{ 'time.day' | translate }} {{ day + 1 }}</div>
+          <ng-container *ngFor="let hour of hours">
+            <div class="hour-label">{{ formatHourLabel(hour) }}</div>
+            <div class="hour-cell" [class.night-hour]="isNightHour(hour)" *ngFor="let day of visibleFixedDays">
+              <div
+                class="quarter-cell"
+                *ngFor="let quarter of quarterMinutes"
+                (click)="selectQuarterSlot(day, hour, quarter)"
+                (dragover)="allowFixedSlotDrop($event)"
+                (drop)="dropFixedSlot($event, day, hour, quarter)"
+              >
+                <span
+                  class="slot-event"
+                  draggable="true"
+                  *ngFor="let slot of slotStartsAt(day, hour * 60 + quarter)"
+                  [style.height.px]="fixedSlotBlockHeight(slot)"
+                  (dragstart)="startFixedSlotDrag($event, slot)"
+                  (click)="$event.stopPropagation(); openFixedSlotModal(day, hour * 60 + quarter, slot)"
+                  (contextmenu)="openFixedSlotContextMenu($event, slot, fixedSlotMenu)"
+                >
+                  <strong>{{ fixedSlotContentLabel(slot) }}</strong>
+                  <small>{{ formatRelativeTime(slot) }}</small>
+                  <span class="slot-resize-actions" (click)="$event.stopPropagation()">
+                    <button type="button" [title]="'evaluationSchemes.reduce15Minutes' | translate" (click)="resizeFixedSlot(slot, -15)">-</button>
+                    <button type="button" [title]="'evaluationSchemes.extend15Minutes' | translate" (click)="resizeFixedSlot(slot, 15)">+</button>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <nz-dropdown-menu #fixedSlotMenu="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-item (click)="duplicateContextFixedSlot()">{{ 'core.duplicate' | translate }}</li>
+          <li nz-menu-item (click)="resizeContextFixedSlot(15)">{{ 'evaluationSchemes.extend15Minutes' | translate }}</li>
+          <li nz-menu-item (click)="resizeContextFixedSlot(-15)">{{ 'evaluationSchemes.reduce15Minutes' | translate }}</li>
+          <li nz-menu-item (click)="deleteContextFixedSlot()">{{ 'core.delete' | translate }}</li>
+        </ul>
+      </nz-dropdown-menu>
+    </section>
+
+    <div class="editor-save-actions">
+      <button nz-button routerLink="/psira/evaluation-schemes">{{ 'core.cancel' | translate }}</button>
+      <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveBase()">
+        {{ 'core.save' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <nz-modal
+    [(nzVisible)]="fixedSlotModalVisible"
+    [nzTitle]="(editingFixedSlotId ? 'evaluationSchemes.editInteraction' : 'evaluationSchemes.createInteraction') | translate"
+    [nzOkLoading]="saving"
+    [nzOkText]="'evaluationSchemes.saveInteraction' | translate"
+    [nzCancelText]="'core.cancel' | translate"
+    (nzOnCancel)="closeFixedSlotModal()"
+    (nzOnOk)="saveFixedSlot()"
+  >
+    <form nz-form [formGroup]="fixedSlotForm" class="fixed-modal-form">
+      <div class="modal-grid">
+        <nz-form-item>
+          <nz-form-label nzRequired>{{ 'evaluationSchemes.assessmentTypeId' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="assessmentTypeId" nzShowSearch>
+              <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'calendar.assessmentNameOptional' | translate }}</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="name" [placeholder]="'calendar.assessmentNameFallbackHint' | translate" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.relativeDay' | translate }}</nz-form-label>
+          <nz-form-control><input nz-input [value]="fixedSlotDayTitle()" disabled /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'calendar.content' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="contentType" (ngModelChange)="onContentTypeChange(fixedSlotForm, $event)">
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE" [nzLabel]="'questionnaires.questionnaire' | translate"></nz-option>
+              <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" [nzLabel]="'questionnaireBundles.bundle' | translate"></nz-option>
+              <nz-option [nzValue]="ACT.RANDOMIZATION" [nzLabel]="'randomizations.randomization' | translate"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="fixedSlotForm.get('contentType')?.value === ACT.QUESTIONNAIRE">
+          <nz-form-label>{{ 'questionnaires.questionnaire' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              formControlName="questionnaireId"
+              nzShowSearch
+              nzServerSearch
+              nzAllowClear
+              (nzOnSearch)="searchQuestionnaires($event)"
+            >
+              <nz-option
+                *ngFor="let questionnaire of foundQuestionnaires"
+                [nzValue]="questionnaire._id"
+                [nzLabel]="questionnaire.name"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="fixedSlotForm.get('contentType')?.value === ACT.QUESTIONNAIRE_BUNDLE">
+          <nz-form-label>{{ 'questionnaireBundles.bundle' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="questionnaireBundleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="fixedSlotForm.get('contentType')?.value === ACT.RANDOMIZATION">
+          <nz-form-label>{{ 'randomizations.randomization' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="randomizationRuleId" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.startTimeBlock' | translate }}</nz-form-label>
+          <nz-form-control><input nz-input type="time" step="900" formControlName="startTime" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.endTimeBlock' | translate }}</nz-form-label>
+          <nz-form-control><input nz-input type="time" step="900" formControlName="endTime" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.triggerMode' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="triggerMode">
+              <nz-option [nzValue]="FTM.BLOCK_START" [nzLabel]="'evaluationSchemes.blockStart' | translate"></nz-option>
+              <nz-option [nzValue]="FTM.RANDOM_WITHIN_WINDOW" [nzLabel]="'evaluationSchemes.randomWithinWindow' | translate"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.expirationTime' | translate }}</nz-form-label>
+          <nz-form-control>
+            <div class="unit-row">
+              <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+              <nz-select formControlName="availabilityDurationUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
+              </nz-select>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'plannedAssessments.reminders' | translate }}</nz-form-label>
+          <nz-form-control>
+            <div class="unit-row">
+              <input nz-input formControlName="reminderMinutes" [placeholder]="'calendar.remindersPlaceholder' | translate" />
+              <nz-select formControlName="reminderUnit">
+                <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
+              </nz-select>
+            </div>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.seedOrder' | translate }}</nz-form-label>
+          <nz-form-control><input nz-input type="number" formControlName="seedOrder" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>{{ 'plannedAssessments.responder' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="responderRoles" nzMode="multiple" nzAllowClear>
+              <nz-option
+                *ngFor="let role of responderRoleOptions"
+                [nzValue]="role.value"
+                [nzLabel]="role.label"
+              ></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="checkbox-row">
+          <label nz-checkbox formControlName="required">{{ 'evaluationSchemes.required' | translate }}</label>
+          <label nz-checkbox formControlName="singleResponse">{{ 'evaluationSchemes.singleResponse' | translate }}</label>
+        </div>
+      </div>
+    </form>
+  </nz-modal>
+
+  <nz-modal
+    [(nzVisible)]="repeatRuleModalVisible"
+    [nzTitle]="'evaluationSchemes.repeatRules' | translate"
+    [nzOkLoading]="saving"
+    [nzOkText]="'evaluationSchemes.applyRule' | translate"
+    [nzCancelText]="'core.cancel' | translate"
+    (nzOnCancel)="closeRepeatRuleModal()"
+    (nzOnOk)="applyRepeatRule()"
+  >
+    <form nz-form [formGroup]="repeatRuleForm" class="fixed-modal-form">
+      <div class="modal-grid">
+        <nz-form-item>
+          <nz-form-label>{{ 'evaluationSchemes.ruleType' | translate }}</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="mode">
+              <nz-option [nzValue]="FRM.ADD_FROM_INTERACTION" [nzLabel]="'evaluationSchemes.addFromInteraction' | translate"></nz-option>
+              <nz-option [nzValue]="FRM.EXTEND_LAST_DAY" [nzLabel]="'evaluationSchemes.extendLastDay' | translate"></nz-option>
+              <nz-option [nzValue]="FRM.EXTEND_LAST_WEEK" [nzLabel]="'evaluationSchemes.extendLastWeek' | translate"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <ng-container *ngIf="repeatRuleForm.get('mode')?.value === FRM.ADD_FROM_INTERACTION">
+          <nz-form-item>
+            <nz-form-label nzRequired>{{ 'evaluationSchemes.assessmentTypeId' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="assessmentTypeId" nzShowSearch>
+                <nz-option *ngFor="let type of assessmentTypes" [nzValue]="type.id" [nzLabel]="type.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'calendar.assessmentNameOptional' | translate }}</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="name" [placeholder]="'calendar.assessmentNameFallbackHint' | translate" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'evaluationSchemes.defaultPreset' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="preset">
+                <nz-option
+                  *ngFor="let preset of repeatPresets"
+                  [nzValue]="preset.value"
+                  [nzLabel]="preset.label | translate"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'calendar.content' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="contentType" (ngModelChange)="onContentTypeChange(repeatRuleForm, $event)">
+                <nz-option [nzValue]="ACT.QUESTIONNAIRE" [nzLabel]="'questionnaires.questionnaire' | translate"></nz-option>
+                <nz-option [nzValue]="ACT.QUESTIONNAIRE_BUNDLE" [nzLabel]="'questionnaireBundles.bundle' | translate"></nz-option>
+                <nz-option [nzValue]="ACT.RANDOMIZATION" [nzLabel]="'randomizations.randomization' | translate"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item *ngIf="repeatRuleForm.get('contentType')?.value === ACT.QUESTIONNAIRE">
+            <nz-form-label>{{ 'questionnaires.questionnaire' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select
+                formControlName="questionnaireId"
+                nzShowSearch
+                nzServerSearch
+                nzAllowClear
+                (nzOnSearch)="searchQuestionnaires($event)"
+              >
+                <nz-option
+                  *ngFor="let questionnaire of foundQuestionnaires"
+                  [nzValue]="questionnaire._id"
+                  [nzLabel]="questionnaire.name"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item *ngIf="repeatRuleForm.get('contentType')?.value === ACT.QUESTIONNAIRE_BUNDLE">
+            <nz-form-label>{{ 'questionnaireBundles.bundle' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="questionnaireBundleId" nzShowSearch nzAllowClear>
+                <nz-option *ngFor="let bundle of questionnaireBundles" [nzValue]="bundle._id" [nzLabel]="bundle.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item *ngIf="repeatRuleForm.get('contentType')?.value === ACT.RANDOMIZATION">
+            <nz-form-label>{{ 'randomizations.randomization' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="randomizationRuleId" nzShowSearch nzAllowClear>
+                <nz-option *ngFor="let randomization of randomizations" [nzValue]="randomization.id" [nzLabel]="randomization.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'evaluationSchemes.startingFrom' | translate }}</nz-form-label>
+            <nz-form-control><input nz-input type="number" min="1" formControlName="startingDay" /></nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'evaluationSchemes.numberOfDays' | translate }}</nz-form-label>
+            <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfDays" /></nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'evaluationSchemes.triggerMode' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="triggerMode">
+                <nz-option [nzValue]="FTM.BLOCK_START" [nzLabel]="'evaluationSchemes.blockStart' | translate"></nz-option>
+                <nz-option [nzValue]="FTM.RANDOM_WITHIN_WINDOW" [nzLabel]="'evaluationSchemes.randomWithinWindow' | translate"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'evaluationSchemes.expirationTime' | translate }}</nz-form-label>
+            <nz-form-control>
+              <div class="unit-row">
+                <input nz-input type="number" formControlName="availabilityDurationMinutes" />
+                <nz-select formControlName="availabilityDurationUnit">
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
+                </nz-select>
+              </div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'plannedAssessments.reminders' | translate }}</nz-form-label>
+            <nz-form-control>
+              <div class="unit-row">
+                <input nz-input formControlName="reminderMinutes" [placeholder]="'calendar.remindersPlaceholder' | translate" />
+                <nz-select formControlName="reminderUnit">
+                  <nz-option *ngFor="let unit of timeUnits" [nzValue]="unit.value" [nzLabel]="unit.label | translate"></nz-option>
+                </nz-select>
+              </div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>{{ 'plannedAssessments.responder' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="responderRoles" nzMode="multiple" nzAllowClear>
+                <nz-option
+                  *ngFor="let role of responderRoleOptions"
+                  [nzValue]="role.value"
+                  [nzLabel]="role.label"
+                ></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <div class="checkbox-row">
+            <label nz-checkbox formControlName="required">{{ 'evaluationSchemes.required' | translate }}</label>
+            <label nz-checkbox formControlName="singleResponse">{{ 'evaluationSchemes.singleResponse' | translate }}</label>
+          </div>
+        </ng-container>
+
+        <nz-form-item *ngIf="repeatRuleForm.get('mode')?.value === FRM.EXTEND_LAST_DAY">
+          <nz-form-label>{{ 'evaluationSchemes.numberOfDays' | translate }}</nz-form-label>
+          <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfDays" /></nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item *ngIf="repeatRuleForm.get('mode')?.value === FRM.EXTEND_LAST_WEEK">
+          <nz-form-label>{{ 'evaluationSchemes.numberOfWeeks' | translate }}</nz-form-label>
+          <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfWeeks" /></nz-form-control>
+        </nz-form-item>
+      </div>
+    </form>
+  </nz-modal>
+</nz-spin>

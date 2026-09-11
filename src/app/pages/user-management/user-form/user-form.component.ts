@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { userForms } from '@app/pages/user-management/@forms/user.form';
 import { Form } from '@shared/components/form/@types/form';
@@ -24,8 +24,12 @@ import { DeleteOneInput } from '../../../@shared/@types/delete-one-input';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { finalize } from 'rxjs/operators';
 import { NzModalService } from 'ng-zorro-antd/modal';
+import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
+import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
+import { AuthService } from '@app/auth/auth.service';
+import { TranslateService } from '@ngx-translate/core';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-user-form',
@@ -33,6 +37,10 @@ const CryptoJS = require('crypto-js');
   styleUrls: ['./user-form.component.scss'],
 })
 export class UserFormComponent implements OnInit {
+  @Input() section: 'all' | 'profile' | 'settings' = 'all';
+  @Input() showTitle = true;
+  @Input() userOverride?: User;
+  @Input() roleCodeOverride?: string;
   @ViewChild(FormComponent) _child: FormComponent;
   PK = PermissionKey;
   user: User;
@@ -43,7 +51,7 @@ export class UserFormComponent implements OnInit {
   modalType: ModalType;
   updatePasswordForm: Form = userForms.updateUserPassword;
   changePasswordModal: ModalType = {
-    title: 'Change Password',
+    title: 'userManagement.changePassword',
     type: 'changePassword',
   };
   newMode = false;
@@ -63,11 +71,34 @@ export class UserFormComponent implements OnInit {
   selectedDepartments: number[] = [];
   unselectedDepartments: number[];
   currentUser: User;
-  private defaultRoleCode: string;
+  assignmentLoading = false;
+  selectedSupervisorId: number;
+  selectedTherapistId: number;
+  availableSupervisors: User[] = [];
+  availableTherapists: User[] = [];
+  assignedSupervisors: User[] = [];
+  assignedTherapists: User[] = [];
+  public defaultRoleCode: string;
+  public automationPreview: any[] = [];
+  public automationPreviewLoading = false;
+  public skippedAutomationIds: number[] = [];
+  public triggerPointLabel: any = EvaluationAutomationTriggerPointLabel;
+  private particularDepartment?: Department;
+  private previewRoleIds: number[] = [];
+  private previewDepartmentIds: number[] = [];
 
   get userTitle(): string {
     const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
     return [this.user?.workID, name].filter((s) => !!s).join(' - ');
+  }
+
+  get userDisplayName(): string {
+    const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
+    return name || this.user?.email || this.user?.username || '';
+  }
+
+  get isOwnUserProfile(): boolean {
+    return !!this.user?.id && !!this.currentUser?.id && Number(this.user.id) === Number(this.currentUser.id);
   }
 
   constructor(
@@ -79,14 +110,42 @@ export class UserFormComponent implements OnInit {
     private errorService: ErrorHandlerService,
     private rolesService: RolesService,
     public perms: AppPermissionsService,
-    private departmentsService: DepartmentsService
+    private departmentsService: DepartmentsService,
+    private evaluationAutomationsService: EvaluationAutomationsService,
+    private authService: AuthService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
-    this.getUserFromUrl();
+    if (this.userOverride) {
+      this.defaultRoleCode = this.roleCodeOverride || this.userOverride.roles?.[0]?.code;
+      this.user = this.withProfileRelations({ ...this.userOverride });
+      if (this.user.birthDate) this.user.birthDate = String(this.user.birthDate).slice(0, 10) as any;
+      this.newMode = false;
+      this.inputMode = false;
+      this.showCancelButton = true;
+      this.profileFields = userForms.userProfileEdit;
+      this.populateForm = true;
+    } else {
+      this.getUserFromUrl();
+    }
     this.getUser();
-    this.getRoles({ paging: { first: 50 } });
-    this.getDepartments({paging: {first: 50}});
+    if (this.shouldLoadProfileOptions()) {
+      this.getRoles({ paging: { first: 50 } });
+      this.getDepartments({ paging: { first: 50 } });
+      this.getParticularDepartment();
+    }
+  }
+
+  private shouldLoadProfileOptions(): boolean {
+    if (this.section === 'settings') return false;
+    return this.perms.permissionsOnly([
+      PermissionKey.USERS_EDIT_DEPARTMENT,
+      PermissionKey.ROLES_VIEW_ALL,
+      PermissionKey.ROLES_EDIT_ALL,
+      PermissionKey.SETTINGS_VIEW_ALL,
+      PermissionKey.SETTINGS_EDIT_ALL,
+    ]);
   }
 
   getDepartments(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[] }) {
@@ -97,26 +156,31 @@ export class UserFormComponent implements OnInit {
       .subscribe(
         ({ data }: any) => {
           const page = data.departments;
-          this.departments = page.edges
-            .map((departmentData: any) => Convert.toDepartment(departmentData.node))
-            .filter((department: Department) => department.name !== 'Particular');
-
-          this.profileFields.groups.map((group) => {
-            group.fields.map((field) => {
-              if (field.name === 'departmentId') {
-                field.options = this.departments.map((department: Department) => {
-                  return {
-                    value: department.id,
-                    label: `${department.name}`,
-                  };
-                });
-              }
-            });
-          });
+          const departments = page.edges.map((departmentData: any) => Convert.toDepartment(departmentData.node));
+          this.particularDepartment = departments.find((department: Department) => department.name === 'Particular');
+          this.departments = departments;
+          this.updateDepartmentFieldForSelectedRoles();
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: 'Unable to load departments',
+            prefix: this.translate.instant('departments.unableLoadDepartments'),
+          })
+      );
+  }
+
+  getParticularDepartment(): void {
+    this.departmentsService
+      .departments({
+        paging: { first: 1 },
+        filter: { name: { eq: 'Particular' } } as any,
+      })
+      .subscribe(
+        ({ data }: any) => {
+          this.particularDepartment = data.departments.edges.map((edge: any) => Convert.toDepartment(edge.node))[0];
+        },
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('departments.unableLoadParticularDepartment'),
           })
       );
   }
@@ -132,7 +196,10 @@ export class UserFormComponent implements OnInit {
   showChangePasswordForm() {
     this.showModal = true;
     this.modalType = Object.assign({}, this.changePasswordModal);
-    this.modalType.title = `${this.modalType.title} for ${this.user.username}: ${this.user.firstName} ${this.user.lastName}`;
+    this.modalType.title = this.translate.instant('userManagement.changePasswordForUser', {
+      username: this.user.username,
+      name: this.formatFullName(this.user),
+    });
   }
 
   getRoles(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting }) {
@@ -152,8 +219,12 @@ export class UserFormComponent implements OnInit {
           })
         );
         this.applyDefaultRole();
+        this.updateDepartmentFieldForSelectedRoles();
+        if (this.section !== 'settings') {
+          this.loadAssignmentOptions();
+        }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableLoadRoles') })
     );
   }
 
@@ -163,11 +234,11 @@ export class UserFormComponent implements OnInit {
 
   handleDeleteAction(user: User) {
     this.modalService.confirm({
-      nzTitle: 'Confirm',
-      nzContent: `Are you sure you want to delete ${this.user.firstName} ${this.user.lastName}`,
-      nzOkText: 'Delete',
+      nzTitle: this.translate.instant('core.confirm'),
+      nzContent: this.translate.instant('userManagement.deleteUserConfirm', { name: this.formatFullName(this.user) }),
+      nzOkText: this.translate.instant('core.delete'),
       nzOnOk: () => this.deleteUser(user),
-      nzCancelText: 'Cancel',
+      nzCancelText: this.translate.instant('core.cancel'),
     });
   }
 
@@ -181,7 +252,7 @@ export class UserFormComponent implements OnInit {
         () => this.router.navigate(['/psira/user-management/users']),
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to delete user "${user.firstName} ${user.lastName}"`,
+            prefix: this.translate.instant('userManagement.unableDeleteUser', { name: this.formatFullName(user) }),
           })
       );
   }
@@ -189,6 +260,10 @@ export class UserFormComponent implements OnInit {
   handleCancel() {
     this.updatePasswordForm.groups.map((group) => group.fields.map((field) => (field.value = '')));
     this.showModal = false;
+  }
+
+  closeSupervisorCreatePanel(): void {
+    this.router.navigate(['/psira/user-management/supervisors']);
   }
 
   userHasDepartment(departmentId: number): boolean {
@@ -221,15 +296,24 @@ export class UserFormComponent implements OnInit {
         this.newMode = false;
         this.inputMode = false;
         this.showCancelButton = true;
-        const bytes = CryptoJS.AES.decrypt(params.user, environment.secretKey);
-        const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.user, environment.secretKey);
+        const decryptedData = JSON.parse(bytes);
         this.user = this.withProfileRelations(decryptedData);
         if (this.user.birthDate) this.user.birthDate = decryptedData.birthDate.slice(0, 10);
         this.profileFields = userForms.userProfileEdit;
         this.populateForm = true;
+        if (this.section !== 'settings') {
+          this.loadAssignmentOptions();
+        }
+      } else if (this.activatedRoute.snapshot.data?.ownProfile) {
+        this.loadOwnUserProfile();
       } else {
-        this.defaultRoleCode = params.roleCode;
-        this.user = { password: this.generateTemporaryPassword() } as User & { password: string };
+        this.defaultRoleCode = params.roleCode || this.activatedRoute.snapshot.data?.roleCode;
+        const draft = params.draft ? this.decryptDraft(params.draft) : {};
+        this.user = { ...draft } as User;
+        if (draft.departmentIds) {
+          (this.user as any).departmentId = draft.departmentIds;
+        }
         this.resetForm = false;
         this.newMode = true;
         this.inputMode = true;
@@ -237,24 +321,86 @@ export class UserFormComponent implements OnInit {
         this.applyDefaultRole();
         this.populateForm = true;
         this.showCancelButton = false;
+        if (this.section !== 'settings') {
+          this.loadAssignmentOptions();
+        }
+        this.refreshAutomationPreview();
       }
     });
   }
 
+  private loadOwnUserProfile(): void {
+    this.isLoading = true;
+    this.authService
+      .getUserProfile()
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe(
+        ({ data }) => {
+          this.user = this.withProfileRelations(UserModel.fromJson(data.getUserProfile));
+          this.currentUser = this.user;
+          localStorage.setItem('user', JSON.stringify(data.getUserProfile));
+          this.defaultRoleCode = this.user.roles?.[0]?.code;
+          if (this.user.birthDate) this.user.birthDate = String(this.user.birthDate).slice(0, 10) as any;
+          this.newMode = false;
+          this.inputMode = false;
+          this.showCancelButton = true;
+          this.profileFields = userForms.userProfileEdit;
+          this.populateForm = true;
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load profile' })
+      );
+  }
+
+  public handleProfileInputChange(change: { name: string; value: any }): void {
+    if (!this.newMode || !['roleId', 'departmentId'].includes(change.name)) {
+      return;
+    }
+    if (change.name === 'roleId') {
+      this.previewRoleIds = Array.isArray(change.value) ? change.value : [change.value].filter((id) => !!id);
+      this.updateDepartmentFieldForSelectedRoles();
+    }
+    if (change.name === 'departmentId') {
+      this.previewDepartmentIds = Array.isArray(change.value) ? change.value : [change.value].filter((id) => !!id);
+    }
+    this.refreshAutomationPreview();
+  }
+
+  public toggleAutomationPreview(automationId: number, checked: boolean): void {
+    this.skippedAutomationIds = checked
+      ? this.skippedAutomationIds.filter((id) => id !== automationId)
+      : [...new Set([...this.skippedAutomationIds, automationId])];
+  }
+
+  public automationPreviewChecked(automationId: number): boolean {
+    return !this.skippedAutomationIds.includes(automationId);
+  }
+
+  public automationsForTrigger(triggerPoint: string): any[] {
+    return this.automationPreview.filter((automation) => automation.triggerPoint === triggerPoint);
+  }
+
+  public automationPreviewTriggerPoints(): string[] {
+    return [...new Set(this.automationPreview.map((automation) => automation.triggerPoint))];
+  }
+
   createUser(formData: any) {
+    formData.username = formData.email.toLowerCase();
+    formData.roleCodes = this.getRoleCodes(formData.roleId ?? []);
+    if (!this.defaultRoleCode && this.redirectSpecialRoleCreation(formData)) {
+      return;
+    }
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    formData.username = formData.email.toLowerCase();
-    formData.roleCodes = this.getRoleCodes(formData.roleId ?? []);
-    formData.departmentIds = formData.departmentId ?? [];
+    formData.departmentIds = this.withDefaultDepartmentsForRoles(formData.departmentId ?? [], formData.roleCodes);
+    formData.skippedAutomationIds = this.skippedAutomationIds;
     delete formData.roleId;
     delete formData.departmentId;
     const inputData: CreateUserInput = Object.assign({}, formData);
     const userInput: CreateOneUserInput = {
       user: inputData,
     };
-    this.loadingMessage = `Creating user ${inputData.firstName} ${inputData.lastName}`;
+    this.loadingMessage = this.translate.instant('userManagement.creatingUser', { name: this.formatFullName(inputData as any) });
     this.usersService
       .createUser(userInput)
       .pipe(
@@ -266,23 +412,30 @@ export class UserFormComponent implements OnInit {
       .subscribe(
         ({ data }) => {
           this._child.toggleEdit();
-          this.message.create('success', `User has successfully been created`);
+          this.message.create('success', this.translate.instant('userManagement.userCreated'));
 
           this.user = UserModel.fromJson(data.createOneUser);
           this.user = this.withProfileRelations(this.user);
+          this.assignInitialRelationship();
           this.afterCreate();
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: 'Unable to create user',
+            prefix: this.translate.instant('userManagement.unableCreateUser'),
           })
       );
   }
 
   updateUser(userUpdates: CreateUserInput) {
     userUpdates.username = userUpdates.email?.toLowerCase();
-    userUpdates.roleCodes = this.getRoleCodes((userUpdates as any).roleId ?? []);
-    userUpdates.departmentIds = (userUpdates as any).departmentId ?? [];
+    const roleIds = (userUpdates as any).roleId;
+    const departmentIds = (userUpdates as any).departmentId;
+    if (roleIds !== undefined) {
+      userUpdates.roleCodes = this.getRoleCodes(roleIds ?? []);
+    }
+    if (departmentIds !== undefined) {
+      userUpdates.departmentIds = this.withDefaultDepartmentsForRoles(departmentIds ?? [], userUpdates.roleCodes);
+    }
     delete (userUpdates as any).roleId;
     delete (userUpdates as any).departmentId;
 
@@ -293,7 +446,7 @@ export class UserFormComponent implements OnInit {
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    this.loadingMessage = `Updating user ${userUpdates.firstName} ${userUpdates.lastName}`;
+    this.loadingMessage = this.translate.instant('userManagement.updatingUser', { name: this.formatFullName(userUpdates as any) });
     this.usersService
       .updateUser(userInput)
       .pipe(
@@ -307,12 +460,12 @@ export class UserFormComponent implements OnInit {
           this.user = UserModel.fromJson(data.updateOneUser);
           this.user = this.withProfileRelations(this.user);
           this._child.toggleEdit();
-          this.message.create('success', `User has successfully been updated`);
+          this.message.create('success', this.translate.instant('userManagement.userUpdated'));
         },
         (error) => {
           this.populateForm = true;
           this.errorService.handleError(error, {
-            prefix: `Unable to update user "${userUpdates.firstName} ${userUpdates.lastName}"`,
+            prefix: this.translate.instant('userManagement.unableUpdateUser', { name: this.formatFullName(userUpdates as any) }),
           });
         }
       );
@@ -341,11 +494,9 @@ export class UserFormComponent implements OnInit {
   afterCreate() {
     this.populateForm = false;
     this.resetForm = false;
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
+    const dataString = this.encryptUserForRoute(this.user);
     this.router.navigate([this.defaultRoleCode ? '/psira/user-management/profile' : '/psira/user-management/user-form'], {
-      state: {
-        title: `${this.user.firstName} ${this.user.lastName}`,
-      },
+      state: { title: this.formatFullName(this.user) },
       queryParams: {
         user: dataString,
         roleCode: this.defaultRoleCode,
@@ -354,26 +505,64 @@ export class UserFormComponent implements OnInit {
     this.newMode = false;
   }
 
+  assignSupervisor(): void {
+    if (!this.user?.id || !this.selectedSupervisorId) return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .assignTherapistSupervisor({ therapistId: this.user.id, supervisorId: this.selectedSupervisorId })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        () => {
+          this.selectedSupervisorId = null;
+          this.loadAssignedSupervisors();
+        },
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignSupervisor') })
+      );
+  }
+
+  assignTherapist(): void {
+    if (!this.user?.id || !this.selectedTherapistId) return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .assignTherapistSupervisor({ therapistId: this.selectedTherapistId, supervisorId: this.user.id })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        () => {
+          this.selectedTherapistId = null;
+          this.loadAssignedTherapists();
+        },
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignTherapist') })
+      );
+  }
+
   assignRoles(role?: Role) {
     this.isLoading = true;
     const rolesIds: number[] = role ? [role.id] : this.selectedRoles;
     const currentRoleIds = this.user.roles?.map((userRole) => userRole.id) ?? [];
     const nextRoleIds = [...new Set([...currentRoleIds, ...rolesIds])];
+    const roleCodes = this.getRoleCodes(nextRoleIds);
+    const update: any = { roleCodes };
+    update.departmentIds = this.withDefaultDepartmentsForRoles(
+      this.user.departments?.map((department) => Number(department.id)) ?? [],
+      roleCodes
+    );
     this.usersService
       .updateUser({
         id: this.user.id,
-        update: { roleCodes: this.getRoleCodes(nextRoleIds) },
+        update,
       })
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         ({ data }) => {
           this.user = UserModel.fromJson(data.updateOneUser);
           this.user = this.withProfileRelations(this.user);
-          this.message.create('success', `the role(s) have been successful assigned to ${this.user.firstName}`);
+          this.message.create('success', this.translate.instant('userManagement.rolesAssigned'));
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to assign role(s) to ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableAssignRoles'),
           })
       );
   }
@@ -393,11 +582,11 @@ export class UserFormComponent implements OnInit {
         ({ data }) => {
           this.user = UserModel.fromJson(data.updateOneUser);
           this.user = this.withProfileRelations(this.user);
-          this.message.create('success', `the role(s) have been successful removed from ${this.user.firstName}`);
+          this.message.create('success', this.translate.instant('userManagement.rolesRemoved'));
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to remove role(s) to ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableRemoveRoles'),
           })
       );
   }
@@ -418,12 +607,12 @@ export class UserFormComponent implements OnInit {
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         () => {
-          this.message.create('success', `the department(s) have been successful assigned to ${this.user.firstName}`);
+          this.message.create('success', this.translate.instant('userManagement.departmentsAssigned'));
           this.user.departments.push(department);
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to assign department(s) to ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableAssignDepartments'),
           })
       );
   }
@@ -435,10 +624,10 @@ export class UserFormComponent implements OnInit {
       .removeDepartmentsFromUser(this.user.id, departmentsIds)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
-        () => this.message.success(`the department(s) have been successful removed from ${this.user.firstName}`),
+        () => this.message.success(this.translate.instant('userManagement.departmentsRemoved')),
         (error) =>
           this.errorService.handleError(error, {
-            prefix: `Unable to remove department(s) from ${this.user.firstName}`,
+            prefix: this.translate.instant('userManagement.unableRemoveDepartments'),
           })
       );
   }
@@ -466,7 +655,7 @@ export class UserFormComponent implements OnInit {
   updateUserPassword(form: any) {
     if (this.user.id) {
       this.isLoading = true;
-      this.loadingMessage = `Updating user ${this.user.firstName} ${this.user.lastName}`;
+      this.loadingMessage = this.translate.instant('userManagement.updatingUser', { name: this.formatFullName(this.user) });
       const inputs: UserUpdatePasswordInput = {
         id: this.user.id,
         newPassword: form.newPassword,
@@ -483,7 +672,7 @@ export class UserFormComponent implements OnInit {
         .subscribe(
           (_) => {
             this.showModal = false;
-            this.message.create('success', `Password has successfully been changed`);
+            this.message.create('success', this.translate.instant('systemMessages.passwordChanged'));
             this.updatePasswordForm.groups.map((group) => {
               group.fields.map((field) => {
                 field.value = '';
@@ -492,7 +681,7 @@ export class UserFormComponent implements OnInit {
           },
           (error) =>
             this.errorService.handleError(error, {
-              prefix: 'Unable to change password',
+              prefix: this.translate.instant('systemMessages.unableChangePassword'),
             })
         );
     }
@@ -506,13 +695,8 @@ export class UserFormComponent implements OnInit {
     return this.user?.id && this.currentUser?.id && this.user.id === this.currentUser.id;
   }
 
-  private generateTemporaryPassword(): string {
-    const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-    return password;
+  private formatFullName(user: Partial<User> | Partial<CreateUserInput>): string {
+    return [user?.firstName, (user as any)?.middleName, user?.lastName].filter((part) => !!part).join(' ');
   }
 
   private getRoleCodes(roleIds: number[]): string[] {
@@ -521,10 +705,111 @@ export class UserFormComponent implements OnInit {
       .map((role) => role.code);
   }
 
+  private redirectSpecialRoleCreation(formData: any): boolean {
+    const routeByRole: Record<string, string> = {
+      PATIENT: '/psira/case-management/profile',
+      THERAPIST: '/psira/user-management/therapist-form',
+      CAREGIVER: '/psira/case-management/caregiver-form',
+      SUPERVISOR: '/psira/user-management/supervisor-form',
+    };
+    const roleCode = ['PATIENT', 'THERAPIST', 'CAREGIVER', 'SUPERVISOR']
+      .find((code) => (formData.roleCodes || []).includes(code));
+    const route = roleCode ? routeByRole[roleCode] : undefined;
+    if (!route) return false;
+
+    const { password, newPassword, oldPassword, confirmPassword, ...safeFormData } = formData;
+    const draft = {
+      ...safeFormData,
+      departmentIds: formData.departmentId ?? [],
+      roleCodes: formData.roleCodes,
+    };
+    delete draft.roleId;
+    delete draft.departmentId;
+    const dataString = encryptRouteObject(draft, environment.secretKey);
+    this.router.navigate([route], {
+      queryParams: {
+        draft: dataString,
+        roleCode,
+      },
+    });
+    return true;
+  }
+
+  private encryptUserForRoute(user: User): string {
+    return encryptRouteObject(user, environment.secretKey);
+  }
+
+  private decryptDraft(value: string): any {
+    try {
+      const bytes = decryptRoutePayload(value, environment.secretKey);
+      return JSON.parse(bytes);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  private withDefaultDepartmentsForRoles(departmentIds: number[], roleCodes?: string[]): number[] {
+    const defaults = this.departments
+      .filter((department) => this.departmentDefaultsForAnyRole(department, roleCodes || []))
+      .map((department) => Number(department.id))
+      .filter((id) => !!id);
+    return [...new Set([...(departmentIds ?? []).map(Number), ...defaults])];
+  }
+
   private withProfileRelations(user: User): User {
     (user as any).roleId = user.roles?.map((role) => role.id) ?? [];
     (user as any).departmentId = user.departments?.map((department) => department.id) ?? [];
     return user;
+  }
+
+  private refreshAutomationPreview(): void {
+    if (!this.newMode) {
+      this.automationPreview = [];
+      return;
+    }
+
+    setTimeout(() => {
+      const roleIds = this.previewRoleIds.length
+        ? this.previewRoleIds
+        : this.currentProfileFieldValue('roleId') || (this.user as any)?.roleId || [];
+      const departmentIds = this.previewDepartmentIds.length
+        ? this.previewDepartmentIds
+        : this.currentProfileFieldValue('departmentId') || (this.user as any)?.departmentId || [];
+      const normalizedRoleIds = Array.isArray(roleIds) ? roleIds : [roleIds].filter((id) => !!id);
+      const normalizedDepartmentIds = Array.isArray(departmentIds)
+        ? departmentIds
+        : [departmentIds].filter((id) => !!id);
+
+      if (!normalizedRoleIds.length || !normalizedDepartmentIds.length) {
+        this.automationPreview = [];
+        this.skippedAutomationIds = [];
+        return;
+      }
+
+      this.automationPreviewLoading = true;
+      this.evaluationAutomationsService
+        .previewAutomations({
+          roleIds: normalizedRoleIds.map(Number),
+          departmentIds: normalizedDepartmentIds.map(Number),
+        })
+        .pipe(finalize(() => (this.automationPreviewLoading = false)))
+        .subscribe(
+          (automations) => {
+            this.automationPreview = automations;
+            const availableIds = automations.map((automation) => automation.automationId);
+            this.skippedAutomationIds = this.skippedAutomationIds.filter((id) => availableIds.includes(id));
+          },
+          (error) => this.errorService.handleError(error, { prefix: 'Unable to load automation preview' })
+        );
+    });
+  }
+
+  private currentProfileFieldValue(fieldName: string): any {
+    for (const group of this.profileFields.groups || []) {
+      const field = group.fields.find((item: any) => item.name === fieldName);
+      if (field) return field.value;
+    }
+    return undefined;
   }
 
   private applyDefaultRole(): void {
@@ -534,7 +819,135 @@ export class UserFormComponent implements OnInit {
     if (!defaultRole) return;
 
     (this.user as any).roleId = [defaultRole.id];
+    this.previewRoleIds = [defaultRole.id];
+    this.updateDepartmentFieldForSelectedRoles();
+    this.refreshAutomationPreview();
     this.populateForm = false;
     setTimeout(() => (this.populateForm = true));
+  }
+
+  private updateDepartmentFieldForSelectedRoles(): void {
+    const roleIds = this.previewRoleIds.length
+      ? this.previewRoleIds
+      : this.currentProfileFieldValue('roleId') || (this.user as any)?.roleId || [];
+    const normalizedRoleIds = Array.isArray(roleIds) ? roleIds : [roleIds].filter((id) => !!id);
+    const roleCodes = this.getRoleCodes(normalizedRoleIds.map(Number));
+    const departmentField = this.findProfileField('departmentId');
+    if (!departmentField) return;
+
+    const filteredDepartments = roleCodes.length
+      ? this.departments.filter((department) => this.departmentAppliesToAnyRole(department, roleCodes))
+      : this.departments;
+
+    departmentField.options = filteredDepartments.map((department: Department) => ({
+      value: department.id,
+      label: department.name,
+    }));
+    departmentField.isRequired = !roleCodes.includes('SUPER_ADMIN');
+
+    const currentValue = this.currentProfileFieldValue('departmentId') || (this.user as any)?.departmentId || [];
+    const currentDepartmentIds = Array.isArray(currentValue) ? currentValue.map(Number) : [Number(currentValue)].filter(Boolean);
+    const availableIds = filteredDepartments.map((department) => Number(department.id));
+    const retainedIds = currentDepartmentIds.filter((departmentId) => availableIds.includes(departmentId));
+    const defaultIds = filteredDepartments
+      .filter((department) => this.departmentDefaultsForAnyRole(department, roleCodes))
+      .map((department) => Number(department.id));
+
+    departmentField.value = [...new Set([...retainedIds, ...defaultIds])];
+    if (this.user) {
+      (this.user as any).departmentId = departmentField.value;
+    }
+    this.previewDepartmentIds = departmentField.value as number[];
+  }
+
+  private findProfileField(fieldName: string): any {
+    for (const group of this.profileFields.groups || []) {
+      const field = group.fields.find((item: any) => item.name === fieldName);
+      if (field) return field;
+    }
+    return undefined;
+  }
+
+  private departmentAppliesToAnyRole(department: Department, roleCodes: string[]): boolean {
+    const appliedRoleCodes = department.appliedRoleCodes || [];
+    if (!appliedRoleCodes.length) return true;
+    return roleCodes.some((roleCode) => appliedRoleCodes.includes(roleCode));
+  }
+
+  private departmentDefaultsForAnyRole(department: Department, roleCodes: string[]): boolean {
+    const defaultRoleCodes = department.defaultRoleCodes || [];
+    return roleCodes.some((roleCode) => defaultRoleCodes.includes(roleCode));
+  }
+
+  private assignInitialRelationship(): void {
+    if (this.defaultRoleCode === 'THERAPIST' && this.selectedSupervisorId) {
+      this.usersService
+        .assignTherapistSupervisor({ therapistId: this.user.id, supervisorId: this.selectedSupervisorId })
+        .subscribe(
+          () => undefined,
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignSupervisor') })
+        );
+    }
+
+    if (this.defaultRoleCode === 'SUPERVISOR' && this.selectedTherapistId) {
+      this.usersService
+        .assignTherapistSupervisor({ therapistId: this.selectedTherapistId, supervisorId: this.user.id })
+        .subscribe(
+          () => undefined,
+          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignTherapist') })
+        );
+    }
+  }
+
+  private loadAssignmentOptions(): void {
+    if (this.defaultRoleCode === 'THERAPIST') {
+      this.usersService.getSupervisors({ first: 50 }).subscribe(
+        ({ data }: any) => {
+          this.availableSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadSupervisors') })
+      );
+      this.loadAssignedSupervisors();
+    }
+
+    if (this.defaultRoleCode === 'SUPERVISOR') {
+      this.usersService.getTherapists({ first: 50 }).subscribe(
+        ({ data }: any) => {
+          this.availableTherapists = data.therapists.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadTherapists') })
+      );
+      this.loadAssignedTherapists();
+    }
+  }
+
+  private loadAssignedSupervisors(): void {
+    if (!this.user?.id || this.defaultRoleCode !== 'THERAPIST') return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .getSupervisors({ first: 50, therapistId: this.user.id })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.assignedSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadAssignedSupervisors') })
+      );
+  }
+
+  private loadAssignedTherapists(): void {
+    if (!this.user?.id || this.defaultRoleCode !== 'SUPERVISOR') return;
+
+    this.assignmentLoading = true;
+    this.usersService
+      .getTherapists({ first: 50, supervisorId: this.user.id })
+      .pipe(finalize(() => (this.assignmentLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.assignedTherapists = data.therapists.edges.map((edge: any) => edge.node);
+        },
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableLoadAssignedTherapists') })
+      );
   }
 }

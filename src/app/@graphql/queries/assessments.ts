@@ -8,6 +8,7 @@ const assessments = gql`
         node {
           id
           uuid
+          name
           date
           assessmentType {
             id
@@ -20,12 +21,19 @@ const assessments = gql`
           targetUserId
           responderUserId
           mailTemplateId
+          reminderMinutes
+          reminderUnit
           clinicianId
           submissionDate
           status
           deliveryDate
           expirationDate
           note
+          origin
+          editableFromAssessmentList
+          clinicalSessionId
+          schemeId
+          schemeAssignmentId
           createdAt
           updatedAt
           deletedAt
@@ -69,6 +77,10 @@ const assessments = gql`
               hierarchy
               code
             }
+            departments {
+              id
+              name
+            }
           }
           responderUser {
             id
@@ -106,6 +118,19 @@ const assessments = gql`
             deletedAt
           }
           informantCaregiverRelation
+          clinicalSession {
+            id
+            sessionKind
+            sessionNumber
+            clinicalStatus
+            historyLabel
+            calendarOccurrence {
+              id
+              title
+              startAt
+              endAt
+            }
+          }
           patient {
             id
             active
@@ -122,12 +147,33 @@ const assessments = gql`
             nationality
             createdAt
             updatedAt
+            departments {
+              id
+              name
+            }
           }
           questionnaireAssessment {
             status
+            randomizationRuleIds
             questionnaireBundles{
               _id
               name
+            }
+            resolvedQuestionnaires {
+              occurrenceId
+              questionnaireId
+              sourceBundleId
+              path
+              screenId
+              screenLabel
+              screenHeaderHtml
+              screenFooterHtml
+              bundleHeaderHtml
+              bundleNoticeHtml
+              questionnaireDisplayTitle
+              showQuestionnaireTitle
+              screenIndex
+              orderIndex
             }
             questionnaires(populate: true) {
               _id
@@ -176,6 +222,199 @@ const assessments = gql`
         endCursor
         hasNextPage
         hasPreviousPage
+      }
+    }
+  }
+`;
+
+const patientAssessments = gql`
+  query($patientId: Int!, $includeArchived: Boolean) {
+    patientAssessments(patientId: $patientId, includeArchived: $includeArchived) {
+      id
+      uuid
+      name
+      date
+      assessmentType {
+        id
+        name
+      }
+      emailReminder
+      emailStatus
+      receiverEmail
+      patientId
+      targetUserId
+      responderUserId
+      mailTemplateId
+      reminderMinutes
+      reminderUnit
+      clinicianId
+      submissionDate
+      status
+      deliveryDate
+      expirationDate
+      note
+      origin
+      editableFromAssessmentList
+      clinicalSessionId
+      schemeId
+      schemeAssignmentId
+      createdAt
+      updatedAt
+      deletedAt
+      deleted
+      informantType
+      clinician {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+      }
+      responsibleUsers {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        workID
+      }
+      targetUser {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+        roles {
+          id
+          name
+          hierarchy
+          code
+        }
+      }
+      responderUser {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+      }
+      informantClinician {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        phone
+        workID
+        address
+        gender
+        birthDate
+        nationality
+        createdAt
+        updatedAt
+        deletedAt
+      }
+      informantCaregiverRelation
+      clinicalSession {
+        id
+        sessionKind
+        sessionNumber
+        clinicalStatus
+        historyLabel
+        calendarOccurrence {
+          id
+          title
+          startAt
+          endAt
+        }
+      }
+      patient {
+        id
+        active
+        medicalRecordNo
+        firstName
+        middleName
+        lastName
+        phone
+        email
+        address
+        gender
+        birthDate
+        birthCountryCode
+        nationality
+        createdAt
+        updatedAt
+      }
+      questionnaireAssessment {
+        status
+        randomizationRuleIds
+        questionnaireBundles {
+          _id
+          name
+        }
+        resolvedQuestionnaires {
+          occurrenceId
+          questionnaireId
+          sourceBundleId
+          path
+          screenId
+          screenLabel
+          screenHeaderHtml
+          screenFooterHtml
+          bundleHeaderHtml
+          bundleNoticeHtml
+          questionnaireDisplayTitle
+          showQuestionnaireTitle
+          screenIndex
+          orderIndex
+        }
+        questionnaires(populate: true) {
+          _id
+          name
+          status
+          createdAt
+          keywords
+          copyright
+          website
+          license
+          timeToComplete
+          language
+          abbreviation
+        }
       }
     }
   }
@@ -235,6 +474,7 @@ const getFullAssessment = gql`
     getFullAssessment(id: $id) {
       id
       uuid
+      name
       isActive
       date
       assessmentType {
@@ -245,6 +485,8 @@ const getFullAssessment = gql`
       emailStatus
       receiverEmail
       mailTemplateId
+      reminderMinutes
+      reminderUnit
       status
       deliveryDate
       expirationDate
@@ -324,14 +566,32 @@ const getFullAssessment = gql`
         }
         _id
         status
+        randomizationRuleIds
         answers {
           question
+          occurrenceId
           valid
           textValue
           multipleChoiceValue
           numberValue
           dateValue
           booleanValue
+        }
+        resolvedQuestionnaires {
+          occurrenceId
+          questionnaireId
+          sourceBundleId
+          path
+          screenId
+          screenLabel
+          screenHeaderHtml
+          screenFooterHtml
+          bundleHeaderHtml
+          bundleNoticeHtml
+          questionnaireDisplayTitle
+          showQuestionnaireTitle
+          screenIndex
+          orderIndex
         }
         questionnaires(populate: true) {
           _id
@@ -390,6 +650,16 @@ const getFullAssessment = gql`
         createdAt
         updatedAt
       }
+      responsibleUsers {
+        id
+        username
+        active
+        firstName
+        middleName
+        lastName
+        email
+        workID
+      }
       patient {
         id
         active
@@ -406,6 +676,16 @@ const getFullAssessment = gql`
         nationality
         createdAt
         updatedAt
+        caseManagers {
+          id
+          username
+          active
+          firstName
+          middleName
+          lastName
+          email
+          workID
+        }
       }
     }
   }
@@ -433,12 +713,29 @@ const getFullPublicAssessment = gql`
         status
         answers {
           question
+          occurrenceId
           valid
           textValue
           multipleChoiceValue
           numberValue
           dateValue
           booleanValue
+        }
+        resolvedQuestionnaires {
+          occurrenceId
+          questionnaireId
+          sourceBundleId
+          path
+          screenId
+          screenLabel
+          screenHeaderHtml
+          screenFooterHtml
+          bundleHeaderHtml
+          bundleNoticeHtml
+          questionnaireDisplayTitle
+          showQuestionnaireTitle
+          screenIndex
+          orderIndex
         }
         questionnaires(populate: true) {
           _id
@@ -486,6 +783,7 @@ const getFullPublicAssessment = gql`
 
 export const AssessmentsQueries = {
   assessments,
+  patientAssessments,
   questionnaires,
   getFullAssessment,
   getFullPublicAssessment,

@@ -1,41 +1,329 @@
 <div class="buttons">
-  <button nz-button nzType="primary" (click)="goBack()">Back</button>
+  <button nz-button nzType="primary" (click)="goBack()">{{ 'core.back' | translate }}</button>
 </div>
 <div class="patient-header" *ngIf="patientTitle">
   <h1>{{ patientTitle }}</h1>
-  <div class="status-selector" *ngIf="patient">
-    <nz-select
-      [ngModel]="patient.statusId"
-      (ngModelChange)="changeStatus($event)"
-      [nzPlaceHolder]="'tables.patients.status' | translate"
-      [nzLoading]="loading"
-      style="width: 200px;"
-    >
-      <nz-option *ngFor="let status of patientStatuses" [nzValue]="status.id" [nzLabel]="status.name"></nz-option>
-    </nz-select>
-    <nz-tag *ngIf="patient.formattedStatus" [nzColor]="patient.formattedStatus.color" style="margin-left: 10px;">
-      {{ patient.formattedStatus.title }}
-    </nz-tag>
+  <div class="patient-header-actions" *ngIf="patient">
+    <div class="status-selector">
+      <nz-select
+        [ngModel]="patient.statusId"
+        (ngModelChange)="changeStatus($event)"
+        [nzPlaceHolder]="'tables.patients.status' | translate"
+        [nzLoading]="loading"
+        style="width: 200px;"
+      >
+        <nz-option *ngFor="let status of patientStatuses" [nzValue]="status.id" [nzLabel]="status.name"></nz-option>
+      </nz-select>
+      <nz-tag *ngIf="patient.formattedStatus" [nzColor]="patient.formattedStatus.color" style="margin-left: 10px;">
+        {{ patient.formattedStatus.title }}
+      </nz-tag>
+    </div>
+
   </div>
 </div>
-<nz-tabset nzSize="large">
-  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.assessments' | translate">
-    <app-assessments [patient]="patient"></app-assessments>
+
+<ng-template #cycleTabActions>
+  <div class="cycle-tab-actions">
+    <button
+      nz-button
+      class="cycle-tab-action cycle-tab-action-danger"
+      [nzLoading]="cycleLoading"
+      *ngIf="!activeTreatmentCycle || activeTreatmentCycle.status === TCS.ACTIVE || activeTreatmentCycle.status === TCS.FINALIZATION_CANCELLED"
+      (click)="openFinalizeTreatment()"
+    >
+      {{ 'patientsManagement.treatmentFinalization' | translate }}
+    </button>
+    <button
+      nz-button
+      class="cycle-tab-action"
+      *ngIf="activeTreatmentCycle?.status === TCS.FINALIZED && canUndoFinalization()"
+      (click)="openCancelFinalization()"
+    >
+      {{ 'patientsManagement.cancelFinalization' | translate }}
+    </button>
+    <button
+      nz-button
+      class="cycle-tab-action cycle-tab-action-primary"
+      *ngIf="activeTreatmentCycle?.status === TCS.FINALIZED"
+      (click)="openNewTreatment()"
+    >
+      {{ 'patientsManagement.newTreatment' | translate }}
+    </button>
+  </div>
+</ng-template>
+
+<ng-container *ngIf="!patientTitle">
+  <app-create-patient></app-create-patient>
+</ng-container>
+
+<nz-tabset *ngIf="patientTitle" nzSize="large" [(nzSelectedIndex)]="selectedTabIndex" [nzTabBarExtraContent]="cycleTabActions">
+  <nz-tab [nzTitle]="'core.calendar' | translate">
+    <app-patient-calendar *ngIf="selectedTabIndex === 0" [patient]="patient"></app-patient-calendar>
   </nz-tab>
-  <nz-tab [nzTitle]="'core.profile' | translate">
-    <app-create-patient></app-create-patient>
+  <nz-tab [nzTitle]="'patientsManagement.clinicalHistory' | translate">
+    <app-clinical-follow-up-list
+      *ngIf="selectedTabIndex === 1"
+      [patientId]="patient?.id"
+      [sessionKind]="CSK.CLINICAL"
+      [title]="'patientsManagement.clinicalHistory' | translate"
+    ></app-clinical-follow-up-list>
   </nz-tab>
-  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.caseManagers' | translate">
-    <app-case-managers [managerType]="'caseManager'" [patient]="patient" [showAssignButton]="true" [filter]="filter">
-    </app-case-managers>
+  <nz-tab [nzTitle]="'core.reports' | translate">
+    <app-reports *ngIf="selectedTabIndex === 2" [patient]="patient"></app-reports>
   </nz-tab>
-  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.departments' | translate">
-    <app-patient-departments [patient]="patient"></app-patient-departments>
+  <nz-tab [nzTitle]="'patientsManagement.caseData' | translate">
+    <nz-tabset *ngIf="selectedTabIndex === 3" nzSize="small" [(nzSelectedIndex)]="caseDataTabIndex">
+      <nz-tab [nzTitle]="'core.profile' | translate">
+        <app-create-patient *ngIf="caseDataTabIndex === 0"></app-create-patient>
+      </nz-tab>
+      <nz-tab [nzTitle]="'patientsManagement.settings' | translate">
+        <nz-spin *ngIf="caseDataTabIndex === 1" [nzSpinning]="accountLoading">
+          <nz-alert
+            *ngIf="patient?.userId && !canViewPatientAccount()"
+            nzType="info"
+            nzShowIcon
+            [nzMessage]="'patientsManagement.noPermissionToViewPatientAccount' | translate"
+          ></nz-alert>
+
+          <nz-alert
+            *ngIf="!patientAccountUser && canViewPatientAccount()"
+            nzType="warning"
+            nzShowIcon
+            [nzMessage]="'patientsManagement.noPatientAccountFound' | translate"
+          ></nz-alert>
+
+          <div nz-row nzGutter="16" *ngIf="patientAccountUser">
+            <div nz-col>
+              <nz-card style="width: 300px" [nzTitle]="'patientsManagement.enableDisableUser' | translate: { name: patientAccountUser?.firstName }">
+                <p>{{ 'patientsManagement.enableDisableUserHelp' | translate: { name: patientAccountUser?.firstName } }}</p>
+                <nz-switch
+                  [disabled]="!canManagePatientAccount()"
+                  [ngModel]="patientAccountUser.active"
+                  (ngModelChange)="setPatientAccountActive($event)"
+                ></nz-switch>
+              </nz-card>
+            </div>
+            <div nz-col>
+              <nz-card style="width: 300px" [nzTitle]="'patientsManagement.changeUserPassword' | translate: { name: patientAccountUser?.firstName }">
+                <p>{{ 'patientsManagement.changeUserPasswordHelp' | translate: { name: patientAccountUser?.firstName } }}</p>
+                <button
+                  [disabled]="!canManagePatientAccount()"
+                  (click)="showPatientPasswordForm()"
+                  nz-button
+                  nzType="primary"
+                >
+                  {{ 'card.changePassword' | translate }}
+                </button>
+              </nz-card>
+            </div>
+            <div nz-col>
+              <nz-card style="width: 300px" [nzTitle]="'patientsManagement.deleteUserTitle' | translate: { name: patientAccountUser?.firstName, username: patientAccountUser?.username }">
+                <p>{{ 'patientsManagement.deleteUserHelp' | translate: { name: patientAccountUser?.firstName } }}</p>
+                <button
+                  [disabled]="!canDeletePatientAccount()"
+                  (click)="handleDeletePatientAccount()"
+                  nz-button
+                  nzType="danger"
+                >
+                  {{ 'patientsManagement.deleteUser' | translate }}
+                </button>
+              </nz-card>
+            </div>
+          </div>
+        </nz-spin>
+      </nz-tab>
+      <nz-tab [nzTitle]="'core.caseManagers' | translate">
+        <app-case-managers *ngIf="caseDataTabIndex === 2" [managerType]="'caseManager'" [patient]="patient" [showAssignButton]="true" [filter]="filter">
+        </app-case-managers>
+      </nz-tab>
+      <nz-tab [nzTitle]="'core.departments' | translate">
+        <app-patient-departments *ngIf="caseDataTabIndex === 3" [patient]="patient"></app-patient-departments>
+      </nz-tab>
+      <nz-tab [nzTitle]="'core.caregivers' | translate">
+        <app-caregivers-patient *ngIf="caseDataTabIndex === 4" [patient]="patient"></app-caregivers-patient>
+      </nz-tab>
+      <nz-tab [nzTitle]="'notifications.title' | translate">
+        <app-notification-preferences *ngIf="caseDataTabIndex === 5" [patientId]="patient?.id"></app-notification-preferences>
+      </nz-tab>
+      <nz-tab [nzTitle]="'informedConsent.title' | translate">
+        <app-informed-consent-responses-list
+          *ngIf="caseDataTabIndex === 6"
+          [patientId]="patient?.id"
+          [userId]="patient?.userId"
+        ></app-informed-consent-responses-list>
+      </nz-tab>
+    </nz-tabset>
   </nz-tab>
-  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.caregivers' | translate">
-    <app-caregivers-patient [patient]="patient"></app-caregivers-patient>
-  </nz-tab>
-  <nz-tab *ngIf="patientTitle" [nzTitle]="'core.reports' | translate">
-    <app-reports [patient]="patient"></app-reports>
+  <nz-tab [nzTitle]="'patientsManagement.more' | translate">
+    <nz-tabset *ngIf="selectedTabIndex === 4" nzSize="small" [(nzSelectedIndex)]="moreTabIndex">
+      <nz-tab [nzTitle]="'core.assessments' | translate">
+        <app-assessments *ngIf="moreTabIndex === 0" [patient]="patient"></app-assessments>
+      </nz-tab>
+      <nz-tab [nzTitle]="'patientsManagement.sessions' | translate">
+        <app-sessions-list *ngIf="moreTabIndex === 1" [patientId]="patient?.id"></app-sessions-list>
+      </nz-tab>
+      <nz-tab [nzTitle]="'patientsManagement.cycles' | translate">
+        <app-cycles-list *ngIf="moreTabIndex === 2" [patientId]="patient?.id" [cycleKind]="CSK.CLINICAL"></app-cycles-list>
+      </nz-tab>
+      <nz-tab [nzTitle]="'patientsManagement.appliedAutomations' | translate">
+        <app-applied-automations-list *ngIf="moreTabIndex === 3" [userId]="patient?.userId"></app-applied-automations-list>
+      </nz-tab>
+    </nz-tabset>
   </nz-tab>
 </nz-tabset>
+
+<nz-modal
+  [(nzVisible)]="passwordModalVisible"
+  [nzTitle]="'card.changePassword' | translate"
+  [nzOkText]="'patientsManagement.changePassword' | translate"
+  [nzCancelText]="'core.cancel' | translate"
+  [nzOkLoading]="accountLoading"
+  (nzOnCancel)="passwordModalVisible = false"
+  (nzOnOk)="submitPatientPasswordForm()"
+>
+  <ng-container *nzModalContent>
+    <app-form
+      #patientPasswordForm
+      [form]="updatePasswordForm"
+      [formData]="patientAccountUser"
+      [isLoading]="accountLoading"
+      [showSubmitButton]="false"
+      [showCancelButton]="false"
+      (submitForm)="updatePatientUserPassword($event)"
+    ></app-form>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="finalizeModalVisible"
+  [nzTitle]="'patientsManagement.treatmentFinalization' | translate"
+  [nzOkText]="'patientsManagement.finalize' | translate"
+  [nzCancelText]="'patientsManagement.back' | translate"
+  [nzOkLoading]="cycleSaving"
+  (nzOnCancel)="finalizeModalVisible = false"
+  (nzOnOk)="confirmFinalizeTreatment()"
+>
+  <ng-container *nzModalContent>
+    <div class="cycle-form">
+      <label>
+        <span>{{ 'patientsManagement.lastSession' | translate }}</span>
+        <input nz-input type="number" [(ngModel)]="finalizationLastSessionNumber" />
+      </label>
+
+      <label *ngFor="let level of finalizationReasonLevels; let levelIndex = index">
+        <span>{{ finalizationReasonLevelLabel(levelIndex) }}</span>
+        <nz-select
+          [ngModel]="selectedFinalizationReasonIds[levelIndex]"
+          (ngModelChange)="onFinalizationReasonChange(levelIndex, $event)"
+          nzAllowClear
+          nzShowSearch
+        >
+          <nz-option *ngFor="let reason of level" [nzValue]="reason.id" [nzLabel]="reason.label"></nz-option>
+        </nz-select>
+      </label>
+
+      <label *ngIf="showFinalizationOtherReason">
+        <span>{{ 'patientsManagement.otherReason' | translate }}</span>
+        <input nz-input [(ngModel)]="finalizationOtherReason" />
+      </label>
+
+      <label>
+        <span>{{ 'patientsManagement.clinicalNote' | translate }}</span>
+        <textarea nz-input rows="4" [(ngModel)]="finalizationNote"></textarea>
+      </label>
+
+      <nz-spin [nzSpinning]="automationPreviewLoading">
+        <div class="automation-preview" *ngIf="automationPreview.length">
+          <h3>{{ 'patientsManagement.automationsToApply' | translate }}</h3>
+          <label
+            class="automation-preview-item"
+            *ngFor="let automation of automationPreview"
+            nz-checkbox
+            [ngModel]="automationPreviewChecked(automation.automationId)"
+            (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+          >
+            <strong>{{ automation.title }}</strong>
+            <span>{{ triggerPointLabel[automation.triggerPoint] || automation.triggerPoint }} · {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          </label>
+        </div>
+      </nz-spin>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="cancelFinalizationModalVisible"
+  [nzTitle]="'patientsManagement.cancelFinalization' | translate"
+  [nzOkText]="'patientsManagement.cancelFinalizationAction' | translate"
+  [nzCancelText]="'patientsManagement.back' | translate"
+  [nzOkLoading]="cycleSaving"
+  (nzOnCancel)="cancelFinalizationModalVisible = false"
+  (nzOnOk)="confirmCancelFinalization()"
+>
+  <ng-container *nzModalContent>
+    <label class="cycle-form">
+      <span>{{ 'core.notes' | translate }}</span>
+      <textarea nz-input rows="4" [(ngModel)]="cancelFinalizationNote"></textarea>
+    </label>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+  [(nzVisible)]="newTreatmentModalVisible"
+  [nzTitle]="'patientsManagement.newTreatment' | translate"
+  [nzOkText]="'patientsManagement.start' | translate"
+  [nzCancelText]="'patientsManagement.back' | translate"
+  [nzOkLoading]="cycleSaving"
+  (nzOnCancel)="newTreatmentModalVisible = false"
+  (nzOnOk)="confirmNewTreatment()"
+>
+  <ng-container *nzModalContent>
+    <div class="cycle-form">
+      <nz-alert
+        *ngIf="activeTreatmentCycle?.previousCycleCount || activeTreatmentCycle?.daysSincePreviousFinalization"
+        nzType="info"
+        nzShowIcon
+        [nzMessage]="'patientsManagement.previousCycles' | translate: { count: activeTreatmentCycle?.previousCycleCount || 0 }"
+        [nzDescription]="'patientsManagement.daysSinceLastFinalization' | translate: { days: activeTreatmentCycle?.daysSincePreviousFinalization || 0 }"
+      ></nz-alert>
+
+      <label *ngFor="let level of newTreatmentReasonLevels; let levelIndex = index">
+        <span>{{ newTreatmentReasonLevelLabel(levelIndex) }}</span>
+        <nz-select
+          [ngModel]="selectedNewTreatmentReasonIds[levelIndex]"
+          (ngModelChange)="onNewTreatmentReasonChange(levelIndex, $event)"
+          nzAllowClear
+          nzShowSearch
+        >
+          <nz-option *ngFor="let reason of level" [nzValue]="reason.id" [nzLabel]="reason.label"></nz-option>
+        </nz-select>
+      </label>
+
+      <label *ngIf="showNewTreatmentOtherReason">
+        <span>{{ 'patientsManagement.otherReason' | translate }}</span>
+        <input nz-input [(ngModel)]="newTreatmentOtherReason" />
+      </label>
+
+      <label>
+        <span>{{ 'patientsManagement.clinicalNote' | translate }}</span>
+        <textarea nz-input rows="4" [(ngModel)]="newTreatmentNote"></textarea>
+      </label>
+
+      <nz-spin [nzSpinning]="automationPreviewLoading">
+        <div class="automation-preview" *ngIf="automationPreview.length">
+          <h3>{{ 'patientsManagement.automationsToApply' | translate }}</h3>
+          <label
+            class="automation-preview-item"
+            *ngFor="let automation of automationPreview"
+            nz-checkbox
+            [ngModel]="automationPreviewChecked(automation.automationId)"
+            (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
+          >
+            <strong>{{ automation.title }}</strong>
+            <span>{{ triggerPointLabel[automation.triggerPoint] || automation.triggerPoint }} · {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+          </label>
+        </div>
+      </nz-spin>
+    </div>
+  </ng-container>
+</nz-modal>

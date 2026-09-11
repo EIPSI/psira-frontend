@@ -22,8 +22,9 @@ import { Sorting } from '@shared/@types/sorting';
 import { Convert } from '@shared/classes/convert';
 import { ReportForm } from '@app/pages/administration/@forms/report.form';
 import { Field } from '@shared/components/form/@types/field';
+import { TranslateService } from '@ngx-translate/core';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-create-report',
@@ -44,6 +45,22 @@ export class CreateReportComponent implements OnInit {
   loadingMessage = '';
   public editMode = true;
   newMode = false;
+  selectedResource = '';
+  selectedAppName = '';
+  resourceTouched = false;
+  appNameTouched = false;
+  resourceOptions: Field['options'] = [];
+  appOptions: Field['options'] = [];
+  reportDraft: CreateReportInput = {
+    id: null,
+    name: '',
+    resources: '',
+    description: '',
+    appName: '',
+    repositoryLink: null,
+    status: false,
+    roles: [],
+  };
 
   constructor(
     private formBuilder: FormBuilder,
@@ -52,10 +69,12 @@ export class CreateReportComponent implements OnInit {
     private message: NzMessageService,
     private reportsService: ReportsService,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
+    this.configureResourceField();
     this.getReportFromUrl();
     this.getRoles();
     this.getAvailableShinyApps();
@@ -73,8 +92,12 @@ export class CreateReportComponent implements OnInit {
     return roles?.length > 0;
   }
 
+  roleIsSelected(roleId: number): boolean {
+    return this.selectedRoles?.some((role) => role.id === roleId) || this.reportHasRole(roleId);
+  }
+
   assignRoleToReport(role: Role, checked: boolean) {
-    if (checked && !this.selectedRoles?.includes(role)) {
+    if (checked && !this.selectedRoles?.some((item) => item.id === role.id)) {
       this.selectedRoles?.push(role);
     } 
     else if (!checked) {
@@ -83,7 +106,46 @@ export class CreateReportComponent implements OnInit {
   }
 
   public submitForm(reportData: CreateReportInput): void {
+    reportData.repositoryLink = reportData.repositoryLink || null;
     reportData.url = this.getUrlForApp(reportData.appName) || reportData.url;
+    reportData.resources = this.selectedResource || reportData.resources || (this.getField('resources')?.value as string);
+    reportData.appName = reportData.appName || (this.getField('appName')?.value as string);
+
+    if (!this.validateRequiredReportFields(reportData)) {
+      return;
+    }
+
+    if (!this.selectedRoles?.length) {
+      this.message.warning(this.translate.instant('reports.rolesRequiredValidation'));
+      return;
+    }
+
+    if (this.report) {
+      reportData.id = this.report.id;
+      this.updateReport(reportData);
+    } else {
+      this.createReport(reportData);
+    }
+  }
+
+  public submitReport(): void {
+    const reportData: CreateReportInput = {
+      ...this.reportDraft,
+      resources: this.selectedResource,
+      appName: this.selectedAppName,
+      repositoryLink: this.reportDraft.repositoryLink || null,
+      url: this.getUrlForApp(this.selectedAppName),
+    };
+
+    if (!this.validateRequiredReportFields(reportData)) {
+      return;
+    }
+
+    if (!this.selectedRoles?.length) {
+      this.message.warning(this.translate.instant('reports.rolesRequiredValidation'));
+      return;
+    }
+
     if (this.report) {
       reportData.id = this.report.id;
       this.updateReport(reportData);
@@ -93,9 +155,21 @@ export class CreateReportComponent implements OnInit {
   }
 
   handleReportInputChange({ name, value }: { name: string; value: string }) {
-    if (name !== 'appName') return;
+    const field = this.getField(name);
+    if (field) field.value = value;
+    return;
+  }
 
-    this.setFieldValue('url', this.getUrlForApp(value));
+  handleResourceChange(value: string): void {
+    this.selectedResource = value;
+    this.resourceTouched = true;
+    this.reportDraft.resources = value;
+  }
+
+  handleAppNameChange(value: string): void {
+    this.selectedAppName = value;
+    this.appNameTouched = true;
+    this.reportDraft.appName = value;
   }
 
   getReportFromUrl(): void {
@@ -105,13 +179,34 @@ export class CreateReportComponent implements OnInit {
       if (params.report) {
         this.inputMode = false;
         this.showCancelButton = true;
-        const bytes = CryptoJS.AES.decrypt(params.report, environment.secretKey);
-        const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.report, environment.secretKey);
+        const decryptedData = JSON.parse(bytes);
         this.report = decryptedData;
+        this.reportDraft = {
+          ...decryptedData,
+          repositoryLink: decryptedData?.repositoryLink || null,
+        };
+        this.selectedResource = decryptedData?.resources || '';
+        this.selectedAppName = decryptedData?.appName || '';
         this.populateForm = true;
       } else {
         this.inputMode = true;
         this.showCancelButton = false;
+        this.report = null;
+        this.reportDraft = {
+          id: null,
+          name: '',
+          resources: '',
+          description: '',
+          appName: '',
+          repositoryLink: null,
+          status: false,
+          roles: [],
+        };
+        this.selectedResource = '';
+        this.selectedAppName = '';
+        this.resourceTouched = false;
+        this.appNameTouched = false;
         this.resetForm = true;
       }
     });
@@ -139,11 +234,12 @@ export class CreateReportComponent implements OnInit {
     this.populateForm = false;
     this.resetForm = false;
     const inputData: CreateReportInput = Object.assign({}, formData);
+    delete inputData.id;
     const roles = this.selectedRoles?.map((item) => item.id);
     const reportInput: CreateOneReportInput = {
       report: { ...inputData, roles },
     };
-    this.loadingMessage = `Creating report ${inputData.name} `;
+    this.loadingMessage = this.translate.instant('reports.creatingReport', { name: inputData.name });
     this.reportsService
       .createReport(reportInput)
       .pipe(
@@ -154,7 +250,7 @@ export class CreateReportComponent implements OnInit {
       )
       .subscribe(
         ({ data }) => {
-          this.message.create('success', `Report has successfully been created`);
+          this.message.create('success', this.translate.instant('reports.reportCreated'));
           this.report = data.createOneReport;
           console.log(this.report);
           if (this.selectedRoles.length > 0) {
@@ -164,7 +260,7 @@ export class CreateReportComponent implements OnInit {
         },
         (error) =>
           this.errorService.handleError(error, {
-            prefix: 'Unable to create report',
+            prefix: this.translate.instant('reports.unableCreateReport'),
           })
       );
   }
@@ -179,7 +275,7 @@ export class CreateReportComponent implements OnInit {
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    this.loadingMessage = `Updating report ${reportUpdates.name}`;
+    this.loadingMessage = this.translate.instant('reports.updatingReport', { name: reportUpdates.name });
     this.reportsService
       .updateReport(reportInput)
       .pipe(
@@ -190,7 +286,7 @@ export class CreateReportComponent implements OnInit {
       )
       .subscribe(
         async ({ data }) => {
-          this.message.create('success', `Report has successfully been updated`);
+          this.message.create('success', this.translate.instant('reports.reportUpdated'));
           this.report = data.updateOneReport;
           console.log(this.report);
           if (this.selectedRoles.length > 0) {
@@ -201,7 +297,7 @@ export class CreateReportComponent implements OnInit {
         (error) => {
           this.populateForm = true;
           this.errorService.handleError(error, { 
-            prefix: `Unable to update user "${reportUpdates.name}"`,
+            prefix: this.translate.instant('reports.unableUpdateReport', { name: reportUpdates.name }),
           });
         }
       );
@@ -210,10 +306,10 @@ export class CreateReportComponent implements OnInit {
   afterCreate() {
     this.populateForm = false;
     this.resetForm = true;
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.report), environment.secretKey).toString();
+    const dataString = encryptRouteObject(this.report, environment.secretKey);
     this.router.navigate(['/psira/administration/create-report'], {
       state: {
-        title: `${this.report.name} `,
+        title: this.report.name,
       },
       queryParams: {
         report: dataString,
@@ -233,7 +329,7 @@ export class CreateReportComponent implements OnInit {
           options.push({ label: _role.name, value: _role.id });
         });
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load roles' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableLoadRoles') })
     );
   }
 
@@ -248,18 +344,50 @@ export class CreateReportComponent implements OnInit {
             value: app.appName,
           }))
         );
+        this.appOptions = this.shinyApps.map((app) => ({
+          label: app.title,
+          value: app.appName,
+        }));
 
-        if (this.report?.appName) {
-          this.setFieldValue('url', this.getUrlForApp(this.report.appName) || this.report.url);
-        }
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to load Shiny apps' })
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('reports.unableLoadShinyApps') })
     );
   }
 
   private getUrlForApp(appName?: string): string {
     if (!appName) return '';
     return this.shinyApps.find((app) => app.appName === appName)?.url || `/shiny/${appName}`;
+  }
+
+  private validateRequiredReportFields(reportData: CreateReportInput): boolean {
+    const requiredFields = [
+      { name: 'name', message: 'forms.createReportForm.reportNameValidation' },
+      { name: 'resources', message: 'forms.createReportForm.resourcesValidation' },
+      { name: 'description', message: 'forms.createReportForm.descriptionValidation' },
+      { name: 'appName', message: 'forms.createReportForm.appNameValidation' },
+    ];
+
+    const missingField = requiredFields.find((field) => this.isBlank((reportData as any)[field.name]));
+    if (missingField) {
+      if (missingField.name === 'resources') this.resourceTouched = true;
+      if (missingField.name === 'appName') this.appNameTouched = true;
+      this.message.warning(this.translate.instant(missingField.message));
+      return false;
+    }
+
+    return true;
+  }
+
+  private isBlank(value: any): boolean {
+    return value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0);
+  }
+
+  private configureResourceField(): void {
+    const field = this.getField('resources');
+    if (!field) return;
+
+    this.resourceOptions = field.options || [];
+    field.hidden = true;
   }
 
   private setFieldOptions(name: string, options: Field['options']) {

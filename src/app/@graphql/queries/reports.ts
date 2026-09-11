@@ -75,9 +75,62 @@ const getReportEmbed = gql`
   }
 `;
 
+const reportSessions = gql`
+  query(
+    $reportId: Int
+    $userId: Int
+    $patientId: Int
+    $contextType: String
+    $active: Boolean
+    $from: DateTime
+    $to: DateTime
+  ) {
+    reportSessions(
+      reportId: $reportId
+      userId: $userId
+      patientId: $patientId
+      contextType: $contextType
+      active: $active
+      from: $from
+      to: $to
+    ) {
+      id
+      reportId
+      userId
+      patientId
+      contextType
+      contextParams
+      closedBy
+      startedAt
+      lastSeenAt
+      endedAt
+      durationSeconds
+      active
+      report {
+        id
+        name
+      }
+      user {
+        id
+        username
+        firstName
+        lastName
+        email
+      }
+      patient {
+        id
+        firstName
+        lastName
+        medicalRecordNo
+      }
+    }
+  }
+`;
+
 export const ReportsQueries = {
   reports,
   availableShinyApps,
   getReportForCurrentUser,
   getReportEmbed,
+  reportSessions,
 };

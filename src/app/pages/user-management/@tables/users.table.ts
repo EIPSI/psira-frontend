@@ -3,7 +3,7 @@ import { FormattedUser } from '../@types/formatted-user';
 
 export const UserColumns: TableColumn<FormattedUser>[] = [
   {
-    title: 'First name',
+    title: 'tables.users.firstName',
     name: 'firstName',
     translationPath: 'tables.users.firstName',
     sort: true,
@@ -13,7 +13,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Middle name',
+    title: 'tables.users.middleName',
     name: 'middleName',
     translationPath: 'tables.users.middleName',
     sort: true,
@@ -23,7 +23,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Last name',
+    title: 'tables.users.lastName',
     name: 'lastName',
     translationPath: 'tables.users.lastName',
     sort: true,
@@ -43,7 +43,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Phone',
+    title: 'tables.users.phone',
     name: 'phone',
     translationPath: 'tables.users.phone',
     sort: true,
@@ -53,7 +53,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Email / Username',
+    title: 'tables.users.username',
     name: 'username',
     translationPath: 'tables.users.username',
     sort: true,
@@ -63,7 +63,7 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     },
   },
   {
-    title: 'Status',
+    title: 'tables.users.formattedStatus',
     name: 'formattedStatus',
     translationPath: 'tables.users.formattedStatus',
     altName: 'active',
@@ -73,17 +73,18 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
       type: 'select',
       value: undefined,
       options: [
-        { label: 'Inactive', value: false },
-        { label: 'Active', value: true },
+        { label: 'core.inactive', value: false },
+        { label: 'core.active', value: true },
       ],
     },
   },
   {
-    title: 'Roles',
+    title: 'tables.users.formattedRoles',
     name: 'formattedRoles',
     translationPath: 'tables.users.formattedRoles',
     altName: 'roles',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,
@@ -92,11 +93,12 @@ export const UserColumns: TableColumn<FormattedUser>[] = [
     filterQuery: (q: number) => (q ? { id: { eq: q } } : { id: { is: null } }),
   },
   {
-    title: 'Departments',
+    title: 'tables.users.formattedDepartments',
     name: 'formattedDepartments',
     translationPath: 'tables.users.formattedDepartments',
     altName: 'departments',
     render: 'tag',
+    sort: true,
     filterField: {
       type: 'select',
       value: undefined,

@@ -32,6 +32,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { CaregiverListComponent } from './caregiver-list/caregiver-list.component';
+import { CaregiverFormComponent } from './caregiver-form/caregiver-form.component';
 import { CaregiversPatientComponent } from './caregivers-patient/caregivers-patient.component';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -41,11 +42,20 @@ import { AssessmentsComponent } from './assessments/assessments.component';
 import { CreateAssessmentComponent } from './create-assessment/create-assessment.component';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AssessmentModule } from '../assessment/assessment.module';
 import { QRCodeModule } from 'angularx-qrcode';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { CustomDirectivesModule } from '@app/@shared/directives/custom-directives.module';
+import { NzCalendarModule } from 'ng-zorro-antd/calendar';
+import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
+import { CalendarWidgetModule } from '../calendar/calendar-widget.module';
+import { NotificationPreferencesModule } from '../notifications/notification-preferences/notification-preferences.module';
+import { InformedConsentSharedModule } from '../informed-consent/informed-consent-shared.module';
 
 const antModules = [
   NzGridModule,
@@ -63,7 +73,13 @@ const antModules = [
   NzAvatarModule,
   NzSelectModule,
   NzToolTipModule,
-  NzCheckboxModule
+  NzCheckboxModule,
+  NzCalendarModule,
+  NzEmptyModule,
+  NzSpinModule,
+  NzSwitchModule,
+  NzDropDownModule,
+  NzMenuModule
 ];
 
 @NgModule({
@@ -83,6 +99,9 @@ const antModules = [
     NzRadioModule,
     NzDatePickerModule,
     AssessmentModule,
+    CalendarWidgetModule,
+    NotificationPreferencesModule,
+    InformedConsentSharedModule,
     QRCodeModule,
     CustomDirectivesModule
   ],
@@ -94,6 +113,7 @@ const antModules = [
     CreatePatientComponent,
     DepartmentsComponent,
     CaregiverListComponent,
+    CaregiverFormComponent,
     CaregiversPatientComponent,
     ReportsComponent,
     AssessmentsComponent,

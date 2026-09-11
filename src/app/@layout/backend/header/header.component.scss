@@ -20,7 +20,7 @@
 //
 //.modal-button {
 //  color: white;
-//  background: #89d180;
+//  background: #186fb5;
 //  //padding: 5px 80px;
 //  font-size: 18px;
 //  border: none;
@@ -48,18 +48,11 @@ nz-breadcrumb {
 .header-menu {
   background-color: transparent;
   border: none;
-  .notifications {
-    border-right: 1px solid #eaedf8;
-  }
-  nz-badge {
-    i {
-      font-size: 25px;
-      color: #373737;
-    }
-    nz-avatar,
-    .user-name {
-      color: #373737;
-    }
+
+  .header-action-item {
+    align-items: center;
+    display: inline-flex;
+    padding: 0 8px;
   }
 }
 
@@ -78,5 +71,110 @@ nz-breadcrumb {
   .usermenu .ant-menu-item,
   .usermenu .ant-menu-item:hover {
     border: 0px solid !important;
+  }
+}
+
+.header-icon-trigger {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: #21232a;
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+  width: 38px;
+
+  &:hover,
+  &:focus {
+    background: rgba(24, 111, 181, 0.08);
+    color: #186fb5;
+    outline: none;
+  }
+
+  i {
+    font-size: 25px;
+  }
+}
+
+.user-dropdown-summary {
+  min-width: 220px;
+}
+
+.translation-option {
+  cursor: pointer;
+  padding: 8px 16px !important;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: #f5f9ff;
+  }
+}
+
+.translation-option--selected {
+  background: #e6f4ff;
+  box-shadow: inset 3px 0 0 #1677ff;
+
+  i {
+    color: #1677ff;
+  }
+}
+
+.translation-option__content {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+
+  i {
+    font-size: 18px;
+  }
+
+  small {
+    color: #667085;
+    display: block;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-page-header-ghost-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  ::ng-deep {
+    .site-page-header-ghost-wrapper .ant-page-header {
+      padding: 6px 8px;
+    }
+
+    .site-page-header-ghost-wrapper .ant-page-header-heading,
+    .site-page-header-ghost-wrapper .ant-page-header-heading-extra {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .site-page-header-ghost-wrapper .ant-page-header-heading-extra {
+      margin: 0;
+    }
+  }
+
+  .header-menu {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 100%;
+    min-width: 0;
+
+    .header-action-item {
+      padding: 0 8px;
+    }
+  }
+
+  .usermenu {
+    max-width: 100%;
   }
 }

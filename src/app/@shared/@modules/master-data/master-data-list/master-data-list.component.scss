@@ -6,6 +6,13 @@ section.actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+section.actions > div:last-child {
+  align-items: center;
+  display: flex;
+  gap: 8px;
 }
 
 section.list {
@@ -15,4 +22,36 @@ section.list {
 section.paging {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  section.actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  section.actions > div,
+  section.actions > div:last-child {
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  section.actions button,
+  section.actions nz-select,
+  section.actions nz-input-group {
+    max-width: 100%;
+  }
+
+  section.paging {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  section.paging button,
+  section.paging nz-select {
+    flex: 1 1 140px;
+  }
 }

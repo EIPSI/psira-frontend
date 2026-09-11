@@ -23,6 +23,12 @@ export enum AssessmentInformant {
   OTHER_USER = 'OTHER_USER',
 }
 
+export enum AssessmentOrigin {
+  INDIVIDUAL = 'INDIVIDUAL',
+  FIXED_SCHEME = 'FIXED_SCHEME',
+  SESSION_BASED = 'SESSION_BASED',
+}
+
 export interface Assessment {
   id?: number;
   uuid?: string;
@@ -33,10 +39,12 @@ export interface Assessment {
   responderUserId?: number;
   note: string;
   clinicianId: number;
+  responsibleUserIds?: number[];
   patient?: Patient;
   targetUser?: User;
   responderUser?: User;
   clinician?: User;
+  responsibleUsers?: User[];
   informantType: string;
   questionnaireAssessmentId?: string;
   createdAt?: Date;
@@ -46,15 +54,42 @@ export interface Assessment {
   informantClinician?: User;
   emailStatus: string;
   receiverEmail?: string;
+  reminderMinutes?: number[];
+  reminderUnit?: string;
   questionnaireAssessment:any;
   questionnaires: []
+  origin?: AssessmentOrigin;
+  editableFromAssessmentList?: boolean;
+  clinicalSessionId?: number;
+  schemeId?: number;
+  schemeAssignmentId?: number;
+  clinicalSession?: any;
 }
 
 export interface QuestionnaireAssessment {
   _id: string;
   questionnaires: QuestionnaireVersion[];
+  questionnaireBundles?: Array<{ _id: string; name: string }>;
+  resolvedQuestionnaires?: ResolvedQuestionnaire[];
   answers: Answer[];
   status: AssessmentStatus;
+}
+
+export interface ResolvedQuestionnaire {
+  occurrenceId: string;
+  questionnaireId: string;
+  sourceBundleId?: string;
+  path: string[];
+  screenId?: string;
+  screenLabel?: string;
+  screenHeaderHtml?: string;
+  screenFooterHtml?: string;
+  bundleHeaderHtml?: string;
+  bundleNoticeHtml?: string;
+  questionnaireDisplayTitle?: string;
+  showQuestionnaireTitle?: boolean;
+  screenIndex?: number;
+  orderIndex: number;
 }
 
 export interface FullAssessment extends Assessment {
@@ -66,6 +101,8 @@ export interface FullAssessment extends Assessment {
   receiverEmail: string;
   emailStatus: string;
   mailTemplateId: number;
+  reminderMinutes?: number[];
+  reminderUnit?: string;
 }
 
 export interface FormattedAssessment extends Assessment {
@@ -85,4 +122,6 @@ export interface FormattedAssessment extends Assessment {
   formatedQuestionnaireNames: []
   formatedQuestionnaires: []
   questionnaires: []
+  formattedOrigin?: TagInfo;
+  linkedSessionLabel?: string;
 }

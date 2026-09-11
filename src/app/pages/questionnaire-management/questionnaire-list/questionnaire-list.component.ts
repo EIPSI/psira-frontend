@@ -22,8 +22,9 @@ import { PageInfo, Paging } from '@shared/@types/paging';
 import { Sorting } from '@shared/@types/sorting';
 import { QuestionnaireVersion } from '@app/pages/questionnaire-management/@types/questionnaire';
 import { TranslateService } from '@ngx-translate/core';
+import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   ARCHIVE_QUESTIONNAIRE,
@@ -61,6 +62,7 @@ export class QuestionnaireListComponent {
   public loading = false;
 
   public pageInfo: PageInfo;
+  public listOfDepartments: any[] = [];
 
   public questionnaireRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
     paging: { first: DEFAULT_PAGE_SIZE },
@@ -74,20 +76,18 @@ export class QuestionnaireListComponent {
     private router: Router,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private departmentsService: DepartmentsService
   ) {
-    this.getQuestionnaires();
+    this.getDepartments();
 
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_QUESTIONNAIRES)) {
-      this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'Discard Questionnaire' });
+    if (this.perms.permissionsOnly(PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT)) {
+      this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'questionnaires.discardQuestionnaire' });
     }
-    // if (this.perms.permissionsOnly(PermissionKey.DELETE_QUESTIONNAIRES)) {
-    //   this.actions.push({ key: ActionKey.DELETE_QUESTIONNAIRE, title: 'Delete Questionnaire' });
-    // }
   }
 
   public onSelect(questionnaire: FormattedQuestionnaireVersion): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(questionnaire), environment.secretKey).toString();
+    const dataString = encryptRouteObject(questionnaire, environment.secretKey);
     this.router.navigate(['/psira/questionnaire-management/questionnaire-form'], {
       queryParams: {
         questionnaire: dataString,
@@ -133,8 +133,50 @@ export class QuestionnaireListComponent {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(({ edges, pageInfo }) => {
         this.pageInfo = pageInfo;
-        this.data = edges.map((e) => Convert.toFormattedQuestionnaireVersion(e.node));
+        this.data = edges.map((e) => this.formatQuestionnaire(Convert.toFormattedQuestionnaireVersion(e.node)));
       });
+  }
+
+  private getDepartments(): void {
+    this.loadDepartmentsPage();
+  }
+
+  private loadDepartmentsPage(after?: string, accumulatedDepartments: any[] = []): void {
+    this.departmentsService
+      .departments({ paging: { first: 50, after }, filter: {}, sorting: [] })
+      .subscribe(
+        ({ data }: any) => {
+          const departments = data.departments.edges.map((department: any) =>
+            Convert.toDepartment(department.node)
+          );
+          const allDepartments = [...accumulatedDepartments, ...departments];
+          this.listOfDepartments = allDepartments;
+
+          if (data.departments.pageInfo?.hasNextPage) {
+            this.loadDepartmentsPage(data.departments.pageInfo.endCursor, allDepartments);
+            return;
+          }
+
+          this.getQuestionnaires();
+        },
+        () => this.getQuestionnaires()
+      );
+  }
+
+  private formatQuestionnaire(questionnaire: FormattedQuestionnaireVersion): FormattedQuestionnaireVersion {
+    return {
+      ...questionnaire,
+      departmentNames: this.departmentNames(questionnaire.departmentIds),
+    };
+  }
+
+  private departmentNames(departmentIds: number[] = []): string {
+    return departmentIds
+      .map((departmentId) =>
+        this.listOfDepartments.find((department: any) => Number(department.id) === Number(departmentId))?.name
+      )
+      .filter(Boolean)
+      .join(', ');
   }
 
   private async deleteQuestionnaire(
@@ -145,8 +187,8 @@ export class QuestionnaireListComponent {
       // create confirmation modal
       const modal = this.modalService.confirm({
         nzOnOk: () => true,
-        nzTitle: 'Delete Questionnaire',
-        nzContent: `This action will delete the questionnaire and all the associated assessments. Are you sure you want to proceed?`,
+        nzTitle: this.translate.instant('questionnaires.deleteQuestionnaire'),
+        nzContent: this.translate.instant('questionnaires.deleteQuestionnaireConfirm'),
       });
 
       // wait for modal to successfully complete
@@ -195,7 +237,9 @@ export class QuestionnaireListComponent {
           this.getQuestionnaires();
         },
         (error) =>
-          this.errorService.handleError(error, { prefix: `Unable to delete assessment "${questionnaire.name}"` })
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('questionnaires.unableDeleteQuestionnaire', { name: questionnaire.name }),
+          })
       );
   }
 }

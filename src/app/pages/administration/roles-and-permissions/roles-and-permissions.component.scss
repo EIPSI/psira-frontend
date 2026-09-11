@@ -10,3 +10,44 @@
   font-size: 2em;
   text-shadow: 0 1px 2px #fff;
 }
+
+.permission-link {
+  height: auto;
+  padding: 0;
+  white-space: normal;
+  text-align: left;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-grid > div {
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fafafa;
+}
+
+.detail-grid span {
+  display: block;
+  color: #8c8c8c;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.permission-detail p {
+  margin-bottom: 16px;
+}
+
+.permission-detail h4 {
+  margin: 18px 0 8px;
+}
+
+.permission-detail ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+}

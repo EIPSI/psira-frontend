@@ -10,26 +10,7 @@
     "import-blacklist": [true, "rxjs/Rx"],
     "max-line-length": [true, 150],
     "member-access": false,
-    "member-ordering": [
-      true,
-      {
-        "order": [
-          "public-static-field",
-          "protected-static-field",
-          "private-static-field",
-          "public-instance-field",
-          "protected-instance-field",
-          "private-instance-field",
-          "public-static-method",
-          "protected-static-method",
-          "private-static-method",
-          "constructor",
-          "public-instance-method",
-          "protected-instance-method",
-          "private-instance-method"
-        ]
-      }
-    ],
+    "member-ordering": false,
     "interface-name": false,
     "max-classes-per-file": false,
     "no-consecutive-blank-lines": false,
@@ -42,7 +23,7 @@
     "no-switch-case-fall-through": true,
     "no-unnecessary-initializer": true,
     "object-literal-sort-keys": false,
-    "quotemark": [true, "single"],
+    "quotemark": [true, "single", "avoid-escape"],
     "typedef": [true, "parameter", "property-declaration"],
     "variable-name": false,
     "no-var-requires": false,

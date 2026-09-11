@@ -1,0 +1,70 @@
+.sessions-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.session-row {
+  cursor: pointer;
+}
+
+.session-row:hover td {
+  background: #f3fbfb;
+}
+
+.row-hint {
+  color: #8c8c8c;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.session-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.history-field {
+  margin-top: 4px;
+}
+
+.scheme-application-list {
+  display: grid;
+  gap: 8px;
+}
+
+.scheme-application-row {
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 8px;
+
+  strong,
+  small {
+    display: block;
+  }
+
+  small {
+    color: #667085;
+  }
+}
+
+.resource-row {
+  cursor: pointer;
+}
+
+.resource-row:hover td {
+  background: #f6ffed;
+}

@@ -24,10 +24,10 @@
     <div nz-row class="question-navigation">
       <div nz-col nzSpan="12" class="navigation previous">
         <i nz-icon nzType="arrow-left" nzTheme="outline" (click)="fetchPreviousQuestion()"></i>
-        <span (click)="fetchPreviousQuestion()">Previous Question</span>
+        <span (click)="fetchPreviousQuestion()">{{ 'questionnaireRuntime.previousQuestion' | translate }}</span>
       </div>
       <div nz-col nzSpan="12" class="navigation next">
-        <span (click)="fetchNextQuestion()">Next Question</span>
+        <span (click)="fetchNextQuestion()">{{ 'questionnaireRuntime.nextQuestion' | translate }}</span>
         <i nz-icon nzType="arrow-right" nzTheme="outline" (click)="fetchNextQuestion()"></i>
       </div>
     </div>

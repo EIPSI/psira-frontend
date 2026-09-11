@@ -1,8 +1,15 @@
 import { Injectable } from '@angular/core';
-import { TranslateService, LangChangeEvent } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { NzI18nService, en_US } from 'ng-zorro-antd/i18n';
+import * as moment from 'moment-timezone';
+import 'moment/locale/es';
+import 'moment/locale/de';
 
 import { Logger } from '@core/logger.service';
+import { environment } from '@env/environment';
 
 const log = new Logger('I18nService');
 const languageKey = 'language';
@@ -23,10 +30,15 @@ export function extract(s: string) {
 export class I18nService {
   defaultLanguage!: string;
   supportedLanguages!: string[];
+  readonly ready$ = new BehaviorSubject<boolean>(false);
+  private runtimeLocale = '';
+  private initialized = false;
 
-  private langChangeSubscription!: Subscription;
-
-  constructor(private translateService: TranslateService) {
+  constructor(
+    private translateService: TranslateService,
+    private http: HttpClient,
+    private nzI18nService: NzI18nService
+  ) {
     // Embed languages to avoid extra HTTP requests
   }
 
@@ -37,23 +49,46 @@ export class I18nService {
    * @param supportedLanguages The list of supported languages.
    */
   init(defaultLanguage: string, supportedLanguages: string[]) {
-    this.defaultLanguage = defaultLanguage;
-    this.supportedLanguages = supportedLanguages;
+    this.ready$.next(false);
+    this.defaultLanguage = this.normalize(defaultLanguage);
+    this.supportedLanguages = supportedLanguages.map((language) => this.normalize(language));
+    this.initialized = true;
     this.language = '';
+  }
 
-    // Warning: this subscription will always be alive for the app's lifetime
-    this.langChangeSubscription = this.translateService.onLangChange.subscribe((event: LangChangeEvent) => {
-      localStorage.setItem(languageKey, event.lang);
-    });
+  loadActiveLanguages(): Observable<{ code: string; name: string; nativeName?: string }[]> {
+    return this.http
+      .post<any>(environment.baseURL, {
+        query: `
+          query {
+            activeLanguages {
+              code
+              name
+              nativeName
+            }
+          }
+        `,
+      })
+      .pipe(
+        map((response) => response?.data?.activeLanguages || []),
+        catchError(() => of([]))
+      );
+  }
+
+  setSupportedLanguages(languages: string[]): void {
+    const normalized = languages.map((language) => this.normalize(language)).filter((language) => !!language);
+    this.supportedLanguages = Array.from(new Set([...(this.supportedLanguages || []), ...normalized]));
   }
 
   /**
    * Cleans up language change subscription.
    */
   destroy() {
-    if (this.langChangeSubscription) {
-      this.langChangeSubscription.unsubscribe();
-    }
+  }
+
+  setLanguage(language: string): void {
+    localStorage.setItem(languageKey, this.normalize(language));
+    this.language = language;
   }
 
   /**
@@ -63,23 +98,22 @@ export class I18nService {
    * @param language The IETF language code to set.
    */
   set language(language: string) {
-    language = language || localStorage.getItem(languageKey) || this.translateService.getBrowserCultureLang();
-    let isSupportedLanguage = this.supportedLanguages.includes(language);
-
-    // If no exact match is found, search without the region
-    if (language && !isSupportedLanguage) {
-      language = language.split('-')[0];
-      language = this.supportedLanguages.find((supportedLanguage) => supportedLanguage.startsWith(language)) || '';
-      isSupportedLanguage = Boolean(language);
-    }
-
-    // Fallback if language is not supported
-    if (!isSupportedLanguage) {
-      language = this.defaultLanguage;
+    const storedLanguage = localStorage.getItem(languageKey);
+    language = this.resolveLanguage(language, storedLanguage);
+    if (language === this.translateService.currentLang && language === this.runtimeLocale) {
+      return;
     }
 
     log.debug(`Language set to ${language}`);
-    this.translateService.use(language);
+    const languageChange = this.translateService.use(language);
+    if (languageChange && typeof (languageChange as any).subscribe === 'function') {
+      (languageChange as any).subscribe(
+        () => this.completeLanguageLoad(language),
+        () => this.completeLanguageLoad(this.defaultLanguage || 'en')
+      );
+    } else {
+      this.completeLanguageLoad(language);
+    }
   }
 
   /**
@@ -88,5 +122,55 @@ export class I18nService {
    */
   get language(): string {
     return this.translateService.currentLang;
+  }
+
+  private normalize(language: string): string {
+    return String(language || '').toLowerCase().split('-')[0].split('_')[0];
+  }
+
+  private resolveLanguage(requestedLanguage?: string, storedLanguage?: string | null): string {
+    const candidates = [
+      requestedLanguage,
+      storedLanguage,
+      ...this.getBrowserLanguages(),
+      this.translateService.getBrowserCultureLang(),
+      this.translateService.getBrowserLang(),
+      this.defaultLanguage,
+    ];
+    for (const candidate of candidates) {
+      const resolved = this.findSupportedLanguage(candidate || '');
+      if (resolved) return resolved;
+    }
+    return this.defaultLanguage;
+  }
+
+  private findSupportedLanguage(language: string): string {
+    const normalized = this.normalize(language);
+    if (!normalized) return '';
+    if (this.supportedLanguages.includes(normalized)) return normalized;
+    return this.supportedLanguages.find((supportedLanguage) => supportedLanguage.startsWith(normalized)) || '';
+  }
+
+  private getBrowserLanguages(): string[] {
+    if (typeof navigator === 'undefined') return [];
+    const languages = (navigator.languages && navigator.languages.length)
+      ? Array.from(navigator.languages)
+      : [navigator.language];
+    return languages.filter((language) => !!language);
+  }
+
+  private applyRuntimeLocale(language: string): void {
+    if (language === this.runtimeLocale) {
+      return;
+    }
+    this.runtimeLocale = language;
+    moment.locale(language || this.defaultLanguage || 'en');
+    // Keep ng-zorro widgets on a stable locale. The application text still uses ngx-translate.
+    this.nzI18nService.setLocale(en_US);
+  }
+
+  private completeLanguageLoad(language: string): void {
+    this.applyRuntimeLocale(language);
+    if (this.initialized) this.ready$.next(true);
   }
 }

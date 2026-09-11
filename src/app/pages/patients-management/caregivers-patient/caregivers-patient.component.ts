@@ -24,6 +24,10 @@ import { FormGroup } from '@angular/forms';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { CaregiversPatientForm } from '@app/pages/patients-management/@forms/caregivers-patient.form';
 import { CaregiversService } from '@app/pages/patients-management/@services/caregivers.service';
+import { Router } from '@angular/router';
+import { environment } from '@env/environment';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+
 
 enum ActionKey {
   REMOVE_CAREGIVER,
@@ -70,6 +74,7 @@ export class CaregiversPatientComponent implements OnInit {
     private caregiversPatientService: CaregiversPatientService,
     private errorService: ErrorHandlerService,
     private caregiversService: CaregiversService,
+    private router: Router,
     public perms: AppPermissionsService
   ) {}
 
@@ -115,10 +120,14 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   public openAddPanel(caregiver?: Caregiver): void {
-    if (caregiver) this.caregiver = caregiver;
-    this.showAddCaregiver = true;
-    this.populateForm = true;
-    this.resetForm = true;
+    this.openCreateCaregiverPage();
+  }
+
+  public openCreateCaregiverPage(): void {
+    const dataString = encryptRouteObject(this.patient, environment.secretKey);
+    this.router.navigate(['/psira/case-management/caregiver-form'], {
+      queryParams: { patient: dataString },
+    });
   }
 
   public closeAddPanel(): void {
@@ -163,7 +172,7 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   public handleRowClick(event: any) {
-    if (!this.perms.permissionsOnly([PermissionKey.MANAGE_PATIENTS])) return;
+    if (!this.perms.permissionsOnly([PermissionKey.PATIENTS_EDIT_DEPARTMENT])) return;
     this.populateForm = true;
     this.openCreatePanel(event);
   }
@@ -235,12 +244,12 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   private setActions(): void {
-    if (this.perms.permissionsOnly(PermissionKey.MANAGE_PATIENTS)) {
+    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
       this.actions = [
         ...this.actions,
         {
           key: ActionKey.REMOVE_CAREGIVER,
-          title: 'Remove patient from Caregiver',
+          title: 'patientsManagement.removePatientFromCaregiver',
         },
       ];
     }

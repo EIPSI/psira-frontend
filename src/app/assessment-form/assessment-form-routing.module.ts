@@ -19,6 +19,11 @@ const routes: Routes = [
         path: 'questionnaire/:questionnaireIndex',
         component: QuestionnaireFormComponent,
       },
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'questionnaire/0',
+      },
     ],
   },
   {

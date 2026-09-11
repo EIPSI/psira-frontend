@@ -1,1 +1,25 @@
-<router-outlet></router-outlet>
+<ng-container *ngIf="i18nReady$ | async; else booting">
+  <router-outlet></router-outlet>
+  <section
+    *ngIf="showStorageNotice"
+    class="storage-notice"
+    role="status"
+    aria-live="polite"
+    aria-label="Browser storage notice"
+  >
+    <div class="storage-notice__content">
+      <strong>{{ 'storageNotice.title' | translate }}</strong>
+      <p>{{ 'storageNotice.message' | translate }}</p>
+    </div>
+    <button type="button" class="storage-notice__button" (click)="acknowledgeStorageNotice()">
+      {{ 'core.understood' | translate }}
+    </button>
+  </section>
+</ng-container>
+
+<ng-template #booting>
+  <main class="app-boot-screen">
+    <div class="app-boot-mark" aria-hidden="true"></div>
+    <div class="app-boot-spinner" aria-hidden="true"></div>
+  </main>
+</ng-template>

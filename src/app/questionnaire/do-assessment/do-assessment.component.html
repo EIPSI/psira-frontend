@@ -1,10 +1,10 @@
 <div nz-row>
   <div nz-col nzSpan="6" class="patient-details">
-    <h4>Jon Konjufca</h4>
-    <h3>ID: 1234-543242</h3>
+    <h4>{{ 'questionnaireRuntime.demoRespondent' | translate }}</h4>
+    <h3>{{ 'questionnaireRuntime.demoId' | translate }}</h3>
   </div>
   <div nz-col nzSpan="16" class="questionnaire-name">
-    <h2>{{ questionnaire.name }}-</h2>
+    <h2>{{ questionnaire.name }}</h2>
   </div>
   <div nz-col nzSpan="2" class="questionnaire-details">
     <span [nzTooltipTitle]="questionnaire.description" nz-tooltip>

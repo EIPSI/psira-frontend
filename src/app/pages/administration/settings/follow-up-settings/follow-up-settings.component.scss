@@ -1,0 +1,21 @@
+.setting-form {
+  align-items: flex-end;
+  display: flex;
+  gap: 10px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+}
+
+input {
+  width: 120px;
+}
+
+@media (max-width: 760px) {
+  .setting-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

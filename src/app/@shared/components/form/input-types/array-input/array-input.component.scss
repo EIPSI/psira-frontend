@@ -12,3 +12,28 @@
     padding-left: 0;
   }
 }
+
+.array-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.array-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.array-card-header {
+  align-items: center;
+  border-bottom: 1px solid #eef0f3;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+}
+
+.array-card-actions {
+  display: flex;
+  gap: 6px;
+}

@@ -3,26 +3,30 @@ import { FormattedDisclaimer } from '../@types/disclaimers';
 
 export const DisclaimersColumns: TableColumn<Partial<FormattedDisclaimer>>[] = [
   {
-    title: 'Type',
+    title: 'tables.disclaimer.type',
     name: 'formattedType',
     translationPath: 'tables.disclaimer.type',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
     },
   },
   {
-    title: 'Text Information',
+    title: 'tables.disclaimer.textInformation',
     name: 'description',
+    render: 'html',
     translationPath: 'tables.disclaimer.textInformation',
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
     },
   },
   {
-    title: 'Last Update',
+    title: 'tables.disclaimer.lastUpdate',
     name: 'updatedAt',
     translationPath: 'tables.disclaimer.lastUpdate',
+    sort: true,
   },
 ];

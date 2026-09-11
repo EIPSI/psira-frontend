@@ -12,6 +12,11 @@ const appRoutes: Routes = [
     loadChildren: () => import('./assessment-form/assessment-form.module').then((m) => m.AssessmentFormModule),
   },
   {
+    path: 'informed-consent',
+    component: AssessmentLayoutComponent,
+    loadChildren: () => import('./pages/informed-consent/informed-consent.module').then((m) => m.InformedConsentModule),
+  },
+  {
     path: 'psira',
     canActivate: [AuthGuard],
     component: BackendLayoutComponent,
