@@ -26,7 +26,7 @@ import {
 } from '../../../@shared/@modules/master-data/@types/list';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { TranslateService } from '@ngx-translate/core';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 enum ActionKey {
@@ -141,7 +141,7 @@ export class PatientsListComponent {
   }
 
   public onPatientSelect(patient: FormattedPatient): void {
-    const dataString = encryptRoutePayload(JSON.stringify(patient), environment.secretKey);
+    const dataString = encryptRouteObject(patient, environment.secretKey);
     this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
         profile: dataString,

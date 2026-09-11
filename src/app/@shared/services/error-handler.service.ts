@@ -31,7 +31,10 @@ export class ErrorHandlerService {
     if (isApolloError(error)) {
       // show error directly if it has no graphQL Errors
       if (!error?.graphQLErrors?.length) {
-        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${this.translateMessage(error.message)}` : this.translateMessage(error.message);
+        const msg =
+          options.prefix && options.forcePrefix
+            ? `${options.prefix} - ${this.translateMessage(error.message)}`
+            : this.translateMessage(error.message);
         this.dispatchError(msg, error, options, 5000);
       }
 
@@ -39,11 +42,17 @@ export class ErrorHandlerService {
       for (const e of error.graphQLErrors) {
         // Use e.extensions.message if available, otherwise fallback to e.message
         const specificMessage = (e as any).extensions?.message || e.message;
-        const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${this.translateMessage(specificMessage)}` : this.translateMessage(specificMessage);
+        const msg =
+          options.prefix && options.forcePrefix
+            ? `${options.prefix} - ${this.translateMessage(specificMessage)}`
+            : this.translateMessage(specificMessage);
         this.dispatchError(msg, e, options, 5000);
       }
     } else if (isSkipLogicError(error)) {
-      const msg = options.prefix && options.forcePrefix ? `${options.prefix} - ${this.translateMessage(error.message)}` : this.translateMessage(error.message);
+      const msg =
+        options.prefix && options.forcePrefix
+          ? `${options.prefix} - ${this.translateMessage(error.message)}`
+          : this.translateMessage(error.message);
       this.dispatchError(msg, error, options, 5000);
     } else {
       const msg = options.prefix ? `${options.prefix} - ${error}` : this.translateMessage(error.toString());

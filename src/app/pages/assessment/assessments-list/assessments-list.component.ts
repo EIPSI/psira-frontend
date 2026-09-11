@@ -26,7 +26,7 @@ import {ClipboardService} from 'ngx-clipboard';
 import {NzMessageService} from 'ng-zorro-antd/message';
 import {LocationStrategy} from '@angular/common';
 import {TranslateService} from '@ngx-translate/core';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 enum ActionKey {
@@ -204,7 +204,7 @@ export class AssessmentsListComponent {
             this.openLinkedSession(assessment);
             return;
         }
-        const dataString = encryptRoutePayload(JSON.stringify(assessment), environment.secretKey);
+        const dataString = encryptRouteObject(assessment, environment.secretKey);
         this.router.navigate(['/psira/assessments/plan-assessments'], {
             queryParams: {
                 assessment: dataString
@@ -464,7 +464,7 @@ export class AssessmentsListComponent {
             return;
         }
 
-        const dataString = encryptRoutePayload(JSON.stringify(assessment.patient), environment.secretKey);
+        const dataString = encryptRouteObject(assessment.patient, environment.secretKey);
         this.router.navigate(['/psira/case-management/profile'], {
             queryParams: {
                 profile: dataString,

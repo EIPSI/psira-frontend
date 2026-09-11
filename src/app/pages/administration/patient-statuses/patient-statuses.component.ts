@@ -76,7 +76,10 @@ export class PatientStatusesComponent implements OnInit {
           this.paging.before = data.patientStatuses.pageInfo.startCursor;
           this.pageInfo = data.patientStatuses.pageInfo;
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableLoadPatientStatuses') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('patientStatuses.unableLoadPatientStatuses'),
+          })
       );
   }
 
@@ -99,7 +102,9 @@ export class PatientStatusesComponent implements OnInit {
   toggleCreatePanel(create: boolean = true) {
     this.isCreateAction = create;
     this.showCreatePatientStatus = !this.showCreatePatientStatus;
-    this.panelTitle = this.isCreateAction ? 'patientStatuses.createPatientStatus' : 'patientStatuses.updatePatientStatus';
+    this.panelTitle = this.isCreateAction
+      ? 'patientStatuses.createPatientStatus'
+      : 'patientStatuses.updatePatientStatus';
     if (create) {
       this.resetForm();
     }
@@ -128,7 +133,9 @@ export class PatientStatusesComponent implements OnInit {
       case 'patientStatuses.deletePatientStatus':
         this.modalService.confirm({
           nzTitle: this.translate.instant('core.confirm'),
-          nzContent: this.translate.instant('patientStatuses.deletePatientStatusConfirm', { name: this.patientStatuses[event.index].name }),
+          nzContent: this.translate.instant('patientStatuses.deletePatientStatusConfirm', {
+            name: this.patientStatuses[event.index].name,
+          }),
           nzOkText: this.translate.instant('core.delete'),
           nzOnOk: () => this.deletePatientStatus(this.patientStatuses[event.index]),
           nzOkDisabled: this.modalLoading,
@@ -160,7 +167,10 @@ export class PatientStatusesComponent implements OnInit {
           this.getPatientStatuses();
           this.message.create('success', this.translate.instant('patientStatuses.patientStatusCreated'));
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableCreatePatientStatus') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('patientStatuses.unableCreatePatientStatus'),
+          })
       );
   }
 
@@ -181,7 +191,9 @@ export class PatientStatusesComponent implements OnInit {
           });
         },
         (error) =>
-          this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableUpdatePatientStatus', { name: patientStatus.name }) })
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('patientStatuses.unableUpdatePatientStatus', { name: patientStatus.name }),
+          })
       );
   }
 
@@ -196,7 +208,9 @@ export class PatientStatusesComponent implements OnInit {
           this.message.create('success', this.translate.instant('patientStatuses.patientStatusDeleted'));
         },
         (error: any) =>
-          this.errorService.handleError(error, { prefix: this.translate.instant('patientStatuses.unableRemovePatientStatus', { name: patientStatus.name }) })
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('patientStatuses.unableRemovePatientStatus', { name: patientStatus.name }),
+          })
       );
   }
 

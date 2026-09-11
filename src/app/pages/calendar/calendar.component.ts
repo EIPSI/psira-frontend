@@ -1,12 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
-import {
-  endOfDay,
-  endOfMonth,
-  endOfWeek,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-} from 'date-fns';
+import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import { finalize } from 'rxjs/operators';
 import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
 import { NzModalService } from 'ng-zorro-antd/modal';
@@ -19,12 +12,7 @@ import { PatientsService } from '@app/pages/patients-management/@services/patien
 import { PermissionKey } from '@shared/@types/permission';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
-import {
-  CalendarEvent,
-  CalendarEventType,
-  CalendarView,
-  ClinicalSessionModality,
-} from './@types/calendar';
+import { CalendarEvent, CalendarEventType, CalendarView, ClinicalSessionModality } from './@types/calendar';
 import { CalendarEventUiService } from './@services/calendar-event-ui.service';
 import { CalendarService } from './@services/calendar.service';
 import { formatSystemDateTime, systemTimezone } from '@shared/utils/system-settings.util';
@@ -180,15 +168,14 @@ export class CalendarComponent implements OnChanges, OnInit {
         })
       : this.calendarService.moveCalendarEvent(this.selectedEvent, this.editStartAt, this.editEndAt);
 
-    update$
-      .pipe(finalize(() => (this.saving = false)))
-      .subscribe(
-        () => {
-          this.editModalVisible = false;
-          this.loadEvents();
-        },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableUpdateCalendarEvent') })
-      );
+    update$.pipe(finalize(() => (this.saving = false))).subscribe(
+      () => {
+        this.editModalVisible = false;
+        this.loadEvents();
+      },
+      (error) =>
+        this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableUpdateCalendarEvent') })
+    );
   }
 
   setEditDurationMinutes(minutes: number): void {
@@ -222,9 +209,19 @@ export class CalendarComponent implements OnChanges, OnInit {
     const event = this.selectedEvent;
     if (!event?.deletable) return;
     this.modalService.confirm({
-      nzTitle: this.translate.instant(event.type === CalendarEventType.ASSESSMENT ? 'patientsManagement.discardAssessment' : 'patientsManagement.cancellation'),
-      nzContent: this.translate.instant(event.type === CalendarEventType.ASSESSMENT ? 'patientsManagement.discardAssessmentConfirm' : 'patientsManagement.cancellationConfirm'),
-      nzOkText: this.translate.instant(event.type === CalendarEventType.ASSESSMENT ? 'patientsManagement.discard' : 'patientsManagement.continue'),
+      nzTitle: this.translate.instant(
+        event.type === CalendarEventType.ASSESSMENT
+          ? 'patientsManagement.discardAssessment'
+          : 'patientsManagement.cancellation'
+      ),
+      nzContent: this.translate.instant(
+        event.type === CalendarEventType.ASSESSMENT
+          ? 'patientsManagement.discardAssessmentConfirm'
+          : 'patientsManagement.cancellationConfirm'
+      ),
+      nzOkText: this.translate.instant(
+        event.type === CalendarEventType.ASSESSMENT ? 'patientsManagement.discard' : 'patientsManagement.continue'
+      ),
       nzOkDanger: true,
       nzCancelText: this.translate.instant('patientsManagement.back'),
       nzOnOk: () => this.discardEvent(event),
@@ -252,16 +249,32 @@ export class CalendarComponent implements OnChanges, OnInit {
       .pipe(finalize(() => (this.saving = false)))
       .subscribe(
         () => this.loadEvents(),
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableDuplicateCalendarEvent') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('calendar.unableDuplicateCalendarEvent'),
+          })
       );
   }
 
   eventTypeLabel(event: CalendarEvent): string {
-    return this.translate.instant(event.type === CalendarEventType.SESSION ? 'calendar.session' : 'calendar.assessment');
+    return this.translate.instant(
+      event.type === CalendarEventType.SESSION ? 'calendar.session' : 'calendar.assessment'
+    );
   }
 
-  personName(person?: { firstName?: string; middleName?: string; lastName?: string; username?: string; email?: string }): string {
-    return [person?.firstName, person?.middleName, person?.lastName].filter(Boolean).join(' ') || person?.username || person?.email || '';
+  personName(person?: {
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    username?: string;
+    email?: string;
+  }): string {
+    return (
+      [person?.firstName, person?.middleName, person?.lastName].filter(Boolean).join(' ') ||
+      person?.username ||
+      person?.email ||
+      ''
+    );
   }
 
   targetUserLabel(user: User): string {
@@ -270,7 +283,8 @@ export class CalendarComponent implements OnChanges, OnInit {
 
   eventPrimaryPerson(event?: CalendarEvent): string {
     if (!event) return '';
-    if (event.type === CalendarEventType.ASSESSMENT) return this.personName(event.responderUser || event.targetUser || event.patient);
+    if (event.type === CalendarEventType.ASSESSMENT)
+      return this.personName(event.responderUser || event.targetUser || event.patient);
     if (event.sessionKind === 'SUPERVISION') return this.personName(event.therapist || event.supervisor);
     return this.personName(event.patient || event.therapist || event.supervisor);
   }
@@ -377,7 +391,8 @@ export class CalendarComponent implements OnChanges, OnInit {
           this.targetUsers = (data?.users?.edges || [])
             .map((edge: any) => edge.node)
             .filter((user: User) => this.canEditTargetUser(user));
-          if (this.targetUserId) this.targetUser = this.targetUsers.find((user) => Number(user.id) === Number(this.targetUserId));
+          if (this.targetUserId)
+            this.targetUser = this.targetUsers.find((user) => Number(user.id) === Number(this.targetUserId));
         },
         () => (this.targetUsers = [])
       );
@@ -403,16 +418,17 @@ export class CalendarComponent implements OnChanges, OnInit {
           this.targetPatient = data?.patients?.edges?.[0]?.node;
           this.openTargetCalendarCreateModal();
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableLoadPatients') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('patientsManagement.unableLoadPatients'),
+          })
       );
   }
 
   private openTargetCalendarCreateModal(): void {
     if (!this.createModalVisible || !this.targetUser || !this.pendingCreateDate) return;
     setTimeout(() => {
-      const calendar = this.isPatientUser(this.targetUser)
-        ? this.targetPatientCalendar
-        : this.targetUserCalendar;
+      const calendar = this.isPatientUser(this.targetUser) ? this.targetPatientCalendar : this.targetUserCalendar;
       if (!calendar) return;
       calendar.openCreateEvent(this.pendingCreateDate, this.pendingCreateHour);
     });
@@ -431,30 +447,47 @@ export class CalendarComponent implements OnChanges, OnInit {
 
   private canEditTargetUser(user: User): boolean {
     if (!user?.id || Number(user.id) === Number(this.currentUser?.id)) return false;
-    if (this.isPatientUser(user)) return this.canEditTargetByPermissions(user, [
-      PermissionKey.CLINICAL_EDIT_ALL,
-      PermissionKey.CLINICAL_EDIT_DEPARTMENT,
-      PermissionKey.CLINICAL_EDIT_ASSIGNED,
-      PermissionKey.ASSESSMENTS_EDIT_ALL,
-      PermissionKey.ASSESSMENTS_EDIT_DEPARTMENT,
-      PermissionKey.ASSESSMENTS_EDIT_ASSIGNED,
-    ]);
-    if (this.hasAnyRole(user, ['THERAPIST', 'SUPERVISOR'])) return this.canEditTargetByPermissions(user, [
-      PermissionKey.CLINICAL_EDIT_ALL,
-      PermissionKey.CLINICAL_EDIT_DEPARTMENT,
-      PermissionKey.CLINICAL_EDIT_ASSIGNED,
-      PermissionKey.ASSESSMENTS_EDIT_ALL,
-      PermissionKey.ASSESSMENTS_EDIT_DEPARTMENT,
-      PermissionKey.ASSESSMENTS_EDIT_ASSIGNED,
-    ]);
+    if (this.isPatientUser(user))
+      return this.canEditTargetByPermissions(user, [
+        PermissionKey.CLINICAL_EDIT_ALL,
+        PermissionKey.CLINICAL_EDIT_DEPARTMENT,
+        PermissionKey.CLINICAL_EDIT_ASSIGNED,
+        PermissionKey.ASSESSMENTS_EDIT_ALL,
+        PermissionKey.ASSESSMENTS_EDIT_DEPARTMENT,
+        PermissionKey.ASSESSMENTS_EDIT_ASSIGNED,
+      ]);
+    if (this.hasAnyRole(user, ['THERAPIST', 'SUPERVISOR']))
+      return this.canEditTargetByPermissions(user, [
+        PermissionKey.CLINICAL_EDIT_ALL,
+        PermissionKey.CLINICAL_EDIT_DEPARTMENT,
+        PermissionKey.CLINICAL_EDIT_ASSIGNED,
+        PermissionKey.ASSESSMENTS_EDIT_ALL,
+        PermissionKey.ASSESSMENTS_EDIT_DEPARTMENT,
+        PermissionKey.ASSESSMENTS_EDIT_ASSIGNED,
+      ]);
     return false;
   }
 
   private canEditTargetByPermissions(user: User, permissions: PermissionKey[]): boolean {
     if (!this.canCreateEvents()) return false;
-    if (this.perms.isSuperAdmin() || this.perms.permissionsOnly(permissions.filter((permission) => permission.endsWith('.all')) as PermissionKey[])) return true;
-    if (this.sameDepartment(user) && this.perms.permissionsOnly(permissions.filter((permission) => permission.endsWith('.department')) as PermissionKey[])) return true;
-    return this.sameDepartment(user) && this.perms.permissionsOnly(permissions.filter((permission) => permission.endsWith('.assigned')) as PermissionKey[]);
+    if (
+      this.perms.isSuperAdmin() ||
+      this.perms.permissionsOnly(permissions.filter((permission) => permission.endsWith('.all')) as PermissionKey[])
+    )
+      return true;
+    if (
+      this.sameDepartment(user) &&
+      this.perms.permissionsOnly(
+        permissions.filter((permission) => permission.endsWith('.department')) as PermissionKey[]
+      )
+    )
+      return true;
+    return (
+      this.sameDepartment(user) &&
+      this.perms.permissionsOnly(
+        permissions.filter((permission) => permission.endsWith('.assigned')) as PermissionKey[]
+      )
+    );
   }
 
   private sameDepartment(user: User): boolean {
@@ -485,10 +518,14 @@ export class CalendarComponent implements OnChanges, OnInit {
 
   private moveEvent(event: CalendarEvent, startAt: Date, endAt: Date): void {
     this.saving = true;
-    this.calendarService.moveCalendarEvent(event, startAt, endAt).pipe(finalize(() => (this.saving = false))).subscribe(
-      () => this.loadEvents(),
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableMoveCalendarEvent') })
-    );
+    this.calendarService
+      .moveCalendarEvent(event, startAt, endAt)
+      .pipe(finalize(() => (this.saving = false)))
+      .subscribe(
+        () => this.loadEvents(),
+        (error) =>
+          this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableMoveCalendarEvent') })
+      );
   }
 
   private discardEvent(event: CalendarEvent): void {
@@ -505,7 +542,10 @@ export class CalendarComponent implements OnChanges, OnInit {
           this.detailModalVisible = false;
           this.loadEvents();
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableDiscardCalendarEvent') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('calendar.unableDiscardCalendarEvent'),
+          })
       );
   }
 
@@ -513,7 +553,8 @@ export class CalendarComponent implements OnChanges, OnInit {
     const pieces = [event.title];
     const person = this.eventPrimaryPerson(event);
     if (person) pieces.push(person);
-    if (event.sessionNumber) pieces.push(this.translate.instant('dashboard.sessionNumber', { number: event.sessionNumber }));
+    if (event.sessionNumber)
+      pieces.push(this.translate.instant('dashboard.sessionNumber', { number: event.sessionNumber }));
     return pieces.filter(Boolean).join(' · ');
   }
 }

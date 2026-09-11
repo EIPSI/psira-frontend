@@ -26,7 +26,7 @@ import { CaregiversPatientForm } from '@app/pages/patients-management/@forms/car
 import { CaregiversService } from '@app/pages/patients-management/@services/caregivers.service';
 import { Router } from '@angular/router';
 import { environment } from '@env/environment';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 enum ActionKey {
@@ -124,7 +124,7 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   public openCreateCaregiverPage(): void {
-    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
+    const dataString = encryptRouteObject(this.patient, environment.secretKey);
     this.router.navigate(['/psira/case-management/caregiver-form'], {
       queryParams: { patient: dataString },
     });

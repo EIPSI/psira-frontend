@@ -11,10 +11,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 import { InformedConsentService } from '../@services/informed-consent.service';
 import { CalendarService } from '@app/pages/calendar/@services/calendar.service';
-import {
-  CaseEventReason,
-  CaseEventReasonContext,
-} from '@app/pages/calendar/@types/calendar';
+import { CaseEventReason, CaseEventReasonContext } from '@app/pages/calendar/@types/calendar';
 import {
   InformedConsentAnswerResolution,
   InformedConsentKindLabel,
@@ -22,7 +19,6 @@ import {
   InformedConsentResponseStatus,
 } from '../@types/informed-consent';
 import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
-
 
 type ConsentBlockType = 'TEXT' | 'QUESTION';
 
@@ -55,12 +51,33 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
   kindLabel = InformedConsentKindLabel;
   sortFields: SortField<any>[] = [];
   columns: TableColumn<any>[] = [
-    { title: 'informedConsent.model', translationPath: 'informedConsent.model', name: 'modelName', sort: true, filterField: { type: 'text', value: undefined } as any },
-    { title: 'informedConsent.management', translationPath: 'informedConsent.management', name: 'managementTitle', sort: true },
+    {
+      title: 'informedConsent.model',
+      translationPath: 'informedConsent.model',
+      name: 'modelName',
+      sort: true,
+      filterField: { type: 'text', value: undefined } as any,
+    },
+    {
+      title: 'informedConsent.management',
+      translationPath: 'informedConsent.management',
+      name: 'managementTitle',
+      sort: true,
+    },
     { title: 'informedConsent.signer', translationPath: 'informedConsent.signer', name: 'signerName', sort: true },
-    { title: 'informedConsent.represented', translationPath: 'informedConsent.represented', name: 'representedName', sort: true },
+    {
+      title: 'informedConsent.represented',
+      translationPath: 'informedConsent.represented',
+      name: 'representedName',
+      sort: true,
+    },
     { title: 'core.status', translationPath: 'core.status', name: 'formattedStatus', render: 'tag', sort: true },
-    { title: 'informedConsent.resolution', translationPath: 'informedConsent.resolution', name: 'formattedResolution', sort: true },
+    {
+      title: 'informedConsent.resolution',
+      translationPath: 'informedConsent.resolution',
+      name: 'formattedResolution',
+      sort: true,
+    },
     { title: 'core.date', translationPath: 'core.date', name: 'answeredDate', render: 'date', sort: true },
     { title: 'informedConsent.records', translationPath: 'informedConsent.records', name: 'historyCount', sort: true },
   ];
@@ -99,7 +116,8 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
         this.responses = responses || [];
         this.applyLocalFilters();
       },
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadResponses') })
+      (error) =>
+        this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadResponses') })
     );
   }
 
@@ -127,7 +145,7 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
         this.responseVisible = false;
         const input = {
           responseId: Number(response.id),
-            reason: this.translate.instant('informedConsent.userRequestedResponseChange'),
+          reason: this.translate.instant('informedConsent.userRequestedResponseChange'),
         };
         const request = this.ownOnly
           ? this.service.reactivateMyResponse(input)
@@ -157,7 +175,10 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
               },
             });
           },
-          (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableReactivateResponse') })
+          (error) =>
+            this.errorService.handleError(error, {
+              prefix: this.translate.instant('informedConsent.unableReactivateResponse'),
+            })
         );
       },
     });
@@ -199,15 +220,20 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
           this.responseVisible = false;
           this.load();
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableReactivateResponse') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('informedConsent.unableReactivateResponse'),
+          })
       );
   }
 
   canReactivate(response?: InformedConsentResponse): boolean {
-    return !!response
-      && !this.ownOnly
-      && this.isLatestResponseInstance(response)
-      && [InformedConsentResponseStatus.BLOCKED, InformedConsentResponseStatus.REVOKED].includes(response.status);
+    return (
+      !!response &&
+      !this.ownOnly &&
+      this.isLatestResponseInstance(response) &&
+      [InformedConsentResponseStatus.BLOCKED, InformedConsentResponseStatus.REVOKED].includes(response.status)
+    );
   }
 
   onReactivateReasonChange(levelIndex: number, reasonId?: number): void {
@@ -268,7 +294,7 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
   }
 
   consentKindNames(kinds?: any[], kind?: any): string {
-    const values = kinds?.length ? kinds : (kind ? [kind] : []);
+    const values = kinds?.length ? kinds : kind ? [kind] : [];
     return values.length
       ? values.map((value) => this.translate.instant(this.kindLabel[value] || value)).join(', ')
       : this.translate.instant('informedConsent.noKindAssociated');
@@ -282,8 +308,12 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
     const labels: Record<string, string> = {
       [InformedConsentAnswerResolution.ACCEPTS]: this.translate.instant('informedConsent.resolutionAccepts'),
       [InformedConsentAnswerResolution.REJECTS]: this.translate.instant('informedConsent.resolutionRejects'),
-      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: this.translate.instant('informedConsent.resolutionRequiresReview'),
-      [InformedConsentAnswerResolution.NOT_APPLICABLE]: this.translate.instant('informedConsent.resolutionNotApplicable'),
+      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: this.translate.instant(
+        'informedConsent.resolutionRequiresReview'
+      ),
+      [InformedConsentAnswerResolution.NOT_APPLICABLE]: this.translate.instant(
+        'informedConsent.resolutionNotApplicable'
+      ),
     };
     return resolution ? labels[resolution] || resolution : '-';
   }
@@ -305,26 +335,25 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
 
   private applyLocalFilters(): void {
     const term = this.searchString.trim().toLowerCase();
-    const scopedResponses = this.responses
-      .filter((response) => {
-        if (
-          this.patientId &&
-          Number(response.patientId) !== Number(this.patientId) &&
-          Number(response.signerUserId) !== Number(this.userId) &&
-          Number(response.representedUserId) !== Number(this.userId)
-        ) {
-          return false;
-        }
-        if (
-          this.userId &&
-          !this.patientId &&
-          Number(response.signerUserId) !== Number(this.userId) &&
-          Number(response.representedUserId) !== Number(this.userId)
-        ) {
-          return false;
-        }
-        return true;
-      });
+    const scopedResponses = this.responses.filter((response) => {
+      if (
+        this.patientId &&
+        Number(response.patientId) !== Number(this.patientId) &&
+        Number(response.signerUserId) !== Number(this.userId) &&
+        Number(response.representedUserId) !== Number(this.userId)
+      ) {
+        return false;
+      }
+      if (
+        this.userId &&
+        !this.patientId &&
+        Number(response.signerUserId) !== Number(this.userId) &&
+        Number(response.representedUserId) !== Number(this.userId)
+      ) {
+        return false;
+      }
+      return true;
+    });
     const rows = this.visibleResponses(scopedResponses)
       .map((response) => ({
         ...response,
@@ -414,13 +443,9 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
 
   private responseGroupKey(response: InformedConsentResponse): string {
     const sourceId = this.latestOnly
-      ? (response.modelId || response.model?.id)
-      : (response.managementId || response.modelId || response.model?.id);
-    return [
-      sourceId || '',
-      response.signerUserId || '',
-      response.representedUserId || '',
-    ].join(':');
+      ? response.modelId || response.model?.id
+      : response.managementId || response.modelId || response.model?.id;
+    return [sourceId || '', response.signerUserId || '', response.representedUserId || ''].join(':');
   }
 
   private isLatestResponseInstance(response: InformedConsentResponse): boolean {
@@ -437,7 +462,10 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
           this.reactivateReasonLevels[levelIndex] = reasons;
         }
       },
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadReactivationReasons') })
+      (error) =>
+        this.errorService.handleError(error, {
+          prefix: this.translate.instant('informedConsent.unableLoadReactivationReasons'),
+        })
     );
   }
 

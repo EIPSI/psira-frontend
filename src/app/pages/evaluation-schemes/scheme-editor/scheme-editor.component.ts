@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AssessmentAdministrationService } from '@app/pages/administration/@services/assessment-administration.service';
@@ -56,7 +56,7 @@ type TimeUnit = 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'MONTHS';
   templateUrl: './scheme-editor.component.html',
   styleUrls: ['./scheme-editor.component.scss'],
 })
-export class SchemeEditorComponent implements OnInit {
+export class SchemeEditorComponent implements OnInit, AfterViewInit {
   private readonly maxFixedWeeks = 100;
   public schemeTypes = Object.values(EvaluationSchemeType);
   public schemeTypeLabel = EvaluationSchemeTypeLabel;
@@ -1602,7 +1602,7 @@ export class SchemeEditorComponent implements OnInit {
     return slot.endMinuteOfDay || (this.fixedSlotStartMinute(slot) + Number(slot.durationMinutes || 60));
   }
 
-  private fixedSlotStartMinute(slot: any, fallback = 0): number {
+  private fixedSlotStartMinute(slot: any, fallback: number = 0): number {
     if (!slot) return fallback;
     return slot.startMinuteOfDay === undefined || slot.startMinuteOfDay === null
       ? Number(slot.relativeMinuteOfDay === undefined ? fallback : slot.relativeMinuteOfDay)

@@ -28,7 +28,7 @@ import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/
 import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 import { AuthService } from '@app/auth/auth.service';
 import { TranslateService } from '@ngx-translate/core';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 @Component({
@@ -310,7 +310,7 @@ export class UserFormComponent implements OnInit {
       } else {
         this.defaultRoleCode = params.roleCode || this.activatedRoute.snapshot.data?.roleCode;
         const draft = params.draft ? this.decryptDraft(params.draft) : {};
-        this.user = { password: this.generateTemporaryPassword(), ...draft } as User & { password: string };
+        this.user = { ...draft } as User;
         if (draft.departmentIds) {
           (this.user as any).departmentId = draft.departmentIds;
         }
@@ -494,7 +494,7 @@ export class UserFormComponent implements OnInit {
   afterCreate() {
     this.populateForm = false;
     this.resetForm = false;
-    const dataString = encryptRoutePayload(JSON.stringify(this.user), environment.secretKey);
+    const dataString = this.encryptUserForRoute(this.user);
     this.router.navigate([this.defaultRoleCode ? '/psira/user-management/profile' : '/psira/user-management/user-form'], {
       state: { title: this.formatFullName(this.user) },
       queryParams: {
@@ -695,15 +695,6 @@ export class UserFormComponent implements OnInit {
     return this.user?.id && this.currentUser?.id && this.user.id === this.currentUser.id;
   }
 
-  private generateTemporaryPassword(): string {
-    const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-    return password;
-  }
-
   private formatFullName(user: Partial<User> | Partial<CreateUserInput>): string {
     return [user?.firstName, (user as any)?.middleName, user?.lastName].filter((part) => !!part).join(' ');
   }
@@ -726,14 +717,15 @@ export class UserFormComponent implements OnInit {
     const route = roleCode ? routeByRole[roleCode] : undefined;
     if (!route) return false;
 
+    const { password, newPassword, oldPassword, confirmPassword, ...safeFormData } = formData;
     const draft = {
-      ...formData,
+      ...safeFormData,
       departmentIds: formData.departmentId ?? [],
       roleCodes: formData.roleCodes,
     };
     delete draft.roleId;
     delete draft.departmentId;
-    const dataString = encryptRoutePayload(JSON.stringify(draft), environment.secretKey);
+    const dataString = encryptRouteObject(draft, environment.secretKey);
     this.router.navigate([route], {
       queryParams: {
         draft: dataString,
@@ -741,6 +733,10 @@ export class UserFormComponent implements OnInit {
       },
     });
     return true;
+  }
+
+  private encryptUserForRoute(user: User): string {
+    return encryptRouteObject(user, environment.secretKey);
   }
 
   private decryptDraft(value: string): any {

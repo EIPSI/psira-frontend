@@ -14,7 +14,7 @@ import { Convert } from '@shared/classes/convert';
 import { QuestionnaireManagementService } from '@app/pages/questionnaire-management/@services/questionnaire-management.service';
 import { environment } from '@env/environment';
 import { Router } from '@angular/router';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 export const createSearchFilter1 = (
@@ -71,7 +71,7 @@ export class QuestionnaireVersionListComponent implements OnInit {
   }
 
   public onSelect(questionnaire: FormattedQuestionnaireVersion): void {
-    const dataString = encryptRoutePayload(JSON.stringify(questionnaire), environment.secretKey);
+    const dataString = encryptRouteObject(questionnaire, environment.secretKey);
     this.router.navigate(['/psira/questionnaire-management/questionnaire-form'], {
       queryParams: {
         questionnaire: dataString,

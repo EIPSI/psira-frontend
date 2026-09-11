@@ -26,8 +26,7 @@ import { ClipboardService } from 'ngx-clipboard';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { User } from '@app/pages/user-management/@types/user';
 import { TranslateService } from '@ngx-translate/core';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
-
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 enum ActionKey {
   SHOW_ASSESSMENT,
@@ -35,7 +34,7 @@ enum ActionKey {
   ARCHIVE_ASSESSMENT,
   RESTORE_ASSESSMENT,
   DELETE_ASSESSMENT,
-  SCAN_QR_CODE
+  SCAN_QR_CODE,
 }
 
 @Component({
@@ -60,17 +59,17 @@ export class AssessmentsComponent implements OnInit {
   public columns: TableColumn<FormattedAssessment>[] = AssessmentsPatientsTable;
   public user: User;
   public isLoading = false;
-  public onlyArchivedAssessments = (localStorage.getItem('onlyArchivedAssessmentsPatients') === 'true');
+  public onlyArchivedAssessments = localStorage.getItem('onlyArchivedAssessmentsPatients') === 'true';
   isVisible = false;
   assessmentModalVisible = false;
   assessmentModalLoading = false;
   editingAssessment?: FullAssessment;
-  newUrl : URL;
-  modalData : any = '';
+  newUrl: URL;
+  modalData: any = '';
   statusFilter = '';
   searchString = '';
   public pageInfo: PageInfo;
-  public onlyMyAssessments = (localStorage.getItem('onlyMyAssessmentsPatients') === 'true');
+  public onlyMyAssessments = localStorage.getItem('onlyMyAssessmentsPatients') === 'true';
 
   public assessmentRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
     paging: { first: DEFAULT_PAGE_SIZE },
@@ -92,17 +91,17 @@ export class AssessmentsComponent implements OnInit {
   ngOnInit(): void {
     this.getAssessments();
 
-    if(!localStorage.getItem('onlyMyAssessmentsPatients')){
+    if (!localStorage.getItem('onlyMyAssessmentsPatients')) {
       localStorage.setItem('onlyMyAssessmentsPatients', this.onlyMyAssessments.toString());
     }
-    if(!localStorage.getItem('onlyArchivedAssessmentsPatients')){
+    if (!localStorage.getItem('onlyArchivedAssessmentsPatients')) {
       localStorage.setItem('onlyArchivedAssessmentsPatients', this.onlyArchivedAssessments.toString());
     }
-    if(!localStorage.getItem('filter-patient-assessment')){
-        localStorage.setItem('filter-patient-assessment', JSON.stringify(this.assessmentRequestOptions.filter));
+    if (!localStorage.getItem('filter-patient-assessment')) {
+      localStorage.setItem('filter-patient-assessment', JSON.stringify(this.assessmentRequestOptions.filter));
     }
-    if(!localStorage.getItem('sorting-patient-assessment')){
-        localStorage.setItem('sorting-patient-assessment', JSON.stringify(this.assessmentRequestOptions.sorting));
+    if (!localStorage.getItem('sorting-patient-assessment')) {
+      localStorage.setItem('sorting-patient-assessment', JSON.stringify(this.assessmentRequestOptions.sorting));
     }
   }
 
@@ -128,18 +127,24 @@ export class AssessmentsComponent implements OnInit {
     this.getAssessments();
   }
 
-  public onStatusSelect(): any{
-    if(this.assessmentRequestOptions.filter.and) {
-      const filters = {...this.assessmentRequestOptions.filter, and: [...this.assessmentRequestOptions.filter.and, {status: {eq: this.statusFilter}}]};
+  public onStatusSelect(): any {
+    if (this.assessmentRequestOptions.filter.and) {
+      const filters = {
+        ...this.assessmentRequestOptions.filter,
+        and: [...this.assessmentRequestOptions.filter.and, { status: { eq: this.statusFilter } }],
+      };
     } else {
-        const filters = {...this.assessmentRequestOptions.filter, and: [{status: {eq: this.statusFilter}}]};
+      const filters = { ...this.assessmentRequestOptions.filter, and: [{ status: { eq: this.statusFilter } }] };
     }
     this.getAssessments();
     this.currentFilters = true;
   }
 
   public onAction({ action, context: assessment }: ActionArgs<FormattedAssessment, ActionKey>): void {
-    if (!assessment.editableFromAssessmentList && ![ActionKey.SHOW_ASSESSMENT, ActionKey.SCAN_QR_CODE].includes(action.key)) {
+    if (
+      !assessment.editableFromAssessmentList &&
+      ![ActionKey.SHOW_ASSESSMENT, ActionKey.SCAN_QR_CODE].includes(action.key)
+    ) {
       this.openLinkedSession();
       return;
     }
@@ -156,23 +161,22 @@ export class AssessmentsComponent implements OnInit {
         return;
       case ActionKey.RESTORE_ASSESSMENT:
         this.restoreAssessment(assessment);
-        return;  
+        return;
       case ActionKey.DELETE_ASSESSMENT:
         this.deleteAssessment(assessment, false);
         return;
       case ActionKey.SCAN_QR_CODE:
-        this.modalData = assessment
+        this.modalData = assessment;
         this.newUrl = new URL(this.generateAssessmentURL(assessment.uuid), window.location.origin);
-        this.showModal()
-        return;  
+        this.showModal();
+        return;
     }
   }
   public onMyAssessments(): void {
-    if(this.onlyMyAssessments === true){
+    if (this.onlyMyAssessments === true) {
       localStorage.setItem('onlyMyAssessmentsPatients', 'false');
       this.onlyMyAssessments = false;
-    }
-    else{
+    } else {
       localStorage.setItem('onlyMyAssessmentsPatients', 'true');
       this.onlyMyAssessments = true;
     }
@@ -180,11 +184,10 @@ export class AssessmentsComponent implements OnInit {
   }
 
   public onArchivedAssessments(): void {
-    if(this.onlyArchivedAssessments === true){
+    if (this.onlyArchivedAssessments === true) {
       localStorage.setItem('onlyArchivedAssessmentsPatients', 'false');
       this.onlyArchivedAssessments = false;
-    }
-    else{
+    } else {
       localStorage.setItem('onlyArchivedAssessmentsPatients', 'true');
       this.onlyArchivedAssessments = true;
     }
@@ -216,7 +219,7 @@ export class AssessmentsComponent implements OnInit {
       return;
     }
 
-    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
+    const dataString = encryptRouteObject(this.patient, environment.secretKey);
     this.router.navigate(['/psira/case-management/create-assessment'], {
       queryParams: {
         profile: dataString,
@@ -247,7 +250,7 @@ export class AssessmentsComponent implements OnInit {
   }
 
   private openLinkedSession(): void {
-    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
+    const dataString = encryptRouteObject(this.patient, environment.secretKey);
     this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
         profile: dataString,
@@ -273,14 +276,14 @@ export class AssessmentsComponent implements OnInit {
     return [
       {
         assessmentType: {
-            or: [
-                {
-                    name: {
-                        iLike: `%${searchString}%`
-                    }
-                }
-            ]
-        }
+          or: [
+            {
+              name: {
+                iLike: `%${searchString}%`,
+              },
+            },
+          ],
+        },
       },
       {
         patient: {
@@ -323,7 +326,10 @@ export class AssessmentsComponent implements OnInit {
             hasPreviousPage: false,
           };
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('plannedAssessments.unableLoadAssessments') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('plannedAssessments.unableLoadAssessments'),
+          })
       );
   }
 
@@ -368,52 +374,69 @@ export class AssessmentsComponent implements OnInit {
           };
           this.assessmentModalVisible = true;
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableLoadAssessment') })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('patientsManagement.unableLoadAssessment'),
+          })
       );
   }
 
-  private async archiveAssessment(assessment : FormattedAssessment) {
+  private async archiveAssessment(assessment: FormattedAssessment) {
     const modal = this.modalService.confirm({
-        nzOnOk: () => true,
-        nzTitle: this.translate.instant('plannedAssessments.archiveAssessmentTitle'),
-        nzContent: this.translate.instant('plannedAssessments.archiveAssessmentConfirm', { name: assessment.name })
+      nzOnOk: () => true,
+      nzTitle: this.translate.instant('plannedAssessments.archiveAssessmentTitle'),
+      nzContent: this.translate.instant('plannedAssessments.archiveAssessmentConfirm', { name: assessment.name }),
     });
 
     const confirmation = await modal.afterClose.toPromise();
-    if (! confirmation) 
-        return;
-    
+    if (!confirmation) return;
 
     this.isLoading = true;
-    this.assessmentService.archiveAssessment(assessment).pipe(finalize(() => (this.isLoading = false))).subscribe((archived) => {
-        if (!archived) {
+    this.assessmentService
+      .archiveAssessment(assessment)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe(
+        (archived) => {
+          if (!archived) {
             this.getAssessments();
-        } else {
+          } else {
             this.getAssessments();
-        }
-    }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableArchiveAssessment', { name: assessment.name })}));
+          }
+        },
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('plannedAssessments.unableArchiveAssessment', { name: assessment.name }),
+          })
+      );
   }
 
-  private async restoreAssessment(assessment : FormattedAssessment) {
+  private async restoreAssessment(assessment: FormattedAssessment) {
     const modal = this.modalService.confirm({
-        nzOnOk: () => true,
-        nzTitle: this.translate.instant('plannedAssessments.restoreAssessmentTitle'),
-        nzContent: this.translate.instant('plannedAssessments.restoreAssessmentConfirm', { name: assessment?.name })
+      nzOnOk: () => true,
+      nzTitle: this.translate.instant('plannedAssessments.restoreAssessmentTitle'),
+      nzContent: this.translate.instant('plannedAssessments.restoreAssessmentConfirm', { name: assessment?.name }),
     });
 
     const confirmation = await modal.afterClose.toPromise();
-    if (! confirmation) 
-        return;
-    
+    if (!confirmation) return;
 
     this.isLoading = true;
-    this.assessmentService.restoreAssessment(assessment).pipe(finalize(() => (this.isLoading = false))).subscribe((archived) => {
-        if (!archived) {
+    this.assessmentService
+      .restoreAssessment(assessment)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe(
+        (archived) => {
+          if (!archived) {
             this.getAssessments();
-        } else {
+          } else {
             this.getAssessments();
-        }
-    }, (error) => this.errorService.handleError(error, {prefix: this.translate.instant('plannedAssessments.unableRestoreAssessment', { name: assessment.name })}));
+          }
+        },
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('plannedAssessments.unableRestoreAssessment', { name: assessment.name }),
+          })
+      );
   }
 
   private async deleteAssessment(assessment: FormattedAssessment, archive: boolean = true): Promise<void> {
@@ -440,7 +463,10 @@ export class AssessmentsComponent implements OnInit {
             this.getAssessments();
           }
         },
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('plannedAssessments.unableDeleteAssessment', { name: assessment.name }) })
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('plannedAssessments.unableDeleteAssessment', { name: assessment.name }),
+          })
       );
   }
 

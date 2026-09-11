@@ -212,7 +212,7 @@ export class RandomizationEditorComponent implements OnInit {
         this.message.success(this.translate.instant(this.isUpdateMode ? 'randomizations.updated' : 'randomizations.created'));
         this.router.navigate(['/psira/randomizations']);
       },
-      (error) => this.errorService.handleError(error, { prefix: 'Unable to save randomization' })
+      (saveError) => this.errorService.handleError(saveError, { prefix: 'Unable to save randomization' })
     );
   }
 
@@ -374,7 +374,7 @@ export class RandomizationEditorComponent implements OnInit {
   }
 
   private buildPayload(): any {
-    this.form.controls['departmentIds'].setValue(this.selectedDepartments);
+    this.form.controls.departmentIds.setValue(this.selectedDepartments);
     return {
       name: this.form.value.name,
       active: this.form.value.active !== false,

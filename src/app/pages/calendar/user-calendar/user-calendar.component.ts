@@ -760,7 +760,7 @@ export class UserCalendarComponent implements OnChanges {
     });
   }
 
-  private moveEvent(event: CalendarEvent, startAt: Date, endAt: Date, closeModal = false): void {
+  private moveEvent(event: CalendarEvent, startAt: Date, endAt: Date, closeModal: boolean = false): void {
     this.saving = true;
     this.calendarService.moveCalendarEvent(event, startAt, endAt).pipe(finalize(() => (this.saving = false))).subscribe(
       () => {

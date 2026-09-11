@@ -92,8 +92,10 @@ export default {
     noPendingItems: 'No pending updates',
     noContent: 'No content to show',
     pendingInformedConsent: 'Informed consent pending response',
-    informedConsentBlockedMessage: 'Given the characteristics of PSIRA, it is not possible to continue using the site without this acceptance. If you have any questions, contact the responsible person.',
-    informedConsentBlockedHelp: 'If the response was a mistake or you changed your mind, request the consent to be re-enabled so you can answer it again.',
+    informedConsentBlockedMessage:
+      'Given the characteristics of PSIRA, it is not possible to continue using the site without this acceptance. If you have any questions, contact the responsible person.',
+    informedConsentBlockedHelp:
+      'If the response was a mistake or you changed your mind, request the consent to be re-enabled so you can answer it again.',
     session: 'Session',
     sessionNumber: 'Session {{number}}',
     supervision: 'Supervision',
@@ -111,7 +113,7 @@ export default {
   assessments: {
     myAssessment: 'My Assessments',
     archivedAssessments: 'Show Archived',
-    notArchivedAssessments: 'Show Not Archived'
+    notArchivedAssessments: 'Show Not Archived',
   },
   language: {
     title: 'Language',
@@ -190,7 +192,8 @@ export default {
     googleCalendar: 'Google Calendar',
     visible: 'Visible',
     hidden: 'Hidden',
-    googleCalendarDescription: 'Configure the official PSIRA OAuth app. If disabled or incomplete, users will not see the button to connect Google Calendar.',
+    googleCalendarDescription:
+      'Configure the official PSIRA OAuth app. If disabled or incomplete, users will not see the button to connect Google Calendar.',
     enableIntegration: 'Enable integration',
     clientId: 'Client ID',
     clientSecret: 'Client Secret',
@@ -282,7 +285,7 @@ export default {
     informedConsentModels: 'IC Models',
     informedConsentManagement: 'Management',
     informedConsentResponses: 'IC Responses',
-    version: 'Version'
+    version: 'Version',
   },
   auth: {
     logInTitle: 'Log In',
@@ -300,9 +303,9 @@ export default {
     system: 'System',
   },
   miscellaneous: {
-    lostTitle: "Hello {{name}}, looks like you're lost",
+    lostTitle: 'Hello {{name}}, looks like you\'re lost',
     notAvailable: 'The page you are looking for is not available!',
-    noActiveTabs: "Hey {{name}}, you don't have active tabs",
+    noActiveTabs: 'Hey {{name}}, you don\'t have active tabs',
   },
   reports: {
     reports: 'Reports',
@@ -381,7 +384,8 @@ export default {
     recipientRoleRequired: 'Select a recipient role.',
     emailTemplateRequired: 'Select a template.',
     deleteConfiguration: 'Delete configuration',
-    deleteConfigurationMessage: 'The configuration will be deleted and will stop activating notifications for that combination.',
+    deleteConfigurationMessage:
+      'The configuration will be deleted and will stop activating notifications for that combination.',
     configurationUpdated: 'Configuration updated',
     configurationsCreated: 'Configurations created',
     configurableNotificationType: 'Configurable notification type in PSIRA.',
@@ -391,7 +395,8 @@ export default {
     immediateNotifications: 'Immediate notifications',
     immediateNotificationsDescription: 'Send alerts when a relevant event occurs.',
     includedImmediateNotifications: 'Included immediate alerts',
-    includedImmediateNotificationsDescription: 'Activate or deactivate the alerts you want to receive immediately for this case or supervision.',
+    includedImmediateNotificationsDescription:
+      'Activate or deactivate the alerts you want to receive immediately for this case or supervision.',
     periodicSummary: 'Periodic summary',
     periodicSummaryDescription: 'Group answered and pending assessments in a report.',
     periodicFrequency: 'Periodic frequency',
@@ -421,7 +426,8 @@ export default {
     thankYouPage: 'Thank-you page',
     thankYouPlaceholder: 'Text shown after the user registers the response',
     modelEditorHelp: 'Build the visible consent as an ordered sequence of text and question blocks.',
-    managementEditorHelp: 'Define who receives this consent, when it is shown, and whether answering is required to continue using PSIRA.',
+    managementEditorHelp:
+      'Define who receives this consent, when it is shown, and whether answering is required to continue using PSIRA.',
     mustAnswerToContinue: 'Must answer to continue',
     requiresResponse: 'Requires response',
     noRolesMeansAll: 'Leave empty to apply to all roles',
@@ -492,9 +498,11 @@ export default {
     reactivateResponse: 'Reactivate response',
     reactivateConsent: 'Reactivate informed consent',
     reactivate: 'Reactivate',
-    reactivationHelp: 'This action allows the user to answer the informed consent again. The reason will be stored in the review history.',
+    reactivationHelp:
+      'This action allows the user to answer the informed consent again. The reason will be stored in the review history.',
     modifyConsent: 'Modify informed consent',
-    modifyConsentWarning: 'Changing an informed consent response can modify access to the system or how your data is used. Do you want to continue?',
+    modifyConsentWarning:
+      'Changing an informed consent response can modify access to the system or how your data is used. Do you want to continue?',
     userRequestedResponseChange: 'User requested to modify the response.',
     unableIdentifyResponse: 'Unable to identify the informed consent response.',
     consentReactivated: 'Consent reactivated for a new response.',
@@ -505,7 +513,7 @@ export default {
   patients: {
     myPatients: 'My Patients',
     archivedPatients: 'Show Archived',
-    notArchivedPatients: 'Show not Archived'
+    notArchivedPatients: 'Show not Archived',
   },
   calendar: {
     type: 'Event type',
@@ -615,7 +623,8 @@ export default {
     selectReason: 'Select a reason.',
     assessment: 'Assessment',
     createFromGeneralCalendar: 'Create from general calendar',
-    generalCalendarTargetHelp: 'Select the user whose case calendar you want to manage. PSIRA does not create free calendar events.',
+    generalCalendarTargetHelp:
+      'Select the user whose case calendar you want to manage. PSIRA does not create free calendar events.',
     targetUser: 'Target user',
     selectTargetUser: 'Select target user',
     responder: 'Responder',
@@ -730,7 +739,8 @@ export default {
     defaultPreset: 'Default preset',
     deleteScheme: 'Delete scheme',
     deleteSchemeAssessment: 'Delete scheme assessment',
-    deleteSchemeConfirm: 'Scheme "{{name}}" will be deleted. Occurrences and assessments already created will remain detached from the scheme.',
+    deleteSchemeConfirm:
+      'Scheme "{{name}}" will be deleted. Occurrences and assessments already created will remain detached from the scheme.',
     deleteSessionRuleConfirm: 'This rule will stop generating new assessments.',
     endTimeAfterStartTime: 'The end time must be after the start time.',
     endTimeBlock: 'End time block',
@@ -811,7 +821,8 @@ export default {
     updatedAt: 'Last update',
     create: 'Create Randomization',
     edit: 'Edit Randomization',
-    notice: 'In addition to the general randomizations available in Evaluation Management > Randomization, questionnaire bundles can include internal randomizations between their own questionnaires. These in-bundle randomizations are configured inside the bundle and work independently.',
+    notice:
+      'In addition to the general randomizations available in Evaluation Management > Randomization, questionnaire bundles can include internal randomizations between their own questionnaires. These in-bundle randomizations are configured inside the bundle and work independently.',
     itemsToRandomize: 'Items to randomize',
     singleSelection: 'single selection',
     addQuestionnaire: 'Add questionnaire',
@@ -911,7 +922,8 @@ export default {
     reasonUpdated: 'Reason updated',
     treeCreated: 'Tree created',
     treeUpdated: 'Tree updated',
-    deleteReasonConfirm: 'Reason "{{reason}}" and its child reasons will be permanently deleted. If historical records already reference it, the database may prevent deletion.',
+    deleteReasonConfirm:
+      'Reason "{{reason}}" and its child reasons will be permanently deleted. If historical records already reference it, the database may prevent deletion.',
     deleteTreeConfirm: 'Tree "{{tree}}" will stop being available for new use. Historical records are preserved.',
     unableLoadReasons: 'Unable to load reasons',
     unableSaveReason: 'Unable to save reason',
@@ -974,7 +986,8 @@ export default {
     evaluationNameOptional: 'Assessment name (optional)',
     evaluationNameHelp: 'If it is not completed, the assessment type will be shown.',
     expiration: 'Expiration',
-    expirationHelp: 'Optional. Counted from the moment the assessment becomes available and defines until when it can be answered.',
+    expirationHelp:
+      'Optional. Counted from the moment the assessment becomes available and defines until when it can be answered.',
     reminders: 'Reminders',
     remindersHelp: 'Values from availability, separated by commas.',
     summary: 'Summary',
@@ -982,8 +995,10 @@ export default {
     selectedTrigger: 'the selected trigger',
     selectedScheme: 'the selected scheme',
     configuredEvaluation: 'the configured assessment',
-    fixedSchemeSummary: 'When a user with role {{role}} matches {{trigger}}, fixed scheme {{scheme}} will be assigned {{delay}} {{unit}} later.',
-    individualEvaluationSummary: 'When a user with role {{role}} matches {{trigger}}, {{name}} will be scheduled {{delay}} {{unit}} later.',
+    fixedSchemeSummary:
+      'When a user with role {{role}} matches {{trigger}}, fixed scheme {{scheme}} will be assigned {{delay}} {{unit}} later.',
+    individualEvaluationSummary:
+      'When a user with role {{role}} matches {{trigger}}, {{name}} will be scheduled {{delay}} {{unit}} later.',
     titleRequired: 'Title is required',
     priorityRequired: 'Priority is required and must be greater than zero',
     departmentRequired: 'Select at least one department',
@@ -1173,7 +1188,8 @@ export default {
       appNameValidation: 'Shiny app is required.',
       urlDescription: 'URL generated from the selected reporting tool.',
       urlValidation: 'Enter a valid URL.',
-      repositoryLinkDescription: 'Optional technical reference, such as the Git repository, documentation, script, or internal folder where this report is maintained.',
+      repositoryLinkDescription:
+        'Optional technical reference, such as the Git repository, documentation, script, or internal folder where this report is maintained.',
       repositoryLinkValidation: 'Enter a valid repository link.',
       reportStatusDescription: 'Enable or disable this report.',
       reportStatusValidation: 'Report status is required.',
@@ -1391,7 +1407,8 @@ export default {
     otherReasonRequired: 'Other reason required',
     otherReasonRequiredMessage: 'Complete Other reason to continue.',
     otherUser: 'Other user',
-    patientAutomationsHelp: 'These assessments will automatically apply to the Patient role. You can uncheck the ones you do not want to apply.',
+    patientAutomationsHelp:
+      'These assessments will automatically apply to the Patient role. You can uncheck the ones you do not want to apply.',
     patientDeleted: 'Patient has been successfully deleted',
     patientStatusUpdated: 'Patient status updated successfully',
     previousCycles: 'Previous cycles',
@@ -1520,7 +1537,8 @@ export default {
     addScript: 'Add script',
     creatingScript: 'Creating script {{name}}',
     deleteQuestionnaire: 'Delete questionnaire',
-    deleteQuestionnaireConfirm: 'This action will delete the questionnaire and all the associated assessments. Are you sure you want to proceed?',
+    deleteQuestionnaireConfirm:
+      'This action will delete the questionnaire and all the associated assessments. Are you sure you want to proceed?',
     deleteScript: 'Delete script',
     deleteScriptConfirm: 'Are you sure you want to delete {{name}}? This action is irreversible.',
     description: 'Description',
@@ -1579,7 +1597,8 @@ export default {
     packageHeaderPlaceholder: 'Text shown above the whole assessment...',
     preview: 'Preview',
     previewTitle: 'Bundle preview',
-    randomHelp: 'Relative weight controls probability inside this group. Random order uses it to decide what appears earlier; replacement uses it to decide which items are selected.',
+    randomHelp:
+      'Relative weight controls probability inside this group. Random order uses it to decide what appears earlier; replacement uses it to decide which items are selected.',
     randomOrder: 'Random order',
     randomizedGroup: 'Randomized group',
     relativeWeight: 'Relative weight (selection/order probability)',
@@ -1676,7 +1695,7 @@ export default {
     userRole: 'User role',
     enableDisableUser: 'Enable or disable {{name}}',
     enableDisableUserHelp: 'Use the switch below to enable or disable {{name}}.',
-    changeUserPasswordTitle: "Change {{name}}'s password",
+    changeUserPasswordTitle: 'Change {{name}}\'s password',
     changeUserPasswordHelp: 'Use the button below to change the password for {{name}}.',
     changePasswordForUser: 'Change password for {{username}}: {{name}}',
     deleteUser: 'Delete user',
@@ -1684,11 +1703,12 @@ export default {
     deleteUserHelp: 'Use the button below to remove {{name}}.',
     deleteUserConfirm: 'Are you sure you want to delete {{name}}?',
     deleteUserIrreversibleConfirm: 'Are you sure you want to delete {{name}}? This action is irreversible.',
-    insufficientDeletePermission: "You don't have sufficient permission to delete this user.",
+    insufficientDeletePermission: 'You don\'t have sufficient permission to delete this user.',
     personalInformation: 'Personal information',
     noApplicableAutomations: 'No automations apply for the selected role, department and triggers.',
     automaticAutomationsToApply: 'Automations that will be applied automatically',
-    automaticAutomationsHelp: 'These assessments will automatically apply to the selected role. You can uncheck the ones you do not want to apply.',
+    automaticAutomationsHelp:
+      'These assessments will automatically apply to the selected role. You can uncheck the ones you do not want to apply.',
     creatingUser: 'Creating user {{name}}',
     updatingUser: 'Updating user {{name}}',
     userCreated: 'User has successfully been created',
@@ -1831,36 +1851,55 @@ export default {
     technicalResourceDescription: 'the technical resource "{{resource}}".',
     technicalActionDescription: 'enables the technical action "{{action}}".',
     technicalScopeDescription: 'technical scope "{{scope}}".',
-    permissionDescription: 'This permission controls whether a user can operate on {{resourceDescription}} The associated action {{actionDescription}} The defined scope is: {{scopeDescription}}',
+    permissionDescription:
+      'This permission controls whether a user can operate on {{resourceDescription}} The associated action {{actionDescription}} The defined scope is: {{scopeDescription}}',
     enabledAction: 'Allows executing the action "{{action}}" on {{resourceDescription}}',
-    enabledUiAndResolvers: 'Allows menus, routes, buttons and resolvers associated with this action to be available when the scope matches.',
-    enabledAllScope: 'When the permission has all scope, it also covers narrower permissions for the same resource and action in system guards.',
-    limitBusinessRules: 'Does not bypass clinical validations, business rules, data integrity or module-specific restrictions.',
-    limitRelatedResources: 'Does not automatically grant permissions over other resources, even when they are functionally related.',
-    limitScopedRecords: 'Department, department-hierarchy and assigned scopes require the record to actually belong to the matching department, hierarchy or assignment.',
+    enabledUiAndResolvers:
+      'Allows menus, routes, buttons and resolvers associated with this action to be available when the scope matches.',
+    enabledAllScope:
+      'When the permission has all scope, it also covers narrower permissions for the same resource and action in system guards.',
+    limitBusinessRules:
+      'Does not bypass clinical validations, business rules, data integrity or module-specific restrictions.',
+    limitRelatedResources:
+      'Does not automatically grant permissions over other resources, even when they are functionally related.',
+    limitScopedRecords:
+      'Department, department-hierarchy and assigned scopes require the record to actually belong to the matching department, hierarchy or assignment.',
     exampleAll: '{{resource}}.{{action}}.all enables this action across PSIRA for this resource.',
     exampleDepartment: '{{resource}}.{{action}}.department enables this action only within permitted departments.',
-    exampleAssigned: '{{resource}}.{{action}}.assigned enables this action only when the user directly participates in the case, session, assessment or response.',
+    exampleAssigned:
+      '{{resource}}.{{action}}.assigned enables this action only when the user directly participates in the case, session, assessment or response.',
     resources: {
-      users: 'general system users, including profile, roles, departments, account status and administrative configuration.',
-      patients: 'patients/clinical cases, their case data, departments, case managers, caregivers, contacts, status and associated information.',
-      therapists: 'therapist users, their professional profile data, supervision links and management availability as special users.',
-      supervisors: 'supervisor users, their profile data and their ability to coordinate therapists or supervised cases.',
-      caregivers: 'caregivers linked to patients, always dependent on a patient and inheriting the case departmental frame.',
-      clinical: 'sessions, supervisions, clinical calendar, clinical/supervision follow-up, cancellations, restructuring and operations associated with clinical work.',
-      assessments: 'individual assessments, fixed-scheme assessments, session-based assessments, automations and their assignment, editing, discard or archive operations.',
-      questionnaires: 'questionnaires as the basic assessment unit, their questions, answers and internal configuration.',
-      questionnaireBundles: 'questionnaire bundles, presentation screens, internal randomization and sequential response experience.',
+      users:
+        'general system users, including profile, roles, departments, account status and administrative configuration.',
+      patients:
+        'patients/clinical cases, their case data, departments, case managers, caregivers, contacts, status and associated information.',
+      therapists:
+        'therapist users, their professional profile data, supervision links and management availability as special users.',
+      supervisors:
+        'supervisor users, their profile data and their ability to coordinate therapists or supervised cases.',
+      caregivers:
+        'caregivers linked to patients, always dependent on a patient and inheriting the case departmental frame.',
+      clinical:
+        'sessions, supervisions, clinical calendar, clinical/supervision follow-up, cancellations, restructuring and operations associated with clinical work.',
+      assessments:
+        'individual assessments, fixed-scheme assessments, session-based assessments, automations and their assignment, editing, discard or archive operations.',
+      questionnaires:
+        'questionnaires as the basic assessment unit, their questions, answers and internal configuration.',
+      questionnaireBundles:
+        'questionnaire bundles, presentation screens, internal randomization and sequential response experience.',
       evaluationSchemes: 'fixed or session-linked evaluation schemes, their application and propagation rules.',
       randomizations: 'randomization rules and random assignment of contents or conditions.',
-      automations: 'automations configured by events, conditions, departments, reasons and clinical or administrative actions.',
+      automations:
+        'automations configured by events, conditions, departments, reasons and clinical or administrative actions.',
       notifications: 'system notification configuration by event, role, department, channel and preferences.',
       notificationLogs: 'technical history of emitted notifications, delivery attempts, status and audit.',
       mailTemplates: 'email templates, variables, sender, rich content and versions used by notifications.',
       informedConsentModels: 'informed consent models, text/question blocks, versions and previews.',
-      informedConsentManagement: 'management of when, to whom and under which conditions each informed consent applies.',
+      informedConsentManagement:
+        'management of when, to whom and under which conditions each informed consent applies.',
       informedConsentResponses: 'responses, reviews, reactivations and audit of informed consents answered by users.',
-      reports: 'reports generated or configured for patients, users, assessments and other clinical or administrative sections.',
+      reports:
+        'reports generated or configured for patients, users, assessments and other clinical or administrative sections.',
       departments: 'departments, their role application rules, colors, defaults and institutional structure.',
       roles: 'system roles, hierarchy, assigned permissions and access profile editing capacity.',
       permissions: 'assignment of permissions to roles within the user permissions matrix.',
@@ -1868,24 +1907,33 @@ export default {
       system: 'global system configuration, module activation and absolute platform parameters.',
     },
     actions: {
-      view: 'allows consulting, listing, opening detail and using the information as read-only inside authorized screens.',
+      view:
+        'allows consulting, listing, opening detail and using the information as read-only inside authorized screens.',
       create: 'allows creating new records or schedules for this resource, respecting the module validations.',
-      edit: 'allows modifying existing records, updating links, changing configuration or executing equivalent maintenance actions.',
-      delete: 'allows deleting records when the module permits it, including definitive deletion or soft deletion depending on the entity.',
-      archive: 'allows archiving records, removing them from the main operational flow without losing historical record.',
+      edit:
+        'allows modifying existing records, updating links, changing configuration or executing equivalent maintenance actions.',
+      delete:
+        'allows deleting records when the module permits it, including definitive deletion or soft deletion depending on the entity.',
+      archive:
+        'allows archiving records, removing them from the main operational flow without losing historical record.',
       restore: 'allows restoring archived, soft-deleted or deactivated records when the module preserves history.',
       assign: 'allows assigning responsible users, recipients or operational links related to assessments.',
-      review: 'allows reviewing responses, reactivating states, recording administrative decisions and operating informed-consent audit.',
+      review:
+        'allows reviewing responses, reactivating states, recording administrative decisions and operating informed-consent audit.',
       test: 'allows testing automation rules or executions without necessarily creating a new automation.',
     },
     scopes: {
-      all: 'absolute scope. Applies to every department, user, case and record of the resource. Intended for super administration or global administrative permissions.',
-      department: 'departmental scope. Applies only to departments the user belongs to or records linked to those departments.',
-      departmentHierarchy: 'departmental scope with hierarchy. Applies within permitted departments and also respects that the user can only operate roles or users with equal or lower hierarchy.',
-      assigned: 'assigned scope. Applies only to cases, therapists, caregivers, sessions, assessments or responses where the user participates as responsible user, case manager, supervisor or linked user.',
+      all:
+        'absolute scope. Applies to every department, user, case and record of the resource. Intended for super administration or global administrative permissions.',
+      department:
+        'departmental scope. Applies only to departments the user belongs to or records linked to those departments.',
+      departmentHierarchy:
+        'departmental scope with hierarchy. Applies within permitted departments and also respects that the user can only operate roles or users with equal or lower hierarchy.',
+      assigned:
+        'assigned scope. Applies only to cases, therapists, caregivers, sessions, assessments or responses where the user participates as responsible user, case manager, supervisor or linked user.',
     },
   },
-  emailTemplates:{
+  emailTemplates: {
     createTemplate: 'Create Template',
     created: 'Email template created successfully!',
     updated: 'Email template updated successfully!',
@@ -1907,28 +1955,30 @@ export default {
     deleteTemplateConfirm: 'Are you sure you want to delete this email template?',
     duplicated: 'Email template duplicated',
     unableDuplicateTemplate: 'Unable to duplicate email template',
-    unableLoadShortcuts: 'Unable to load shortcuts'
+    unableLoadShortcuts: 'Unable to load shortcuts',
   },
-  emailStatusFilter:{
+  emailStatusFilter: {
     expired: 'Expired',
     planned: 'Planned',
     pending: 'Pending',
     openForCompletion: 'Open For Completion',
     partiallyCompleted: 'Partially Completed',
-    completed: 'Completed'
+    completed: 'Completed',
   },
   modal: {
     continue: 'Continue to next section?',
     continueOverview: 'Finish questionnaire?',
-    unansweredQuestions: "You have {{count}} unanswered required question(s). All questions need to be answered to submit the questionnaire.",
-    unansweredQuestionsOverview: "You have {{count}} unanswered required question(s). Are you sure you want to finish the questionnaire?",
-    cancel: "Proceed Without Completing (Not Recommended)",
-    ok: "Go Back and Complete the Questions"
+    unansweredQuestions:
+      'You have {{count}} unanswered required question(s). All questions need to be answered to submit the questionnaire.',
+    unansweredQuestionsOverview:
+      'You have {{count}} unanswered required question(s). Are you sure you want to finish the questionnaire?',
+    cancel: 'Proceed Without Completing (Not Recommended)',
+    ok: 'Go Back and Complete the Questions',
   },
   bundles: {
     created: 'Bundle created successfully!',
     updated: 'Bundle updated successfully!',
     deleted: 'Bundle deleted successfully!',
     unableToLoad: 'Unable to load bundles!',
-  }
+  },
 };

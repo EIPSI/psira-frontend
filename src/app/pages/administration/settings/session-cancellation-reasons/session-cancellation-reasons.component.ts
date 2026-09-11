@@ -784,8 +784,8 @@ export class SessionCancellationReasonsComponent implements OnInit {
 
   private flattenReasons(
     reasons: CaseEventReason[],
-    depth = 0,
-    parentPath = ''
+    depth: number = 0,
+    parentPath: string = ''
   ): FlatReason[] {
     return reasons.reduce((flat: FlatReason[], reason) => {
       const path = parentPath ? `${parentPath} > ${reason.label}` : reason.label;

@@ -92,8 +92,10 @@ export default {
     noPendingItems: 'No hay novedades pendientes',
     noContent: 'No hay contenido para mostrar',
     pendingInformedConsent: 'Consentimiento informado pendiente de respuesta',
-    informedConsentBlockedMessage: 'Dadas las características de PSIRA, no es posible continuar usando el sitio sin esta aceptación. Ante cualquier duda, comunicate con el responsable.',
-    informedConsentBlockedHelp: 'Si la respuesta fue un error o cambiaste de opinión, solicitá que rehabiliten el consentimiento para poder responderlo nuevamente.',
+    informedConsentBlockedMessage:
+      'Dadas las características de PSIRA, no es posible continuar usando el sitio sin esta aceptación. Ante cualquier duda, comunicate con el responsable.',
+    informedConsentBlockedHelp:
+      'Si la respuesta fue un error o cambiaste de opinión, solicitá que rehabiliten el consentimiento para poder responderlo nuevamente.',
     session: 'Sesión',
     sessionNumber: 'Sesión {{number}}',
     supervision: 'Supervisión',
@@ -174,7 +176,8 @@ export default {
     requiredFields: 'Completá los campos obligatorios.',
     missingTranslation: 'Falta traducción para la clave "{{key}}" del idioma "{{language}}"',
     unexpectedError: 'Error inesperado',
-    informedConsentBlocked: 'Tenés consentimientos informados pendientes por responder antes de seguir utilizando PSIRA.',
+    informedConsentBlocked:
+      'Tenés consentimientos informados pendientes por responder antes de seguir utilizando PSIRA.',
   },
   system: {
     system: 'Sistema',
@@ -184,7 +187,8 @@ export default {
     notifications: 'Notificaciones',
     notificationsActive: 'Notificaciones activas',
     notificationsInactive: 'Notificaciones inactivas',
-    notificationsDescription: 'Si está apagado no se envían emails ni resúmenes, pero se conservan las configuraciones.',
+    notificationsDescription:
+      'Si está apagado no se envían emails ni resúmenes, pero se conservan las configuraciones.',
     informedConsent: 'Consentimiento Informado',
     informedConsentActive: 'Consentimiento informado activo',
     informedConsentInactive: 'Consentimiento informado inactivo',
@@ -193,7 +197,8 @@ export default {
     googleCalendar: 'Google Calendar',
     visible: 'Visible',
     hidden: 'Oculto',
-    googleCalendarDescription: 'Configura la app OAuth oficial de PSIRA. Si queda inactivo o incompleto, los usuarios no verán el botón para conectar Google Calendar.',
+    googleCalendarDescription:
+      'Configura la app OAuth oficial de PSIRA. Si queda inactivo o incompleto, los usuarios no verán el botón para conectar Google Calendar.',
     enableIntegration: 'Activar integración',
     clientId: 'Client ID',
     clientSecret: 'Client Secret',
@@ -238,13 +243,13 @@ export default {
     caregivers: 'Cuidadores',
     caregiverList: 'Lista de Cuidadores',
     questionnaires: 'Cuestionarios',
-    questionnairesList: 'Lista de Cuestionarios',    
+    questionnairesList: 'Lista de Cuestionarios',
     questionnairesVersionList: 'Versiones Antiguas',
-    uploadQuestionnaire: 'Cargar Cuestionario Nuevo',    
+    uploadQuestionnaire: 'Cargar Cuestionario Nuevo',
     questionnaireBundle: 'Paquete de Cuestionarios',
     questionnaireBundles: 'Paquetes de Cuestionarios',
     createQuestionnaireBundle: 'Crear Paquete de Cuestionarios',
-    updateQuestionnaireBundle: 'Actualizar Paquete de Cuestionarios',    
+    updateQuestionnaireBundle: 'Actualizar Paquete de Cuestionarios',
     assessments: 'Evaluaciones',
     evaluationManagement: 'Gestión de Evaluaciones',
     planAssessment: 'Crear una Evaluación',
@@ -381,7 +386,8 @@ export default {
     recipientRoleRequired: 'Seleccioná un rol destinatario.',
     emailTemplateRequired: 'Seleccioná un template.',
     deleteConfiguration: 'Eliminar configuración',
-    deleteConfigurationMessage: 'La configuración se eliminará y dejará de activar notificaciones para esa combinación.',
+    deleteConfigurationMessage:
+      'La configuración se eliminará y dejará de activar notificaciones para esa combinación.',
     configurationUpdated: 'Configuración actualizada',
     configurationsCreated: 'Configuraciones creadas',
     configurableNotificationType: 'Tipo de notificación configurable en PSIRA.',
@@ -391,7 +397,8 @@ export default {
     immediateNotifications: 'Notificaciones inmediatas',
     immediateNotificationsDescription: 'Enviar avisos cuando ocurre un evento relevante.',
     includedImmediateNotifications: 'Avisos inmediatos incluidos',
-    includedImmediateNotificationsDescription: 'Activá o desactivá los avisos que querés recibir en el momento para este caso o supervisión.',
+    includedImmediateNotificationsDescription:
+      'Activá o desactivá los avisos que querés recibir en el momento para este caso o supervisión.',
     periodicSummary: 'Resumen periódico',
     periodicSummaryDescription: 'Agrupar evaluaciones respondidas y pendientes en un informe.',
     periodicFrequency: 'Frecuencia periódica',
@@ -421,7 +428,8 @@ export default {
     thankYouPage: 'Página de agradecimiento',
     thankYouPlaceholder: 'Texto que se muestra después de registrar la respuesta',
     modelEditorHelp: 'Construí el consentimiento visible como una secuencia ordenada de bloques de texto y preguntas.',
-    managementEditorHelp: 'Definí quién recibe este consentimiento, cuándo se muestra y si responderlo es necesario para continuar usando PSIRA.',
+    managementEditorHelp:
+      'Definí quién recibe este consentimiento, cuándo se muestra y si responderlo es necesario para continuar usando PSIRA.',
     mustAnswerToContinue: 'Debe responder para continuar',
     requiresResponse: 'Exige respuesta',
     noRolesMeansAll: 'Dejá vacío para aplicar a todos los roles',
@@ -457,7 +465,8 @@ export default {
     resolutionRejects: 'Rechaza',
     resolutionRequiresReview: 'Requiere revisión',
     resolutionNotApplicable: 'No aplica',
-    choiceQuestionsNeedAnswers: 'Las preguntas de selección deben tener al menos una respuesta y cada respuesta necesita una resolución.',
+    choiceQuestionsNeedAnswers:
+      'Las preguntas de selección deben tener al menos una respuesta y cada respuesta necesita una resolución.',
     modelSaved: 'Modelo guardado',
     managementSaved: 'Gestión guardada',
     unableLoadModel: 'No se pudo cargar el modelo de consentimiento informado',
@@ -492,9 +501,12 @@ export default {
     reactivateResponse: 'Rehabilitar respuesta',
     reactivateConsent: 'Rehabilitar consentimiento informado',
     reactivate: 'Rehabilitar',
-    reactivationHelp: 'Esta acción permite que el usuario vuelva a responder el consentimiento informado. El motivo quedará registrado en el historial de revisiones.',
+    reactivationHelp:
+      'Esta acción permite que el usuario vuelva a responder el consentimiento informado. ' +
+        'El motivo quedará registrado en el historial de revisiones.',
     modifyConsent: 'Modificar consentimiento informado',
-    modifyConsentWarning: 'Cambiar una respuesta de consentimiento puede modificar el acceso al sistema o el modo en que se usan tus datos. ¿Deseás continuar?',
+    modifyConsentWarning:
+      'Cambiar una respuesta de consentimiento puede modificar el acceso al sistema o el modo en que se usan tus datos. ¿Deseás continuar?',
     userRequestedResponseChange: 'Solicitud del usuario para modificar su respuesta.',
     unableIdentifyResponse: 'No se pudo identificar la respuesta de consentimiento informado.',
     consentReactivated: 'Consentimiento reactivado para responder nuevamente.',
@@ -505,7 +517,7 @@ export default {
   patients: {
     myPatients: 'Mis Pacientes',
     archivedPatients: 'Mostrar Pacientes Archivados',
-    notArchivedPatients: 'Mostrar Pacientes No Archivados'
+    notArchivedPatients: 'Mostrar Pacientes No Archivados',
   },
   calendar: {
     type: 'Tipo de evento',
@@ -615,7 +627,8 @@ export default {
     selectReason: 'Seleccionar motivo.',
     assessment: 'Evaluación',
     createFromGeneralCalendar: 'Crear desde calendario general',
-    generalCalendarTargetHelp: 'Seleccioná el usuario cuyo calendario de caso querés gestionar. PSIRA no crea eventos libres de calendario.',
+    generalCalendarTargetHelp:
+      'Seleccioná el usuario cuyo calendario de caso querés gestionar. PSIRA no crea eventos libres de calendario.',
     targetUser: 'Usuario objetivo',
     selectTargetUser: 'Seleccionar usuario objetivo',
     responder: 'Respondedor',
@@ -723,14 +736,16 @@ export default {
     clearAllInteractions: 'Borrar todas las interacciones',
     clearFixedScheduleConfirm: 'Se eliminará toda la programación del esquema fijo.',
     completeAssessmentTypeAndTimeBlock: 'Completá el tipo de evaluación y el bloque horario.',
-    completeResourceAndAssessmentType: 'Completá el tipo de recurso y el tipo de evaluación antes de agregar el recurso.',
+    completeResourceAndAssessmentType:
+      'Completá el tipo de recurso y el tipo de evaluación antes de agregar el recurso.',
     completeSchemeNameAndType: 'Completá el nombre y el tipo de esquema.',
     dayOne: 'Día 1',
     dayOutsideScheme: 'Día fuera del esquema',
     defaultPreset: 'Esquema por defecto',
     deleteScheme: 'Eliminar esquema',
     deleteSchemeAssessment: 'Eliminar evaluación del esquema',
-    deleteSchemeConfirm: 'El esquema "{{name}}" se eliminará. Las ocurrencias y evaluaciones ya creadas quedarán desvinculadas del esquema.',
+    deleteSchemeConfirm:
+      'El esquema "{{name}}" se eliminará. Las ocurrencias y evaluaciones ya creadas quedarán desvinculadas del esquema.',
     deleteSessionRuleConfirm: 'Esta regla dejará de generar evaluaciones nuevas.',
     endTimeAfterStartTime: 'La hora de fin debe ser posterior a la hora de inicio.',
     endTimeBlock: 'Fin del bloque horario',
@@ -811,7 +826,8 @@ export default {
     updatedAt: 'Última actualización',
     create: 'Crear Randomización',
     edit: 'Editar Randomización',
-    notice: 'Además de las randomizaciones generales disponibles en Gestión de evaluaciones > Randomización, los paquetes de cuestionarios pueden incluir randomizaciones internas entre sus propios cuestionarios. Estas randomizaciones intra-paquete se configuran dentro del paquete y funcionan de manera independiente.',
+    notice:
+      'Además de las randomizaciones generales disponibles en Gestión de evaluaciones > Randomización, los paquetes de cuestionarios pueden incluir randomizaciones internas entre sus propios cuestionarios. Estas randomizaciones intra-paquete se configuran dentro del paquete y funcionan de manera independiente.',
     itemsToRandomize: 'Elementos a randomizar',
     singleSelection: 'selección única',
     addQuestionnaire: 'Agregar cuestionario',
@@ -911,8 +927,10 @@ export default {
     reasonUpdated: 'Motivo actualizado',
     treeCreated: 'Árbol creado',
     treeUpdated: 'Árbol actualizado',
-    deleteReasonConfirm: 'El motivo "{{reason}}" y sus submotivos se eliminarán definitivamente. Si ya tiene registros históricos vinculados, la base de datos puede impedir la eliminación.',
-    deleteTreeConfirm: 'El árbol "{{tree}}" dejará de estar disponible para nuevos usos. Los registros históricos se conservan.',
+    deleteReasonConfirm:
+      'El motivo "{{reason}}" y sus submotivos se eliminarán definitivamente. Si ya tiene registros históricos vinculados, la base de datos puede impedir la eliminación.',
+    deleteTreeConfirm:
+      'El árbol "{{tree}}" dejará de estar disponible para nuevos usos. Los registros históricos se conservan.',
     unableLoadReasons: 'No se pudieron cargar los motivos',
     unableSaveReason: 'No se pudo guardar el motivo',
     unableDeleteReason: 'No se pudo eliminar el motivo',
@@ -974,7 +992,8 @@ export default {
     evaluationNameOptional: 'Nombre de la evaluación (opcional)',
     evaluationNameHelp: 'Si no se completa, se mostrará el tipo de evaluación.',
     expiration: 'Expiración',
-    expirationHelp: 'Opcional. Se cuenta desde que la evaluación queda disponible y define hasta cuándo puede responderse.',
+    expirationHelp:
+      'Opcional. Se cuenta desde que la evaluación queda disponible y define hasta cuándo puede responderse.',
     reminders: 'Recordatorios',
     remindersHelp: 'Valores desde la disponibilidad, separados por coma.',
     summary: 'Resumen',
@@ -982,8 +1001,10 @@ export default {
     selectedTrigger: 'el trigger seleccionado',
     selectedScheme: 'el esquema seleccionado',
     configuredEvaluation: 'la evaluación configurada',
-    fixedSchemeSummary: 'Cuando un usuario con rol {{role}} cumpla {{trigger}}, se asignará el esquema fijo {{scheme}} {{delay}} {{unit}} después.',
-    individualEvaluationSummary: 'Cuando un usuario con rol {{role}} cumpla {{trigger}}, se programará {{name}} {{delay}} {{unit}} después.',
+    fixedSchemeSummary:
+      'Cuando un usuario con rol {{role}} cumpla {{trigger}}, se asignará el esquema fijo {{scheme}} {{delay}} {{unit}} después.',
+    individualEvaluationSummary:
+      'Cuando un usuario con rol {{role}} cumpla {{trigger}}, se programará {{name}} {{delay}} {{unit}} después.',
     titleRequired: 'El título es obligatorio',
     priorityRequired: 'La prioridad es obligatoria y debe ser mayor a cero',
     departmentRequired: 'Seleccioná al menos un departamento',
@@ -1004,7 +1025,8 @@ export default {
     updated: 'Automatización actualizada',
     created: 'Automatización creada',
     delete: 'Eliminar automatización',
-    deleteMessage: 'La automatización "{{title}}" se eliminará. Las evaluaciones o esquemas ya programados persistirán.',
+    deleteMessage:
+      'La automatización "{{title}}" se eliminará. Las evaluaciones o esquemas ya programados persistirán.',
     sessionNumberRequiredMessage: 'Debe indicarse el número de sesión que activa la automatización',
     lastLoginDaysPositive: 'Los días desde el login anterior deben ser mayores a cero',
     fixedSchemeRequiredMessage: 'Debe seleccionarse un esquema fijo',
@@ -1174,7 +1196,8 @@ export default {
       appNameValidation: 'La app Shiny es obligatoria.',
       urlDescription: 'URL generada desde la herramienta de informes seleccionada.',
       urlValidation: 'Ingresá una URL válida.',
-      repositoryLinkDescription: 'Referencia técnica opcional, como el repositorio Git, documentación, script o carpeta interna donde se mantiene este informe.',
+      repositoryLinkDescription:
+        'Referencia técnica opcional, como el repositorio Git, documentación, script o carpeta interna donde se mantiene este informe.',
       repositoryLinkValidation: 'Ingresá un enlace de repositorio válido.',
       reportStatusDescription: 'Activá o desactivá este informe.',
       reportStatusValidation: 'El estado del informe es obligatorio.',
@@ -1248,7 +1271,7 @@ export default {
       birthDate: 'Fecha de Nacimiento',
       gender: 'Sexo',
       department: 'Institución',
-      caseManager: 'Encargado del Caso',      
+      caseManager: 'Encargado del Caso',
       patientAddress: 'Dirección del Paciente',
       street: 'Calle',
       addressNumber: 'Número',
@@ -1379,7 +1402,8 @@ export default {
     newTreatmentStarted: 'Nuevo tratamiento iniciado',
     noCaseAdministrators: 'No hay administradores del caso disponibles para los departamentos seleccionados.',
     noPatientAccountFound: 'No se encontró una cuenta de usuario para este paciente.',
-    noPatientAutomations: 'No hay automatizaciones aplicables para el rol Paciente, departamento y triggers configurados.',
+    noPatientAutomations:
+      'No hay automatizaciones aplicables para el rol Paciente, departamento y triggers configurados.',
     noPermissionToViewPatientAccount: 'No tenés permiso para ver la cuenta de usuario del paciente.',
     noShowCancellation: 'Cancelación por falta',
     notSet: 'Sin definir',
@@ -1392,7 +1416,8 @@ export default {
     otherReasonRequired: 'Otro motivo requerido',
     otherReasonRequiredMessage: 'Completá Otro motivo para continuar.',
     otherUser: 'Otro usuario',
-    patientAutomationsHelp: 'De manera automática estas evaluaciones se aplicarán al rol Paciente. Podés desmarcar las que no querés aplicar.',
+    patientAutomationsHelp:
+      'De manera automática estas evaluaciones se aplicarán al rol Paciente. Podés desmarcar las que no querés aplicar.',
     patientDeleted: 'El paciente fue eliminado correctamente',
     patientStatusUpdated: 'Estado del paciente actualizado correctamente',
     previousCycles: 'Ciclos previos',
@@ -1457,7 +1482,8 @@ export default {
     unableStopEvaluationScheme: 'No se pudo detener el esquema de evaluación',
     unableUpdateClinicalSession: 'No se pudo actualizar la sesión clínica',
     unassignCaseManager: 'Quitar administrador del caso',
-    unassignCaseManagerConfirm: '¿Está seguro de que desea quitar como administrador del caso a {{name}}? Esta acción es irreversible.',
+    unassignCaseManagerConfirm:
+      '¿Está seguro de que desea quitar como administrador del caso a {{name}}? Esta acción es irreversible.',
     unit: 'Unidad',
     updateInformant: 'Actualizar informante',
   },
@@ -1521,7 +1547,8 @@ export default {
     addScript: 'Agregar script',
     creatingScript: 'Creando script {{name}}',
     deleteQuestionnaire: 'Eliminar cuestionario',
-    deleteQuestionnaireConfirm: 'Esta acción eliminará el cuestionario y todas las evaluaciones asociadas. ¿Está seguro de que desea continuar?',
+    deleteQuestionnaireConfirm:
+      'Esta acción eliminará el cuestionario y todas las evaluaciones asociadas. ¿Está seguro de que desea continuar?',
     deleteScript: 'Eliminar script',
     deleteScriptConfirm: '¿Está seguro de que desea eliminar {{name}}? Esta acción es irreversible.',
     description: 'Descripción',
@@ -1580,7 +1607,8 @@ export default {
     packageHeaderPlaceholder: 'Texto que aparece arriba de toda la evaluación...',
     preview: 'Previsualizar',
     previewTitle: 'Previsualización del paquete',
-    randomHelp: 'El peso relativo controla la probabilidad dentro de este grupo. El orden aleatorio lo usa para decidir qué aparece antes; el reemplazo lo usa para decidir qué elementos se seleccionan.',
+    randomHelp:
+      'El peso relativo controla la probabilidad dentro de este grupo. El orden aleatorio lo usa para decidir qué aparece antes; el reemplazo lo usa para decidir qué elementos se seleccionan.',
     randomOrder: 'Orden aleatorio',
     randomizedGroup: 'Grupo randomizado',
     relativeWeight: 'Peso relativo (probabilidad de selección/orden)',
@@ -1689,7 +1717,8 @@ export default {
     personalInformation: 'Información personal',
     noApplicableAutomations: 'No hay automatizaciones aplicables para el rol, departamento y triggers configurados.',
     automaticAutomationsToApply: 'Automatizaciones que se aplicarán automáticamente',
-    automaticAutomationsHelp: 'Estas evaluaciones se aplicarán automáticamente al rol seleccionado. Podés desmarcar las que no querés aplicar.',
+    automaticAutomationsHelp:
+      'Estas evaluaciones se aplicarán automáticamente al rol seleccionado. Podés desmarcar las que no querés aplicar.',
     creatingUser: 'Creando usuario {{name}}',
     updatingUser: 'Actualizando usuario {{name}}',
     userCreated: 'El usuario fue creado correctamente',
@@ -1832,61 +1861,97 @@ export default {
     technicalResourceDescription: 'el recurso técnico "{{resource}}".',
     technicalActionDescription: 'habilita la acción técnica "{{action}}".',
     technicalScopeDescription: 'alcance técnico "{{scope}}".',
-    permissionDescription: 'Este permiso controla si un usuario puede operar sobre {{resourceDescription}} La acción asociada {{actionDescription}} El alcance definido es: {{scopeDescription}}',
+    permissionDescription:
+      'Este permiso controla si un usuario puede operar sobre {{resourceDescription}} La acción asociada {{actionDescription}} El alcance definido es: {{scopeDescription}}',
     enabledAction: 'Permite ejecutar la acción "{{action}}" sobre {{resourceDescription}}',
-    enabledUiAndResolvers: 'Permite que menús, rutas, botones y resolvers asociados a esta acción queden disponibles cuando el alcance coincide.',
-    enabledAllScope: 'Cuando el permiso es de alcance all, también cubre permisos más acotados del mismo recurso y acción en los guards del sistema.',
-    limitBusinessRules: 'No saltea validaciones clínicas, reglas de negocio, integridad de datos ni restricciones propias de cada módulo.',
-    limitRelatedResources: 'No otorga automáticamente permisos sobre otros recursos aunque estén relacionados funcionalmente.',
-    limitScopedRecords: 'Los alcances department, department-hierarchy y assigned requieren que el registro esté efectivamente dentro del departamento, jerarquía o vinculación correspondiente.',
+    enabledUiAndResolvers:
+      'Permite que menús, rutas, botones y resolvers asociados a esta acción queden disponibles cuando el alcance coincide.',
+    enabledAllScope:
+      'Cuando el permiso es de alcance all, también cubre permisos más acotados del mismo recurso y acción en los guards del sistema.',
+    limitBusinessRules:
+      'No saltea validaciones clínicas, reglas de negocio, integridad de datos ni restricciones propias de cada módulo.',
+    limitRelatedResources:
+      'No otorga automáticamente permisos sobre otros recursos aunque estén relacionados funcionalmente.',
+    limitScopedRecords:
+      'Los alcances department, department-hierarchy y assigned requieren que el registro esté efectivamente dentro del departamento, jerarquía o vinculación correspondiente.',
     exampleAll: '{{resource}}.{{action}}.all habilita esta acción en todo PSIRA para ese recurso.',
-    exampleDepartment: '{{resource}}.{{action}}.department habilita esta acción solo dentro de los departamentos permitidos.',
-    exampleAssigned: '{{resource}}.{{action}}.assigned habilita esta acción solo cuando el usuario participa directamente en el caso, sesión, evaluación o respuesta.',
+    exampleDepartment:
+      '{{resource}}.{{action}}.department habilita esta acción solo dentro de los departamentos permitidos.',
+    exampleAssigned:
+      '{{resource}}.{{action}}.assigned habilita esta acción solo cuando el usuario participa directamente en el caso, sesión, evaluación o respuesta.',
     resources: {
-      users: 'usuarios generales del sistema, incluyendo su perfil, roles, departamentos, estado de cuenta y configuración administrativa.',
-      patients: 'pacientes/casos clínicos, sus datos de caso, departamentos, administradores del caso, cuidadores, contactos, estado e información asociada.',
-      therapists: 'usuarios terapeutas, sus datos de perfil profesional, vínculos de supervisión y disponibilidad de gestión como usuarios especiales.',
-      supervisors: 'usuarios supervisores, sus datos de perfil y su capacidad de articular terapeutas o casos bajo supervisión.',
-      caregivers: 'cuidadores vinculados a pacientes, siempre dependientes de un paciente y heredando el marco departamental del caso.',
-      clinical: 'sesiones, supervisiones, calendario clínico, seguimiento clínico/de supervisión, cancelaciones, reestructuraciones y operaciones asociadas al trabajo clínico.',
-      assessments: 'evaluaciones individuales, evaluaciones generadas por esquemas fijos, session-based, automatizaciones y sus operaciones de asignación, edición, descarte o archivo.',
-      questionnaires: 'cuestionarios como unidad básica de evaluación, sus preguntas, respuestas y configuración interna.',
-      questionnaireBundles: 'paquetes de cuestionarios, pantallas de presentación, randomización interna y experiencia secuencial de respuesta.',
-      evaluationSchemes: 'esquemas de evaluación fijos o vinculados a sesiones, sus reglas de aplicación y propagación.',
+      users:
+        'usuarios generales del sistema, incluyendo su perfil, roles, departamentos, estado de cuenta y configuración administrativa.',
+      patients:
+        'pacientes/casos clínicos, sus datos de caso, departamentos, administradores del caso, cuidadores, contactos, estado e información asociada.',
+      therapists:
+        'usuarios terapeutas, sus datos de perfil profesional, vínculos de supervisión y disponibilidad de gestión como usuarios especiales.',
+      supervisors:
+        'usuarios supervisores, sus datos de perfil y su capacidad de articular terapeutas o casos bajo supervisión.',
+      caregivers:
+        'cuidadores vinculados a pacientes, siempre dependientes de un paciente y heredando el marco departamental del caso.',
+      clinical:
+        'sesiones, supervisiones, calendario clínico, seguimiento clínico/de supervisión, cancelaciones, reestructuraciones y operaciones asociadas al trabajo clínico.',
+      assessments:
+        'evaluaciones individuales, evaluaciones generadas por esquemas fijos, session-based, automatizaciones y sus operaciones de asignación, edición, descarte o archivo.',
+      questionnaires:
+        'cuestionarios como unidad básica de evaluación, sus preguntas, respuestas y configuración interna.',
+      questionnaireBundles:
+        'paquetes de cuestionarios, pantallas de presentación, randomización interna y experiencia secuencial de respuesta.',
+      evaluationSchemes:
+        'esquemas de evaluación fijos o vinculados a sesiones, sus reglas de aplicación y propagación.',
       randomizations: 'reglas de randomización y asignación aleatoria de contenidos o condiciones.',
-      automations: 'automatizaciones configuradas por eventos, condiciones, departamentos, motivos y acciones clínicas o administrativas.',
+      automations:
+        'automatizaciones configuradas por eventos, condiciones, departamentos, motivos y acciones clínicas o administrativas.',
       notifications: 'configuración de notificaciones del sistema por evento, rol, departamento, canal y preferencias.',
       notificationLogs: 'historial técnico de notificaciones emitidas, intentos de envío, estado y auditoría.',
-      mailTemplates: 'modelos de email, variables, emisor, contenido enriquecido y versiones usadas por notificaciones.',
-      informedConsentModels: 'modelos de consentimiento informado, bloques de texto/pregunta, versiones y previsualizaciones.',
-      informedConsentManagement: 'gestión de cuándo, a quién y bajo qué condiciones aplica cada consentimiento informado.',
-      informedConsentResponses: 'respuestas, revisiones, rehabilitaciones y auditoría de consentimientos informados respondidos por usuarios.',
-      reports: 'informes generados o configurados para pacientes, usuarios, evaluaciones y otras secciones clínicas o administrativas.',
+      mailTemplates:
+        'modelos de email, variables, emisor, contenido enriquecido y versiones usadas por notificaciones.',
+      informedConsentModels:
+        'modelos de consentimiento informado, bloques de texto/pregunta, versiones y previsualizaciones.',
+      informedConsentManagement:
+        'gestión de cuándo, a quién y bajo qué condiciones aplica cada consentimiento informado.',
+      informedConsentResponses:
+        'respuestas, revisiones, rehabilitaciones y auditoría de consentimientos informados respondidos por usuarios.',
+      reports:
+        'informes generados o configurados para pacientes, usuarios, evaluaciones y otras secciones clínicas o administrativas.',
       departments: 'departamentos, sus reglas de aplicación por rol, colores, defaults y estructura institucional.',
       roles: 'roles del sistema, jerarquía, permisos asignados y capacidad de edición de perfiles de acceso.',
       permissions: 'asignación de permisos a roles dentro de la matriz de permisos de usuarios.',
-      settings: 'ajustes configurables de PSIRA que afectan comportamiento clínico, formatos, limpieza y parámetros generales.',
+      settings:
+        'ajustes configurables de PSIRA que afectan comportamiento clínico, formatos, limpieza y parámetros generales.',
       system: 'configuración global del sistema, activación de módulos y parámetros absolutos de plataforma.',
     },
     actions: {
-      view: 'permite consultar, listar, abrir detalle y usar la información como lectura dentro de las pantallas autorizadas.',
-      create: 'permite crear nuevos registros o programaciones de este recurso, respetando las validaciones propias del módulo.',
-      edit: 'permite modificar registros existentes, actualizar vínculos, cambiar configuración o ejecutar acciones equivalentes de mantenimiento.',
-      delete: 'permite eliminar registros cuando el módulo lo permite, incluyendo operaciones de baja definitiva o eliminación lógica según la entidad.',
+      view:
+        'permite consultar, listar, abrir detalle y usar la información como lectura dentro de las pantallas autorizadas.',
+      create:
+        'permite crear nuevos registros o programaciones de este recurso, respetando las validaciones propias del módulo.',
+      edit:
+        'permite modificar registros existentes, actualizar vínculos, cambiar configuración o ejecutar acciones equivalentes de mantenimiento.',
+      delete:
+        'permite eliminar registros cuando el módulo lo permite, incluyendo operaciones de baja definitiva o eliminación lógica según la entidad.',
       archive: 'permite archivar registros, quitarlos del flujo operativo principal sin perder el registro histórico.',
-      restore: 'permite restaurar registros archivados, eliminados lógicamente o dados de baja cuando el módulo conserva historial.',
+      restore:
+        'permite restaurar registros archivados, eliminados lógicamente o dados de baja cuando el módulo conserva historial.',
       assign: 'permite asignar responsables, destinatarios o vínculos operativos relacionados con evaluaciones.',
-      review: 'permite revisar respuestas, rehabilitar estados, registrar decisiones administrativas y operar auditoría de consentimientos.',
-      test: 'permite probar reglas o ejecuciones de automatizaciones sin que eso implique necesariamente crear una automatización nueva.',
+      review:
+        'permite revisar respuestas, rehabilitar estados, registrar decisiones administrativas y operar auditoría de consentimientos.',
+      test:
+        'permite probar reglas o ejecuciones de automatizaciones sin que eso implique necesariamente crear una automatización nueva.',
     },
     scopes: {
-      all: 'alcance absoluto. Aplica sobre todos los departamentos, usuarios, casos y registros del recurso. Está pensado para super administración o permisos administrativos globales.',
-      department: 'alcance departamental. Aplica solo sobre departamentos a los que pertenece el usuario o sobre registros vinculados a esos departamentos.',
-      departmentHierarchy: 'alcance departamental con jerarquía. Aplica dentro de los departamentos permitidos y además respeta que el usuario solo pueda operar roles o usuarios de jerarquía igual o inferior.',
-      assigned: 'alcance asignado. Aplica solo sobre casos, terapeutas, cuidadores, sesiones, evaluaciones o respuestas donde el usuario participa como responsable, administrador del caso, supervisor o usuario vinculado.',
+      all:
+        'alcance absoluto. Aplica sobre todos los departamentos, usuarios, casos y registros del recurso. Está pensado para super administración o permisos administrativos globales.',
+      department:
+        'alcance departamental. Aplica solo sobre departamentos a los que pertenece el usuario o sobre registros vinculados a esos departamentos.',
+      departmentHierarchy:
+        'alcance departamental con jerarquía. Aplica dentro de los departamentos permitidos y además respeta que el usuario solo pueda operar roles o usuarios de jerarquía igual o inferior.',
+      assigned:
+        'alcance asignado. Aplica solo sobre casos, terapeutas, cuidadores, sesiones, evaluaciones o respuestas donde el usuario participa como responsable, administrador del caso, supervisor o usuario vinculado.',
     },
   },
-  emailTemplates:{
+  emailTemplates: {
     createTemplate: 'Crear Modelo de Email',
     created: '¡Modelo de email creado exitosamente!',
     updated: '¡Modelo de email actualizado exitosamente!',
@@ -1908,28 +1973,30 @@ export default {
     deleteTemplateConfirm: '¿Seguro que querés eliminar este modelo de email?',
     duplicated: 'Modelo de email duplicado',
     unableDuplicateTemplate: 'No se pudo duplicar el modelo de email',
-    unableLoadShortcuts: 'No se pudieron cargar las variables'
+    unableLoadShortcuts: 'No se pudieron cargar las variables',
   },
-  emailStatusFilter:{
+  emailStatusFilter: {
     expired: 'Expirado',
     planned: 'Planificado',
     pending: 'Pendiente',
     openForCompletion: 'Abierto para completar',
     partiallyCompleted: 'Parcialmente completado',
-    completed: 'Completado'
+    completed: 'Completado',
   },
   modal: {
     continue: '¿Vaya a la siguiente sección?',
     continueOverview: '¿Salir del cuestionario?',
-    unansweredQuestions: 'Usted ha dejado {{count}} preguntas sin responder. Todas las preguntas deben responderse para enviar el cuestionario.',
-    unansweredQuestionsOverview: "Tienes {{count}} preguntas obligatorias sin respuesta. ¿Estás seguro de que quieres completar el cuestionario?",
-    cancel: "Continuar sin completar las preguntas que faltan (No recomendado)",
-    ok: "Vuelva a completar las preguntas que faltan"
+    unansweredQuestions:
+      'Usted ha dejado {{count}} preguntas sin responder. Todas las preguntas deben responderse para enviar el cuestionario.',
+    unansweredQuestionsOverview:
+      'Tienes {{count}} preguntas obligatorias sin respuesta. ¿Estás seguro de que quieres completar el cuestionario?',
+    cancel: 'Continuar sin completar las preguntas que faltan (No recomendado)',
+    ok: 'Vuelva a completar las preguntas que faltan',
   },
   bundles: {
     created: '¡Paquete de cuestionarios creado exitosamente!',
     updated: '¡Paquete de cuestionarios actualizado exitosamente!',
     deleted: '¡Paquete de cuestionarios eliminado exitosamente!',
     unableToLoad: 'No se puede cargar el paquete de cuestionarios',
-  }
+  },
 };

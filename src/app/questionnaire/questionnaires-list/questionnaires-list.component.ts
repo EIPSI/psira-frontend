@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { environment } from '@env/environment';
 import { NzModalService } from 'ng-zorro-antd';
 import { TranslateService } from '@ngx-translate/core';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 @Component({
   selector: 'app-questionnaires-list',
@@ -57,7 +57,7 @@ export class QuestionnairesListComponent implements OnInit {
       });
       return;
     }
-    const dataString = encryptRoutePayload(JSON.stringify(this.questionnaires[this.activeIndex]), environment.secretKey);
+    const dataString = encryptRouteObject(this.questionnaires[this.activeIndex], environment.secretKey);
     this.router.navigate(['/assessment/questionnaire'], {
       queryParams: {
         questionnaire: dataString,

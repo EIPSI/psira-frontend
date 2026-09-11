@@ -27,7 +27,7 @@ import { LocationStrategy } from '@angular/common';
 import { QuestionnaireBundlesService } from '@app/pages/questionnaire-management/@services/questionnaire-bundles.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 enum AssessmentContentType {
@@ -199,7 +199,7 @@ export class CreateAssessmentComponent implements OnInit {
   }
 
   public goBack(patient: FormattedPatient): void {
-    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
+    const dataString = encryptRouteObject(this.patient, environment.secretKey);
     console.log(this.patient);
     this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
@@ -766,7 +766,7 @@ export class CreateAssessmentComponent implements OnInit {
     this.patientEmail = responder?.email ?? '';
   }
 
-  private parseReminderMinutes(value: string | number[], unit = 'MINUTES'): number[] {
+  private parseReminderMinutes(value: string | number[], unit: string = 'MINUTES'): number[] {
     if (Array.isArray(value)) {
       return value.filter((part) => Number.isFinite(part) && part >= 0);
     }
@@ -777,7 +777,7 @@ export class CreateAssessmentComponent implements OnInit {
       .map((part) => this.unitAmountToMinutes(part, unit));
   }
 
-  private unitAmountToMinutes(value: number, unit = 'MINUTES'): number {
+  private unitAmountToMinutes(value: number, unit: string = 'MINUTES'): number {
     switch (unit) {
       case 'HOURS':
         return value * 60;
@@ -792,7 +792,7 @@ export class CreateAssessmentComponent implements OnInit {
     }
   }
 
-  private minutesToUnitAmount(minutes: number, unit = 'MINUTES'): number {
+  private minutesToUnitAmount(minutes: number, unit: string = 'MINUTES'): number {
     switch (unit) {
       case 'HOURS':
         return Number(minutes || 0) / 60;
@@ -807,7 +807,7 @@ export class CreateAssessmentComponent implements OnInit {
     }
   }
 
-  private minutesListToUnitText(minutes: number[] = [], unit = 'MINUTES'): string {
+  private minutesListToUnitText(minutes: number[] = [], unit: string = 'MINUTES'): string {
     return (minutes || []).map((minute) => this.minutesToUnitAmount(minute, unit)).join(', ');
   }
 

@@ -23,7 +23,7 @@ import { Convert } from '@shared/classes/convert';
 import { ReportForm } from '@app/pages/administration/@forms/report.form';
 import { Field } from '@shared/components/form/@types/field';
 import { TranslateService } from '@ngx-translate/core';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 @Component({
@@ -306,7 +306,7 @@ export class CreateReportComponent implements OnInit {
   afterCreate() {
     this.populateForm = false;
     this.resetForm = true;
-    const dataString = encryptRoutePayload(JSON.stringify(this.report), environment.secretKey);
+    const dataString = encryptRouteObject(this.report, environment.secretKey);
     this.router.navigate(['/psira/administration/create-report'], {
       state: {
         title: this.report.name,

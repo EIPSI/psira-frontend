@@ -98,10 +98,13 @@ export class InformedConsentModelEditorComponent implements OnInit {
   }
 
   loadReferences(): void {
-    this.departmentsService.departments({ paging: { first: 50 }, sorting: [{ field: 'name', direction: 'ASC' }] as any }).subscribe(
-      (result: any) => (this.departments = result.data.departments.edges.map((edge: any) => edge.node)),
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('departments.unableLoadDepartments') })
-    );
+    this.departmentsService
+      .departments({ paging: { first: 50 }, sorting: [{ field: 'name', direction: 'ASC' }] as any })
+      .subscribe(
+        (result: any) => (this.departments = result.data.departments.edges.map((edge: any) => edge.node)),
+        (error) =>
+          this.errorService.handleError(error, { prefix: this.translate.instant('departments.unableLoadDepartments') })
+      );
   }
 
   loadShortcuts(): void {
@@ -119,28 +122,39 @@ export class InformedConsentModelEditorComponent implements OnInit {
 
   loadModel(id: number): void {
     this.loading = true;
-    this.service.getModel(id).pipe(finalize(() => (this.loading = false))).subscribe(
-      (model) => {
-        this.model = model;
-        this.blocks.clear();
-        this.versionTitleTouched = false;
-        this.form.patchValue({
-          name: model.name,
-          kind: model.kind,
-          description: model.description || '',
-          active: model.active,
-          systemDefault: false,
-          departmentIds: model.departments?.map((department) => department.id) || [],
-          versionTitle: this.defaultVersionTitle(model.name, (model.versions?.length || 0) + 1),
-          submitButtonLabel: model.currentPublishedVersion?.submitButtonLabel || this.translate.instant('informedConsent.defaultSubmitButton'),
-          thankYouHtml: model.currentPublishedVersion?.thankYouHtml || `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`,
-          versionNotes: '',
-        }, { emitEvent: false });
-        this.hydrateBlocks(model.currentPublishedVersion);
-        if (!this.blocks.length) this.addBlock('TEXT');
-      },
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadModel') })
-    );
+    this.service
+      .getModel(id)
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe(
+        (model) => {
+          this.model = model;
+          this.blocks.clear();
+          this.versionTitleTouched = false;
+          this.form.patchValue(
+            {
+              name: model.name,
+              kind: model.kind,
+              description: model.description || '',
+              active: model.active,
+              systemDefault: false,
+              departmentIds: model.departments?.map((department) => department.id) || [],
+              versionTitle: this.defaultVersionTitle(model.name, (model.versions?.length || 0) + 1),
+              submitButtonLabel:
+                model.currentPublishedVersion?.submitButtonLabel ||
+                this.translate.instant('informedConsent.defaultSubmitButton'),
+              thankYouHtml:
+                model.currentPublishedVersion?.thankYouHtml ||
+                `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`,
+              versionNotes: '',
+            },
+            { emitEvent: false }
+          );
+          this.hydrateBlocks(model.currentPublishedVersion);
+          if (!this.blocks.length) this.addBlock('TEXT');
+        },
+        (error) =>
+          this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadModel') })
+      );
   }
 
   addBlock(blockType: ConsentBlockType = 'TEXT', block: any = {}): void {
@@ -171,21 +185,40 @@ export class InformedConsentModelEditorComponent implements OnInit {
     return this.fb.group({
       ...base,
       kind: [block.kind || block.kinds?.[0] || null],
-      kinds: [block.kinds?.length ? block.kinds : (block.kind ? [block.kind] : [])],
+      kinds: [block.kinds?.length ? block.kinds : block.kind ? [block.kind] : []],
       questionType: [block.questionType || InformedConsentQuestionType.SINGLE_CHOICE, Validators.required],
       label: [block.label || '', Validators.required],
       helpText: [block.helpText || ''],
       required: [block.required !== false],
-      answerOptions: this.fb.array((block.answerOptions?.length ? block.answerOptions : [
-        { orderIndex: 1, label: this.translate.instant('dashboard.accept'), resolution: InformedConsentAnswerResolution.ACCEPTS },
-        { orderIndex: 2, label: this.translate.instant('informedConsent.doNotAccept'), resolution: InformedConsentAnswerResolution.REJECTS },
-      ]).map((option: any) => this.optionGroup(option))),
+      answerOptions: this.fb.array(
+        (block.answerOptions?.length
+          ? block.answerOptions
+          : [
+              {
+                orderIndex: 1,
+                label: this.translate.instant('dashboard.accept'),
+                resolution: InformedConsentAnswerResolution.ACCEPTS,
+              },
+              {
+                orderIndex: 2,
+                label: this.translate.instant('informedConsent.doNotAccept'),
+                resolution: InformedConsentAnswerResolution.REJECTS,
+              },
+            ]
+        ).map((option: any) => this.optionGroup(option))
+      ),
     });
   }
 
   private hydrateBlocks(version?: InformedConsentVersion): void {
-    const textBlocks = (version?.textBlocks || []).map((block) => ({ ...block, blockType: 'TEXT' as ConsentBlockType }));
-    const questions = (version?.questions || []).map((question) => ({ ...question, blockType: 'QUESTION' as ConsentBlockType }));
+    const textBlocks = (version?.textBlocks || []).map((block) => ({
+      ...block,
+      blockType: 'TEXT' as ConsentBlockType,
+    }));
+    const questions = (version?.questions || []).map((question) => ({
+      ...question,
+      blockType: 'QUESTION' as ConsentBlockType,
+    }));
     [...textBlocks, ...questions]
       .sort((a, b) => Number(a.orderIndex || 0) - Number(b.orderIndex || 0))
       .forEach((block) => this.addBlock(block.blockType, block));
@@ -197,7 +230,14 @@ export class InformedConsentModelEditorComponent implements OnInit {
 
   addOption(questionIndex: number): void {
     const options = this.options(questionIndex);
-    options.push(this.optionGroup({ orderIndex: options.length + 1, value: '', label: '', resolution: InformedConsentAnswerResolution.NOT_APPLICABLE }));
+    options.push(
+      this.optionGroup({
+        orderIndex: options.length + 1,
+        value: '',
+        label: '',
+        resolution: InformedConsentAnswerResolution.NOT_APPLICABLE,
+      })
+    );
   }
 
   removeOption(questionIndex: number, optionIndex: number): void {
@@ -213,7 +253,10 @@ export class InformedConsentModelEditorComponent implements OnInit {
   }
 
   previewCurrent(): void {
-    this.previewTitle = this.form.get('versionTitle').value || this.form.get('name').value || this.translate.instant('informedConsent.title');
+    this.previewTitle =
+      this.form.get('versionTitle').value ||
+      this.form.get('name').value ||
+      this.translate.instant('informedConsent.title');
     this.previewBlocks = this.blocks.value.map((block: any, index: number) => ({
       ...block,
       orderIndex: index + 1,
@@ -259,7 +302,8 @@ export class InformedConsentModelEditorComponent implements OnInit {
         this.message.success(this.translate.instant('informedConsent.modelSaved'));
         this.router.navigate(['/psira/informed-consent/models']);
       },
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableSaveModel') })
+      (error) =>
+        this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableSaveModel') })
     );
   }
 
@@ -313,7 +357,7 @@ export class InformedConsentModelEditorComponent implements OnInit {
   }
 
   consentKindNames(kinds?: InformedConsentKind[], kind?: InformedConsentKind): string {
-    const values = kinds?.length ? kinds : (kind ? [kind] : []);
+    const values = kinds?.length ? kinds : kind ? [kind] : [];
     return values.length
       ? values.map((value) => this.translate.instant(this.kindLabel[value] || value)).join(', ')
       : this.translate.instant('informedConsent.noKindAssociated');
@@ -323,13 +367,19 @@ export class InformedConsentModelEditorComponent implements OnInit {
     const labels: Record<string, string> = {
       [InformedConsentAnswerResolution.ACCEPTS]: this.translate.instant('informedConsent.resolutionAccepts'),
       [InformedConsentAnswerResolution.REJECTS]: this.translate.instant('informedConsent.resolutionRejects'),
-      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: this.translate.instant('informedConsent.resolutionRequiresReview'),
-      [InformedConsentAnswerResolution.NOT_APPLICABLE]: this.translate.instant('informedConsent.resolutionNotApplicable'),
+      [InformedConsentAnswerResolution.REQUIRES_REVIEW]: this.translate.instant(
+        'informedConsent.resolutionRequiresReview'
+      ),
+      [InformedConsentAnswerResolution.NOT_APPLICABLE]: this.translate.instant(
+        'informedConsent.resolutionNotApplicable'
+      ),
     };
     return resolution ? labels[resolution] || resolution : '-';
   }
 
-  private buildShortcutGroups(shortcuts: InformedConsentShortcut[]): Array<{ group: string; items: InformedConsentShortcut[] }> {
+  private buildShortcutGroups(
+    shortcuts: InformedConsentShortcut[]
+  ): Array<{ group: string; items: InformedConsentShortcut[] }> {
     const groups = new Map<string, InformedConsentShortcut[]>();
     for (const shortcut of shortcuts) {
       groups.set(shortcut.group, [...(groups.get(shortcut.group) || []), shortcut]);
@@ -360,9 +410,10 @@ export class InformedConsentModelEditorComponent implements OnInit {
     };
     const normalized = String(group || '').trim();
     const key = normalized.toLowerCase();
-    return labels[key] || normalized
-      .replace(/[_-]+/g, ' ')
-      .replace(/\w\S*/g, (word) => word[0].toUpperCase() + word.slice(1).toLowerCase());
+    return (
+      labels[key] ||
+      normalized.replace(/[_-]+/g, ' ').replace(/\w\S*/g, (word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
+    );
   }
 
   copyShortcut(token: string, event?: Event): void {
@@ -381,14 +432,15 @@ export class InformedConsentModelEditorComponent implements OnInit {
         InformedConsentQuestionType.MULTIPLE_CHOICE,
       ].includes(question.questionType);
       if (!choice) return true;
-      return (question.answerOptions || []).length
-        && question.answerOptions.every((option: any) => option.label && option.resolution);
+      return (
+        (question.answerOptions || []).length &&
+        question.answerOptions.every((option: any) => option.label && option.resolution)
+      );
     });
   }
 
   private primaryModelKind(questions: any[] = []): InformedConsentKind {
-    return questions.find((question) => question.kinds?.length)?.kinds[0]
-      || InformedConsentKind.TERMS_OF_USE;
+    return questions.find((question) => question.kinds?.length)?.kinds[0] || InformedConsentKind.TERMS_OF_USE;
   }
 
   private normalizedBlocks(blocks: any[]): { textBlocks: any[]; questions: any[] } {
@@ -420,9 +472,12 @@ export class InformedConsentModelEditorComponent implements OnInit {
 
   syncDefaultVersionTitle(): void {
     if (this.versionTitleTouched) return;
-    this.form.patchValue({
-      versionTitle: this.defaultVersionTitle(this.form.get('name').value, this.nextVersionNumber()),
-    }, { emitEvent: false });
+    this.form.patchValue(
+      {
+        versionTitle: this.defaultVersionTitle(this.form.get('name').value, this.nextVersionNumber()),
+      },
+      { emitEvent: false }
+    );
   }
 
   markVersionTitleTouched(): void {
@@ -450,22 +505,30 @@ export class InformedConsentModelEditorComponent implements OnInit {
       .filter(Boolean);
     if (!words.length) return 'CI';
     if (words.length === 1) return words[0].toUpperCase();
-    return words.map((word) => word[0]).join('').toUpperCase();
+    return words
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase();
   }
 
   private optionValue(label: string, orderIndex: number): string {
-    return (label || `option-${orderIndex}`)
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || `option-${orderIndex}`;
+    return (
+      (label || `option-${orderIndex}`)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || `option-${orderIndex}`
+    );
   }
 
   private applyDefaultEditableTexts(): void {
-    this.form.patchValue({
-      submitButtonLabel: this.translate.instant('informedConsent.defaultSubmitButton'),
-      thankYouHtml: `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`,
-    }, { emitEvent: false });
+    this.form.patchValue(
+      {
+        submitButtonLabel: this.translate.instant('informedConsent.defaultSubmitButton'),
+        thankYouHtml: `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`,
+      },
+      { emitEvent: false }
+    );
   }
 }

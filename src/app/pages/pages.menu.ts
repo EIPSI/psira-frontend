@@ -63,7 +63,12 @@ export const MENU: SideNavInterface[] | any = [
   {
     path: 'assessments',
     title: 'menu.evaluationManagement',
-    permissions: [PK.ASSESSMENTS_VIEW_DEPARTMENT, PK.ASSESSMENTS_EDIT_DEPARTMENT, PK.QUESTIONNAIRES_VIEW_DEPARTMENT, PK.QUESTIONNAIRES_EDIT_DEPARTMENT],
+    permissions: [
+      PK.ASSESSMENTS_VIEW_DEPARTMENT,
+      PK.ASSESSMENTS_EDIT_DEPARTMENT,
+      PK.QUESTIONNAIRES_VIEW_DEPARTMENT,
+      PK.QUESTIONNAIRES_EDIT_DEPARTMENT,
+    ],
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'edit',
@@ -292,7 +297,11 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'notifications/administration',
         title: 'menu.notificationAdministration',
-        permissions: [PK.NOTIFICATIONS_VIEW_DEPARTMENT, PK.NOTIFICATIONS_EDIT_DEPARTMENT, PK.MAIL_TEMPLATES_VIEW_DEPARTMENT],
+        permissions: [
+          PK.NOTIFICATIONS_VIEW_DEPARTMENT,
+          PK.NOTIFICATIONS_EDIT_DEPARTMENT,
+          PK.MAIL_TEMPLATES_VIEW_DEPARTMENT,
+        ],
         iconType: '',
         iconTheme: '',
         submenu: [],

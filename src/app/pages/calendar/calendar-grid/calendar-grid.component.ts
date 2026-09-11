@@ -141,7 +141,7 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
     return formatSystemTime(value);
   }
 
-  formatWeekday(value: Date, long = false): string {
+  formatWeekday(value: Date, long: boolean = false): string {
     return configuredMoment(value).format(long ? 'dddd' : 'ddd');
   }
 

@@ -34,7 +34,7 @@ export class AssessmentService {
       .pipe(map((result: any) => result.data.assessments));
   }
 
-  getPatientAssessments(patientId: number, includeArchived = false): Observable<any[]> {
+  getPatientAssessments(patientId: number, includeArchived: boolean = false): Observable<any[]> {
     return this.apollo
       .query({
         query: AssessmentsQueries.patientAssessments,

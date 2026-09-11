@@ -41,15 +41,20 @@ export class XlsExportService {
   }
 
   private escapeHtml(value: any): string {
-    const htmlEntities = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;',
-    };
-
-    return String(value ?? '').replace(/[&<>"']/g, (character) => htmlEntities[character]);
+    return String(value ?? '').replace(/[&<>"']/g, (character) => {
+      switch (character) {
+        case '&':
+          return '&amp;';
+        case '<':
+          return '&lt;';
+        case '>':
+          return '&gt;';
+        case String.fromCharCode(34):
+          return '&quot;';
+        default:
+          return '&#039;';
+      }
+    });
   }
 
   private saveExcelFile(content: string, fileName: string): void {

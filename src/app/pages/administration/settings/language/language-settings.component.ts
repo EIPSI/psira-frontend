@@ -269,9 +269,10 @@ export class LanguageSettingsComponent implements OnInit {
   private extractVariables(text: string): string[] {
     const variables = new Set<string>();
     const regex = /{{\s*([A-Za-z0-9_.-]+)\s*}}/g;
-    let match: RegExpExecArray | null;
-    while ((match = regex.exec(text || ''))) {
+    let match: RegExpExecArray | null = regex.exec(text || '');
+    while (match) {
       variables.add(match[1]);
+      match = regex.exec(text || '');
     }
     return Array.from(variables);
   }

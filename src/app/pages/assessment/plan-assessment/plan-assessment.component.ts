@@ -1064,7 +1064,7 @@ export class PlanAssessmentComponent implements OnInit {
       );
   }
 
-  private parseReminderMinutes(value: string | number[], unit = 'MINUTES'): number[] {
+  private parseReminderMinutes(value: string | number[], unit: string = 'MINUTES'): number[] {
     if (Array.isArray(value)) {
       return value.filter((part) => Number.isFinite(part) && part >= 0);
     }
@@ -1075,7 +1075,7 @@ export class PlanAssessmentComponent implements OnInit {
       .map((part) => this.unitAmountToMinutes(part, unit));
   }
 
-  private unitAmountToMinutes(value: number, unit = 'MINUTES'): number {
+  private unitAmountToMinutes(value: number, unit: string = 'MINUTES'): number {
     switch (unit) {
       case 'HOURS':
         return value * 60;
@@ -1090,7 +1090,7 @@ export class PlanAssessmentComponent implements OnInit {
     }
   }
 
-  private minutesToUnitAmount(minutes: number, unit = 'MINUTES'): number {
+  private minutesToUnitAmount(minutes: number, unit: string = 'MINUTES'): number {
     switch (unit) {
       case 'HOURS':
         return Number(minutes || 0) / 60;
@@ -1105,7 +1105,7 @@ export class PlanAssessmentComponent implements OnInit {
     }
   }
 
-  private minutesListToUnitText(minutes: number[] = [], unit = 'MINUTES'): string {
+  private minutesListToUnitText(minutes: number[] = [], unit: string = 'MINUTES'): string {
     return (minutes || []).map((minute) => this.minutesToUnitAmount(minute, unit)).join(', ');
   }
 }

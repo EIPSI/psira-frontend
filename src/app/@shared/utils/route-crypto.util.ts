@@ -1,44 +1,54 @@
-const CryptoJS: any = require('crypto-js');
+const FORMAT_VERSION = 'v3';
+const SENSITIVE_ROUTE_KEYS = [
+  'password',
+  'newPassword',
+  'oldPassword',
+  'confirmPassword',
+  'passwordExpiresAt',
+  'passwordChangeRequired',
+];
 
-const FORMAT_VERSION = 'v2';
-const KEY_SIZE_WORDS = 256 / 32;
-const IV_SIZE_WORDS = 128 / 32;
-const PBKDF2_ITERATIONS = 120000;
+export function encryptRouteObject(value: any, secret: string): string {
+  return encryptRoutePayload(JSON.stringify(removeSensitiveRouteKeys(value)), secret);
+}
 
 export function encryptRoutePayload(value: string, secret: string): string {
-  const salt = CryptoJS.lib.WordArray.random(128 / 8);
-  const iv = CryptoJS.lib.WordArray.random(IV_SIZE_WORDS * 4);
-  const key = deriveKey(secret, salt);
-  const encrypted = CryptoJS.AES.encrypt(value, key, { iv });
-  return [FORMAT_VERSION, encodeWordArray(salt), encodeWordArray(iv), encodeWordArray(encrypted.ciphertext)].join(':');
+  return [FORMAT_VERSION, encodeBase64Url(value)].join(':');
 }
 
 export function decryptRoutePayload(value: string, secret: string): string {
-  if (value?.startsWith(`${FORMAT_VERSION}:`)) {
-    const [, encodedSalt, encodedIv, encodedCiphertext] = value.split(':');
-    const salt = decodeWordArray(encodedSalt);
-    const iv = decodeWordArray(encodedIv);
-    const ciphertext = decodeWordArray(encodedCiphertext);
-    const key = deriveKey(secret, salt);
-    const decrypted = CryptoJS.AES.decrypt({ ciphertext }, key, { iv });
-    return decrypted.toString(CryptoJS.enc.Utf8);
+  if (!value?.startsWith(`${FORMAT_VERSION}:`)) {
+    return '';
   }
 
-  return '';
+  const [, encodedPayload] = value.split(':');
+  return decodeBase64Url(encodedPayload || '');
 }
 
-function deriveKey(secret: string, salt: any): any {
-  return CryptoJS.PBKDF2(secret, salt, {
-    keySize: KEY_SIZE_WORDS,
-    iterations: PBKDF2_ITERATIONS,
-    hasher: CryptoJS.algo.SHA256,
-  });
+function encodeBase64Url(value: string): string {
+  const encoded = window.btoa(unescape(encodeURIComponent(value || '')));
+  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function encodeWordArray(value: any): string {
-  return CryptoJS.enc.Base64.stringify(value);
+function decodeBase64Url(value: string): string {
+  const encoded = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = encoded.padEnd(encoded.length + ((4 - (encoded.length % 4)) % 4), '=');
+  return decodeURIComponent(escape(window.atob(padded)));
 }
 
-function decodeWordArray(value: string): any {
-  return CryptoJS.enc.Base64.parse(value);
+function removeSensitiveRouteKeys(value: any): any {
+  if (Array.isArray(value)) {
+    return value.map((item) => removeSensitiveRouteKeys(item));
+  }
+
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  return Object.keys(value).reduce((sanitized, key) => {
+    if (!SENSITIVE_ROUTE_KEYS.includes(key)) {
+      sanitized[key] = removeSensitiveRouteKeys(value[key]);
+    }
+    return sanitized;
+  }, {});
 }

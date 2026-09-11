@@ -36,12 +36,29 @@ export class InformedConsentManagementListComponent implements OnInit {
   sortFields: SortField<any>[] = [];
   actions: Action<ActionKey>[] = [];
   columns: TableColumn<any>[] = [
-    { title: 'core.title', translationPath: 'core.title', name: 'title', sort: true, filterField: { type: 'text', value: undefined } as any },
+    {
+      title: 'core.title',
+      translationPath: 'core.title',
+      name: 'title',
+      sort: true,
+      filterField: { type: 'text', value: undefined } as any,
+    },
     { title: 'informedConsent.model', translationPath: 'informedConsent.model', name: 'modelName', sort: true },
     { title: 'informedConsent.trigger', translationPath: 'informedConsent.trigger', name: 'triggerLabel', sort: true },
     { title: 'roles.roles', translationPath: 'roles.roles', name: 'roleNames', sort: true },
-    { title: 'departments.departments', translationPath: 'departments.departments', name: 'departmentNames', sort: true },
-    { title: 'informedConsent.requiresResponse', translationPath: 'informedConsent.requiresResponse', name: 'formattedMandatory', render: 'tag', sort: true },
+    {
+      title: 'departments.departments',
+      translationPath: 'departments.departments',
+      name: 'departmentNames',
+      sort: true,
+    },
+    {
+      title: 'informedConsent.requiresResponse',
+      translationPath: 'informedConsent.requiresResponse',
+      name: 'formattedMandatory',
+      render: 'tag',
+      sort: true,
+    },
     { title: 'core.status', translationPath: 'core.status', name: 'formattedStatus', render: 'tag', sort: true },
   ];
 
@@ -61,13 +78,19 @@ export class InformedConsentManagementListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.service.getManagements().pipe(finalize(() => (this.loading = false))).subscribe(
-      (managements) => {
-        this.managements = managements || [];
-        this.applyLocalFilters();
-      },
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadManagement') })
-    );
+    this.service
+      .getManagements()
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe(
+        (managements) => {
+          this.managements = managements || [];
+          this.applyLocalFilters();
+        },
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('informedConsent.unableLoadManagement'),
+          })
+      );
   }
 
   open(item: InformedConsentManagement): void {
@@ -81,7 +104,10 @@ export class InformedConsentManagementListComponent implements OnInit {
   duplicate(item: InformedConsentManagement): void {
     this.service.duplicateManagement(item.id).subscribe(
       (copy) => this.router.navigate(['/psira/informed-consent/management', copy.id]),
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableDuplicateManagement') })
+      (error) =>
+        this.errorService.handleError(error, {
+          prefix: this.translate.instant('informedConsent.unableDuplicateManagement'),
+        })
     );
   }
 
@@ -91,10 +117,14 @@ export class InformedConsentManagementListComponent implements OnInit {
       nzContent: this.translate.instant('informedConsent.deleteManagementConfirm'),
       nzOkText: this.translate.instant('core.delete'),
       nzOkDanger: true,
-      nzOnOk: () => this.service.deleteManagement(item.id).subscribe(
-        () => this.load(),
-        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableDeleteManagement') })
-      ),
+      nzOnOk: () =>
+        this.service.deleteManagement(item.id).subscribe(
+          () => this.load(),
+          (error) =>
+            this.errorService.handleError(error, {
+              prefix: this.translate.instant('informedConsent.unableDeleteManagement'),
+            })
+        ),
     });
   }
 
@@ -141,19 +171,33 @@ export class InformedConsentManagementListComponent implements OnInit {
         modelName: item.model?.name || '',
         triggerLabel: this.translate.instant(this.triggerLabel[item.trigger] || item.trigger),
         roleNames: item.appliesToAllRoles ? this.translate.instant('core.all') : this.names(item.roles),
-        departmentNames: item.appliesToAllDepartments ? this.translate.instant('core.all') : this.names(item.departments),
-        formattedMandatory: { color: item.mandatory ? 'red' : 'blue', title: this.translate.instant(item.mandatory ? 'core.yes' : 'core.no') },
-        formattedStatus: { color: item.active ? 'green' : 'default', title: this.translate.instant(this.statusLabel[item.status] || item.status) },
+        departmentNames: item.appliesToAllDepartments
+          ? this.translate.instant('core.all')
+          : this.names(item.departments),
+        formattedMandatory: {
+          color: item.mandatory ? 'red' : 'blue',
+          title: this.translate.instant(item.mandatory ? 'core.yes' : 'core.no'),
+        },
+        formattedStatus: {
+          color: item.active ? 'green' : 'default',
+          title: this.translate.instant(this.statusLabel[item.status] || item.status),
+        },
       }))
-      .filter((item) => !search || [
-        item.title,
-        item.description,
-        item.modelName,
-        item.triggerLabel,
-        item.roleNames,
-        item.departmentNames,
-        item.formattedStatus.title,
-      ].filter(Boolean).some((value) => String(value).toLowerCase().includes(search)));
+      .filter(
+        (item) =>
+          !search ||
+          [
+            item.title,
+            item.description,
+            item.modelName,
+            item.triggerLabel,
+            item.roleNames,
+            item.departmentNames,
+            item.formattedStatus.title,
+          ]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(search))
+      );
     this.filteredManagements = this.sortRows(rows);
   }
 

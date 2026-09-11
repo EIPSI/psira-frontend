@@ -262,7 +262,9 @@ export class AutomationEditorComponent implements OnInit {
 
     request.pipe(finalize(() => (this.saving = false))).subscribe(
       () => {
-        this.message.success(this.translate.instant(this.automationId ? 'evaluationAutomations.updated' : 'evaluationAutomations.created'));
+        this.message.success(
+          this.translate.instant(this.automationId ? 'evaluationAutomations.updated' : 'evaluationAutomations.created')
+        );
         this.router.navigate(['/psira/evaluation-automations']);
       },
       (error) => this.errorService.handleError(error, { prefix: 'Unable to save automation' })
@@ -270,16 +272,31 @@ export class AutomationEditorComponent implements OnInit {
   }
 
   public summary(): string {
-    const role = this.roles.find((item) => item.id === this.form?.get('roleId')?.value)?.name || this.translate.instant('evaluationAutomations.selectedRole');
-    const trigger = this.triggerPointLabel[this.form?.get('triggerPoint')?.value] || this.translate.instant('evaluationAutomations.selectedTrigger');
+    const role =
+      this.roles.find((item) => item.id === this.form?.get('roleId')?.value)?.name ||
+      this.translate.instant('evaluationAutomations.selectedRole');
+    const trigger =
+      this.triggerPointLabel[this.form?.get('triggerPoint')?.value] ||
+      this.translate.instant('evaluationAutomations.selectedTrigger');
     const delay = this.form?.get('delayAmount')?.value || 0;
-    const unit = this.translate.instant(this.delayUnitLabel[this.form?.get('delayUnit')?.value] || 'time.minutes').toLowerCase();
+    const unit = this.translate
+      .instant(this.delayUnitLabel[this.form?.get('delayUnit')?.value] || 'time.minutes')
+      .toLowerCase();
     if (this.isFixedScheme) {
-      const scheme = this.schemes.find((item) => item.id === this.form?.get('schemeId')?.value)?.name || this.translate.instant('evaluationAutomations.selectedScheme');
+      const scheme =
+        this.schemes.find((item) => item.id === this.form?.get('schemeId')?.value)?.name ||
+        this.translate.instant('evaluationAutomations.selectedScheme');
       return this.translate.instant('evaluationAutomations.fixedSchemeSummary', { role, trigger, scheme, delay, unit });
     }
-    const name = this.form?.get('evaluationName')?.value || this.translate.instant('evaluationAutomations.configuredEvaluation');
-    return this.translate.instant('evaluationAutomations.individualEvaluationSummary', { role, trigger, name, delay, unit });
+    const name =
+      this.form?.get('evaluationName')?.value || this.translate.instant('evaluationAutomations.configuredEvaluation');
+    return this.translate.instant('evaluationAutomations.individualEvaluationSummary', {
+      role,
+      trigger,
+      name,
+      delay,
+      unit,
+    });
   }
 
   public isSessionNumberTrigger(): boolean {
@@ -290,7 +307,9 @@ export class AutomationEditorComponent implements OnInit {
     return this.form?.get('triggerPoint')?.value === EvaluationAutomationTriggerPoint.LAST_LOGIN;
   }
 
-  public usesReasonFilter(triggerPoint = this.form?.get('triggerPoint')?.value): boolean {
+  public usesReasonFilter(
+    triggerPoint: EvaluationAutomationTriggerPoint = this.form?.get('triggerPoint')?.value
+  ): boolean {
     return [
       EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION,
       EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION,
@@ -362,10 +381,7 @@ export class AutomationEditorComponent implements OnInit {
       })
       .pipe(
         switchMap((page: any) => {
-          const departments = [
-            ...accumulated,
-            ...page.edges.map((edge: any) => edge.node as Department),
-          ];
+          const departments = [...accumulated, ...page.edges.map((edge: any) => edge.node as Department)];
 
           return page.pageInfo?.hasNextPage
             ? this.loadLookupDepartments(page.pageInfo.endCursor, departments)
@@ -382,14 +398,9 @@ export class AutomationEditorComponent implements OnInit {
       })
       .pipe(
         switchMap((page: any) => {
-          const roles = [
-            ...accumulated,
-            ...page.edges.map((edge: any) => edge.node as Role),
-          ];
+          const roles = [...accumulated, ...page.edges.map((edge: any) => edge.node as Role)];
 
-          return page.pageInfo?.hasNextPage
-            ? this.loadLookupRoles(page.pageInfo.endCursor, roles)
-            : of(roles);
+          return page.pageInfo?.hasNextPage ? this.loadLookupRoles(page.pageInfo.endCursor, roles) : of(roles);
         })
       );
   }
@@ -422,9 +433,13 @@ export class AutomationEditorComponent implements OnInit {
     return !!(
       user?.isSuperUser ||
       user?.roles?.some((role: any) => role.isSuperAdmin || role.code === 'SUPER_ADMIN') ||
-      user?.permissions?.some((permission: any) => ['users.edit.all', 'assessments.assign.all'].includes(permission.name)) ||
+      user?.permissions?.some((permission: any) =>
+        ['users.edit.all', 'assessments.assign.all'].includes(permission.name)
+      ) ||
       user?.roles?.some((role: any) =>
-        role.permissions?.some((permission: any) => ['users.edit.all', 'assessments.assign.all'].includes(permission.name))
+        role.permissions?.some((permission: any) =>
+          ['users.edit.all', 'assessments.assign.all'].includes(permission.name)
+        )
       )
     );
   }
@@ -455,7 +470,9 @@ export class AutomationEditorComponent implements OnInit {
 
     this.bundlesService
       .getQuestionnairesBundles({ paging: { first: 50 }, departmentIds })
-      .subscribe((result: any) => (this.bundles = result.data.getQuestionnaireBundles.edges.map((edge: any) => edge.node)));
+      .subscribe(
+        (result: any) => (this.bundles = result.data.getQuestionnaireBundles.edges.map((edge: any) => edge.node))
+      );
 
     this.randomizationsService
       .getRandomizations({
@@ -523,12 +540,19 @@ export class AutomationEditorComponent implements OnInit {
       evaluationName: automation.evaluationName,
       expirationMinutes: this.minutesToUnitAmount(automation.expirationMinutes, automation.expirationUnit as TimeUnit),
       expirationUnit: automation.expirationUnit || 'MINUTES',
-      reminderMinutesText: this.minutesListToUnitText(automation.reminderMinutes || [], automation.reminderUnit as TimeUnit),
+      reminderMinutesText: this.minutesListToUnitText(
+        automation.reminderMinutes || [],
+        automation.reminderUnit as TimeUnit
+      ),
       reminderUnit: automation.reminderUnit || 'MINUTES',
     });
     (automation.conditions || []).forEach((condition) => this.addCondition(condition));
     (automation.lastLoginConditions || []).forEach((condition) => this.addLastLoginCondition(condition));
-    if (automation.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN && !this.lastLoginConditions.length && automation.lastLoginInactiveDays) {
+    if (
+      automation.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN &&
+      !this.lastLoginConditions.length &&
+      automation.lastLoginInactiveDays
+    ) {
       this.addLastLoginCondition({
         operator: EvaluationAutomationConditionOperator.GTE,
         value: automation.lastLoginInactiveDays,
@@ -550,33 +574,36 @@ export class AutomationEditorComponent implements OnInit {
       conditions: this.normalizedConditions(value.conditions),
       triggerPoint: value.triggerPoint,
       automationType: value.automationType,
-      triggerSessionNumber: value.triggerPoint === EvaluationAutomationTriggerPoint.SESSION_NUMBER
-        ? Number(value.triggerSessionNumber)
-        : null,
+      triggerSessionNumber:
+        value.triggerPoint === EvaluationAutomationTriggerPoint.SESSION_NUMBER
+          ? Number(value.triggerSessionNumber)
+          : null,
       triggerReasonIds: this.usesReasonFilter(value.triggerPoint)
         ? this.normalizeNumberArray(value.triggerReasonIds)
         : [],
       triggerReasonContexts: this.usesReasonFilter(value.triggerPoint)
         ? this.contextsForTriggerScope(value.triggerPoint, value.triggerReasonScope)
         : [],
-      lastLoginInactiveDays: value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN && value.lastLoginInactiveDays
-        ? Number(value.lastLoginInactiveDays)
-        : null,
-      lastLoginConditionLogic: value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN
-        ? value.lastLoginConditionLogic || 'AND'
-        : 'AND',
-      lastLoginConditions: value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN
-        ? this.normalizedLastLoginConditions(value.lastLoginConditions)
-        : [],
+      lastLoginInactiveDays:
+        value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN && value.lastLoginInactiveDays
+          ? Number(value.lastLoginInactiveDays)
+          : null,
+      lastLoginConditionLogic:
+        value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN
+          ? value.lastLoginConditionLogic || 'AND'
+          : 'AND',
+      lastLoginConditions:
+        value.triggerPoint === EvaluationAutomationTriggerPoint.LAST_LOGIN
+          ? this.normalizedLastLoginConditions(value.lastLoginConditions)
+          : [],
       delayAmount: Number(value.delayAmount),
       delayUnit: value.delayUnit,
     };
 
     if (value.automationType === EvaluationAutomationType.FIXED_SCHEME) {
       payload.schemeId = value.fixedSelectionType === 'SCHEME' ? value.schemeId : null;
-      payload.schemeRandomizationRuleId = value.fixedSelectionType === 'HIGH_LEVEL_RANDOMIZATION'
-        ? value.schemeRandomizationRuleId
-        : null;
+      payload.schemeRandomizationRuleId =
+        value.fixedSelectionType === 'HIGH_LEVEL_RANDOMIZATION' ? value.schemeRandomizationRuleId : null;
       payload.assessmentTypeId = null;
       payload.questionnaireIds = [];
       payload.questionnaireBundleIds = [];
@@ -753,9 +780,7 @@ export class AutomationEditorComponent implements OnInit {
     forkJoin(
       contexts.flatMap((context) =>
         departmentIds.map((departmentId: number | undefined) =>
-          this.loadReasonTree(context, undefined, departmentId).pipe(
-            map((reasons) => ({ context, reasons }))
-          )
+          this.loadReasonTree(context, undefined, departmentId).pipe(map((reasons) => ({ context, reasons })))
         )
       )
     ).subscribe(
@@ -816,20 +841,11 @@ export class AutomationEditorComponent implements OnInit {
   private contextsForTrigger(triggerPoint: EvaluationAutomationTriggerPoint): CaseEventReasonContext[] {
     switch (triggerPoint) {
       case EvaluationAutomationTriggerPoint.SESSION_NO_SHOW_CANCELLATION:
-        return [
-          CaseEventReasonContext.SESSION_CANCELLATION,
-          CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION,
-        ];
+        return [CaseEventReasonContext.SESSION_CANCELLATION, CaseEventReasonContext.SUPERVISION_SESSION_CANCELLATION];
       case EvaluationAutomationTriggerPoint.TREATMENT_FINALIZATION:
-        return [
-          CaseEventReasonContext.TREATMENT_FINALIZATION,
-          CaseEventReasonContext.SUPERVISION_FINALIZATION,
-        ];
+        return [CaseEventReasonContext.TREATMENT_FINALIZATION, CaseEventReasonContext.SUPERVISION_FINALIZATION];
       case EvaluationAutomationTriggerPoint.NEW_TREATMENT:
-        return [
-          CaseEventReasonContext.NEW_TREATMENT,
-          CaseEventReasonContext.NEW_SUPERVISION,
-        ];
+        return [CaseEventReasonContext.NEW_TREATMENT, CaseEventReasonContext.NEW_SUPERVISION];
       default:
         return [];
     }
@@ -914,15 +930,11 @@ export class AutomationEditorComponent implements OnInit {
   }
 
   private minutesListToUnitText(values: number[], unit: TimeUnit = 'MINUTES'): string {
-    return (values || [])
-      .map((value) => this.minutesToUnitAmount(value, unit))
-      .join(', ');
+    return (values || []).map((value) => this.minutesToUnitAmount(value, unit)).join(', ');
   }
 
   private normalizeNumberArray(value: any): number[] {
     const values = Array.isArray(value) ? value : value ? [value] : [];
-    return values
-      .map((item) => Number(item))
-      .filter((item) => Number.isFinite(item));
+    return values.map((item) => Number(item)).filter((item) => Number.isFinite(item));
   }
 }

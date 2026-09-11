@@ -19,7 +19,11 @@ const routes: Routes = [
     data: {
       breadcrumbI18nKey: 'menu.notificationAdministration',
       permissions: {
-        only: [PermissionKey.NOTIFICATIONS_VIEW_DEPARTMENT, PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT, PermissionKey.MAIL_TEMPLATES_VIEW_DEPARTMENT],
+        only: [
+          PermissionKey.NOTIFICATIONS_VIEW_DEPARTMENT,
+          PermissionKey.NOTIFICATIONS_EDIT_DEPARTMENT,
+          PermissionKey.MAIL_TEMPLATES_VIEW_DEPARTMENT,
+        ],
       },
     },
     canActivate: [PermissionGuard],

@@ -169,7 +169,8 @@ export class DepartmentsComponent implements OnInit {
           this.data = data.departments.edges.map((department: any) => Convert.toDepartment(department.node));
           this.pageInfo = data.departments.pageInfo;
         },
-        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableLoadDepartments') })
+        (err) =>
+          this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableLoadDepartments') })
       );
   }
 
@@ -197,7 +198,10 @@ export class DepartmentsComponent implements OnInit {
           data.splice(this.data.indexOf(department), 1);
           this.data = data; // mutate reference to trigger change detection
         },
-        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableDeleteDepartment', { name: department.name }) })
+        (err) =>
+          this.errorService.handleError(err, {
+            prefix: this.translate.instant('departments.unableDeleteDepartment', { name: department.name }),
+          })
       );
   }
 
@@ -214,7 +218,8 @@ export class DepartmentsComponent implements OnInit {
           this.data = [...this.data, Convert.toDepartment(data.createOneDepartment)];
           this.closeCreatePanel();
         },
-        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableCreateDepartment') })
+        (err) =>
+          this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableCreateDepartment') })
       );
   }
 
@@ -242,7 +247,8 @@ export class DepartmentsComponent implements OnInit {
           this.data = list; // mutate reference to trigger change detection
           this.closeCreatePanel();
         },
-        (err) => this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableUpdateDepartment') })
+        (err) =>
+          this.errorService.handleError(err, { prefix: this.translate.instant('departments.unableUpdateDepartment') })
       );
   }
 

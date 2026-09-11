@@ -21,7 +21,6 @@ import { SettingsService } from '@app/pages/administration/@services/settings.se
 import { Department } from '@app/pages/patients-management/@types/department';
 import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-
 @Component({
   selector: 'app-create-patient',
   templateUrl: './create-patient.component.html',
@@ -316,9 +315,7 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private refreshAutomationPreview(departmentValue: any): void {
-    const departmentIds = Array.isArray(departmentValue)
-      ? departmentValue
-      : [departmentValue].filter((id) => !!id);
+    const departmentIds = Array.isArray(departmentValue) ? departmentValue : [departmentValue].filter((id) => !!id);
 
     if (!departmentIds.length) {
       this.automationPreview = [];
@@ -364,7 +361,9 @@ export class CreatePatientComponent implements OnInit {
     return !!(
       user?.isSuperUser ||
       roles.some((role: any) => {
-        const normalizedRoleName = String(role.name || '').toLowerCase().replace(/[\s_-]/g, '');
+        const normalizedRoleName = String(role.name || '')
+          .toLowerCase()
+          .replace(/[\s_-]/g, '');
         return (
           role.isSuperAdmin ||
           role.code === 'SUPER_ADMIN' ||
@@ -373,9 +372,11 @@ export class CreatePatientComponent implements OnInit {
         );
       }) ||
       permissions.some((permission: any) =>
-        [PermissionKey.PATIENTS_VIEW_ALL, PermissionKey.USERS_EDIT_DEPARTMENT, PermissionKey.SETTINGS_EDIT_ALL].includes(
-          permission?.name
-        )
+        [
+          PermissionKey.PATIENTS_VIEW_ALL,
+          PermissionKey.USERS_EDIT_DEPARTMENT,
+          PermissionKey.SETTINGS_EDIT_ALL,
+        ].includes(permission?.name)
       ) ||
       this.perms.permissionsOnly([
         PermissionKey.PATIENTS_VIEW_ALL,
@@ -391,20 +392,18 @@ export class CreatePatientComponent implements OnInit {
     if (scope !== 'ALL') {
       const userDepartments = user.departments || [];
       this.setDepartmentOptions(userDepartments, scope);
-      this.departmentsService
-        .departments({ paging: { first: 1 }, filter: { name: { eq: 'Particular' } } })
-        .subscribe(
-          (particularResponse) => {
-            const particular = particularResponse.data.departments.edges.map((e: any) => e.node)[0];
-            const departments = userDepartments;
-            const allDepartments =
-              particular && !departments.some((department: any) => department.id === particular.id)
-                ? [...departments, particular]
-                : departments;
-            this.setDepartmentOptions(allDepartments, scope);
-          },
-          (error) => this.errorService.handleError(error, { prefix: 'Unable to load Particular department' })
-        );
+      this.departmentsService.departments({ paging: { first: 1 }, filter: { name: { eq: 'Particular' } } }).subscribe(
+        (particularResponse) => {
+          const particular = particularResponse.data.departments.edges.map((e: any) => e.node)[0];
+          const departments = userDepartments;
+          const allDepartments =
+            particular && !departments.some((department: any) => department.id === particular.id)
+              ? [...departments, particular]
+              : departments;
+          this.setDepartmentOptions(allDepartments, scope);
+        },
+        (error) => this.errorService.handleError(error, { prefix: 'Unable to load Particular department' })
+      );
       return;
     }
 
@@ -540,15 +539,15 @@ export class CreatePatientComponent implements OnInit {
     const existingIds = (this.patient?.emergencyContacts || [])
       .filter((contact: Contact) => !!contact.id)
       .map((contact: Contact) => Number(contact.id));
-    const removedIds = existingIds.filter((id) => !submittedIds.includes(id));
+    const removedIds = existingIds.filter((contactId) => !submittedIds.includes(contactId));
 
     const requests = [
       ...submittedContacts.map((contact: Contact) => {
         if (contact.id) {
-          const { id, ...update } = contact as any;
-          return this.emergencyContactsService.updateEmergencyContact({ id, update });
+          const { id: updateContactId, ...update } = contact as any;
+          return this.emergencyContactsService.updateEmergencyContact({ id: updateContactId, update });
         }
-        const { id, ...create } = contact as any;
+        const { id: createContactId, ...create } = contact as any;
         return this.emergencyContactsService.createEmergencyContact(create);
       }),
       ...removedIds.map((id) => this.emergencyContactsService.deleteEmergencyContact({ id } as Contact)),

@@ -128,7 +128,7 @@ export class NotificationConfigurationEditorComponent implements OnInit {
     return NotificationFamily.AUTOMATION;
   }
 
-  private loadConfiguration(id: number, duplicate = false): void {
+  private loadConfiguration(id: number, duplicate: boolean = false): void {
     this.loading = true;
     this.notificationsService
       .getConfiguration(id)

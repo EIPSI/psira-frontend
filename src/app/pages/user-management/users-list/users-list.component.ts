@@ -27,7 +27,7 @@ import { Role } from '@app/pages/administration/@types/role';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { TranslateService } from '@ngx-translate/core';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 
 enum ActionKey {
@@ -104,7 +104,7 @@ export class UsersListComponent {
   }
 
   public onUserSelect(user: FormattedUser): void {
-    const dataString = encryptRoutePayload(JSON.stringify(user), environment.secretKey);
+    const dataString = encryptRouteObject(user, environment.secretKey);
     this.router.navigate(['/psira/user-management/profile'], {
       queryParams: {
         user: dataString,

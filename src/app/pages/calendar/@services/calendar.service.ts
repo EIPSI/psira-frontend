@@ -109,8 +109,8 @@ export class CalendarService {
     context: CaseEventReasonContext,
     parentId?: number | null,
     departmentId?: number | null,
-    includeInactive = false,
-    exactDepartment = false
+    includeInactive: boolean = false,
+    exactDepartment: boolean = false
   ): Observable<CaseEventReason[]> {
     return this.apollo
       .query({
@@ -121,7 +121,7 @@ export class CalendarService {
       .pipe(map((result: any) => result.data.caseEventReasons));
   }
 
-  getCaseEventReasonTrees(includeInactive = false): Observable<CaseEventReasonTree[]> {
+  getCaseEventReasonTrees(includeInactive: boolean = false): Observable<CaseEventReasonTree[]> {
     return this.apollo
       .query({
         query: CalendarQueries.caseEventReasonTrees,
@@ -590,7 +590,7 @@ export class CalendarService {
 
   cancelClinicalSession(
     clinicalSessionId: number,
-    renumberFutureSessions = false,
+    renumberFutureSessions: boolean = false,
     cancellationReason?: string,
     cancellationType: ClinicalSessionCancellationType = ClinicalSessionCancellationType.RESCHEDULED,
     cancellationReasonId?: number,
@@ -618,7 +618,7 @@ export class CalendarService {
       .pipe(map((result: any) => result.data.cancelClinicalSession));
   }
 
-  deleteAssessmentEvent(assessmentId: number, statusCancel = true): Observable<boolean> {
+  deleteAssessmentEvent(assessmentId: number, statusCancel: boolean = true): Observable<boolean> {
     return this.apollo
       .mutate({
         mutation: AssessmentsMutations.deleteAssessment,
