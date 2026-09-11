@@ -23,7 +23,7 @@
     "no-switch-case-fall-through": true,
     "no-unnecessary-initializer": true,
     "object-literal-sort-keys": false,
-    "quotemark": [true, "single"],
+    "quotemark": [true, "single", "avoid-escape"],
     "typedef": [true, "parameter", "property-declaration"],
     "variable-name": false,
     "no-var-requires": false,
