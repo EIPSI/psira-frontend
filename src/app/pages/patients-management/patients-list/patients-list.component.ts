@@ -26,8 +26,8 @@ import {
 } from '../../../@shared/@modules/master-data/@types/list';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   DELETE_PATIENT,
@@ -141,7 +141,7 @@ export class PatientsListComponent {
   }
 
   public onPatientSelect(patient: FormattedPatient): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(patient), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(patient), environment.secretKey);
     this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
         profile: dataString,

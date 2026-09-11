@@ -26,8 +26,8 @@ import { ClipboardService } from 'ngx-clipboard';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { User } from '@app/pages/user-management/@types/user';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   SHOW_ASSESSMENT,
@@ -216,7 +216,7 @@ export class AssessmentsComponent implements OnInit {
       return;
     }
 
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
     this.router.navigate(['/psira/case-management/create-assessment'], {
       queryParams: {
         profile: dataString,
@@ -247,7 +247,7 @@ export class AssessmentsComponent implements OnInit {
   }
 
   private openLinkedSession(): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
     this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
         profile: dataString,
@@ -257,7 +257,7 @@ export class AssessmentsComponent implements OnInit {
   }
 
   private generateAssessmentURL(assesmentUuid: string): string {
-    const cryptoId = CryptoJS.AES.encrypt(assesmentUuid, environment.secretKey).toString();
+    const cryptoId = encryptRoutePayload(assesmentUuid, environment.secretKey);
     const tree = this.router.createUrlTree(['/assessment/overview'], { queryParams: { assessment: cryptoId } });
     return this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
   }

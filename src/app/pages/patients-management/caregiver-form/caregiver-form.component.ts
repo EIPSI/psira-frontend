@@ -13,8 +13,8 @@ import { CaregiverForm } from '../@forms/contacts.form';
 import { Caregiver } from '../@types/caregiver';
 import { CaregiversService } from '../@services/caregivers.service';
 import { PatientsService } from '../@services/patients.service';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-caregiver-form',
@@ -145,8 +145,8 @@ export class CaregiverFormComponent implements OnInit {
 
   private decrypt(value: string): any {
     try {
-      const bytes = CryptoJS.AES.decrypt(value, environment.secretKey);
-      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      const bytes = decryptRoutePayload(value, environment.secretKey);
+      return JSON.parse(bytes);
     } catch (_) {
       return {};
     }

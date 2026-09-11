@@ -4,8 +4,8 @@ import { FullAssessment } from './../pages/assessment/@types/assessment';
 import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Injectable({ providedIn: 'root' })
 export class AssessmentResolver implements Resolve<FullAssessment> {
@@ -14,8 +14,8 @@ export class AssessmentResolver implements Resolve<FullAssessment> {
   public resolve(route: ActivatedRouteSnapshot): Observable<FullAssessment> {
     try {
       const encryptedId = route.queryParamMap.get('assessment');
-      const bytes = CryptoJS.AES.decrypt(encryptedId, environment.secretKey);
-      const assessmentUuid = bytes.toString(CryptoJS.enc.Utf8);
+      const bytes = decryptRoutePayload(encryptedId, environment.secretKey);
+      const assessmentUuid = bytes;
       return this.service.getFullPublicAssessment(assessmentUuid);
     } catch (err) {
       console.error('Assessment not found');

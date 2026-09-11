@@ -28,8 +28,8 @@ import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/
 import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 import { AuthService } from '@app/auth/auth.service';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-user-form',
@@ -296,8 +296,8 @@ export class UserFormComponent implements OnInit {
         this.newMode = false;
         this.inputMode = false;
         this.showCancelButton = true;
-        const bytes = CryptoJS.AES.decrypt(params.user, environment.secretKey);
-        const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.user, environment.secretKey);
+        const decryptedData = JSON.parse(bytes);
         this.user = this.withProfileRelations(decryptedData);
         if (this.user.birthDate) this.user.birthDate = decryptedData.birthDate.slice(0, 10);
         this.profileFields = userForms.userProfileEdit;
@@ -494,7 +494,7 @@ export class UserFormComponent implements OnInit {
   afterCreate() {
     this.populateForm = false;
     this.resetForm = false;
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.user), environment.secretKey);
     this.router.navigate([this.defaultRoleCode ? '/psira/user-management/profile' : '/psira/user-management/user-form'], {
       state: { title: this.formatFullName(this.user) },
       queryParams: {
@@ -733,7 +733,7 @@ export class UserFormComponent implements OnInit {
     };
     delete draft.roleId;
     delete draft.departmentId;
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(draft), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(draft), environment.secretKey);
     this.router.navigate([route], {
       queryParams: {
         draft: dataString,
@@ -745,8 +745,8 @@ export class UserFormComponent implements OnInit {
 
   private decryptDraft(value: string): any {
     try {
-      const bytes = CryptoJS.AES.decrypt(value, environment.secretKey);
-      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      const bytes = decryptRoutePayload(value, environment.secretKey);
+      return JSON.parse(bytes);
     } catch (_) {
       return {};
     }

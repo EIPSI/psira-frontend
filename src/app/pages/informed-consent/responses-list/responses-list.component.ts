@@ -21,8 +21,8 @@ import {
   InformedConsentResponse,
   InformedConsentResponseStatus,
 } from '../@types/informed-consent';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 type ConsentBlockType = 'TEXT' | 'QUESTION';
 
@@ -468,9 +468,6 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
   private publicConsentToken(userId: number): string {
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 6);
-    return CryptoJS.AES.encrypt(
-      JSON.stringify({ userId, exp: expiresAt.getTime() }),
-      environment.secretKey
-    ).toString();
+    return encryptRoutePayload(JSON.stringify({ userId, exp: expiresAt.getTime() }), environment.secretKey);
   }
 }

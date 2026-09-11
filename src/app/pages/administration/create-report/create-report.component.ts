@@ -23,8 +23,8 @@ import { Convert } from '@shared/classes/convert';
 import { ReportForm } from '@app/pages/administration/@forms/report.form';
 import { Field } from '@shared/components/form/@types/field';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-create-report',
@@ -179,8 +179,8 @@ export class CreateReportComponent implements OnInit {
       if (params.report) {
         this.inputMode = false;
         this.showCancelButton = true;
-        const bytes = CryptoJS.AES.decrypt(params.report, environment.secretKey);
-        const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.report, environment.secretKey);
+        const decryptedData = JSON.parse(bytes);
         this.report = decryptedData;
         this.reportDraft = {
           ...decryptedData,
@@ -306,7 +306,7 @@ export class CreateReportComponent implements OnInit {
   afterCreate() {
     this.populateForm = false;
     this.resetForm = true;
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.report), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.report), environment.secretKey);
     this.router.navigate(['/psira/administration/create-report'], {
       state: {
         title: this.report.name,

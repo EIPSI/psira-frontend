@@ -23,8 +23,8 @@ import { Sorting } from '@shared/@types/sorting';
 import { QuestionnaireVersion } from '@app/pages/questionnaire-management/@types/questionnaire';
 import { TranslateService } from '@ngx-translate/core';
 import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   ARCHIVE_QUESTIONNAIRE,
@@ -87,7 +87,7 @@ export class QuestionnaireListComponent {
   }
 
   public onSelect(questionnaire: FormattedQuestionnaireVersion): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(questionnaire), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(questionnaire), environment.secretKey);
     this.router.navigate(['/psira/questionnaire-management/questionnaire-form'], {
       queryParams: {
         questionnaire: dataString,

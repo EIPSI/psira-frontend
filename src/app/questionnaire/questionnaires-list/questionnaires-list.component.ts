@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
-const CryptoJS = require('crypto-js');
 import { environment } from '@env/environment';
 import { NzModalService } from 'ng-zorro-antd';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 @Component({
   selector: 'app-questionnaires-list',
@@ -57,10 +57,7 @@ export class QuestionnairesListComponent implements OnInit {
       });
       return;
     }
-    const dataString = CryptoJS.AES.encrypt(
-      JSON.stringify(this.questionnaires[this.activeIndex]),
-      environment.secretKey
-    ).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.questionnaires[this.activeIndex]), environment.secretKey);
     this.router.navigate(['/assessment/questionnaire'], {
       queryParams: {
         questionnaire: dataString,

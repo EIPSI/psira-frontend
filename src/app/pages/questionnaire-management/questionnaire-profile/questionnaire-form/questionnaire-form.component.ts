@@ -12,8 +12,8 @@ import { AppPermissionsService } from '@shared/services/app-permissions.service'
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { AngularEditorConfig } from '@kolkov/angular-editor';
 import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-questionnaire-form',
@@ -96,8 +96,8 @@ export class QuestionnaireFormComponent {
     const data = this.activatedRoute.snapshot.queryParamMap.get('questionnaire');
     if (!data) return;
 
-    const bytes = CryptoJS.AES.decrypt(data, environment.secretKey);
-    const questionnaire: QuestionnaireVersion = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    const bytes = decryptRoutePayload(data, environment.secretKey);
+    const questionnaire: QuestionnaireVersion = JSON.parse(bytes);
     this.setExistingMode(questionnaire);
   }
 

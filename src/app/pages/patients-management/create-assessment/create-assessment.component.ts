@@ -27,8 +27,8 @@ import { LocationStrategy } from '@angular/common';
 import { QuestionnaireBundlesService } from '@app/pages/questionnaire-management/@services/questionnaire-bundles.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum AssessmentContentType {
   QUESTIONNAIRE = 'QUESTIONNAIRE',
@@ -199,7 +199,7 @@ export class CreateAssessmentComponent implements OnInit {
   }
 
   public goBack(patient: FormattedPatient): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
     console.log(this.patient);
     this.router.navigate(['/psira/case-management/profile'], {
       queryParams: {
@@ -420,8 +420,8 @@ export class CreateAssessmentComponent implements OnInit {
     this.activatedRoute.queryParams.subscribe((params) => {
       if (params.profile) {
         console.log('here');
-        const bytes = CryptoJS.AES.decrypt(params.profile, environment.secretKey);
-        const patient = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.profile, environment.secretKey);
+        const patient = JSON.parse(bytes);
         console.log(PatientModel.fromJson(patient));
         this.patient = PatientModel.fromJson(patient);
         this.patientEmail = this.patient.email;
@@ -519,8 +519,8 @@ export class CreateAssessmentComponent implements OnInit {
     if (this.assessment) {
       this.fullAssessment = this.assessment;
     } else {
-      const bytes = CryptoJS.AES.decrypt(data, environment.secretKey);
-      this.fullAssessment = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      const bytes = decryptRoutePayload(data, environment.secretKey);
+      this.fullAssessment = JSON.parse(bytes);
     }
     this.assessmentUrl = new URL(this.generateAssessmentURL(this.fullAssessment?.uuid), window.location.origin);
     if (!this.patient) {
@@ -752,7 +752,7 @@ export class CreateAssessmentComponent implements OnInit {
   }
 
   private generateAssessmentURL(assesmentUuid: string): string {
-    const cryptoId = CryptoJS.AES.encrypt(assesmentUuid, environment.secretKey).toString();
+    const cryptoId = encryptRoutePayload(assesmentUuid, environment.secretKey);
     const tree = this.router.createUrlTree(['/assessment/overview'], { queryParams: { assessment: cryptoId } });
     return this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
   }

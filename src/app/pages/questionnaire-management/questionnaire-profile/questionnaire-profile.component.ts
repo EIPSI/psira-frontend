@@ -6,8 +6,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { QuestionnaireModel } from '@app/pages/questionnaire-management/@models/questionnaire.model';
 import { finalize } from 'rxjs/operators';
 import { Convert } from '@shared/classes/convert';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-questionnaire-profile',
@@ -40,8 +40,8 @@ export class QuestionnaireProfileComponent implements OnInit {
   getQuestionnaire() {
     this.activatedRoute.queryParams.subscribe((params) => {
       if (params.questionnaire) {
-        const bytes = CryptoJS.AES.decrypt(params.questionnaire, environment.secretKey);
-        const questionnaire = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.questionnaire, environment.secretKey);
+        const questionnaire = JSON.parse(bytes);
         this.questionnaire = QuestionnaireModel.fromJson(questionnaire);
       }
     });

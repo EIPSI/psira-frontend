@@ -16,8 +16,8 @@ import { AppPermissionsService } from '@shared/services/app-permissions.service'
 import { finalize } from 'rxjs/operators';
 import { Convert } from '@shared/classes/convert';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum SupervisorActionKey {
   REMOVE_SUPERVISOR,
@@ -115,8 +115,8 @@ export class UserProfileTabsComponent implements OnInit {
     this.activatedRoute.queryParams.subscribe((params) => {
       this.roleCode = params.roleCode;
       if (params.user) {
-        const bytes = CryptoJS.AES.decrypt(params.user, environment.secretKey);
-        this.user = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.user, environment.secretKey);
+        this.user = JSON.parse(bytes);
       }
       this.getReports();
       this.getSupervisors();

@@ -26,7 +26,6 @@ import { NzModalService } from 'ng-zorro-antd/modal';
 import { FormComponent } from '@shared/components/form/form.component';
 import { TranslateService } from '@ngx-translate/core';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   EDIT_SCRIPT,

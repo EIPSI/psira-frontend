@@ -35,8 +35,8 @@ import {
   EvaluationAutomationTriggerPointLabel,
 } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 import { PatientCalendarComponent } from '../calendar/patient-calendar.component';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-patient-profile',
@@ -123,8 +123,8 @@ export class PatientProfileComponent implements OnInit {
   getPatient() {
     this.activatedRoute.queryParams.subscribe((params: any) => {
       if (params.profile) {
-        const bytes = CryptoJS.AES.decrypt(params.profile, environment.secretKey);
-        const patient = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.profile, environment.secretKey);
+        const patient = JSON.parse(bytes);
         this.patient = PatientModel.fromJson(patient);
         this.filter = {
           patientId: this.patient.id,

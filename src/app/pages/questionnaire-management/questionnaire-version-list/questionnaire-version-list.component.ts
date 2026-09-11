@@ -14,8 +14,8 @@ import { Convert } from '@shared/classes/convert';
 import { QuestionnaireManagementService } from '@app/pages/questionnaire-management/@services/questionnaire-management.service';
 import { environment } from '@env/environment';
 import { Router } from '@angular/router';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 export const createSearchFilter1 = (
   searchString: string
@@ -71,7 +71,7 @@ export class QuestionnaireVersionListComponent implements OnInit {
   }
 
   public onSelect(questionnaire: FormattedQuestionnaireVersion): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(questionnaire), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(questionnaire), environment.secretKey);
     this.router.navigate(['/psira/questionnaire-management/questionnaire-form'], {
       queryParams: {
         questionnaire: dataString,

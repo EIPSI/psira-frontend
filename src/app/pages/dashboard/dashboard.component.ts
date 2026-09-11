@@ -25,8 +25,8 @@ import { DepartmentsService } from '../administration/@services/departments.serv
 import { Department } from '../administration/@types/department';
 import { formatSystemDateTime } from '@shared/utils/system-settings.util';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 interface DashboardTimelineItem {
   itemType: 'ASSESSMENT' | 'SESSION';
@@ -136,7 +136,7 @@ export class DashboardComponent implements OnInit {
 
   public startAssessment(assessment: FormattedAssessment): void {
     if (!this.isAssessmentAvailable(assessment)) return;
-    const cryptoId = CryptoJS.AES.encrypt(assessment.uuid, environment.secretKey).toString();
+    const cryptoId = encryptRoutePayload(assessment.uuid, environment.secretKey);
     const tree = this.router.createUrlTree(['/assessment/overview'], {
       queryParams: { assessment: cryptoId },
     });
@@ -472,10 +472,7 @@ export class DashboardComponent implements OnInit {
   private publicConsentToken(): string {
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 6);
-    return CryptoJS.AES.encrypt(
-      JSON.stringify({ userId: this.user.id, exp: expiresAt.getTime() }),
-      environment.secretKey
-    ).toString();
+    return encryptRoutePayload(JSON.stringify({ userId: this.user.id, exp: expiresAt.getTime() }), environment.secretKey);
   }
 
   private loadDepartmentFilters(): void {

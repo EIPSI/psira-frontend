@@ -26,8 +26,8 @@ import { CaregiversPatientForm } from '@app/pages/patients-management/@forms/car
 import { CaregiversService } from '@app/pages/patients-management/@services/caregivers.service';
 import { Router } from '@angular/router';
 import { environment } from '@env/environment';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum ActionKey {
   REMOVE_CAREGIVER,
@@ -124,7 +124,7 @@ export class CaregiversPatientComponent implements OnInit {
   }
 
   public openCreateCaregiverPage(): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.patient), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.patient), environment.secretKey);
     this.router.navigate(['/psira/case-management/caregiver-form'], {
       queryParams: { patient: dataString },
     });

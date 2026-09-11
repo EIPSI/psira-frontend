@@ -13,10 +13,10 @@ import { TranslationItem } from '@shared/@types/translation';
 import { ErrorHandlerService } from '../../../@shared/services/error-handler.service';
 import { InformedConsentService } from '@app/pages/informed-consent/@services/informed-consent.service';
 
-const CryptoJS = require('crypto-js');
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { I18nService } from '@app/i18n/i18n.service';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 @Component({
   selector: 'app-header',
@@ -88,7 +88,7 @@ export class HeaderComponent implements OnInit {
     if (this.hasBlockingInformedConsent) {
       return;
     }
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(this.user), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(this.user), environment.secretKey);
     const title = [this.user.firstName, this.user.lastName].filter(Boolean).join(' ');
     this.router.navigate(['/psira/user-management/my-profile'], {
       state: {

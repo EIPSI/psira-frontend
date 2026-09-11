@@ -269,9 +269,7 @@ export class QuestionnaireFormComponent {
   }
 
   private htmlText(value: string): string {
-    return (value || '')
-      .replace(/<[^>]*>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .trim();
+    const document = new DOMParser().parseFromString(value || '', 'text/html');
+    return (document.body.textContent || '').split('\u00a0').join(' ').trim();
   }
 }

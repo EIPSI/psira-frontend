@@ -19,8 +19,8 @@ import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/
 import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 import { SettingsService } from '@app/pages/administration/@services/settings.service';
 import { Department } from '@app/pages/patients-management/@types/department';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-create-patient',
@@ -160,8 +160,8 @@ export class CreatePatientComponent implements OnInit {
       if (params.profile) {
         this.inputMode = false;
         this.showCancelButton = true;
-        const bytes = CryptoJS.AES.decrypt(params.profile, environment.secretKey);
-        const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.profile, environment.secretKey);
+        const decryptedData = JSON.parse(bytes);
         this.patient = decryptedData;
         this.patient.emergencyContacts = (this.patient.emergencyContacts || []).map((contact: Contact) => ({
           ...contact,
@@ -199,8 +199,8 @@ export class CreatePatientComponent implements OnInit {
 
   private decryptDraft(value: string): any {
     try {
-      const bytes = CryptoJS.AES.decrypt(value, environment.secretKey);
-      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      const bytes = decryptRoutePayload(value, environment.secretKey);
+      return JSON.parse(bytes);
     } catch (_) {
       return {};
     }
@@ -529,7 +529,7 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private encrypt(value: any): string {
-    return CryptoJS.AES.encrypt(JSON.stringify(value || {}), environment.secretKey).toString();
+    return encryptRoutePayload(JSON.stringify(value || {}), environment.secretKey);
   }
 
   private syncEmergencyContacts(patientId: number, contacts: Contact[]) {

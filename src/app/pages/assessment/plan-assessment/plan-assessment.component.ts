@@ -32,8 +32,8 @@ import { CaregiversPatientService } from '@app/pages/patients-management/@servic
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
-const CryptoJS = require('crypto-js');
 
 enum AssessmentContentType {
   QUESTIONNAIRE = 'QUESTIONNAIRE',
@@ -665,8 +665,8 @@ export class PlanAssessmentComponent implements OnInit {
 
     try {
       const raw = this.activatedRoute.snapshot.queryParamMap.get('assessment');
-      const bytes = CryptoJS.AES.decrypt(raw, environment.secretKey);
-      assessmentId = JSON.parse(bytes.toString(CryptoJS.enc.Utf8)).id;
+      const bytes = decryptRoutePayload(raw, environment.secretKey);
+      assessmentId = JSON.parse(bytes).id;
 
       this.isUpdate = true;
 
@@ -1046,7 +1046,7 @@ export class PlanAssessmentComponent implements OnInit {
   }
 
   private generateAssessmentURL(assesmentUuid: string): string {
-    const cryptoId = CryptoJS.AES.encrypt(assesmentUuid, environment.secretKey).toString();
+    const cryptoId = encryptRoutePayload(assesmentUuid, environment.secretKey);
     const tree = this.router.createUrlTree(['/assessment/overview'], { queryParams: { assessment: cryptoId } });
     return this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
   }

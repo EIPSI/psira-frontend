@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-const CryptoJS = require('crypto-js');
 import { environment } from '@env/environment';
 import { questions } from '@app/questionnaire/do-assessment/data';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 @Component({
   selector: 'app-do-assessment',
@@ -23,8 +23,8 @@ export class DoAssessmentComponent implements OnInit {
   getQuestionnaire() {
     this.activatedRoute.queryParams.subscribe((params) => {
       if (params.questionnaire) {
-        const bytes = CryptoJS.AES.decrypt(params.questionnaire, environment.secretKey);
-        this.questionnaire = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const bytes = decryptRoutePayload(params.questionnaire, environment.secretKey);
+        this.questionnaire = JSON.parse(bytes);
         this.questionnaire.questions = questions;
       }
     });

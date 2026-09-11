@@ -21,13 +21,13 @@ import { environment } from '@env/environment';
 import { ReportsModel } from '@app/pages/administration/@models/reports.model';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { TranslateService } from '@ngx-translate/core';
+import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 enum ActionKey {
   EDIT_REPORT,
   DELETE_REPORT,
 }
 
-const CryptoJS = require('crypto-js');
 
 @Component({
   selector: 'app-reports',
@@ -93,7 +93,7 @@ export class ReportsComponent implements OnInit {
   }
 
   public onReportSelect(report: FormattedReport): void {
-    const dataString = CryptoJS.AES.encrypt(JSON.stringify(report), environment.secretKey).toString();
+    const dataString = encryptRoutePayload(JSON.stringify(report), environment.secretKey);
     this.router.navigate(['/psira/administration/create-report'], {
       queryParams: {
         report: dataString,
