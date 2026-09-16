@@ -62,14 +62,13 @@ export class AssessmentAdministrationService {
       fetchPolicy: 'no-cache',
     });
   }
-  //
-  // deleteAssessmentAdministration(role: Role): Observable<FetchResult<any>> {
-  //   return this.apollo.mutate({
-  //     mutation: AssessmentAdministrationMutations.deleteOneAssessmentAdministration,
-  //     variables: {
-  //       input: { id: role.id },
-  //     },
-  //     fetchPolicy: 'no-cache',
-  //   });
-  // }
+  deleteAssessmentAdministration(assessmentType: AssessmentAdministration): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: AssessmentAdministrationMutations.deleteOneAssessmentType,
+      variables: {
+        id: assessmentType.id,
+      },
+      fetchPolicy: 'no-cache',
+    });
+  }
 }

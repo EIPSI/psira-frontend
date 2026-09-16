@@ -17,9 +17,13 @@ import { AssessmentAdministrationService } from '@app/pages/administration/@serv
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { Convert } from '../../../@shared/classes/convert';
 import { TranslateService } from '@ngx-translate/core';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 enum ActionKey {
   EDIT,
+  DUPLICATE,
+  DELETE,
 }
 
 @Component({
@@ -39,7 +43,7 @@ export class AssessmentAdministrationComponent implements OnInit {
   public showCreateAssessmentAdministration = false;
   public populateForm = false;
   public resetForm = false;
-  public assessmentAdministration: AssessmentAdministration;
+  public assessmentAdministration: AssessmentAdministration = { name: '', status: 'ACTIVE' as any } as AssessmentAdministration;
   public assessmentAdministrationForm = AssessmentAdministrationForm;
 
   public assessmentAdministrationRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
@@ -50,13 +54,19 @@ export class AssessmentAdministrationComponent implements OnInit {
 
   constructor(
     private assessmentAdministrationService: AssessmentAdministrationService,
+    private modalService: NzModalService,
+    private message: NzMessageService,
     private errorService: ErrorHandlerService,
     private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.getAssessmentTypes();
-    this.actions = [{ key: ActionKey.EDIT, title: this.translate.instant('assessmentAdministration.editType') }];
+    this.actions = [
+      { key: ActionKey.EDIT, title: this.translate.instant('assessmentAdministration.editType') },
+      { key: ActionKey.DUPLICATE, title: this.translate.instant('core.duplicate') },
+      { key: ActionKey.DELETE, title: this.translate.instant('core.delete') },
+    ];
   }
 
   public onPageChange(paging: Paging): void {
@@ -82,31 +92,110 @@ export class AssessmentAdministrationComponent implements OnInit {
       case ActionKey.EDIT:
         this.openCreatePanel(assessmentAdministration);
         return;
+      case ActionKey.DUPLICATE:
+        this.duplicateAssessmentType(assessmentAdministration);
+        return;
+      case ActionKey.DELETE:
+        this.deleteAssessmentType(assessmentAdministration);
+        return;
     }
   }
 
   public openCreatePanel(assessmentAdministration?: AssessmentAdministration): void {
-    if (assessmentAdministration) this.assessmentAdministration = assessmentAdministration;
+    if (assessmentAdministration) this.assessmentAdministration = { ...assessmentAdministration };
+    else this.assessmentAdministration = { name: '', status: 'ACTIVE' as any } as AssessmentAdministration;
     this.showCreateAssessmentAdministration = true;
     this.populateForm = true;
     this.resetForm = true;
   }
 
   public closeCreatePanel(): void {
-    this.assessmentAdministration = null;
+    this.assessmentAdministration = { name: '', status: 'ACTIVE' as any } as AssessmentAdministration;
     this.showCreateAssessmentAdministration = false;
     this.populateForm = false;
     this.resetForm = false;
   }
 
   public onSubmitForm(assessmentAdministration: AssessmentAdministration): void {
+    this.saveAssessmentType(assessmentAdministration);
+  }
+
+  public submitAssessmentTypeDraft(): void {
+    this.saveAssessmentType(this.assessmentAdministration);
+  }
+
+  private saveAssessmentType(assessmentAdministration: AssessmentAdministration): void {
+    const normalizedAssessmentType = this.normalizeAssessmentType(this.extractAssessmentTypePayload(assessmentAdministration));
+    if (!normalizedAssessmentType) return;
+
     if (this.assessmentAdministration?.id) {
-      assessmentAdministration.id = this.assessmentAdministration.id;
-      this.updateAssessmentType(assessmentAdministration);
+      normalizedAssessmentType.id = this.assessmentAdministration.id;
+      this.updateAssessmentType(normalizedAssessmentType);
     } else {
-      this.createAssessmentType(assessmentAdministration);
+      this.createAssessmentType(normalizedAssessmentType);
     }
-    console.log(assessmentAdministration);
+  }
+
+  private duplicateAssessmentType(assessmentAdministration: AssessmentAdministration): void {
+    const copy = this.normalizeAssessmentType({
+      ...assessmentAdministration,
+      id: undefined,
+      name: this.copyName(assessmentAdministration.name),
+    });
+
+    if (copy) this.createAssessmentType(copy);
+  }
+
+  private deleteAssessmentType(assessmentAdministration: AssessmentAdministration): void {
+    this.modalService.confirm({
+      nzTitle: this.translate.instant('core.confirm'),
+      nzContent: this.translate.instant('assessmentAdministration.deleteAssessmentTypeConfirm', {
+        name: assessmentAdministration.name,
+      }),
+      nzOkText: this.translate.instant('core.delete'),
+      nzCancelText: this.translate.instant('core.cancel'),
+      nzOnOk: () => {
+        this.isLoading = true;
+        return this.assessmentAdministrationService
+          .deleteAssessmentAdministration(assessmentAdministration)
+          .pipe(finalize(() => (this.isLoading = false)))
+          .toPromise()
+          .then(() => {
+            this.getAssessmentTypes();
+            this.message.success(this.translate.instant('assessmentAdministration.assessmentTypeDeleted'));
+          })
+          .catch((error) => {
+            this.errorService.handleError(error, {
+              prefix: this.translate.instant('assessmentAdministration.unableDeleteAssessmentType'),
+            });
+            throw error;
+          });
+      },
+    });
+  }
+
+  private extractAssessmentTypePayload(payload: any): AssessmentAdministration {
+    return payload?.assessmentAdministration || payload?.assessmentType || payload?.data || payload;
+  }
+
+  private copyName(name: string): string {
+    return `${name || ''} ${this.translate.instant('core.copySuffix')}`.trim();
+  }
+
+  private normalizeAssessmentType(assessmentAdministration: AssessmentAdministration): AssessmentAdministration | null {
+    const name = assessmentAdministration?.name?.trim();
+    if (!name) {
+      this.errorService.handleError(new Error('Assessment type name is required'), {
+        prefix: this.translate.instant('forms.assessmentAdministration.typeNameValidation'),
+      });
+      return null;
+    }
+
+    return {
+      ...assessmentAdministration,
+      name,
+      status: assessmentAdministration.status,
+    };
   }
 
   private getAssessmentTypes(): void {
@@ -135,7 +224,6 @@ export class AssessmentAdministrationComponent implements OnInit {
       )
       .subscribe(
         ({ data }) => {
-          console.log(data);
           this.isLoading = false;
           this.getAssessmentTypes();
           this.closeCreatePanel();
@@ -154,7 +242,6 @@ export class AssessmentAdministrationComponent implements OnInit {
       )
       .subscribe(
         ({ data }) => {
-          console.log(data);
           this.isLoading = false;
           this.getAssessmentTypes();
           this.closeCreatePanel();

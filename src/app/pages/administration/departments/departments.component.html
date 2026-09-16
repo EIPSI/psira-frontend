@@ -31,19 +31,72 @@
   [nzMaskClosable]="false"
   [nzVisible]="showCreateDepartment"
   nzPlacement="right"
-  [nzTitle]="department?.id ? 'Edit Department' : 'Create Department'"
+  [nzTitle]="(department?.id ? 'departments.editDepartment' : 'departments.createDepartment') | translate"
   (nzOnClose)="closeCreatePanel()"
 >
-  <app-form
-    class="mt-3"
-    [form]="departmentForms"
-    [formData]="department"
-    [isLoading]="isLoading"
-    [populateForm]="populateForm"
-    [resetForm]="resetForm"
-    [inputMode]="true"
-    [showCancelButton]="false"
-    (submitForm)="onSubmitForm($event)"
-  >
-  </app-form>
+  <form class="mt-3" [formGroup]="departmentFormGroup" (ngSubmit)="submitDepartmentDraft()">
+    <nz-form-item>
+      <nz-form-label nzRequired>{{ 'tables.department.departmentName' | translate }}</nz-form-label>
+      <nz-form-control [nzErrorTip]="'departments.departmentNameValidation' | translate">
+        <input
+          class="m-b-15"
+          nz-input
+          formControlName="name"
+          autocomplete="off"
+          [placeholder]="'departments.departmentNameDescription' | translate"
+        />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>{{ 'tables.department.description' | translate }}</nz-form-label>
+      <nz-form-control>
+        <input class="m-b-15" nz-input formControlName="description" />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>{{ 'tables.department.status' | translate }}</nz-form-label>
+      <nz-form-control>
+        <nz-select class="m-b-15" style="width: 100%" formControlName="active">
+          <nz-option [nzValue]="true" [nzLabel]="'core.active' | translate"></nz-option>
+          <nz-option [nzValue]="false" [nzLabel]="'core.inactive' | translate"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label nzRequired>{{ 'departments.appliesToRoles' | translate }}</nz-form-label>
+      <nz-form-control [nzErrorTip]="'departments.rolesValidation' | translate">
+        <nz-select
+          class="m-b-15"
+          style="width: 100%"
+          nzMode="multiple"
+          formControlName="appliedRoleCodes"
+          [nzPlaceHolder]="'departments.selectRoles' | translate"
+        >
+          <nz-option *ngFor="let role of roles" [nzValue]="role.code" [nzLabel]="role.name"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>{{ 'departments.defaultForRoles' | translate }}</nz-form-label>
+      <nz-form-control>
+        <nz-select
+          class="m-b-15"
+          style="width: 100%"
+          nzMode="multiple"
+          formControlName="defaultRoleCodes"
+          [nzPlaceHolder]="'departments.selectRoles' | translate"
+        >
+          <nz-option *ngFor="let role of roles" [nzValue]="role.code" [nzLabel]="role.name"></nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <button nz-button nzType="primary" nzShape="round" class="full-width" [disabled]="departmentFormGroup.invalid || isLoading">
+      {{ department?.id ? ('departments.editDepartment' | translate) : ('departments.createDepartment' | translate) }}
+    </button>
+  </form>
 </nz-drawer>

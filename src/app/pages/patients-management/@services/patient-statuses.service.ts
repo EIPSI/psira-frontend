@@ -31,7 +31,7 @@ export class PatientStatusesService {
     return this.apollo.mutate({
       mutation: PatientStatusesMutations.createOnePatientStatus,
       variables: {
-        input: { patientStatus },
+        input: { patientStatus: this.toPatientStatusInput(patientStatus) },
       },
       fetchPolicy: 'no-cache',
     });
@@ -39,17 +39,23 @@ export class PatientStatusesService {
 
   updatePatientStatus(patientStatus: PatientStatus): Observable<FetchResult<any>> {
     const id = patientStatus.id;
-    delete patientStatus.id;
     return this.apollo.mutate({
       mutation: PatientStatusesMutations.updateOnePatientStatus,
       variables: {
         input: {
           id,
-          update: patientStatus,
+          update: this.toPatientStatusInput(patientStatus),
         },
       },
       fetchPolicy: 'no-cache',
     });
+  }
+
+  private toPatientStatusInput(patientStatus: PatientStatus): Pick<PatientStatus, 'name' | 'description'> {
+    return {
+      name: patientStatus.name,
+      description: patientStatus.description || '',
+    };
   }
 
   deletePatientStatus(patientStatus: PatientStatus): Observable<FetchResult<any>> {

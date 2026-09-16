@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Paging } from '@shared/@types/paging';
 import { Role, UpdateOneRoleInput } from '@app/pages/administration/@types/role';
 import { RolesTable } from '@app/pages/administration/@tables/roles.table';
@@ -15,6 +16,8 @@ import { finalize } from 'rxjs/operators';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { TranslateService } from '@ngx-translate/core';
+import { FieldGroup } from '../../../@shared/components/form/@types/field.group';
+import { Field } from '../../../@shared/components/form/@types/field';
 
 @Component({
   selector: 'app-roles',
@@ -41,11 +44,12 @@ export class RolesComponent implements OnInit {
   showCreateRole = false;
   panelTitle = 'roles.createRole';
   loadingMessage = '';
-  roleForms = RoleForm;
+  roleForms = JSON.parse(JSON.stringify(RoleForm));
   inputMode = true;
   showCancelButton = false;
   isCreateAction = false;
-  role: Role;
+  role: Role = { id: undefined, name: '', hierarchy: null, code: undefined } as Role;
+  roleFormGroup: FormGroup;
 
   constructor(
     private rolesService: RolesService,
@@ -54,8 +58,14 @@ export class RolesComponent implements OnInit {
     private errorService: ErrorHandlerService,
     public perms: AppPermissionsService,
     private paginationService: PaginationService,
-    private translate: TranslateService
-  ) {}
+    private translate: TranslateService,
+    private fb: FormBuilder
+  ) {
+    this.roleFormGroup = this.fb.group({
+      name: ['', Validators.required],
+      hierarchy: [null, [Validators.required, Validators.min(1), Validators.max(999)]],
+    });
+  }
 
   ngOnInit(): void {
     this.getRoles();
@@ -94,7 +104,8 @@ export class RolesComponent implements OnInit {
       .pipe(finalize(() => (this.modalLoading = false)))
       .subscribe(
         () => {
-          this.rolesTable.rows.splice(index, 1);
+          this.roles = this.roles.filter((currentRole: Role) => currentRole.id !== role.id);
+          this.rolesTable.rows = [...this.roles];
           this.message.success(this.translate.instant('roles.roleDeleted'));
         },
         (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableRemoveRole', { name: role.name }) })
@@ -102,19 +113,23 @@ export class RolesComponent implements OnInit {
   }
 
   handleActionClick(event: any): void {
-    this.role = this.roles[event.index];
+    const role = event?.data || this.roles[event?.index];
+    const index = Number.isFinite(event?.index) ? event.index : this.roles.indexOf(role);
+    if (!role) return;
+
+    this.role = role;
     this.populateForm = false;
     switch (event.action.name) {
       case 'roles.deleteRole':
         this.modalService.confirm({
           nzTitle: this.translate.instant('core.confirm'),
-          nzContent: `${this.translate.instant('roles.deleteRoleConfirm', { name: this.roles[event.index].name })} ${
-            this.role.users && this.role.users.length > 0
+          nzContent: `${this.translate.instant('roles.deleteRoleConfirm', { name: role.name })} ${
+            role.users && role.users.length > 0
               ? this.translate.instant('roles.deleteRoleUsersWarning')
               : this.translate.instant('roles.deleteRoleNoUsers')
           }`,
           nzOkText: this.translate.instant('core.delete'),
-          nzOnOk: () => this.deleteRole(this.roles[event.index], event.index),
+          nzOnOk: () => this.deleteRole(role, index),
           nzOkDisabled: this.modalLoading,
           nzCancelText: this.translate.instant('core.cancel'),
         });
@@ -122,6 +137,9 @@ export class RolesComponent implements OnInit {
       case 'roles.editRole':
         this.populateForm = true;
         this.toggleCreatePanel(false);
+        break;
+      case 'roles.duplicateRole':
+        this.duplicateRole(role);
         break;
     }
   }
@@ -135,8 +153,8 @@ export class RolesComponent implements OnInit {
   }
 
   disableEnableFields() {
-    this.roleForms.groups.forEach((group) =>
-      group.fields.forEach((field) => {
+    this.roleForms.groups.forEach((group: FieldGroup) =>
+      group.fields.forEach((field: Field) => {
         field.name === 'hierarchy' && this.perms.isSuperAdmin ? (field.disabled = true) : (field.disabled = false);
       })
     );
@@ -146,6 +164,8 @@ export class RolesComponent implements OnInit {
     this.populateForm = false;
     this.resetForm = false;
     this.showCreateRole = false;
+    this.role = { id: undefined, name: '', hierarchy: null, code: undefined } as Role;
+    this.roleFormGroup.reset({ name: '', hierarchy: null });
   }
 
   toggleCreatePanel(create: boolean = true) {
@@ -153,19 +173,28 @@ export class RolesComponent implements OnInit {
     this.showCreateRole = !this.showCreateRole;
     this.isCreateAction = create;
     if (create) {
-      this.role = null;
+      this.role = { id: undefined, name: '', hierarchy: null, code: undefined } as Role;
+      this.roleFormGroup.reset({ name: '', hierarchy: null });
       this.resetForm = true;
+    } else {
+      this.roleFormGroup.reset({
+        name: this.role?.name || '',
+        hierarchy: this.role?.hierarchy ?? null,
+      });
     }
     this.panelTitle = !this.isCreateAction ? 'roles.updateRole' : 'roles.createRole';
   }
 
   createRole(role: Role) {
+    const normalizedRole = this.normalizeRole(role);
+    if (!normalizedRole) return;
+
     this.isLoading = true;
     this.populateForm = false;
     this.resetForm = false;
-    this.loadingMessage = this.translate.instant('roles.creatingRole', { name: role.name });
+    this.loadingMessage = this.translate.instant('roles.creatingRole', { name: normalizedRole.name });
     this.rolesService
-      .createRole(role)
+      .createRole(normalizedRole)
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -178,7 +207,7 @@ export class RolesComponent implements OnInit {
           this.rolesTable.rows = this.roles;
           this.resetForm = true;
           this.populateForm = false;
-          this.toggleCreatePanel();
+          this.closeCreatePanel();
           this.getRoles();
           this.message.success(this.translate.instant('roles.roleCreated'));
         },
@@ -187,12 +216,84 @@ export class RolesComponent implements OnInit {
   }
 
   submitForm(roleData: any) {
-    if (this.isCreateAction) {
-      this.createRole(roleData);
-    } else {
-      roleData.id = this.role.id;
-      this.updateRole(roleData);
+    this.saveRole(roleData);
+  }
+
+  submitRoleDraft(): void {
+    if (this.roleFormGroup.invalid) {
+      Object.values(this.roleFormGroup.controls).forEach((control) => {
+        control.markAsDirty();
+        control.updateValueAndValidity();
+      });
+      return;
     }
+
+    const formValue = this.roleFormGroup.getRawValue();
+    this.saveRole({
+      ...this.role,
+      name: formValue.name,
+      hierarchy: formValue.hierarchy,
+    } as Role);
+  }
+
+  private saveRole(roleData: any): void {
+    const normalizedRole = this.normalizeRole(this.extractRolePayload(roleData));
+    if (!normalizedRole) return;
+
+    if (this.isCreateAction) {
+      this.createRole(normalizedRole);
+    } else {
+      normalizedRole.id = this.role.id;
+      this.updateRole(normalizedRole);
+    }
+  }
+
+
+  private duplicateRole(role: Role): void {
+    const copy = this.normalizeRole({
+      ...role,
+      id: undefined,
+      name: this.copyName(role.name),
+      code: undefined,
+      users: [],
+      permissions: [],
+    } as Role);
+
+    if (copy) this.createRole(copy);
+  }
+
+  private extractRolePayload(payload: any): Role {
+    return payload?.role || payload?.data || payload;
+  }
+
+  private copyName(name: string): string {
+    return `${name || ''} ${this.translate.instant('core.copySuffix')}`.trim();
+  }
+
+  private normalizeRole(role: Role): Role | null {
+    const name = role?.name?.trim();
+    const hierarchy = Number(role?.hierarchy);
+
+    if (!name) {
+      this.errorService.handleError(new Error('Role name is required'), {
+        prefix: this.translate.instant('roles.nameValidation'),
+      });
+      return null;
+    }
+
+    if (!Number.isFinite(hierarchy)) {
+      this.errorService.handleError(new Error('Role hierarchy is required'), {
+        prefix: this.translate.instant('roles.hierarchyValidation'),
+      });
+      return null;
+    }
+
+    return {
+      id: role.id,
+      name,
+      hierarchy,
+      code: role.code,
+    } as Role;
   }
 
   private updateRole(role: Role) {
@@ -225,9 +326,9 @@ export class RolesComponent implements OnInit {
           this.rolesTable.rows = this.roles;
           this.resetForm = true;
           this.populateForm = false;
-          this.toggleCreatePanel();
+          this.closeCreatePanel();
           this.message.success(this.translate.instant('roles.roleUpdated'));
-          this.role = null;
+          this.role = { id: undefined, name: '', hierarchy: null, code: undefined } as Role;
         },
         (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableUpdateRole', { name: role.name }) })
       );

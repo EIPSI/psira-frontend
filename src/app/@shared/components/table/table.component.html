@@ -179,7 +179,7 @@
     </thead>
     <tbody>
       <ng-container *ngFor="let data of rowSelectionTable.data; let i = index">
-        <tr class="table-row" (click)="handleRowClick(data, i)">
+        <tr class="table-row" (click)="handleRowClick(data, i)" (contextmenu)="openContextMenu($event, i)">
           <td
             *ngIf="showCheckBoxColumn"
             (nzCheckedChange)="onItemChecked(data.id, $event)"
@@ -216,7 +216,7 @@
             <nz-dropdown-menu #actionMenu="nzDropdownMenu">
               <ul nz-menu>
                 <li *ngFor="let action of listOfCustomActions" nz-menu-item>
-                  <a (click)="onCustomActionEvent(action, data); emitAction(action, i)">{{ action.name }}</a>
+                  <a (click)="onCustomActionEvent(action, data); emitAction(action, i)">{{ action.name | translate }}</a>
                 </li>
               </ul>
             </nz-dropdown-menu>
@@ -225,6 +225,13 @@
       </ng-container>
     </tbody>
   </nz-table>
+  <nz-dropdown-menu #rowContextMenu="nzDropdownMenu">
+    <ul nz-menu *ngIf="listOfCustomActions?.length">
+      <li *ngFor="let action of listOfCustomActions" nz-menu-item>
+        <a (click)="emitContextAction(action)">{{ action.name | translate }}</a>
+      </li>
+    </ul>
+  </nz-dropdown-menu>
   <div *ngIf="!showPagination && showNext" style="margin-top: 10px">
     <div nz-row nzAlign="middle" class="m-v-10 responsive-paging">
       <div nz-col nzFlex="300px">

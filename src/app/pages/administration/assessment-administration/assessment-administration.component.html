@@ -26,16 +26,26 @@
   [nzTitle]="assessmentAdministration?.id ? 'Edit Assessment Name' : 'Create Assessment Name'"
   (nzOnClose)="closeCreatePanel()"
 >
-  <app-form
-    class="mt-3"
-    [form]="assessmentAdministrationForm"
-    [formData]="assessmentAdministration"
-    [isLoading]="isLoading"
-    [populateForm]="populateForm"
-    [resetForm]="resetForm"
-    [inputMode]="true"
-    [showCancelButton]="false"
-    (submitForm)="onSubmitForm($event)"
-  >
-  </app-form>
+  <form class="mt-3" #assessmentTypeForm="ngForm" (ngSubmit)="submitAssessmentTypeDraft()">
+    <label><b>{{ 'forms.assessmentAdministration.typeName' | translate }} <span style="color: red">*</span></b></label>
+    <input
+      class="m-b-15"
+      nz-input
+      name="assessmentTypeName"
+      required
+      autocomplete="off"
+      [(ngModel)]="assessmentAdministration.name" (input)="assessmentAdministration.name = $any($event.target).value"
+      [placeholder]="'forms.assessmentAdministration.typeNameDescription' | translate"
+    />
+
+    <label><b>{{ 'forms.assessmentAdministration.status' | translate }} <span style="color: red">*</span></b></label>
+    <nz-select class="m-b-15" style="width: 100%" name="assessmentTypeStatus" required [(ngModel)]="assessmentAdministration.status">
+      <nz-option nzValue="ACTIVE" nzLabel="ACTIVE"></nz-option>
+      <nz-option nzValue="INACTIVE" nzLabel="INACTIVE"></nz-option>
+    </nz-select>
+
+    <button nz-button nzType="primary" nzShape="round" class="full-width" [disabled]="assessmentTypeForm.invalid || isLoading">
+      {{ assessmentAdministration?.id ? ('assessmentAdministration.editType' | translate) : ('assessmentAdministration.createAssessmentName' | translate) }}
+    </button>
+  </form>
 </nz-drawer>

@@ -4,6 +4,10 @@ const actions: any[] = [
     name: 'patientStatuses.editPatientStatus',
   },
   {
+    type: 'patientStatuses.duplicatePatientStatus',
+    name: 'core.duplicate',
+  },
+  {
     type: 'patientStatuses.deletePatientStatus',
     name: 'patientStatuses.deletePatientStatus',
   },
