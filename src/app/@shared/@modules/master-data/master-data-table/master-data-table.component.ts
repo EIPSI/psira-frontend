@@ -36,6 +36,8 @@ export class MasterDataTableComponent<T> {
   constructor(private contextMenuService: NzContextMenuService) {}
 
   public onOpenContextMenu(event: MouseEvent, context: T): void {
+    event.preventDefault();
+    event.stopPropagation();
     this.context = context;
     this.contextChange.emit(context);
     this.contextMenuService.create(event, this.contextMenu);

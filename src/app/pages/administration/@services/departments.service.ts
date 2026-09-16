@@ -32,7 +32,7 @@ export class DepartmentsService {
     return this.apollo.mutate({
       mutation: DepartmentsMutations.createOneDepartment,
       variables: {
-        input: { department },
+        input: { department: this.toDepartmentInput(department) },
       },
     });
   }
@@ -41,9 +41,19 @@ export class DepartmentsService {
     return this.apollo.mutate({
       mutation: DepartmentsMutations.updateOneDepartment,
       variables: {
-        input: { id: department.id, update: department.update },
+        input: { id: department.id, update: this.toDepartmentInput(department.update as Department) },
       },
     });
+  }
+
+  private toDepartmentInput(department: Partial<Department>): Partial<Department> {
+    return {
+      name: department.name,
+      description: department.description || '',
+      active: department.active !== false,
+      appliedRoleCodes: department.appliedRoleCodes || [],
+      defaultRoleCodes: department.defaultRoleCodes || [],
+    };
   }
 
   deleteDepartment(department: Department): Observable<FetchResult<any>> {

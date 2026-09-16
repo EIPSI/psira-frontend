@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import { ExportChoiceType } from './export-choice.type';
 import { XlsExportService } from '@shared/services/xls-export.service';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
+import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
 
 @Component({
   selector: 'app-table',
@@ -64,8 +65,11 @@ export class TableComponent implements OnInit, OnChanges {
   listOfDisplayData: any[] = [];
   listOfCurrentPageData: any[] = [];
   setOfCheckedId = new Set<number>();
+  contextMenuIndex = -1;
 
-  constructor(private xlsExportService: XlsExportService) {}
+  @ViewChild('rowContextMenu', { static: false }) rowContextMenu: NzDropdownMenuComponent;
+
+  constructor(private xlsExportService: XlsExportService, private contextMenuService: NzContextMenuService) {}
 
   ngOnInit(): void {
     this.onFilterSearch(null);
@@ -173,6 +177,23 @@ export class TableComponent implements OnInit, OnChanges {
 
   emitAction(action: any, index: number) {
     this.onAction.emit({ action, index });
+  }
+
+  openContextMenu(event: MouseEvent, index: number): void {
+    if (!this.showCustomActions || !this.listOfCustomActions?.length) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextMenuIndex = index;
+    this.contextMenuService.create(event, this.rowContextMenu);
+  }
+
+  emitContextAction(action: any): void {
+    if (this.contextMenuIndex < 0) return;
+
+    const data = this.listOfDisplayData[this.contextMenuIndex];
+    this.onCustomActionEvent({ ...action }, data);
+    this.emitAction(action, this.contextMenuIndex);
   }
 
   onDateFilterChange($event: any) {

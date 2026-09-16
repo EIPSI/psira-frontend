@@ -618,6 +618,7 @@ export default {
   },
   forms: {
     assessmentAdministration: {
+    createAssessmentName: 'Create assessment type',
       nameType: 'Bezeichnung',
       status: 'Status',
       typeName: 'Type Name',
@@ -1461,6 +1462,10 @@ export default {
     visible: 'Visible',
   },
   tables: {
+    roles: {
+      name: 'Name',
+      hierarchy: 'Hierarchy',
+    },
     assessmentAdministration: {
       assessmentType: 'Bezeichnung',
       lastUpdate: 'Letztes Änderung',
@@ -1510,6 +1515,13 @@ export default {
       status: 'Status',
     },
     departments: {
+    createDepartment: 'Create Department',
+    departmentNameDescription: 'Enter the department name.',
+    departmentNameValidation: 'Department name is required.',
+    rolesValidation: 'Select at least one applicable role.',
+    appliesToRoles: 'Applies to roles',
+    defaultForRoles: 'Default for roles',
+    selectRoles: 'Select roles',
       createdAt: 'Erstellungsdatum',
       description: 'Beschreibung',
       name: 'Name',
@@ -1810,6 +1822,15 @@ export default {
     unableDeleteDepartment: 'Unable to delete department',
   },
   roles: {
+    createRole: 'Create Role',
+    editRole: 'Edit role',
+    deleteRole: 'Delete role',
+    duplicateRole: 'Duplicate role',
+    saveRole: 'Save role',
+    nameDescription: 'Enter the role name.',
+    hierarchyDescription: 'Enter a hierarchy from 1 to 999. Lower numbers have more access.',
+    nameValidation: 'Role name is required.',
+    hierarchyValidation: 'Role hierarchy is required.',
     patient: 'Patient',
     caregiver: 'Caregiver',
     therapist: 'Therapist',
@@ -1944,10 +1965,14 @@ export default {
   },
   assessmentAdministration: {
     editType: 'Edit assessment type',
+    deleteAssessmentTypeConfirm: 'Are you sure you want to delete the assessment type {{name}}?',
+    assessmentTypeDeleted: 'Assessment type deleted',
+    unableDeleteAssessmentType: 'Unable to delete assessment type',
     unableSaveAssessmentType: 'Unable to save assessment type',
   },
   patientStatuses: {
     createPatientStatus: 'Create patient status',
+    duplicatePatientStatus: 'Duplicate patient status',
     updatePatientStatus: 'Update patient status',
     submitPatientStatus: 'Save patient status',
     editPatientStatus: 'Edit patient status',

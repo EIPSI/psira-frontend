@@ -10,7 +10,7 @@
       [listOfData]="rolesTable.rows"
       [listOfColumn]="rolesTable.columns"
       [showButton]="perms.permissionsOnly(PK.ROLES_EDIT_ALL)"
-      [buttonText]="'Create Role'"
+      [buttonText]="'roles.createRole' | translate"
       [hasNextPage]="pageInfo?.hasNextPage"
       [hasPreviousPage]="pageInfo?.hasPreviousPage"
       (onNext)="navigatePages('next')"
@@ -29,20 +29,40 @@
   [nzMaskClosable]="false"
   [nzVisible]="showCreateRole"
   nzPlacement="right"
-  [nzTitle]="panelTitle"
+  [nzTitle]="panelTitle | translate"
   (nzOnClose)="closeCreatePanel()"
 >
-  <app-form
-    class="mt-3"
-    [form]="roleForms"
-    [formData]="role"
-    [isLoading]="isLoading"
-    [populateForm]="populateForm"
-    [resetForm]="resetForm"
-    [inputMode]="inputMode"
-    [showCancelButton]="showCancelButton"
-    [loadingMessage]="loadingMessage"
-    (submitForm)="submitForm($event)"
-  >
-  </app-form>
+  <form class="mt-3" [formGroup]="roleFormGroup" (ngSubmit)="submitRoleDraft()">
+    <nz-form-item>
+      <nz-form-label nzRequired>{{ 'tables.roles.name' | translate }}</nz-form-label>
+      <nz-form-control [nzErrorTip]="'roles.nameValidation' | translate">
+        <input
+          class="m-b-15"
+          nz-input
+          formControlName="name"
+          autocomplete="off"
+          [placeholder]="'roles.nameDescription' | translate"
+        />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label nzRequired>{{ 'tables.roles.hierarchy' | translate }}</nz-form-label>
+      <nz-form-control [nzErrorTip]="'roles.hierarchyValidation' | translate">
+        <input
+          class="m-b-15"
+          nz-input
+          type="number"
+          min="1"
+          max="999"
+          formControlName="hierarchy"
+          [placeholder]="'roles.hierarchyDescription' | translate"
+        />
+      </nz-form-control>
+    </nz-form-item>
+
+    <button nz-button nzType="primary" nzShape="round" class="full-width" [disabled]="roleFormGroup.invalid || isLoading">
+      {{ 'roles.saveRole' | translate }}
+    </button>
+  </form>
 </nz-drawer>

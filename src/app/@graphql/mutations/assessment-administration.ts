@@ -25,15 +25,8 @@ const updateOneAssessmentType = gql`
 `;
 
 const deleteOneAssessmentType = gql`
-  mutation($input: DeleteOneInput!) {
-    deleteOnePatientStatus(input: $input) {
-      id
-      name
-      description
-      status
-      createdAt
-      updatedAt
-    }
+  mutation($id: Float!) {
+    deleteAssessmentType(id: $id)
   }
 `;
 

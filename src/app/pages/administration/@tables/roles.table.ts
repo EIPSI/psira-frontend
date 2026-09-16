@@ -4,6 +4,10 @@ const actions: any[] = [
     name: 'roles.editRole',
   },
   {
+    type: 'roles.duplicateRole',
+    name: 'core.duplicate',
+  },
+  {
     type: 'roles.deleteRole',
     name: 'roles.deleteRole',
   },

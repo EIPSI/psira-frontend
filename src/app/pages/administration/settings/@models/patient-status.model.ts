@@ -3,9 +3,10 @@ import { PatientStatus } from '../../../patients-management/@types/patient-statu
 
 export class PatientStatusModel {
   public static fromJson(json: any): PatientStatus {
-    json.formattedCreatedAt = json.createdAt ? AppDate.formatDate(json.createdAt) : '';
-    json.formattedUpdatedAt = json.updatedAt ? AppDate.formatDate(json.updatedAt) : '';
-    return json;
+    const patientStatus = json || {};
+    patientStatus.formattedCreatedAt = patientStatus.createdAt ? AppDate.formatDate(patientStatus.createdAt) : '';
+    patientStatus.formattedUpdatedAt = patientStatus.updatedAt ? AppDate.formatDate(patientStatus.updatedAt) : '';
+    return patientStatus;
   }
 
   public static toJson(value: PatientStatus): string {

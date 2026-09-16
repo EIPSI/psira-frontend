@@ -31,7 +31,7 @@ export class RolesService {
     return this.apollo.mutate({
       mutation: RolesMutations.createOneRole,
       variables: {
-        input: { role },
+        input: { role: this.toRoleInput(role) },
       },
       fetchPolicy: 'no-cache',
     });
@@ -41,10 +41,20 @@ export class RolesService {
     return this.apollo.mutate({
       mutation: RolesMutations.updateOneRole,
       variables: {
-        input: updateOneRoleInput,
+        input: {
+          id: updateOneRoleInput.id,
+          update: this.toRoleInput(updateOneRoleInput.update as Role),
+        },
       },
       fetchPolicy: 'no-cache',
     });
+  }
+
+  private toRoleInput(role: Pick<Role, 'name' | 'hierarchy'>): Pick<Role, 'name' | 'hierarchy'> {
+    return {
+      name: role.name,
+      hierarchy: Number(role.hierarchy),
+    };
   }
 
   addPermissionsToRole(roleId: number, permissionIds: number[]): Observable<FetchResult<any>> {

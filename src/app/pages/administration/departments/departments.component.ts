@@ -1,5 +1,6 @@
 import { finalize } from 'rxjs/operators';
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Department, FormattedDepartment, UpdateOneDepartmentInput } from '../@types/department';
 import { DepartmentColumns } from '../@tables/departments.table';
 import { DepartmentsService } from '../@services/departments.service';
@@ -28,6 +29,7 @@ import { TranslateService } from '@ngx-translate/core';
 
 enum ActionKey {
   EDIT_DEPARTMENT,
+  DUPLICATE_DEPARTMENT,
   DELETE_DEPARTMENT,
 }
 
@@ -59,9 +61,18 @@ export class DepartmentsComponent implements OnInit {
   public showCreateDepartment = false;
   public populateForm = false;
   public resetForm = false;
-  public department: Department;
+  public department: Department = {
+    id: undefined,
+    name: '',
+    description: '',
+    active: true,
+    appliedRoleCodes: [],
+    defaultRoleCodes: [],
+    users: [],
+  };
   public departmentForms = JSON.parse(JSON.stringify(DepartmentForm));
   public roles: Role[] = [];
+  public departmentFormGroup: FormGroup;
 
   constructor(
     private departmentsService: DepartmentsService,
@@ -69,8 +80,17 @@ export class DepartmentsComponent implements OnInit {
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
     public perms: AppPermissionsService,
-    private translate: TranslateService
-  ) {}
+    private translate: TranslateService,
+    private fb: FormBuilder
+  ) {
+    this.departmentFormGroup = this.fb.group({
+      name: ['', Validators.required],
+      description: [''],
+      active: [true],
+      appliedRoleCodes: [[], Validators.required],
+      defaultRoleCodes: [[]],
+    });
+  }
 
   public ngOnInit(): void {
     this.getRoles();
@@ -79,6 +99,7 @@ export class DepartmentsComponent implements OnInit {
     if (this.perms.permissionsOnly(PermissionKey.SETTINGS_EDIT_ALL)) {
       this.actions = [
         { key: ActionKey.EDIT_DEPARTMENT, title: this.translate.instant('departments.editDepartment') },
+        { key: ActionKey.DUPLICATE_DEPARTMENT, title: this.translate.instant('core.duplicate') },
         { key: ActionKey.DELETE_DEPARTMENT, title: this.translate.instant('departments.deleteDepartment') },
       ];
     }
@@ -110,6 +131,10 @@ export class DepartmentsComponent implements OnInit {
         this.openCreatePanel(department);
         return;
 
+      case ActionKey.DUPLICATE_DEPARTMENT:
+        this.duplicateDepartment(department);
+        return;
+
       case ActionKey.DELETE_DEPARTMENT:
         this.deleteDepartment(department);
         return;
@@ -138,25 +163,119 @@ export class DepartmentsComponent implements OnInit {
       };
     }
     this.setRoleFieldOptions();
+    this.departmentFormGroup.reset({
+      name: this.department.name || '',
+      description: this.department.description || '',
+      active: this.department.active !== false,
+      appliedRoleCodes: this.department.appliedRoleCodes || [],
+      defaultRoleCodes: this.department.defaultRoleCodes || [],
+    });
     this.showCreateDepartment = true;
     this.populateForm = true;
     this.resetForm = false;
   }
 
   public closeCreatePanel(): void {
-    this.department = null;
+    this.department = {
+      id: undefined,
+      name: '',
+      description: '',
+      active: true,
+      appliedRoleCodes: [],
+      defaultRoleCodes: [],
+      users: [],
+    };
+    this.departmentFormGroup.reset({
+      name: '',
+      description: '',
+      active: true,
+      appliedRoleCodes: [],
+      defaultRoleCodes: [],
+    });
     this.showCreateDepartment = false;
     this.populateForm = false;
     this.resetForm = false;
   }
 
   public onSubmitForm(department: Department): void {
-    if (this.department?.id) {
-      department.id = this.department.id;
-      this.updateDepartment(department);
-    } else {
-      this.createDepartment(department);
+    this.saveDepartment(department);
+  }
+
+  public submitDepartmentDraft(): void {
+    if (this.departmentFormGroup.invalid) {
+      Object.values(this.departmentFormGroup.controls).forEach((control) => {
+        control.markAsDirty();
+        control.updateValueAndValidity();
+      });
+      return;
     }
+
+    const formValue = this.departmentFormGroup.getRawValue();
+    this.saveDepartment({
+      ...this.department,
+      name: formValue.name,
+      description: formValue.description,
+      active: formValue.active,
+      appliedRoleCodes: formValue.appliedRoleCodes || [],
+      defaultRoleCodes: formValue.defaultRoleCodes || [],
+    });
+  }
+
+  private saveDepartment(department: Department): void {
+    const normalizedDepartment = this.normalizeDepartment(this.extractDepartmentPayload(department));
+    if (!normalizedDepartment) return;
+
+    if (this.department?.id) {
+      normalizedDepartment.id = this.department.id;
+      this.updateDepartment(normalizedDepartment);
+    } else {
+      this.createDepartment(normalizedDepartment);
+    }
+  }
+
+
+  private duplicateDepartment(department: Department): void {
+    const copy = this.normalizeDepartment({
+      ...department,
+      id: undefined,
+      name: this.copyName(department.name),
+      users: [],
+    });
+
+    if (copy) this.createDepartment(copy);
+  }
+
+  private extractDepartmentPayload(payload: any): Department {
+    return payload?.department || payload?.data || payload;
+  }
+
+  private copyName(name: string): string {
+    return `${name || ''} ${this.translate.instant('core.copySuffix')}`.trim();
+  }
+
+  private normalizeDepartment(department: Department): Department | null {
+    const name = department?.name?.trim();
+    if (!name) {
+      this.errorService.handleError(new Error('Department name is required'), {
+        prefix: this.translate.instant('departments.departmentNameValidation'),
+      });
+      return null;
+    }
+
+    const defaultRoleCodes = this.validRoleCodes(department.defaultRoleCodes || []);
+    const appliedRoleCodes = this.validRoleCodes(
+      department.appliedRoleCodes?.length ? department.appliedRoleCodes : defaultRoleCodes
+    );
+
+    return {
+      id: department.id,
+      name,
+      description: department.description?.trim() || '',
+      active: department.active !== false,
+      appliedRoleCodes,
+      defaultRoleCodes,
+      users: [],
+    };
   }
 
   private getDepartments(): void {
@@ -252,18 +371,30 @@ export class DepartmentsComponent implements OnInit {
       );
   }
 
+  private validRoleCodes(roleCodes: Array<string | null | undefined>): string[] {
+    return roleCodes.filter((roleCode): roleCode is string => typeof roleCode === 'string' && roleCode.trim().length > 0);
+  }
+
   private getRoles(): void {
     this.rolesService.roles({ paging: { first: 50 } }).subscribe(
       ({ data }: any) => {
         this.roles = data.roles.edges.map((edge: any) => edge.node);
         this.setRoleFieldOptions();
+        if (this.showCreateDepartment) {
+          this.departmentFormGroup.patchValue({
+            appliedRoleCodes: this.department.appliedRoleCodes || [],
+            defaultRoleCodes: this.department.defaultRoleCodes || [],
+          });
+        }
       },
       (err) => this.errorService.handleError(err, { prefix: this.translate.instant('roles.unableLoadRoles') })
     );
   }
 
   private setRoleFieldOptions(): void {
-    const options = this.roles.map((role) => ({ label: role.name, value: role.code }));
+    const options = this.roles
+      .filter((role) => typeof role.code === 'string' && role.code.trim().length > 0)
+      .map((role) => ({ label: role.name, value: role.code }));
     if (this.department && !this.department.appliedRoleCodes?.length) {
       this.department.appliedRoleCodes = options.map((option) => option.value);
     }
