@@ -1560,6 +1560,10 @@ export default {
     website: 'Sitio Web',
     license: 'licencia',
     createdAt: 'Creado En',
+    archiveQuestionnaire: 'Archivar cuestionario',
+    archivedTitle: '¿Está seguro de que desea archivar este cuestionario?',
+    archivedMessage: `<p>Esto desactivará el cuestionario para usos futuros sin moverlo a versiones antiguas ni eliminar datos previos.</p>`,
+    unableArchiveQuestionnaire: 'No se pudo archivar el cuestionario {{name}}',
     discardedTitle: '¿Está seguro de que desea eliminar este cuestionario?',
     discardedMessage: `<p>Por favor, tenga en cuenta las siguientes consecuencias:</p>
     <ol>

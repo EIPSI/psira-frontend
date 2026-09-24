@@ -39,10 +39,10 @@ export class ScriptsService {
   }
 
   createScript(createOneScriptInput: CreateOneScriptInput): Observable<FetchResult<any>> {
-    const input = createOneScriptInput;
+    const { scriptText, ...input } = createOneScriptInput;
     return this.apollo.mutate({
       mutation: ScriptsMutations.createOneScript,
-      variables: { input },
+      variables: { input, scriptText },
       fetchPolicy: 'no-cache',
       context: {
         useMultipart: true,
@@ -51,12 +51,11 @@ export class ScriptsService {
   }
 
   updateScript(id: number, updateOneScriptInput: CreateOneScriptInput): Observable<FetchResult<any>> {
-    const { questionnaireId, ...rest } = updateOneScriptInput;
+    const { questionnaireId, scriptText, ...rest } = updateOneScriptInput;
     const input = { id, update: { ...rest } };
-    console.log(id);
     return this.apollo.mutate({
       mutation: ScriptsMutations.updateOneScript,
-      variables: { input },
+      variables: { input, scriptText },
       fetchPolicy: 'no-cache',
       context: {
         useMultipart: true,

@@ -25,6 +25,9 @@ const getQuestionnaires = gql`
           language
           abbreviation
           departmentIds
+          versionRootId
+          versionNumber
+          replacedById
           questionGroups {
             label
             questions {
@@ -67,6 +70,9 @@ const getQuestionnairesVersion = gql`
           language
           abbreviation
           departmentIds
+          versionRootId
+          versionNumber
+          replacedById
           questionGroups {
             label
             questions {

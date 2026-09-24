@@ -16,10 +16,11 @@ export class QuestionnaireManagementService {
   constructor(private apollo: Apollo) {}
 
   public createQuestionnaire(xlsForm: CreateQuestionnaireInput): Observable<QuestionnaireVersion> {
+    const { excelFile, ...questionnaireInput } = xlsForm;
     return this.apollo
       .mutate<{ createQuestionnaire: QuestionnaireVersion }>({
         mutation: QuestionnaireMutations.createQuestionnaire,
-        variables: { xlsForm },
+        variables: { xlsForm: questionnaireInput, excelFile },
         fetchPolicy: 'no-cache',
         context: {
           useMultipart: true,
@@ -29,12 +30,13 @@ export class QuestionnaireManagementService {
   }
 
   public updateQuestionnaire(_id: string, xlsForm: UpdateQuestionnaireInput): Observable<QuestionnaireVersion> {
-    console.log('UPDATE', _id, xlsForm);
+    const { excelFile, ...questionnaireInput } = xlsForm;
     return this.apollo
       .mutate<{ updateQuestionnaire: QuestionnaireVersion }>({
         mutation: QuestionnaireMutations.updateQuestionnaire,
-        variables: { _id, xlsForm },
+        variables: { _id, xlsForm: questionnaireInput, excelFile: excelFile || undefined },
         fetchPolicy: 'no-cache',
+        context: excelFile ? { useMultipart: true } : undefined,
       })
       .pipe(map((result) => result.data.updateQuestionnaire));
   }

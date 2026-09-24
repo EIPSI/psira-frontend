@@ -84,11 +84,10 @@ export class CaregiversService {
   }
 
   deleteCaregiver(caregiver: Caregiver): Observable<FetchResult<any>> {
-    console.log(caregiver);
     return this.apollo.mutate({
-      mutation: CaregiversMutations.updateOneCaregiver,
+      mutation: CaregiversMutations.deleteOneCaregiver,
       variables: {
-        input: { id: caregiver.id, update: { deletedAt: new Date() } },
+        input: { id: caregiver.id },
       },
       fetchPolicy: 'no-cache',
     });

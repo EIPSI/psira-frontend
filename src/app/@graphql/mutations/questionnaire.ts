@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 const createQuestionnaire = gql`
-  mutation($xlsForm: CreateQuestionnaireInput!) {
-    createQuestionnaire(xlsForm: $xlsForm) {
+  mutation($xlsForm: CreateQuestionnaireInput!, $excelFile: Upload!) {
+    createQuestionnaire(xlsForm: $xlsForm, excelFile: $excelFile) {
       _id
       name
       status
@@ -16,13 +16,16 @@ const createQuestionnaire = gql`
       language
       abbreviation
       departmentIds
+      versionRootId
+      versionNumber
+      replacedById
     }
   }
 `;
 
 const updateQuestionnaire = gql`
-  mutation($_id: String!, $xlsForm: UpdateQuestionnaireInput!) {
-    updateQuestionnaire(_id: $_id, xlsForm: $xlsForm) {
+  mutation($_id: String!, $xlsForm: UpdateQuestionnaireInput!, $excelFile: Upload) {
+    updateQuestionnaire(_id: $_id, xlsForm: $xlsForm, excelFile: $excelFile) {
       _id
       name
       status
@@ -36,6 +39,9 @@ const updateQuestionnaire = gql`
       language
       abbreviation
       departmentIds
+      versionRootId
+      versionNumber
+      replacedById
     }
   }
 `;

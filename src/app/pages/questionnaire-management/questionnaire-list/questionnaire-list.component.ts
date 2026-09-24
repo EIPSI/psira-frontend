@@ -66,7 +66,7 @@ export class QuestionnaireListComponent {
 
   public questionnaireRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
     paging: { first: DEFAULT_PAGE_SIZE },
-    filter: {and: [{status: {neq: 'PRIVATE'}}, {zombie: {is: false}}]},
+    filter: { and: [{ zombie: { is: false } }] },
     sorting: [],
   };
 
@@ -82,7 +82,7 @@ export class QuestionnaireListComponent {
     this.getDepartments();
 
     if (this.perms.permissionsOnly(PermissionKey.QUESTIONNAIRES_EDIT_DEPARTMENT)) {
-      this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'questionnaires.discardQuestionnaire' });
+      this.actions.push({ key: ActionKey.ARCHIVE_QUESTIONNAIRE, title: 'questionnaires.archiveQuestionnaire' });
     }
   }
 
@@ -98,7 +98,7 @@ export class QuestionnaireListComponent {
   public onAction({ action, context: questionnaire }: ActionArgs<FormattedQuestionnaireVersion, ActionKey>): void {
     switch (action.key) {
       case ActionKey.ARCHIVE_QUESTIONNAIRE:
-        this.deleteQuestionnaire(questionnaire);
+        this.archiveQuestionnaire(questionnaire);
         return;
       // case ActionKey.DELETE_QUESTIONNAIRE:
       //   this.deleteQuestionnaire(questionnaire, false);
@@ -179,66 +179,49 @@ export class QuestionnaireListComponent {
       .join(', ');
   }
 
-  private async deleteQuestionnaire(
-    questionnaire: FormattedQuestionnaireVersion,
-    archive: boolean = true
-  ): Promise<void> {
-    if (!archive) {
-      // create confirmation modal
-      const modal = this.modalService.confirm({
-        nzOnOk: () => true,
-        nzTitle: this.translate.instant('questionnaires.deleteQuestionnaire'),
-        nzContent: this.translate.instant('questionnaires.deleteQuestionnaireConfirm'),
-      });
+  private async archiveQuestionnaire(questionnaire: FormattedQuestionnaireVersion): Promise<void> {
+    let title = '';
+    let content = '';
+    let continueButton = '';
+    let cancelButton = '';
 
-      // wait for modal to successfully complete
-      const confirmation = await modal.afterClose.toPromise();
-      if (!confirmation) return;
-    }
+    this.translate.get('questionnaires.archivedTitle').subscribe((translation) => title = translation);
+    this.translate.get('questionnaires.archivedMessage').subscribe((translation) => content = translation);
+    this.translate.get('questionnaires.continueButton').subscribe((translation) => continueButton = translation);
+    this.translate.get('questionnaires.cancelButton').subscribe((translation) => cancelButton = translation);
 
-    if (archive) {
-      // create confirmation modal
-      let title = '';
-      let content = '';
-      let continueButton = '';
-      let cancelButton = '';
+    const modal = this.modalService.confirm({
+      nzOnOk: () => true,
+      nzTitle: title,
+      nzContent: content,
+      nzClosable: false,
+      nzOkText: continueButton,
+      nzCancelText: cancelButton
+    });
 
-      this.translate.get('questionnaires.discardedTitle').subscribe((translation) => title = translation);
-      this.translate.get('questionnaires.discardedMessage').subscribe((translation) => content = translation);
-      this.translate.get('questionnaires.continueButton').subscribe((translation) => continueButton = translation);
-      this.translate.get('questionnaires.cancelButton').subscribe((translation) => cancelButton = translation);
-
-      const modal = this.modalService.confirm({
-        nzOnOk: () => true,
-        nzTitle: title,
-        nzContent: content,
-        nzClosable: false,
-        nzOkText: continueButton,
-        nzCancelText: cancelButton
-      });
-
-      // wait for modal to successfully complete
-      const confirmation = await modal.afterClose.toPromise();
-      if (!confirmation) return;
-    }
+    const confirmation = await modal.afterClose.toPromise();
+    if (!confirmation) return;
 
     this.loading = true;
     this.qmService
-      .deleteQuestionnaire(questionnaire._id)
+      .updateQuestionnaire(questionnaire._id, {
+        name: questionnaire.name,
+        language: questionnaire.language,
+        timeToComplete: questionnaire.timeToComplete,
+        license: questionnaire.license,
+        copyright: questionnaire.copyright,
+        website: questionnaire.website,
+        description: questionnaire.description,
+        status: QuestionnaireStatus.ARCHIVED,
+        keywords: questionnaire.keywords || [],
+        departmentIds: questionnaire.departmentIds || [],
+      })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
-        () => {
-          if (archive) {
-            questionnaire.status = QuestionnaireStatus.ARCHIVED;
-            questionnaire = Convert.toFormattedQuestionnaireVersion(questionnaire);
-          } else {
-            this.data.splice(this.data.indexOf(questionnaire), 1);
-          }
-          this.getQuestionnaires();
-        },
+        () => this.getQuestionnaires(),
         (error) =>
           this.errorService.handleError(error, {
-            prefix: this.translate.instant('questionnaires.unableDeleteQuestionnaire', { name: questionnaire.name }),
+            prefix: this.translate.instant('questionnaires.unableArchiveQuestionnaire', { name: questionnaire.name }),
           })
       );
   }
