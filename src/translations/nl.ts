@@ -1192,6 +1192,10 @@ export default {
     departments: 'Departments',
     discardedMessage:
       '<p>What happens when you discard a questionnaire?</p>\n    <ol>\n      <li><b>New Assessments</b>: You won\'t be able to use this questionnaire for new assessments.</li>\n      <li><b>Data</b>: Any data you\'ve already collected with this questionnaire will still be accessible.</li>\n      <li><b>Report Scripts</b>: You will still be able to edit the scripts that generate reports based on this questionnaire.</li>\n      <li><b>Location</b>: The questionnaire will be moved to a separate section called "Discarded Questionnaires." This is where you can edit the questionnaire, including its associated scripts.</li>\n      <li><b>Replacement</b>: Discarding frees up space for a new questionnaire with the same language and abbreviation.</li>\n    </ol>',
+    archiveQuestionnaire: 'Archive questionnaire',
+    archivedTitle: 'Are you sure you want to archive this questionnaire?',
+    archivedMessage: `<p>This will deactivate the questionnaire for future use without moving it to old versions or deleting previous data.</p>`,
+    unableArchiveQuestionnaire: 'Unable to archive questionnaire {{name}}',
     discardedTitle: 'Are You Sure You Want to Discard This Questionnaire?',
     formattedStatus: 'Status',
     id: 'ID',

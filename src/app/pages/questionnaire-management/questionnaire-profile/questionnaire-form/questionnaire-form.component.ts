@@ -61,8 +61,11 @@ export class QuestionnaireFormComponent {
   public onSubmit(form: { [K in keyof CreateQuestionnaireInput]: any }): void {
     const input: CreateQuestionnaireInput = { ...form };
 
-    if (!this.isExisting) {
-      input.excelFile = (form.excelFile as FileList).item(0);
+    const selectedFile = form.excelFile instanceof FileList ? form.excelFile.item(0) : undefined;
+    if (selectedFile) {
+      input.excelFile = selectedFile;
+    } else {
+      delete input.excelFile;
     }
 
     // input.keywords = this.prepareKeywords(form.keywords);

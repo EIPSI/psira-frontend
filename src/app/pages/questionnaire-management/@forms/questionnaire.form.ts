@@ -114,6 +114,15 @@ export const QuestionnaireUpdateForm: Form & { groups: { fields: { name: keyof U
           isRequired: true,
         },
         {
+          value: undefined,
+          name: 'excelFile',
+          title: 'questionnairesForm.excelFile',
+          translationPath: 'questionnairesForm.excelFile',
+          description: 'questionnairesForm.excelFile',
+          type: 'file',
+          span: 12,
+        },
+        {
           value: QuestionnaireStatus.DRAFT,
           name: 'status',
           title: 'questionnairesForm.status',

@@ -182,6 +182,7 @@ export class CreateReportComponent implements OnInit {
         const bytes = decryptRoutePayload(params.report, environment.secretKey);
         const decryptedData = JSON.parse(bytes);
         this.report = decryptedData;
+        this.selectedRoles = decryptedData?.roles ? [...decryptedData.roles] : [];
         this.reportDraft = {
           ...decryptedData,
           repositoryLink: decryptedData?.repositoryLink || null,
@@ -193,6 +194,7 @@ export class CreateReportComponent implements OnInit {
         this.inputMode = true;
         this.showCancelButton = false;
         this.report = null;
+        this.selectedRoles = [];
         this.reportDraft = {
           id: null,
           name: '',
@@ -266,11 +268,11 @@ export class CreateReportComponent implements OnInit {
   }
 
   updateReport(reportUpdates: UpdateReport) {
-    delete reportUpdates.id;
-    const roles = this.selectedRoles.map((item) => item.id);
+    const roles = this.selectedRoles.map((item) => Number(item.id)).filter((id) => !Number.isNaN(id));
+    const update: UpdateReport = this.buildReportPayload(reportUpdates, roles);
     const reportInput: UpdateOneReportInput = {
       id: this.report.id,
-      update: { ...reportUpdates, roles },
+      update,
     };
     this.isLoading = true;
     this.populateForm = false;
@@ -301,6 +303,21 @@ export class CreateReportComponent implements OnInit {
           });
         }
       );
+  }
+
+
+  private buildReportPayload(reportData: CreateReportInput | UpdateReport, roles: number[]): UpdateReport {
+    return {
+      anonymus: !!reportData.anonymus,
+      name: (reportData.name || '').trim(),
+      description: (reportData.description || '').trim(),
+      status: !!reportData.status,
+      appName: (reportData.appName || '').trim(),
+      repositoryLink: reportData.repositoryLink || null,
+      url: reportData.url || this.getUrlForApp(reportData.appName),
+      resources: (reportData.resources || '').trim(),
+      roles,
+    };
   }
 
   afterCreate() {

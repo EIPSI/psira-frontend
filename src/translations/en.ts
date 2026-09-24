@@ -1550,6 +1550,10 @@ export default {
     website: 'Website',
     license: 'License',
     createdAt: 'Created At',
+    archiveQuestionnaire: 'Archive questionnaire',
+    archivedTitle: 'Are you sure you want to archive this questionnaire?',
+    archivedMessage: `<p>This will deactivate the questionnaire for future use without moving it to old versions or deleting previous data.</p>`,
+    unableArchiveQuestionnaire: 'Unable to archive questionnaire {{name}}',
     discardedTitle: 'Are You Sure You Want to Discard This Questionnaire?',
     discardedMessage: `<p>What happens when you discard a questionnaire?</p>
     <ol>

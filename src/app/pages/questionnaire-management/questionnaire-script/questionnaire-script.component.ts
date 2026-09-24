@@ -281,17 +281,49 @@ export class QuestionnaireScriptComponent implements OnInit {
       );
   }
   private downloadScript(script: Scripts) {
-    const file = new Blob([script.scriptText], { type: '.r' });
+    const storedFile = this.parseStoredScriptFile(script);
+    const file = new Blob([storedFile.content], { type: storedFile.type });
     const a = document.createElement('a');
     const url = URL.createObjectURL(file);
     a.href = url;
-    a.download = script.name + '.r';
+    a.download = storedFile.filename;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     }, 0);
+  }
+
+  private parseStoredScriptFile(script: Scripts): { content: BlobPart; filename: string; type: string } {
+    const value = script.scriptText as any;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (parsed?.encoding === 'base64' && parsed?.content) {
+          return {
+            content: this.base64ToArrayBuffer(parsed.content),
+            filename: parsed.filename || `${script.name}.xlsx`,
+            type: parsed.mimetype || 'application/octet-stream',
+          };
+        }
+      } catch (_) {}
+    }
+
+    return {
+      content: value || '',
+      filename: `${script.name}.r`,
+      type: 'text/plain',
+    };
+  }
+
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
   }
 
   private createSearchFilter(searchString: string): Array<{ [K in keyof Partial<Scripts>]: {} }> {

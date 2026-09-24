@@ -1193,6 +1193,10 @@ export default {
     departments: 'Abteilungen',
     discardedMessage:
       '<p>Bitte beachten Sie die folgenden Konsequenzen:</p>\n    <ol>\n      <li><b>Neue Testungen</b>: Der entfernte Fragebogen steht für zukünftige Testungen nicht mehr zur Verfügung.</li>\n      <li><b>Datenzugriff</b>: Daten, die mit dem nun entfernten Fragebogen erhoben wurden, bleiben weiterhin zugänglich.</li>\n      <li><b>Berichtsanpassungen</b>: Berichte, die den entfernten Fragebogen beinhalten, können nach wie vor angepasst werden.</li>\n      <li><b>Archiv-Bereich</b>: Der entfernte Fragebogen wird in den Bereich "Alte Fragebogenversionen" verschoben, wo er weiterhin bearbeitet werden kann.</li>\n      <li><b>Ersatzmöglichkeit</b>: Nach dem Entfernen haben Sie die Möglichkeit, einen neuen Fragebogen mit der gleichen Abkürzung und in derselben Sprache zu erstellen.</li>\n    </ol>',
+    archiveQuestionnaire: 'Fragebogen archivieren',
+    archivedTitle: 'Sind Sie sicher, dass Sie diesen Fragebogen archivieren möchten?',
+    archivedMessage: `<p>Dadurch wird der Fragebogen für zukünftige Nutzung deaktiviert, ohne ihn in alte Versionen zu verschieben oder vorhandene Daten zu löschen.</p>`,
+    unableArchiveQuestionnaire: 'Fragebogen {{name}} konnte nicht archiviert werden',
     discardedTitle: 'Sind Sie sicher, dass Sie diesen Fragebogen entfernen möchten?',
     formattedStatus: 'Status',
     id: 'ID',

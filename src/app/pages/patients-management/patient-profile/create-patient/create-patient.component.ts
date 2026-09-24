@@ -206,18 +206,16 @@ export class CreatePatientComponent implements OnInit {
   }
 
   private createEmergencyContacts(patientData: Patient, contacts: Contact[]) {
-    if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
+    const emergencyContacts = (contacts || [])
+      .filter((contact: Contact) => this.hasEmergencyContactData(contact))
+      .map((contact: Contact) => this.sanitizeEmergencyContact(patientData.id, contact));
+
+    if (!emergencyContacts.length) {
       this.redirectAfterPatientCreation(patientData, contacts);
       return;
     }
+
     this.isLoading = true;
-    const emergencyContacts = contacts.map((contact: Contact) => {
-      const { createCaregiver, ...contactData } = contact as any;
-      return {
-        ...contactData,
-        patientId: patientData.id,
-      };
-    });
     this.emergencyContactsService
       .createManyEmergencyContacts(emergencyContacts)
       .pipe(
