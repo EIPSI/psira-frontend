@@ -16,6 +16,8 @@ const settings = gql`
       evaluationAutomationRunRetentionDays
       treatmentFinalizationUndoWindowDays
       patientCaseManagerAssignableHierarchyRank
+      patientCaseManagerRoleCodes
+      therapistSupervisorRoleCodes
       notificationsEnabled
       informedConsentEnabled
       googleCalendarEnabled

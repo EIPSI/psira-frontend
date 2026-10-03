@@ -165,6 +165,35 @@
         ></nz-option>
       </nz-select>
     </div>
+    <div class="form-field" *ngIf="event.type === 'SESSION'">
+      <span>{{ responsibleUserLabelKey() | translate }}</span>
+      <nz-select
+        [nzDisabled]="!canEdit"
+        [ngModel]="responsibleUserIds"
+        (ngModelChange)="responsibleUserIdsChange.emit($event || [])"
+        [nzAllowClear]="false"
+        nzMode="multiple"
+        nzShowSearch
+      >
+        <nz-option
+          *ngFor="let user of responsibleUserOptions"
+          [nzValue]="user.id"
+          [nzLabel]="userLabel(user)"
+        ></nz-option>
+      </nz-select>
+      <small class="validation-error" *ngIf="!responsibleUserIds?.length">
+        {{ 'calendar.responsibleUsersRequired' | translate }}
+      </small>
+    </div>
+    <label class="inline-check" *ngIf="event.type === 'SESSION' && restructureEnabled && responsibleUsersChanged">
+      <input
+        type="checkbox"
+        [disabled]="!canEdit"
+        [ngModel]="responsibleUsersPropagate"
+        (ngModelChange)="responsibleUsersPropagateChange.emit($event)"
+      />
+      <span>{{ 'calendar.propagateResponsibleUsersFutureSessions' | translate }}</span>
+    </label>
     <div class="form-field" *ngIf="event.type === 'ASSESSMENT'">
       <span>{{ 'core.assessments' | translate }}</span>
       <input nz-input [ngModel]="event.assessmentId" disabled />

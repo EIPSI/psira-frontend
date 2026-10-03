@@ -52,12 +52,17 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
     this.selectedManagementId = Number.isFinite(managementId) && managementId > 0 ? managementId : undefined;
     this.editingResponseId = Number.isFinite(editingResponseId) && editingResponseId > 0 ? editingResponseId : undefined;
     this.previousStatus = this.route.snapshot.queryParamMap.get('previousStatus') as InformedConsentResponseStatus;
-    this.publicToken = this.route.snapshot.queryParamMap.get('token') || undefined;
+    const token = this.route.snapshot.queryParamMap.get('token') || undefined;
+    this.publicToken = this.hasAuthenticatedSession() ? undefined : token;
     this.load();
   }
 
   ngOnDestroy(): void {
     this.cancelOpenEditIfNeeded();
+  }
+
+  private hasAuthenticatedSession(): boolean {
+    return !!localStorage.getItem('auth_app_token');
   }
 
   load(): void {

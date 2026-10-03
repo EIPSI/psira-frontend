@@ -56,11 +56,11 @@
   <app-create-patient></app-create-patient>
 </ng-container>
 
-<nz-tabset *ngIf="patientTitle" nzSize="large" [(nzSelectedIndex)]="selectedTabIndex" [nzTabBarExtraContent]="cycleTabActions">
-  <nz-tab [nzTitle]="'core.calendar' | translate">
+<nz-tabset *ngIf="patientTitle" nzSize="large" [(nzSelectedIndex)]="selectedTabIndex" [nzTabBarExtraContent]="canViewClinicalSections() ? cycleTabActions : null">
+  <nz-tab *ngIf="canViewClinicalSections()" [nzTitle]="'core.calendar' | translate">
     <app-patient-calendar *ngIf="selectedTabIndex === 0" [patient]="patient"></app-patient-calendar>
   </nz-tab>
-  <nz-tab [nzTitle]="'patientsManagement.clinicalHistory' | translate">
+  <nz-tab *ngIf="canViewClinicalSections()" [nzTitle]="'patientsManagement.clinicalHistory' | translate">
     <app-clinical-follow-up-list
       *ngIf="selectedTabIndex === 1"
       [patientId]="patient?.id"
@@ -68,11 +68,11 @@
       [title]="'patientsManagement.clinicalHistory' | translate"
     ></app-clinical-follow-up-list>
   </nz-tab>
-  <nz-tab [nzTitle]="'core.reports' | translate">
+  <nz-tab *ngIf="canViewReportSections()" [nzTitle]="'core.reports' | translate">
     <app-reports *ngIf="selectedTabIndex === 2" [patient]="patient"></app-reports>
   </nz-tab>
   <nz-tab [nzTitle]="'patientsManagement.caseData' | translate">
-    <nz-tabset *ngIf="selectedTabIndex === 3" nzSize="small" [(nzSelectedIndex)]="caseDataTabIndex">
+    <nz-tabset *ngIf="isCaseDataTabSelected()" nzSize="small" [(nzSelectedIndex)]="caseDataTabIndex">
       <nz-tab [nzTitle]="'core.profile' | translate">
         <app-create-patient *ngIf="caseDataTabIndex === 0"></app-create-patient>
       </nz-tab>
@@ -154,8 +154,8 @@
       </nz-tab>
     </nz-tabset>
   </nz-tab>
-  <nz-tab [nzTitle]="'patientsManagement.more' | translate">
-    <nz-tabset *ngIf="selectedTabIndex === 4" nzSize="small" [(nzSelectedIndex)]="moreTabIndex">
+  <nz-tab *ngIf="canViewMoreSections()" [nzTitle]="'patientsManagement.more' | translate">
+    <nz-tabset *ngIf="isMoreTabSelected()" nzSize="small" [(nzSelectedIndex)]="moreTabIndex">
       <nz-tab [nzTitle]="'core.assessments' | translate">
         <app-assessments *ngIf="moreTabIndex === 0" [patient]="patient"></app-assessments>
       </nz-tab>

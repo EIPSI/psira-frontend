@@ -9,6 +9,7 @@ const getPatientCaseManagers = gql`
     $searchKeyword: String
     $patientId: Int
     $caseManagerId: Int
+    $departmentIds: [Int!]
   ) {
     getPatientCaseManagers(
       first: $first
@@ -18,6 +19,7 @@ const getPatientCaseManagers = gql`
       searchKeyword: $searchKeyword
       patientId: $patientId
       caseManagerId: $caseManagerId
+      departmentIds: $departmentIds
     ) {
       edges {
         cursor

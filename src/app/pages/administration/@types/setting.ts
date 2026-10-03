@@ -12,6 +12,8 @@ export interface Setting {
   evaluationAutomationRunRetentionDays: number;
   treatmentFinalizationUndoWindowDays: number;
   patientCaseManagerAssignableHierarchyRank: number;
+  patientCaseManagerRoleCodes?: string[];
+  therapistSupervisorRoleCodes?: string[];
   notificationsEnabled?: boolean;
   informedConsentEnabled?: boolean;
   googleCalendarEnabled?: boolean;

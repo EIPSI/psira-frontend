@@ -382,13 +382,13 @@ export class PatientsListComponent {
   }
 
   private setActions(): void {
-    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
+    if (this.perms.permissionsOnly([PermissionKey.PATIENTS_EDIT_ALL, PermissionKey.PATIENTS_EDIT_DEPARTMENT, PermissionKey.PATIENTS_EDIT_ASSIGNED])) {
       this.actions = [...this.actions, { key: ActionKey.CHANGE_STATUS, title: 'patientsManagement.changeStatus' }];
       this.actions = [...this.actions, { key: ActionKey.ARCHIVE_PATIENT, title: 'patientsManagement.archivePatient' }];
       this.actions = [...this.actions, { key: ActionKey.RESTORE_PATIENT, title: 'patientsManagement.restorePatient' }];
     }
 
-    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_DELETE_DEPARTMENT)) {
+    if (this.perms.permissionsOnly([PermissionKey.PATIENTS_DELETE_ALL, PermissionKey.PATIENTS_DELETE_DEPARTMENT, PermissionKey.PATIENTS_DELETE_ASSIGNED])) {
       this.actions = [...this.actions, { key: ActionKey.DELETE_PATIENT, title: 'patientsManagement.deletePatient' }];
     }
   }

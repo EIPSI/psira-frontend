@@ -25,4 +25,6 @@ export interface CaseManager {
   permissionGrants?: Permission[];
   permissions?: Permission[];
   departments?: Department[];
+  assignmentRequestId?: number;
+  assignmentRequestStatus?: string;
 }

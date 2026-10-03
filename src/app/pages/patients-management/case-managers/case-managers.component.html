@@ -63,11 +63,10 @@
         <div nz-col nzSpan="12">{{ manager?.email }}</div>
         <div nz-col nzSpan="4">
           <button
-            [disabled]="!(manager.departments.length > 0) || !checkIfManagerHasPermission(manager?.permissionGrants)"
             class="assign-button"
             nz-button
             nzType="primary"
-            (click)="departmentCheck(manager)"
+            (click)="assignCaseManager(manager)"
             nzSize="small"
             nzShape="round"
           >
@@ -77,16 +76,4 @@
       </div>
     </li>
   </ul>
-</nz-modal>
-
-<nz-modal
-  *ngIf="manager"
-  [nzWidth]="600"
-  [(nzVisible)]="showAssignDepartmentModal"
-  [nzTitle]="'patientsManagement.assignDepartmentToPatient' | translate:{ patient: patient?.firstName + ' ' + patient?.lastName }"
-  (nzOnCancel)="toggleAssignDetapartmentModal()"
-  (nzOnOk)="toggleAssignDetapartmentModal()"
-  [nzOkLoading]="loading"
->
-  <app-patient-departments [departments]="manager?.departments" [patient]="patient"></app-patient-departments>
 </nz-modal>

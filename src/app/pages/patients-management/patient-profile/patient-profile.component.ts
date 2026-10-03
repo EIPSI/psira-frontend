@@ -130,19 +130,21 @@ export class PatientProfileComponent implements OnInit {
           patientId: this.patient.id,
         };
         this.loadPatientAccountUser();
-        this.loadTreatmentCycle();
+        if (this.canViewClinicalSections()) {
+          this.loadTreatmentCycle();
+        }
       }
-      if (params.tab === 'sessions') {
-        this.selectedTabIndex = 4;
+      if (params.tab === 'sessions' && this.canViewMoreSections()) {
+        this.selectedTabIndex = this.moreMainTabIndex();
         this.moreTabIndex = 1;
       } else {
-        this.selectedTabIndex = 0;
+        this.selectedTabIndex = this.canViewClinicalSections() ? 0 : this.caseDataMainTabIndex();
       }
     });
   }
 
   loadTreatmentCycle(): void {
-    if (!this.patient?.id) return;
+    if (!this.patient?.id || !this.canViewClinicalSections()) return;
     this.cycleLoading = true;
     this.calendarService
       .getActiveTreatmentCycle({
@@ -356,6 +358,10 @@ export class PatientProfileComponent implements OnInit {
     reasonContext: CaseEventReasonContext,
     reasonIds: number[]
   ): void {
+    if (!this.canViewClinicalSections()) {
+      this.resetAutomationPreview();
+      return;
+    }
     const departmentIds = this.patientDepartmentIds();
     if (!departmentIds.length) {
       this.resetAutomationPreview();
@@ -386,6 +392,38 @@ export class PatientProfileComponent implements OnInit {
     return (this.patient?.departments || [])
       .map((department: any) => Number(department.id))
       .filter((id: number) => Number.isFinite(id));
+  }
+
+
+  canViewClinicalSections(): boolean {
+    return this.perms.permissionsOnly([PermissionKey.CLINICAL_VIEW_ALL, PermissionKey.CLINICAL_VIEW_DEPARTMENT, PermissionKey.CLINICAL_VIEW_ASSIGNED]);
+  }
+
+  canViewReportSections(): boolean {
+    return this.perms.permissionsOnly([PermissionKey.REPORTS_VIEW_ALL, PermissionKey.REPORTS_VIEW_DEPARTMENT, PermissionKey.REPORTS_VIEW_ASSIGNED]);
+  }
+
+  canViewMoreSections(): boolean {
+    return this.perms.permissionsOnly([PermissionKey.ASSESSMENTS_VIEW_ALL, PermissionKey.ASSESSMENTS_VIEW_DEPARTMENT, PermissionKey.ASSESSMENTS_VIEW_ASSIGNED]);
+  }
+
+  caseDataMainTabIndex(): number {
+    let index = 0;
+    if (this.canViewClinicalSections()) index += 2;
+    if (this.canViewReportSections()) index += 1;
+    return index;
+  }
+
+  moreMainTabIndex(): number {
+    return this.caseDataMainTabIndex() + 1;
+  }
+
+  isCaseDataTabSelected(): boolean {
+    return this.selectedTabIndex === this.caseDataMainTabIndex();
+  }
+
+  isMoreTabSelected(): boolean {
+    return this.selectedTabIndex === this.moreMainTabIndex();
   }
 
   getPatientStatuses() {
@@ -545,7 +583,7 @@ export class PatientProfileComponent implements OnInit {
   }
 
   private detectLastSessionNumber(): void {
-    if (!this.patient?.id) return;
+    if (!this.patient?.id || !this.canViewClinicalSections()) return;
     this.calendarService
       .getClinicalSessions({
         patientId: this.patient.id,

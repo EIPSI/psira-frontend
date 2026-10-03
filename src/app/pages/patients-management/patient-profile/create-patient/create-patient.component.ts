@@ -14,10 +14,9 @@ import { ErrorHandlerService } from '../../../../@shared/services/error-handler.
 import { finalize } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 import { DepartmentsService } from '@app/pages/patients-management/@services/departments.service';
-import { UsersService } from '@app/pages/user-management/@services/users.service';
+import { CaseManagersService } from '@app/pages/patients-management/@services/case-managers.service';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
 import { EvaluationAutomationTriggerPointLabel } from '@app/pages/evaluation-automations/@types/evaluation-automation';
-import { SettingsService } from '@app/pages/administration/@services/settings.service';
 import { Department } from '@app/pages/patients-management/@types/department';
 import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
@@ -46,7 +45,6 @@ export class CreatePatientComponent implements OnInit {
   caseManagerOptions: Array<{ label: string; value: number }> = [];
   selectedCaseManagerIds: number[] = [];
   medicalRecordNo = '';
-  private caseManagerHierarchyRankCutoff = 500;
 
   constructor(
     private patientsService: PatientsService,
@@ -55,9 +53,8 @@ export class CreatePatientComponent implements OnInit {
     private errorService: ErrorHandlerService,
     private activatedRoute: ActivatedRoute,
     private departmentsService: DepartmentsService,
-    private usersService: UsersService,
+    private caseManagersService: CaseManagersService,
     private evaluationAutomationsService: EvaluationAutomationsService,
-    private settingsService: SettingsService,
     private router: Router,
     public perms: AppPermissionsService
   ) {}
@@ -65,7 +62,7 @@ export class CreatePatientComponent implements OnInit {
   ngOnInit(): void {
     this.getPatientFromUrl();
     this.getDepartments();
-    this.getCaseManagerSettings();
+    this.getCaseManagers();
   }
 
   public submitForm(patientData: Patient): void {
@@ -95,6 +92,7 @@ export class CreatePatientComponent implements OnInit {
     if (!this.patient) {
       this.refreshAutomationPreview(this.selectedDepartmentIds);
     }
+    this.getCaseManagers();
   }
 
   public handleInputModeChanged(inputMode: boolean): void {
@@ -131,6 +129,12 @@ export class CreatePatientComponent implements OnInit {
           this.departmentOptions.find((option) => Number(option.value) === Number(departmentId))?.label || departmentId
       )
       .join(', ');
+  }
+
+
+
+  public shouldLockCaseManagerSelection(): boolean {
+    return this.inputMode && !this.patient?.id && this.getAccessScope() === 'ASSIGNED';
   }
 
   public selectedCaseManagerLabel(): string {
@@ -188,9 +192,6 @@ export class CreatePatientComponent implements OnInit {
         this.medicalRecordNo = '';
         this.selectedDepartmentIds = draft.departmentIds || [];
         this.selectedCaseManagerIds = draft.caseManagerIds || [];
-        if (this.getAccessScope() === 'ASSIGNED') {
-          this.selectedCaseManagerIds = [JSON.parse(localStorage.getItem('user') || '{}').id].filter((id) => !!id);
-        }
         this.populateForm = !!this.patient;
       }
     });
@@ -249,10 +250,6 @@ export class CreatePatientComponent implements OnInit {
     this.populateForm = false;
     const emergencyContacts = patient.emergencyContacts;
     patient.emergencyContacts = undefined;
-
-    if (this.getAccessScope() === 'ASSIGNED') {
-      patient.caseManagerIds = [JSON.parse(localStorage.getItem('user')).id];
-    }
     patient.skippedAutomationIds = this.skippedAutomationIds;
 
     this.loadingMessage = `Creating patient ${patient.firstName} ${patient.lastName}`;
@@ -441,62 +438,63 @@ export class CreatePatientComponent implements OnInit {
       this.selectedDepartmentIds = options.map((option) => Number(option.value));
       this.refreshAutomationPreview(this.selectedDepartmentIds);
     }
+    if (scope === 'ASSIGNED') {
+      this.applyAssignedCaseManagerDefault();
+    }
+    this.getCaseManagers();
   }
 
   private getCaseManagers(): void {
-    const scope = this.getAccessScope();
-    const user = JSON.parse(localStorage.getItem('user'));
-    const filter: any = {
-      and: [
-        {
-          roles: {
-            hierarchy: {
-              lte: this.caseManagerHierarchyRankCutoff,
-            },
-          },
-        },
-      ],
-    };
+    const user = this.currentUser();
+    const departmentIds = this.selectedDepartmentIds.length
+      ? this.selectedDepartmentIds
+      : user.departments?.map((department: any) => Number(department.id)).filter((id: number) => Number.isFinite(id)) || [];
 
-    if (scope === 'DEPARTMENT') {
-      const departmentIds = user.departments?.map((d: any) => d.id) || [];
-      filter.and.push({
-        departments: {
-          id: {
-            in: departmentIds,
-          },
-        },
-      });
-    } else if (scope === 'ASSIGNED') {
-      filter.and.push({
-        id: {
-          eq: user.id,
-        },
-      });
+    const variables: any = { first: 50 };
+    if (this.patient?.id) {
+      variables.patientId = Number(this.patient.id);
+    } else if (departmentIds.length) {
+      variables.departmentIds = departmentIds;
     }
 
-    this.usersService.getUsers({ paging: { first: 50 }, filter }).subscribe((response) => {
-      const currentHierarchy = this.strongestHierarchy(user);
-      const options = response.data.users.edges
-        .map((e: any) => e.node)
-        .filter((candidate: any) => {
-          const candidateHierarchy = this.strongestHierarchy(candidate);
-          return candidateHierarchy >= currentHierarchy && candidateHierarchy <= this.caseManagerHierarchyRankCutoff;
-        })
+    this.caseManagersService.getPatientCaseManagers(variables).subscribe((response) => {
+      let options = (response.data?.getPatientCaseManagers?.edges || [])
+        .map((edge: any) => edge.node)
         .map((candidate: any) => ({
-          label: [candidate.firstName, candidate.lastName].filter((n: any) => !!n).join(' '),
-          value: candidate.id,
+          label: [candidate.firstName, candidate.lastName].filter((name: any) => !!name).join(' ') || candidate.email,
+          value: Number(candidate.id),
         }));
-      this.caseManagerOptions = options;
-      const currentUserIsAssignable = options.some(
-        (option: { label: string; value: number }) => Number(option.value) === Number(user.id)
-      );
-      if (scope === 'ASSIGNED') {
-        this.selectedCaseManagerIds = [user.id];
-      } else if (!this.patient?.id && !this.selectedCaseManagerIds.length && currentUserIsAssignable) {
-        this.selectedCaseManagerIds = [user.id];
+
+      if (this.getAccessScope() === 'ASSIGNED' && user?.id) {
+        const currentUserOption = {
+          label: [user.firstName, user.lastName].filter((name: any) => !!name).join(' ') || user.email,
+          value: Number(user.id),
+        };
+        if (!options.some((option: { label: string; value: number }) => Number(option.value) === Number(user.id))) {
+          options = [currentUserOption, ...options];
+        }
+        this.selectedCaseManagerIds = [Number(user.id)];
       }
+
+      this.caseManagerOptions = options;
+      const optionIds = options.map((option: { label: string; value: number }) => Number(option.value));
+      this.selectedCaseManagerIds = this.selectedCaseManagerIds.filter((id) => optionIds.includes(Number(id)));
     });
+  }
+
+  private currentUser(): any {
+    try {
+      return JSON.parse(localStorage.getItem('user')) || {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  private applyAssignedCaseManagerDefault(): void {
+    const user = this.currentUser();
+    if (user?.id && !this.patient?.id) {
+      this.selectedCaseManagerIds = [Number(user.id)];
+    }
   }
 
   private redirectAfterPatientCreation(patient: Patient, contacts: Contact[] = []): void {
@@ -574,20 +572,4 @@ export class CreatePatientComponent implements OnInit {
     };
   }
 
-  private getCaseManagerSettings(): void {
-    this.settingsService.settings().subscribe(
-      ({ data }) => {
-        this.caseManagerHierarchyRankCutoff = Number(data.settings?.patientCaseManagerAssignableHierarchyRank) || 500;
-        this.getCaseManagers();
-      },
-      () => this.getCaseManagers()
-    );
-  }
-
-  private strongestHierarchy(user: any): number {
-    const hierarchies = (user?.roles || [])
-      .map((role: any) => Number(role.hierarchy))
-      .filter((hierarchy: number) => Number.isFinite(hierarchy));
-    return hierarchies.length ? Math.min(...hierarchies) : Number.MAX_SAFE_INTEGER;
-  }
 }

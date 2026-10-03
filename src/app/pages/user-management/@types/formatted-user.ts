@@ -5,4 +5,7 @@ export interface FormattedUser extends User {
   formattedRoles?: TagInfo[];
   formattedStatus?: TagInfo;
   formattedDepartments?: TagInfo[];
+  assignmentRequestId?: number;
+  assignmentRequestStatus?: string;
+  formattedAssignmentStatus?: TagInfo;
 }

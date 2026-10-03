@@ -331,6 +331,7 @@ export interface CalendarEvent {
   therapistId?: number;
   supervisorId?: number;
   responsibleUserIds?: number[];
+  responsibleUsers?: CalendarPerson[];
   clinicalSessionId?: number;
   sessionKind?: ClinicalSessionKind;
   sessionNumber?: number;

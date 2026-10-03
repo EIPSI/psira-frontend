@@ -7,7 +7,6 @@ import { CaseManagerModel } from '@app/pages/patients-management/@models/case-ma
 import { CaseManagersFilterForm } from '@app/pages/patients-management/@forms/case-managers-filter.form';
 import { PatientsService } from '@app/pages/patients-management/@services/patients.service';
 import { CaseManagerFilter } from '@app/pages/patients-management/@types/case-manager-filter';
-import { UsersService } from '@app/pages/user-management/@services/users.service';
 import { Patient } from '@app/pages/patients-management/@types/patient';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
@@ -16,7 +15,6 @@ import { finalize } from 'rxjs/operators';
 import { PermissionKey } from '@app/@shared/@types/permission';
 import { Permission } from '@app/pages/administration/@types/permission';
 import { Department } from '../../administration/@types/department';
-import { SelectModalComponent } from '@app/@shared/components/select-modal/select-modal.component';
 import { DepartmentsService } from '../@services/departments.service';
 import { Filter } from '@app/@shared/@types/filter';
 import { Sorting } from '@app/@shared/@types/sorting';
@@ -43,9 +41,9 @@ enum ActionKey {
 export class CaseManagersComponent implements OnInit {
   public PK = PermissionKey;
 
-  public data: Partial<FormattedUser>[];
+  public data: Array<Partial<FormattedUser> & { assignmentRequestId?: number; assignmentRequestStatus?: string }>;
 
-  public columns: TableColumn<FormattedUser>[] = CaseManagerColumns;
+  public columns: TableColumn<FormattedUser>[] = CaseManagerColumns as TableColumn<FormattedUser>[];
 
   public caseManagersRequestOptions: {
     paging: Paging;
@@ -79,7 +77,6 @@ export class CaseManagersComponent implements OnInit {
   selectedIndex = -1;
   showFilter = false;
   showAssignModal = false;
-  showAssignDepartmentModal = false;
   drawerTitle = '';
   caseManagerNiceName = '';
   manager: CaseManager = null;
@@ -112,7 +109,6 @@ export class CaseManagersComponent implements OnInit {
     private message: NzMessageService,
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
-    private usersService: UsersService,
     private departmentsService: DepartmentsService,
     private translate: TranslateService
   ) {}
@@ -124,7 +120,7 @@ export class CaseManagersComponent implements OnInit {
     this.drawerTitle = this.managerType === 'caseManager' ? 'patientsManagement.filterCaseManagers' : 'patientsManagement.filterInformants';
     this.caseManagerNiceName = this.managerType === 'caseManager' ? 'patientsManagement.caseManager' : 'patientsManagement.informant';
     this.getDepartments();
-    if (this.perms.permissionsOnly(PermissionKey.PATIENTS_EDIT_DEPARTMENT)) {
+    if (this.perms.permissionsOnly([PermissionKey.PATIENTS_EDIT_DEPARTMENT, PermissionKey.PATIENTS_EDIT_ASSIGNED])) {
       this.actions = [{ key: ActionKey.UNASSIGN_CASEMANAGER, title: 'patientsManagement.unassignCaseManager' }];
     }
   }
@@ -152,7 +148,7 @@ export class CaseManagersComponent implements OnInit {
   }
 
   public checkIfManagerHasPermission(permissions: Permission[]): boolean {
-    return permissions.some((p: Permission) => p.name === this.PK.PATIENTS_EDIT_DEPARTMENT);
+    return permissions.some((p: Permission) => [this.PK.PATIENTS_EDIT_DEPARTMENT, this.PK.PATIENTS_EDIT_ASSIGNED].includes(p.name as any));
   }
 
   public canRemoveCaseManager(manager: CaseManager): boolean {
@@ -164,39 +160,6 @@ export class CaseManagersComponent implements OnInit {
     return this.caseManagersService[property](params);
   }
 
-  public async updatePatientDepartment(manager: CaseManager): Promise<void> {
-    const modal = this.modalService.create<SelectModalComponent<Department>>({
-      nzTitle: this.translate.instant('patientsManagement.addPatientToDepartment', {
-        patient: `${this.patient.firstName} ${this.patient.lastName}`,
-      }),
-      nzContent: SelectModalComponent,
-      nzComponentParams: {
-        options: this.manager.departments,
-        titleField: 'name',
-      },
-      nzOnOk: (m) => m.selected,
-    });
-
-    const state: Department = await modal.afterClose.toPromise();
-    if (state) {
-      const departmentId = state.id;
-      const department = this.manager.departments[this.manager.departments.findIndex((p) => p.id === departmentId)];
-      this.checkPationHasDepartment(department)
-        ? this.assignCaseManager(manager)
-        : this.managePatientDepartments(manager, department);
-    }
-  }
-
-  public departmentCheck(manager: CaseManager) {
-    this.manager = manager;
-
-    // check if there is at least 1 of the same department
-    if (manager.departments.some((md) => this.patient.departments.find((pd) => pd.id === md.id))) {
-      this.assignCaseManager(manager);
-    } else {
-      this.updatePatientDepartment(manager);
-    }
-  }
 
   public toggleFilterDrawer() {
     this.showFilter = !this.showFilter;
@@ -206,9 +169,6 @@ export class CaseManagersComponent implements OnInit {
     this.showAssignModal = !this.showAssignModal;
   }
 
-  public toggleAssignDetapartmentModal(): void {
-    this.showAssignDepartmentModal = !this.showAssignDepartmentModal;
-  }
 
   public handleSearchOptions(search: { field: { name: string }; keyword: string }) {
     switch (search.field.name) {
@@ -256,10 +216,7 @@ export class CaseManagersComponent implements OnInit {
     this.getCaseManagers();
   }
   public searchCaseManagers(searchString: string): void {
-    this.userRequestOptions.filter = {
-      or: this.createSearchFilter(searchString),
-    };
-    this.getSearchedCaseManagers();
+    this.getSearchedCaseManagers(searchString);
   }
 
   private createSearchFilter(searchString: string): Array<{ [K in keyof FormattedUser]: {} }> {
@@ -286,23 +243,21 @@ export class CaseManagersComponent implements OnInit {
 
   private getCaseManagers(): void {
     this.loading = true;
-    const options = { ...this.caseManagersRequestOptions };
-    const patientFilter = this.patient ? { patients: { id: { eq: this.patient.id } } } : undefined;
-    const previousAndFilters = options.filter ? options.filter.and ?? [] : [];
-    options.filter = {
-      ...options.filter,
-      and: [patientFilter, ...previousAndFilters],
-    };
     this.caseManagersService
       .getPatientCaseManagers({
+        first: this.caseManagersRequestOptions.paging?.first,
+        after: this.caseManagersRequestOptions.paging?.after,
+        last: this.caseManagersRequestOptions.paging?.last,
+        before: this.caseManagersRequestOptions.paging?.before,
         patientId: this.patient ? this.patient?.id : -1,
       })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(({ data }) => {
-        this.data = data.getPatientCaseManagers.edges.map((caseManager: any) =>
+        const assigned = data.getPatientCaseManagers.edges.map((caseManager: any) =>
           CaseManagerModel.fromJson(caseManager.node)
         );
         this.pageInfo = data.getPatientCaseManagers.pageInfo;
+        this.loadPendingCaseManagerRequests(assigned);
       });
   }
 
@@ -322,22 +277,7 @@ export class CaseManagersComponent implements OnInit {
       });
   }
 
-  private managePatientDepartments(manager: CaseManager, department: Department) {
-    this.loading = true;
-    const executedAction = this.departmentsService.addDepartmentsToPatient(this.patient.id, department.id);
-    executedAction.pipe(finalize(() => (this.loading = false))).subscribe(
-      () => {
-        this.patient.departments.push(department);
-        this.assignCaseManager(manager);
-      },
-      (error) =>
-        this.errorService.handleError(error, {
-          prefix: 'An error occurred could not update patient',
-        })
-    );
-  }
-
-  private assignCaseManager(manager: CaseManager) {
+  public assignCaseManager(manager: CaseManager) {
     this.loading = true;
     this.caseManagersService
       .assignPatientCaseManager({
@@ -347,14 +287,17 @@ export class CaseManagersComponent implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
         () => {
-          // modify reference to trigger change detection
-          this.data = [CaseManagerModel.fromJson(manager), ...this.data];
+          this.getCaseManagers();
+          this.users = this.users.filter((user) => Number(user.id) !== Number(manager.id));
           this.message.create(
             'success',
-            this.translate.instant('patientsManagement.managerAssigned', {
-              manager: manager.firstName,
-              patient: this.patient.firstName,
-            })
+            this.translate.instant(
+              manager.id === this.currentUserId ? 'patientsManagement.managerAssigned' : 'assignmentRequests.requestSent',
+              {
+                manager: manager.firstName,
+                patient: this.patient.firstName,
+              }
+            )
           );
         },
         (error) =>
@@ -368,6 +311,10 @@ export class CaseManagersComponent implements OnInit {
   }
 
   private async unAssignCaseManager(manager: CaseManager) {
+    if ((manager as any).assignmentRequestStatus === 'PENDING') {
+      await this.cancelPendingCaseManagerRequest(manager);
+      return;
+    }
     if (!this.canRemoveCaseManager(manager)) {
       this.errorService.handleError(
         new Error(this.translate.instant('patientsManagement.specialPermissionRemoveSelf'))
@@ -407,6 +354,58 @@ export class CaseManagersComponent implements OnInit {
       );
   }
 
+
+  private loadPendingCaseManagerRequests(assigned: any[]): void {
+    if (!this.patient?.id) {
+      this.data = assigned;
+      return;
+    }
+
+    this.caseManagersService.pendingPatientCaseManagerRequests(this.patient.id).subscribe(
+      ({ data }) => {
+        const pending = (data.pendingPatientCaseManagerRequests || [])
+          .map((request: any) => {
+            const assignee = CaseManagerModel.fromJson({
+              ...request.assignee,
+              assignmentRequestId: request.id,
+              assignmentRequestStatus: request.status,
+            });
+            return assignee;
+          })
+          .filter((candidate: any) => !assigned.some((manager: any) => Number(manager.id) === Number(candidate.id)));
+        this.data = [...pending, ...assigned];
+      },
+      () => {
+        this.data = assigned;
+      }
+    );
+  }
+
+  private async cancelPendingCaseManagerRequest(manager: CaseManager): Promise<void> {
+    const modal = this.modalService.confirm({
+      nzOnOk: () => true,
+      nzTitle: this.translate.instant('assignmentRequests.cancelTitle'),
+      nzContent: this.translate.instant('assignmentRequests.cancelConfirm', {
+        name: `${manager.firstName} ${manager.lastName}`,
+      }),
+    });
+
+    const confirmation = await modal.afterClose.toPromise();
+    if (!confirmation) return;
+
+    this.loading = true;
+    this.caseManagersService
+      .cancelAssignmentRequest((manager as any).assignmentRequestId)
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe(
+        () => this.getCaseManagers(),
+        (error) =>
+          this.errorService.handleError(error, {
+            prefix: this.translate.instant('assignmentRequests.unableCancel'),
+          })
+      );
+  }
+
   private searchPatients(keyword: string) {
     const options: { label: string; value: number }[] = [];
     this.patientService.patients({ filter: { firstName: { iLike: keyword } } }).subscribe(
@@ -428,19 +427,22 @@ export class CaseManagersComponent implements OnInit {
     );
   }
 
-  private getSearchedCaseManagers(): void {
+  private getSearchedCaseManagers(searchKeyword?: string): void {
     this.loading = true;
-    this.usersService
-      .getUsers(this.userRequestOptions)
+    const departmentIds = (this.patient?.departments || [])
+      .map((department: any) => Number(department.id))
+      .filter((id: number) => Number.isFinite(id));
+    this.caseManagersService
+      .getPatientCaseManagers({ first: 50, searchKeyword, departmentIds })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(({ data }) => {
-        this.users = data.users.edges.map((caseManager: any) => CaseManagerModel.fromJson(caseManager.node));
-        this.caseManagersFilterForm.groups[0].fields[2].options = this.users.map((user) => {
-          return {
-            value: user.id,
-            label: [user.firstName, user.lastName].filter(Boolean).join(' '),
-          };
-        });
+        this.users = (data.getPatientCaseManagers.edges || [])
+          .map((caseManager: any) => CaseManagerModel.fromJson(caseManager.node))
+          .filter((candidate: any) => !this.data?.some((assigned: any) => Number(assigned.id) === Number(candidate.id)));
+        this.caseManagersFilterForm.groups[0].fields[2].options = this.users.map((user) => ({
+          value: user.id,
+          label: [user.firstName, user.lastName].filter(Boolean).join(' '),
+        }));
       });
   }
 

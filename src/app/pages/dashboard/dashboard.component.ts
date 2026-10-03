@@ -26,6 +26,8 @@ import { Department } from '../administration/@types/department';
 import { formatSystemDateTime } from '@shared/utils/system-settings.util';
 import { TranslateService } from '@ngx-translate/core';
 import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { AssignmentRequestsService } from '@app/@shared/services/assignment-requests.service';
+import { AssignmentRequest } from '@app/@shared/@types/assignment-request';
 
 
 interface DashboardTimelineItem {
@@ -57,6 +59,8 @@ export class DashboardComponent implements OnInit {
   public reportsLoading = false;
   public pendingConsents: PendingInformedConsent[] = [];
   public consentsLoading = true;
+  public assignmentRequests: AssignmentRequest[] = [];
+  public assignmentRequestsLoading = true;
   public calendarHasContent = false;
   public calendarContentKnown = false;
   public selectedTabIndex = 0;
@@ -73,6 +77,7 @@ export class DashboardComponent implements OnInit {
     private calendarService: CalendarService,
     private reportsDashboardService: ReportsDashboardService,
     private informedConsentService: InformedConsentService,
+    private assignmentRequestsService: AssignmentRequestsService,
     private departmentsService: DepartmentsService,
     private perms: AppPermissionsService,
     private locationStrategy: LocationStrategy,
@@ -92,6 +97,7 @@ export class DashboardComponent implements OnInit {
         this.acceptedTerm = this.user.acceptedTerm;
         this.loadDepartmentFilters();
         if (this.acceptedTerm) {
+          this.getPendingAssignmentRequests();
           this.getPendingConsents();
         } else {
           this.pendingConsents = [];
@@ -101,6 +107,8 @@ export class DashboardComponent implements OnInit {
           this.assessments = [];
           this.sessions = [];
           this.reports = [];
+          this.assignmentRequests = [];
+          this.assignmentRequestsLoading = false;
         }
       },
       (err) => this.errorService.handleError(err, { prefix: this.translate.instant('systemMessages.unableGetUserProfile') })
@@ -125,6 +133,7 @@ export class DashboardComponent implements OnInit {
           this.user = data.updateUserAcceptedTerm;
           this.acceptedTerm = this.user.acceptedTerm;
           if (this.acceptedTerm) {
+            this.getPendingAssignmentRequests();
             this.getPendingConsents();
           }
         },
@@ -238,17 +247,17 @@ export class DashboardComponent implements OnInit {
 
   public pendingItemsCount(): number {
     if (this.hasBlockingInformedConsent()) return this.blockingConsents().length;
-    return this.answerablePendingConsents().length + this.visibleTimelineItems().length;
+    return this.answerablePendingConsents().length + this.assignmentRequests.length + this.visibleTimelineItems().length;
   }
 
   public totalPendingItemsCount(): number {
     if (this.hasBlockingInformedConsent()) return this.blockingConsents().length;
-    return this.answerablePendingConsents().length + this.timelineItems.length;
+    return this.answerablePendingConsents().length + this.assignmentRequests.length + this.timelineItems.length;
   }
 
   public showGeneralTab(): boolean {
     if (!this.user) return true;
-    return !this.acceptedTerm || this.consentsLoading || this.assessmentsLoading || this.sessionsLoading || this.totalPendingItemsCount() > 0;
+    return !this.acceptedTerm || this.consentsLoading || this.assignmentRequestsLoading || this.assessmentsLoading || this.sessionsLoading || this.totalPendingItemsCount() > 0;
   }
 
   public showReportsTab(): boolean {
@@ -297,6 +306,58 @@ export class DashboardComponent implements OnInit {
     }));
   }
 
+
+  public acceptAssignmentRequest(request: AssignmentRequest): void {
+    this.assignmentRequestsLoading = true;
+    this.assignmentRequestsService
+      .accept(request.id)
+      .pipe(finalize(() => (this.assignmentRequestsLoading = false)))
+      .subscribe(
+        () => this.getPendingAssignmentRequests(),
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('assignmentRequests.unableAccept') })
+      );
+  }
+
+  public rejectAssignmentRequest(request: AssignmentRequest): void {
+    this.assignmentRequestsLoading = true;
+    this.assignmentRequestsService
+      .reject(request.id)
+      .pipe(finalize(() => (this.assignmentRequestsLoading = false)))
+      .subscribe(
+        () => this.getPendingAssignmentRequests(),
+        (error) => this.errorService.handleError(error, { prefix: this.translate.instant('assignmentRequests.unableReject') })
+      );
+  }
+
+  public assignmentRequestTitle(request: AssignmentRequest): string {
+    const key = request.kind === 'CASE_MANAGER' ? 'assignmentRequests.caseManagerTitle' : 'assignmentRequests.supervisorTitle';
+    return this.translate.instant(key, { target: this.assignmentRequestTargetName(request) });
+  }
+
+  public assignmentRequestSubtitle(request: AssignmentRequest): string {
+    return this.translate.instant('assignmentRequests.requestedBy', { requester: this.personName(request.requester) });
+  }
+
+  private getPendingAssignmentRequests(): void {
+    this.assignmentRequestsLoading = true;
+    this.assignmentRequestsService
+      .pendingAssignmentRequests()
+      .pipe(finalize(() => (this.assignmentRequestsLoading = false)))
+      .subscribe(
+        ({ data }: any) => {
+          this.assignmentRequests = data.pendingAssignmentRequests || [];
+        },
+        () => {
+          this.assignmentRequests = [];
+        }
+      );
+  }
+
+  private assignmentRequestTargetName(request: AssignmentRequest): string {
+    if (request.kind === 'CASE_MANAGER') return this.personName(request.patient);
+    return this.personName(request.therapist);
+  }
+
   private canViewReports(): boolean {
     return this.perms.permissionsOnly([PermissionKey.REPORTS_VIEW_DEPARTMENT]);
   }
@@ -316,6 +377,8 @@ export class DashboardComponent implements OnInit {
         },
         () => {
           this.reports = [];
+          this.assignmentRequests = [];
+          this.assignmentRequestsLoading = false;
         }
       );
   }

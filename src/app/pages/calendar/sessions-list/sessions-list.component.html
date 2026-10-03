@@ -72,6 +72,25 @@
       <span>{{ editingSession.historyLabel }}</span>
       <textarea nz-input rows="5" [disabled]="!canEditSession(editingSession)" [(ngModel)]="editHistory"></textarea>
     </div>
+    <div class="form-field">
+      <span>{{ responsibleUserLabelKey(editingSession) | translate }}</span>
+      <nz-select
+        [(ngModel)]="editResponsibleUserIds"
+        [nzDisabled]="!canEditSession(editingSession)"
+        [nzAllowClear]="false"
+        nzMode="multiple"
+        nzShowSearch
+      >
+        <nz-option
+          *ngFor="let user of editResponsibleUserOptions"
+          [nzValue]="user.id"
+          [nzLabel]="userLabel(user)"
+        ></nz-option>
+      </nz-select>
+      <small class="validation-error" *ngIf="!editResponsibleUserIds.length">
+        {{ 'calendar.responsibleUsersRequired' | translate }}
+      </small>
+    </div>
 
     <div class="form-grid">
       <div class="form-field" *ngIf="activeSchemeApplications.length">
