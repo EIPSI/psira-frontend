@@ -361,6 +361,9 @@ export class UserFormComponent implements OnInit {
     }
     if (change.name === 'departmentId') {
       this.previewDepartmentIds = Array.isArray(change.value) ? change.value : [change.value].filter((id) => !!id);
+      this.selectedSupervisorId = null;
+      this.selectedTherapistId = null;
+      this.loadAssignmentOptions();
     }
     this.refreshAutomationPreview();
   }
@@ -901,7 +904,13 @@ export class UserFormComponent implements OnInit {
 
   private loadAssignmentOptions(): void {
     if (this.defaultRoleCode === 'THERAPIST') {
-      this.usersService.getSupervisors({ first: 50 }).subscribe(
+      const departmentIds = this.assignmentDepartmentIds();
+      if (this.newMode && !departmentIds.length) {
+        this.availableSupervisors = [];
+        this.loadAssignedSupervisors();
+        return;
+      }
+      this.usersService.getSupervisors({ first: 50, departmentIds }).subscribe(
         ({ data }: any) => {
           this.availableSupervisors = data.supervisors.edges.map((edge: any) => edge.node);
         },
@@ -911,7 +920,13 @@ export class UserFormComponent implements OnInit {
     }
 
     if (this.defaultRoleCode === 'SUPERVISOR') {
-      this.usersService.getTherapists({ first: 50 }).subscribe(
+      const departmentIds = this.assignmentDepartmentIds();
+      if (this.newMode && !departmentIds.length) {
+        this.availableTherapists = [];
+        this.loadAssignedTherapists();
+        return;
+      }
+      this.usersService.getTherapists({ first: 50, departmentIds }).subscribe(
         ({ data }: any) => {
           this.availableTherapists = data.therapists.edges.map((edge: any) => edge.node);
         },
@@ -919,6 +934,13 @@ export class UserFormComponent implements OnInit {
       );
       this.loadAssignedTherapists();
     }
+  }
+
+  public assignmentDepartmentIds(): number[] {
+    const ids = this.newMode
+      ? this.previewDepartmentIds
+      : (this.user?.departments || []).map((department: any) => Number(department.id));
+    return (ids || []).map(Number).filter((id) => Number.isFinite(id));
   }
 
   private loadAssignedSupervisors(): void {

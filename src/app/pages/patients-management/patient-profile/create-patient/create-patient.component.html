@@ -47,7 +47,11 @@
           nzMode="multiple"
           nzShowSearch
           nzAllowClear
-          [nzPlaceHolder]="'patientsManagement.selectCaseManager' | translate"
+          [nzPlaceHolder]="
+            selectedDepartmentIds.length
+              ? ('patientsManagement.selectCaseManager' | translate)
+              : ('patientsManagement.selectDepartment' | translate)
+          "
           [nzDisabled]="shouldLockCaseManagerSelection()"
           [(ngModel)]="selectedCaseManagerIds"
         >
