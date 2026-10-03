@@ -71,6 +71,14 @@ export const CaseManagerColumns: TableColumn<FormattedUser>[] = [
     sort: true,
   },
   {
+    title: 'assignmentRequests.statusTitle',
+    name: 'formattedAssignmentStatus',
+    translationPath: 'assignmentRequests.statusTitle',
+    altName: 'assignmentRequestStatus',
+    render: 'tag',
+    sort: false,
+  },
+  {
     title: 'core.departments',
     name: 'formattedDepartments',
     translationPath: 'tables.casemanagers.departments',

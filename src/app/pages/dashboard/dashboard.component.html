@@ -40,11 +40,36 @@
           </button>
         </div>
 
+        <div *ngIf="assignmentRequestsLoading" class="col-md-12 text-center">
+          <nz-spin nzSize="large"></nz-spin>
+        </div>
+
+        <div
+          *ngFor="let request of assignmentRequests"
+          class="col-md-12 m-b-16"
+        >
+          <div class="dashboard-task dashboard-task--assignment">
+            <span class="dashboard-task__marker"></span>
+            <span class="dashboard-task__content">
+              <strong>{{ assignmentRequestTitle(request) }}</strong>
+              <small>{{ assignmentRequestSubtitle(request) }}</small>
+            </span>
+            <span class="dashboard-task__action">
+              <button nz-button nzType="primary" nzSize="small" (click)="acceptAssignmentRequest(request)">
+                {{ 'assignmentRequests.accept' | translate }}
+              </button>
+              <button nz-button nzSize="small" (click)="rejectAssignmentRequest(request)">
+                {{ 'assignmentRequests.reject' | translate }}
+              </button>
+            </span>
+          </div>
+        </div>
+
         <div *ngIf="!hasBlockingInformedConsent() && (assessmentsLoading || sessionsLoading)" class="col-md-12 text-center">
           <nz-spin nzSize="large"></nz-spin>
         </div>
 
-        <div *ngIf="!hasBlockingInformedConsent() && !assessmentsLoading && !sessionsLoading && pendingItemsCount() === 0" class="col-md-12">
+        <div *ngIf="!hasBlockingInformedConsent() && !assignmentRequestsLoading && !assessmentsLoading && !sessionsLoading && pendingItemsCount() === 0" class="col-md-12">
           <nz-empty [nzNotFoundContent]="'dashboard.noPendingItems' | translate"></nz-empty>
         </div>
 

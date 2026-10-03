@@ -10,6 +10,21 @@
       <input nz-input type="number" min="0" [(ngModel)]="settings.dashboardLookaheadDays" />
     </label>
     <span>{{ 'clinicalSettings.daysBeforeDashboard' | translate }}</span>
+
+    <label>
+      <span>{{ 'clinicalSettings.caseManagerRoles' | translate }}</span>
+      <nz-select nzMode="multiple" [(ngModel)]="patientCaseManagerRoleCodes" [nzPlaceHolder]="'clinicalSettings.caseManagerRoles' | translate">
+        <nz-option *ngFor="let role of roleOptions" [nzValue]="role.value" [nzLabel]="role.label"></nz-option>
+      </nz-select>
+    </label>
+
+    <label>
+      <span>{{ 'clinicalSettings.supervisorRoles' | translate }}</span>
+      <nz-select nzMode="multiple" [(ngModel)]="therapistSupervisorRoleCodes" [nzPlaceHolder]="'clinicalSettings.supervisorRoles' | translate">
+        <nz-option *ngFor="let role of roleOptions" [nzValue]="role.value" [nzLabel]="role.label"></nz-option>
+      </nz-select>
+    </label>
+
     <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveSettings()">
       {{ 'core.save' | translate }}
     </button>

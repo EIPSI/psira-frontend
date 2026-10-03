@@ -23,6 +23,7 @@ import {
 } from '@app/pages/calendar/@types/calendar';
 import { CalendarService } from '@app/pages/calendar/@services/calendar.service';
 import { CalendarEventUiService } from '@app/pages/calendar/@services/calendar-event-ui.service';
+import { ResponsibleUserOption } from '@app/pages/calendar/event-edit-modal/event-edit-modal.component';
 import { CalendarRecurrenceService, RepeatEndMode, RepeatUnit } from '@app/pages/calendar/@services/calendar-recurrence.service';
 import {
   ClinicalSessionKind,
@@ -110,6 +111,10 @@ export class PatientCalendarComponent implements OnChanges {
   editSessionNumber?: number;
   editModality = ClinicalSessionModality.IN_PERSON;
   editDescription = '';
+  editResponsibleUserIds: number[] = [];
+  originalEditResponsibleUserIds: number[] = [];
+  editResponsibleUserOptions: ResponsibleUserOption[] = [];
+  editResponsibleUsersPropagate = false;
   editRestructure = false;
   editRestructureEvery = 1;
   editRestructureUnit = RepeatUnit.WEEK;
@@ -554,6 +559,10 @@ export class PatientCalendarComponent implements OnChanges {
     this.editSessionNumber = event.sessionNumber;
     this.editModality = event.modality || ClinicalSessionModality.IN_PERSON;
     this.editDescription = event.description || '';
+    this.editResponsibleUserIds = this.editEventResponsibleUserIds(event);
+    this.originalEditResponsibleUserIds = [...this.editResponsibleUserIds];
+    this.editResponsibleUserOptions = this.editResponsibleOptions(event);
+    this.editResponsibleUsersPropagate = false;
     this.editRestructure = false;
     this.editRestructureEvery = 1;
     this.editRestructureUnit = RepeatUnit.WEEK;
@@ -644,6 +653,12 @@ export class PatientCalendarComponent implements OnChanges {
   saveEdit(): void {
     if (!this.editingEvent || !this.editStartAt || !this.editEndAt) return;
     if (!this.editingEvent.editable) return;
+    if (this.editingEvent.clinicalSessionId && !this.editResponsibleUserIds.length) {
+      this.modalService.error({
+        nzTitle: this.translate.instant('calendar.responsibleUsersRequired'),
+      });
+      return;
+    }
 
     const clinicalSessionId = this.editingEvent.clinicalSessionId;
     const occurrenceId = this.editingEvent.occurrenceId;
@@ -659,6 +674,8 @@ export class PatientCalendarComponent implements OnChanges {
           endAt: this.editEndAt,
           clinicalHistory: this.editDescription,
           modality: this.editModality,
+          responsibleUserIds: this.editResponsibleUserIds,
+          propagateFuture: this.editRestructure && this.editResponsibleUsersPropagate,
         });
       const save$: Observable<any> = this.editRestructure
         ? update$.pipe(
@@ -997,6 +1014,52 @@ export class PatientCalendarComponent implements OnChanges {
   private primaryResponsibleUser(): User | undefined {
     const userId = this.primaryResponsibleUserId();
     return this.caseAdministrators.find((user) => Number(user.id) === Number(userId));
+  }
+
+  responsibleUsersChanged(): boolean {
+    return !this.sameIds(this.originalEditResponsibleUserIds, this.editResponsibleUserIds);
+  }
+
+  private sameIds(left: number[], right: number[]): boolean {
+    const a = this.normalizeIds(left || []).sort((x, y) => x - y);
+    const b = this.normalizeIds(right || []).sort((x, y) => x - y);
+    return a.length === b.length && a.every((id, index) => id === b[index]);
+  }
+
+  private editEventResponsibleUserIds(event: CalendarEvent): number[] {
+    return this.normalizeIds([...(event.responsibleUserIds || []), event.therapistId]);
+  }
+
+  private editResponsibleOptions(event: CalendarEvent): ResponsibleUserOption[] {
+    return this.mergeResponsibleUserOptions(
+      this.caseAdministrators as ResponsibleUserOption[],
+      this.assignedResponsibleUserOptions(event)
+    );
+  }
+
+  private assignedResponsibleUserOptions(event: CalendarEvent): ResponsibleUserOption[] {
+    const assignedIds = this.editEventResponsibleUserIds(event);
+    const knownPeople = [
+      ...(event.responsibleUsers || []),
+      event.therapist,
+      this.therapist,
+    ].filter(Boolean) as ResponsibleUserOption[];
+    return assignedIds.map((id) => {
+      const known = knownPeople.find((user) => Number(user.id) === Number(id));
+      return known || { id };
+    });
+  }
+
+  private mergeResponsibleUserOptions(
+    primary: ResponsibleUserOption[],
+    fallback: ResponsibleUserOption[]
+  ): ResponsibleUserOption[] {
+    const byId = new Map<number, ResponsibleUserOption>();
+    [...primary, ...fallback].forEach((user: ResponsibleUserOption) => {
+      const id = Number(user?.id);
+      if (Number.isFinite(id) && id > 0 && !byId.has(id)) byId.set(id, { ...user, id });
+    });
+    return Array.from(byId.values());
   }
 
   private eventResponsibleUserIds(event: CalendarEvent): number[] {

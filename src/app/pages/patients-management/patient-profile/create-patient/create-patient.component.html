@@ -27,7 +27,6 @@
           nzShowSearch
           nzAllowClear
           [nzPlaceHolder]="'patientsManagement.selectDepartment' | translate"
-          [nzDisabled]="getAccessScope() === 'ASSIGNED'"
           [(ngModel)]="selectedDepartmentIds"
           (ngModelChange)="handleDepartmentSelection($event)"
         >
@@ -49,7 +48,7 @@
           nzShowSearch
           nzAllowClear
           [nzPlaceHolder]="'patientsManagement.selectCaseManager' | translate"
-          [nzDisabled]="getAccessScope() === 'ASSIGNED'"
+          [nzDisabled]="shouldLockCaseManagerSelection()"
           [(ngModel)]="selectedCaseManagerIds"
         >
           <nz-option *ngFor="let option of caseManagerOptions" [nzValue]="option.value" [nzLabel]="option.label">
@@ -68,7 +67,7 @@
   [isLoading]="isLoading"
   [inputMode]="inputMode"
   [resetForm]="resetForm"
-  [showEditButton]="perms.permissionsOnly(PK.PATIENTS_EDIT_DEPARTMENT)"
+  [showEditButton]="perms.permissionsOnly([PK.PATIENTS_EDIT_ALL, PK.PATIENTS_EDIT_DEPARTMENT, PK.PATIENTS_EDIT_ASSIGNED])"
   [showCancelButton]="showCancelButton"
   layoutMode="definition"
   [populateForm]="populateForm"

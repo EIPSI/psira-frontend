@@ -21,7 +21,7 @@
       nzType="primary"
       nzShape="circle"
       routerLink="/psira/case-management/profile"
-      *ngIf="perms.permissionsOnly([PK.PATIENTS_EDIT_DEPARTMENT])"
+      *ngIf="perms.permissionsOnly([PK.PATIENTS_CREATE_ALL, PK.PATIENTS_CREATE_DEPARTMENT, PK.PATIENTS_CREATE_ASSIGNED])"
     >
       <i nz-icon nzType="plus"></i>
     </button>

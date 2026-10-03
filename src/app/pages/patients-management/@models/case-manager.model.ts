@@ -12,6 +12,12 @@ export class CaseManagerModel {
       title: role.name,
     }));
     json.formattedDepartments = json.departments.map((dep: { name: any }) => ({ color: 'cyan', title: dep.name }));
+    if (json.assignmentRequestStatus) {
+      json.formattedAssignmentStatus = {
+        color: json.assignmentRequestStatus === 'PENDING' ? 'gold' : 'blue',
+        title: `assignmentRequests.status.${json.assignmentRequestStatus}`,
+      };
+    }
     return json;
   }
 

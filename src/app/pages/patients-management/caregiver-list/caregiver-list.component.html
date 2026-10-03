@@ -19,7 +19,7 @@
       nzType="primary"
       nzShape="circle"
       routerLink="/psira/case-management/caregiver-form"
-      *ngIf="perms.permissionsOnly(PK.CAREGIVERS_EDIT_DEPARTMENT)"
+      *ngIf="perms.permissionsOnly([PK.CAREGIVERS_CREATE_DEPARTMENT, PK.CAREGIVERS_CREATE_ASSIGNED])"
     >
       <i nz-icon nzType="plus"></i>
     </button>

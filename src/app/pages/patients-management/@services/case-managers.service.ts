@@ -7,12 +7,13 @@ import { CaseManagerFilter } from '@app/pages/patients-management/@types/case-ma
 import { CaseManagersMutations } from '@app/@graphql/mutations/case-managers';
 import { Paging } from '@app/@shared/@types/paging';
 import { Sorting } from '@app/@shared/@types/sorting';
+import { AssignmentRequestsService } from '@app/@shared/services/assignment-requests.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CaseManagersService {
-  constructor(private apollo: Apollo) {}
+  constructor(private apollo: Apollo, private assignmentRequestsService: AssignmentRequestsService) {}
 
   getPatientCaseManagers(filter?: CaseManagerFilter): Observable<FetchResult<any>> {
     return this.apollo.query({
@@ -50,6 +51,14 @@ export class CaseManagersService {
       },
       fetchPolicy: 'no-cache',
     });
+  }
+
+  pendingPatientCaseManagerRequests(patientId: number): Observable<FetchResult<any>> {
+    return this.assignmentRequestsService.pendingPatientCaseManagerRequests(patientId);
+  }
+
+  cancelAssignmentRequest(id: number): Observable<FetchResult<any>> {
+    return this.assignmentRequestsService.cancel(id);
   }
 
   unassignPatientCaseManager(relationship: { userId: number; patientId: number }): Observable<FetchResult<any>> {

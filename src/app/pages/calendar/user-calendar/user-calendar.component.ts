@@ -51,6 +51,7 @@ import {
   EvaluationAutomationTriggerPointLabel,
 } from '@app/pages/evaluation-automations/@types/evaluation-automation';
 import { TranslateService } from '@ngx-translate/core';
+import { ResponsibleUserOption } from '../event-edit-modal/event-edit-modal.component';
 
 enum CalendarCreateType {
   SESSION = 'SESSION',
@@ -146,6 +147,10 @@ export class UserCalendarComponent implements OnChanges {
   editSessionNumber?: number;
   editModality = ClinicalSessionModality.IN_PERSON;
   editDescription = '';
+  editResponsibleUserIds: number[] = [];
+  originalEditResponsibleUserIds: number[] = [];
+  editResponsibleUserOptions: ResponsibleUserOption[] = [];
+  editResponsibleUsersPropagate = false;
   editRestructure = false;
   editRestructureEvery = 1;
   editRestructureUnit = RepeatUnit.WEEK;
@@ -280,6 +285,10 @@ export class UserCalendarComponent implements OnChanges {
     this.editSessionNumber = event.sessionNumber;
     this.editModality = event.modality || ClinicalSessionModality.IN_PERSON;
     this.editDescription = event.description || '';
+    this.editResponsibleUserIds = this.editEventResponsibleUserIds(event);
+    this.originalEditResponsibleUserIds = [...this.editResponsibleUserIds];
+    this.editResponsibleUserOptions = this.editResponsibleOptions(event);
+    this.editResponsibleUsersPropagate = false;
     this.editRestructure = false;
     this.editRestructureEvery = 1;
     this.editRestructureUnit = RepeatUnit.WEEK;
@@ -381,6 +390,12 @@ export class UserCalendarComponent implements OnChanges {
   saveEdit(): void {
     if (!this.editingEvent || !this.editStartAt || !this.editEndAt) return;
     if (!this.editingEvent.editable) return;
+    if (this.editingEvent.clinicalSessionId && !this.editResponsibleUserIds.length) {
+      this.modalService.error({
+        nzTitle: this.translate.instant('calendar.responsibleUsersRequired'),
+      });
+      return;
+    }
     const clinicalSessionId = this.editingEvent.clinicalSessionId;
     const occurrenceId = this.editingEvent.occurrenceId;
     if (!clinicalSessionId && !occurrenceId) return;
@@ -395,6 +410,8 @@ export class UserCalendarComponent implements OnChanges {
           endAt: this.editEndAt,
           clinicalHistory: this.editDescription,
           modality: this.editModality,
+          responsibleUserIds: this.editResponsibleUserIds,
+          propagateFuture: this.editRestructure && this.editResponsibleUsersPropagate,
         });
       const save$: Observable<any> = this.editRestructure
         ? update$.pipe(
@@ -1023,6 +1040,16 @@ export class UserCalendarComponent implements OnChanges {
     return levels.some((level) => level.some((reason) => Number(reason.id) === Number(reasonId) && !!reason.isOther));
   }
 
+  responsibleUsersChanged(): boolean {
+    return !this.sameIds(this.originalEditResponsibleUserIds, this.editResponsibleUserIds);
+  }
+
+  private sameIds(left: number[], right: number[]): boolean {
+    const a = this.normalizeIds(left || []).sort((x, y) => x - y);
+    const b = this.normalizeIds(right || []).sort((x, y) => x - y);
+    return a.length === b.length && a.every((id, index) => id === b[index]);
+  }
+
   private defaultSupervisorIds(): number[] {
     const currentUserId = Number(this.currentUser?.id);
     if (this.allowExternalManagement && currentUserId) return [currentUserId];
@@ -1042,6 +1069,49 @@ export class UserCalendarComponent implements OnChanges {
   private primaryResponsibleUser(): User | undefined {
     const userId = this.primaryResponsibleUserId();
     return this.supervisorOptions.find((user) => Number(user.id) === Number(userId));
+  }
+
+  private editEventResponsibleUserIds(event: CalendarEvent): number[] {
+    const fallbackId = event.sessionKind === CalendarClinicalSessionKind.SUPERVISION
+      ? event.supervisorId
+      : event.therapistId;
+    return this.normalizeIds([...(event.responsibleUserIds || []), fallbackId]);
+  }
+
+  private editResponsibleOptions(event: CalendarEvent): ResponsibleUserOption[] {
+    const assignedUsers = this.assignedResponsibleUserOptions(event);
+    if (event.sessionKind === CalendarClinicalSessionKind.SUPERVISION) {
+      return this.mergeResponsibleUserOptions(
+        this.supervisorOptions as ResponsibleUserOption[],
+        [...assignedUsers, ...([event.supervisor].filter(Boolean) as ResponsibleUserOption[])]
+      );
+    }
+    return this.mergeResponsibleUserOptions(assignedUsers, [event.therapist].filter(Boolean) as ResponsibleUserOption[]);
+  }
+
+  private assignedResponsibleUserOptions(event: CalendarEvent): ResponsibleUserOption[] {
+    const assignedIds = this.editEventResponsibleUserIds(event);
+    const knownPeople = [
+      ...(event.responsibleUsers || []),
+      event.therapist,
+      event.supervisor,
+    ].filter(Boolean) as ResponsibleUserOption[];
+    return assignedIds.map((id) => {
+      const known = knownPeople.find((user) => Number(user.id) === Number(id));
+      return known || { id };
+    });
+  }
+
+  private mergeResponsibleUserOptions(
+    primary: ResponsibleUserOption[],
+    fallback: ResponsibleUserOption[]
+  ): ResponsibleUserOption[] {
+    const byId = new Map<number, ResponsibleUserOption>();
+    [...primary, ...fallback].forEach((user: ResponsibleUserOption) => {
+      const id = Number(user?.id);
+      if (Number.isFinite(id) && id > 0 && !byId.has(id)) byId.set(id, { ...user, id });
+    });
+    return Array.from(byId.values());
   }
 
   private eventResponsibleUserIds(event: CalendarEvent): number[] {

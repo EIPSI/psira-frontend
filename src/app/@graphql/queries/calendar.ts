@@ -116,6 +116,13 @@ const calendarEvents = gql`
       therapistId
       supervisorId
       responsibleUserIds
+      responsibleUsers {
+        id
+        firstName
+        middleName
+        lastName
+        workID
+      }
       clinicalSessionId
       sessionKind
       sessionNumber

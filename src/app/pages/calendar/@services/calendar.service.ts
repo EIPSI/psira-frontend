@@ -277,6 +277,7 @@ export class CalendarService {
     clinicalHistory?: string;
     responsibleUserIds?: number[];
     modality?: string;
+    propagateFuture?: boolean;
   }): Observable<ClinicalSession> {
     return this.apollo
       .mutate({
@@ -525,6 +526,7 @@ export class CalendarService {
     clinicalHistory?: string;
     responsibleUserIds?: number[];
     modality?: string;
+    propagateFuture?: boolean;
   }): any {
     const input: any = {
       clinicalSessionId: session.clinicalSessionId,
@@ -532,6 +534,7 @@ export class CalendarService {
       clinicalHistory: session.clinicalHistory,
       responsibleUserIds: session.responsibleUserIds,
       modality: session.modality,
+      propagateFuture: session.propagateFuture,
     };
     if (session.startAt) input.startAt = session.startAt.toISOString();
     if (session.endAt) input.endAt = session.endAt.toISOString();

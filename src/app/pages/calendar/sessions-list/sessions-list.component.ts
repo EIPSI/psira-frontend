@@ -10,6 +10,8 @@ import {
   EvaluationSchemeType,
 } from '@app/pages/evaluation-schemes/@types/evaluation-scheme';
 import { CalendarService } from '../@services/calendar.service';
+import { CaseManagersService } from '@app/pages/patients-management/@services/case-managers.service';
+import { ResponsibleUserOption } from '../event-edit-modal/event-edit-modal.component';
 import {
   AddClinicalSessionSchemesApplicationMode,
   ClinicalSession,
@@ -46,6 +48,9 @@ export class SessionsListComponent implements OnChanges {
   editStartAt?: Date;
   editEndAt?: Date;
   editHistory = '';
+  editResponsibleUserIds: number[] = [];
+  editResponsibleUserOptions: ResponsibleUserOption[] = [];
+  editResponsibleUsersPropagate = false;
   editAddSchemeIds: number[] = [];
   editAddSchemesPropagate = false;
   editAddSchemesApplicationMode = AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION;
@@ -86,6 +91,7 @@ export class SessionsListComponent implements OnChanges {
 
   constructor(
     private calendarService: CalendarService,
+    private caseManagersService: CaseManagersService,
     private contextMenuService: NzContextMenuService,
     private errorService: ErrorHandlerService,
     private schemesService: EvaluationSchemesService,
@@ -158,6 +164,9 @@ export class SessionsListComponent implements OnChanges {
     this.editStartAt = new Date(session.calendarOccurrence.startAt);
     this.editEndAt = new Date(session.calendarOccurrence.endAt);
     this.editHistory = session.clinicalHistory || '';
+    this.editResponsibleUserIds = this.sessionResponsibleUserIds(session);
+    this.editResponsibleUsersPropagate = false;
+    this.loadEditResponsibleUserOptions(session);
     this.editAddSchemeIds = [];
     this.editAddSchemesPropagate = false;
     this.editAddSchemesApplicationMode = AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION;
@@ -233,6 +242,12 @@ export class SessionsListComponent implements OnChanges {
   saveEdit(): void {
     if (!this.editingSession) return;
     if (!this.canEditSession(this.editingSession)) return;
+    if (!this.editResponsibleUserIds.length) {
+      this.modalService.error({
+        nzTitle: this.translate.instant('calendar.responsibleUsersRequired'),
+      });
+      return;
+    }
     this.saving = true;
     const clinicalSessionId = this.editingSession.id;
     const save$: Observable<any> = this.calendarService
@@ -242,6 +257,7 @@ export class SessionsListComponent implements OnChanges {
         startAt: this.editStartAt,
         endAt: this.editEndAt,
         clinicalHistory: this.editHistory,
+        responsibleUserIds: this.editResponsibleUserIds,
       });
     const saveWithSchemes$: Observable<any> = this.editAddSchemeIds.length
       ? save$.pipe(
@@ -371,6 +387,78 @@ export class SessionsListComponent implements OnChanges {
       ? session.supervisorId
       : session.therapistId;
     return responsibleUserIds.includes(this.currentUser.id) || legacyResponsibleId === this.currentUser.id;
+  }
+
+  responsibleUserLabelKey(session?: ClinicalSession): string {
+    return session?.sessionKind === ClinicalSessionKind.SUPERVISION ? 'calendar.supervisors' : 'core.caseManagers';
+  }
+
+  userLabel(user: ResponsibleUserOption): string {
+    const name = [user.firstName, user.middleName, user.lastName].filter(Boolean).join(' ');
+    return [user.workID, name || user.username || user.email || user.id].filter(Boolean).join(' - ');
+  }
+
+  private sessionResponsibleUserIds(session: ClinicalSession): number[] {
+    const fallbackId = session.sessionKind === ClinicalSessionKind.SUPERVISION
+      ? session.supervisorId
+      : session.therapistId;
+    return this.normalizeIds([...(session.responsibleUsers || []).map((user) => user.id), fallbackId]);
+  }
+
+  private loadEditResponsibleUserOptions(session: ClinicalSession): void {
+    this.editResponsibleUserOptions = this.defaultResponsibleUserOptions(session);
+    if (!session.patientId || session.sessionKind === ClinicalSessionKind.SUPERVISION) return;
+
+    this.caseManagersService.getPatientCaseManagers({ first: 50, patientId: session.patientId }).subscribe(
+      (result: any) => {
+        const nodes = result?.data?.getPatientCaseManagers?.edges?.map((edge: any) => edge.node) || [];
+        this.editResponsibleUserOptions = this.mergeResponsibleUserOptions(nodes, this.editResponsibleUserOptions);
+      },
+      () => {
+        this.editResponsibleUserOptions = this.defaultResponsibleUserOptions(session);
+      }
+    );
+  }
+
+  private assignedResponsibleUserOptions(session: ClinicalSession): ResponsibleUserOption[] {
+    const assignedUsers = session.responsibleUsers || [];
+    const assignedIds = this.sessionResponsibleUserIds(session);
+    return assignedIds.map((id) => {
+      const known = assignedUsers.find((user) => Number(user.id) === Number(id));
+      return known || { id };
+    });
+  }
+
+  private defaultResponsibleUserOptions(session: ClinicalSession): ResponsibleUserOption[] {
+    const people = session.sessionKind === ClinicalSessionKind.SUPERVISION
+      ? [session.supervisor]
+      : [session.therapist];
+    return this.mergeResponsibleUserOptions(
+      [...this.assignedResponsibleUserOptions(session), ...(people.filter(Boolean) as ResponsibleUserOption[])],
+      []
+    );
+  }
+
+  private mergeResponsibleUserOptions(
+    primary: ResponsibleUserOption[],
+    fallback: ResponsibleUserOption[]
+  ): ResponsibleUserOption[] {
+    const byId = new Map<number, ResponsibleUserOption>();
+    [...primary, ...fallback].forEach((user: ResponsibleUserOption) => {
+      const id = Number(user?.id);
+      if (Number.isFinite(id) && id > 0 && !byId.has(id)) byId.set(id, { ...user, id });
+    });
+    return Array.from(byId.values());
+  }
+
+  private normalizeIds(ids: Array<number | string | undefined>): number[] {
+    return Array.from(
+      new Set(
+        (ids || [])
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    );
   }
 
   stopActiveScheme(application: ClinicalSessionSchemeApplication): void {

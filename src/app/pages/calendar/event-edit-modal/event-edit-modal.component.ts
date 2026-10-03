@@ -7,6 +7,16 @@ import {
 } from '../@types/calendar';
 import { RepeatEndMode, RepeatOption, RepeatUnit } from '../@services/calendar-recurrence.service';
 
+export interface ResponsibleUserOption {
+  id: number;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  workID?: string;
+}
+
 @Component({
   selector: 'app-event-edit-modal',
   templateUrl: './event-edit-modal.component.html',
@@ -24,6 +34,10 @@ export class EventEditModalComponent {
   @Input() sessionNumber?: number;
   @Input() modality?: ClinicalSessionModality;
   @Input() description = '';
+  @Input() responsibleUserIds: number[] = [];
+  @Input() responsibleUserOptions: ResponsibleUserOption[] = [];
+  @Input() responsibleUsersChanged = false;
+  @Input() responsibleUsersPropagate = false;
   @Input() modalityOptions: Array<{ label: string; value: ClinicalSessionModality }> = [];
   @Input() restructureEnabled = false;
   @Input() restructureEvery = 1;
@@ -48,6 +62,8 @@ export class EventEditModalComponent {
   @Output() sessionNumberChange = new EventEmitter<number | undefined>();
   @Output() modalityChange = new EventEmitter<ClinicalSessionModality>();
   @Output() descriptionChange = new EventEmitter<string>();
+  @Output() responsibleUserIdsChange = new EventEmitter<number[]>();
+  @Output() responsibleUsersPropagateChange = new EventEmitter<boolean>();
   @Output() restructureEnabledChange = new EventEmitter<boolean>();
   @Output() restructureEveryChange = new EventEmitter<number>();
   @Output() restructureUnitChange = new EventEmitter<RepeatUnit>();
@@ -66,6 +82,15 @@ export class EventEditModalComponent {
 
   get canEdit(): boolean {
     return !!this.event?.editable;
+  }
+
+  responsibleUserLabelKey(): string {
+    return this.event?.sessionKind === 'SUPERVISION' ? 'calendar.supervisors' : 'core.caseManagers';
+  }
+
+  userLabel(user: ResponsibleUserOption): string {
+    const name = [user.firstName, user.middleName, user.lastName].filter(Boolean).join(' ');
+    return [user.workID, name || user.username || user.email || user.id].filter(Boolean).join(' - ');
   }
 
   close(): void {

@@ -24,14 +24,21 @@ export const MENU: SideNavInterface[] | any = [
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'audit',
-    permissions: [PK.PATIENTS_VIEW_DEPARTMENT, PK.PATIENTS_EDIT_DEPARTMENT],
+    permissions: [
+      PK.PATIENTS_VIEW_DEPARTMENT,
+      PK.PATIENTS_VIEW_ASSIGNED,
+      PK.PATIENTS_EDIT_DEPARTMENT,
+      PK.PATIENTS_EDIT_ASSIGNED,
+      PK.CAREGIVERS_VIEW_DEPARTMENT,
+      PK.CAREGIVERS_VIEW_ASSIGNED,
+    ],
     submenu: [
       {
         path: 'case-management/patients',
         title: 'menu.patients',
         iconType: '',
         iconTheme: '',
-        permissions: [PK.PATIENTS_VIEW_DEPARTMENT],
+        permissions: [PK.PATIENTS_VIEW_DEPARTMENT, PK.PATIENTS_VIEW_ASSIGNED],
         submenu: [],
       },
       {
@@ -39,7 +46,7 @@ export const MENU: SideNavInterface[] | any = [
         title: 'menu.caregivers',
         iconType: '',
         iconTheme: '',
-        permissions: [PK.PATIENTS_VIEW_DEPARTMENT],
+        permissions: [PK.CAREGIVERS_VIEW_DEPARTMENT, PK.CAREGIVERS_VIEW_ASSIGNED],
         submenu: [],
       },
       {

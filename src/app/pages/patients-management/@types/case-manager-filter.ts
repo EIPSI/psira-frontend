@@ -8,4 +8,5 @@ export interface CaseManagerFilter {
   searchKeyword?: string;
   patientId?: number;
   caseManagerId?: number;
+  departmentIds?: number[];
 }
