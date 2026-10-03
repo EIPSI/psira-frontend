@@ -134,7 +134,7 @@ export class CreatePatientComponent implements OnInit {
 
 
   public shouldLockCaseManagerSelection(): boolean {
-    return this.inputMode && !this.patient?.id && this.getAccessScope() === 'ASSIGNED';
+    return this.inputMode && !this.selectedDepartmentIds.length;
   }
 
   public selectedCaseManagerLabel(): string {
@@ -446,15 +446,17 @@ export class CreatePatientComponent implements OnInit {
 
   private getCaseManagers(): void {
     const user = this.currentUser();
-    const departmentIds = this.selectedDepartmentIds.length
-      ? this.selectedDepartmentIds
-      : user.departments?.map((department: any) => Number(department.id)).filter((id: number) => Number.isFinite(id)) || [];
+    const departmentIds = this.selectedDepartmentIds;
 
     const variables: any = { first: 50 };
     if (this.patient?.id) {
       variables.patientId = Number(this.patient.id);
     } else if (departmentIds.length) {
       variables.departmentIds = departmentIds;
+    } else {
+      this.caseManagerOptions = [];
+      this.selectedCaseManagerIds = [];
+      return;
     }
 
     this.caseManagersService.getPatientCaseManagers(variables).subscribe((response) => {

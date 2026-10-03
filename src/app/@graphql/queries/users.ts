@@ -144,7 +144,7 @@ const supervisionUserFields = `
 `;
 
 const therapists = gql`
-  query($first: Int, $after: String, $last: Int, $before: String, $searchKeyword: String, $supervisorId: Int) {
+  query($first: Int, $after: String, $last: Int, $before: String, $searchKeyword: String, $supervisorId: Int, $departmentIds: [Int!]) {
     therapists(
       first: $first
       after: $after
@@ -152,6 +152,7 @@ const therapists = gql`
       before: $before
       searchKeyword: $searchKeyword
       supervisorId: $supervisorId
+      departmentIds: $departmentIds
     ) {
       ${supervisionUserFields}
     }
@@ -159,7 +160,7 @@ const therapists = gql`
 `;
 
 const supervisors = gql`
-  query($first: Int, $after: String, $last: Int, $before: String, $searchKeyword: String, $therapistId: Int) {
+  query($first: Int, $after: String, $last: Int, $before: String, $searchKeyword: String, $therapistId: Int, $departmentIds: [Int!]) {
     supervisors(
       first: $first
       after: $after
@@ -167,6 +168,7 @@ const supervisors = gql`
       before: $before
       searchKeyword: $searchKeyword
       therapistId: $therapistId
+      departmentIds: $departmentIds
     ) {
       ${supervisionUserFields}
     }
