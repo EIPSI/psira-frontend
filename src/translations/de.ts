@@ -46,6 +46,8 @@ export default {
     updated: 'Bundle updated successfully!',
   },
   calendar: {
+    unableLoadTargets: 'Die verfügbaren Kalenderpersonen konnten nicht geladen werden',
+    duration45: '45 Min.',
     createEvent: 'Create Event',
     createSession: 'Create Session',
     details: 'Details',
@@ -1061,6 +1063,10 @@ export default {
       'Sie haben {{count}} unbeantwortete Pflichtfragen. Alle Pflichtfragen müssen beantwortet werden, um den Fragebogen abschliessen zu können.',
   },
   notifications: {
+    supervisorAssignmentRequestDescription: 'Benachrichtigt über eine Anfrage zur Supervision eines Therapeuten. Die Anfrage kann im Dashboard angenommen oder abgelehnt werden.',
+    caseManagerAssignmentRequestDescription: 'Benachrichtigt über eine Anfrage zur Betreuung eines Patienten. Die Anfrage kann im Dashboard angenommen oder abgelehnt werden.',
+    supervisorAssignmentRequest: 'Anfrage zur Supervision',
+    caseManagerAssignmentRequest: 'Anfrage zur Fallverwaltung',
     channel: 'Channel',
     configurableNotificationType: 'Configurable notification type in PSIRA.',
     configurationHelp: 'Define which template is used for each event, department and recipient role.',

@@ -194,6 +194,7 @@ const emergencyContactFields: Field[] = [
   {
     value: '',
     name: 'emergencyContacts',
+    minRows: 1,
     title: 'forms.patients.emergencyContacts',
     label: 'forms.patients.emergencyContacts',
     translationPath: 'forms.patients.emergencyContacts',

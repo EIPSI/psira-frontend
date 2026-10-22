@@ -67,6 +67,12 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   }
 
 
+  eventPeople(event: CalendarEvent): string {
+    const people = [event.patient || event.targetUser, ...(event.responsibleUsers || []), event.therapist, event.supervisor].filter(Boolean);
+    const names = people.map(person => [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ')).filter(Boolean);
+    return [...new Set(names)].join(' · ');
+  }
+
   get title(): string {
     if (this.view === CalendarView.DAY) return calendarDateMoment(this.selectedDate).format('dddd D MMMM YYYY');
     if (this.view === CalendarView.WEEK) {

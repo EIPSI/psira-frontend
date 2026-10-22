@@ -228,7 +228,7 @@
     <div class="date-row">
       <div class="form-field">
         <span>{{ 'calendar.startAt' | translate }}</span>
-        <nz-date-picker [(ngModel)]="createStartAt" nzShowTime></nz-date-picker>
+        <nz-date-picker [ngModel]="createStartAt" (ngModelChange)="onCreateStartChange($event)" nzShowTime></nz-date-picker>
       </div>
       <div class="form-field" *ngIf="createType === CT.SESSION">
         <span>{{ 'calendar.endAt' | translate }}</span>

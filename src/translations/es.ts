@@ -412,6 +412,10 @@ export default {
     placeholder: 'Feedback disponible.',
   },
   notifications: {
+    supervisorAssignmentRequestDescription: 'Notifica al usuario una solicitud para supervisar a un terapeuta. Puede aceptarla o rechazarla desde el Panel de control.',
+    caseManagerAssignmentRequestDescription: 'Notifica al usuario una solicitud para administrar un paciente. Puede aceptarla o rechazarla desde el Panel de control.',
+    supervisorAssignmentRequest: 'Solicitud de supervisor',
+    caseManagerAssignmentRequest: 'Solicitud de administrador de caso',
     title: 'Notificaciones',
     createConfiguration: 'Crear configuración',
     editConfiguration: 'Editar configuración',
@@ -564,6 +568,8 @@ export default {
     notArchivedPatients: 'Mostrar Pacientes No Archivados',
   },
   calendar: {
+    unableLoadTargets: 'No se pudieron cargar las personas disponibles para el calendario',
+    duration45: '45 min',
     type: 'Tipo de evento',
     emptyDay: 'No hay eventos para este día',
     details: 'Detalles',

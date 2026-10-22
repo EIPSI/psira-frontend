@@ -1,1 +1,17 @@
-@import '../../patients-management/calendar/patient-calendar.component.scss';
+@import "../../patients-management/calendar/patient-calendar.component.scss";
+
+.calendar-event {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.calendar-event-title,
+.calendar-event-people {
+  display: block;
+}
+
+.calendar-event-people {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.3;
+}

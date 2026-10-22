@@ -370,4 +370,112 @@ if (process.env.PSIRA_SCHEMA_PATH) test('role and status sort requests match Gra
     assert.deepStrictEqual((result.errors || []).map(error => error.message), []);
   }
 });
+test('all calendar editors reset the end to one hour after a changed start and support 45 minutes', () => {
+  const { CalendarEventUiService } = require(path.join(root, 'pages/calendar/@services/calendar-event-ui.service.ts'));
+  for (const [file, exported] of [
+    ['pages/calendar/calendar.component.ts', 'CalendarComponent'],
+    ['pages/calendar/user-calendar/user-calendar.component.ts', 'UserCalendarComponent'],
+    ['pages/patients-management/calendar/patient-calendar.component.ts', 'PatientCalendarComponent'],
+  ]) {
+    const Component = require(path.join(root, file))[exported];
+    const editor = Object.create(Component.prototype);
+    editor.eventUiService = new CalendarEventUiService();
+    const start = new Date('2026-10-25T01:30:00Z');
+    editor.onEditStartChange(start);
+    assert.strictEqual(editor.editEndAt.toISOString(), '2026-10-25T02:30:00.000Z');
+    editor.setEditDurationMinutes(45);
+    assert.strictEqual(editor.editEndAt.toISOString(), '2026-10-25T02:15:00.000Z');
+    if (editor.onCreateStartChange) {
+      editor.onCreateStartChange(start);
+      assert.strictEqual(editor.createEndAt.toISOString(), '2026-10-25T02:30:00.000Z');
+    }
+  }
+});
+test('emergency contacts retain an editable row but never save an empty contact', () => {
+  const { ArrayInputComponent } = require(path.join(root, '@shared/components/form/input-types/array-input/array-input.component.ts'));
+  const { FormComponent } = require(path.join(root, '@shared/components/form/form.component.ts'));
+  const editor = new ArrayInputComponent();
+  editor.field = { name: 'emergencyContacts', minRows: 1, rows: [[{ name: 'name', value: '' }]] };
+  let removals = 0;
+  editor.rowRemoved.subscribe(() => removals++);
+  editor.removeRow(0);
+  assert.strictEqual(editor.field.rows.length, 1);
+  assert.strictEqual(removals, 0);
+  editor.field.rows.push([{ name: 'name', value: 'Contact' }]);
+  editor.removeRow(0);
+  assert.strictEqual(removals, 1);
+  const form = Object.create(FormComponent.prototype);
+  assert.deepStrictEqual(form.parseArrays(editor.field), [{ name: 'Contact' }]);
+  editor.field.rows = [[{ name: 'name', value: '  ' }, { name: 'phone', value: '' }]];
+  assert.deepStrictEqual(form.parseArrays(editor.field), []);
+});
+test('profile names remain available when administrative options arrive after the profile', () => {
+  const { UserFormComponent } = require(path.join(root, 'pages/user-management/user-form/user-form.component.ts'));
+  const profile = Object.create(UserFormComponent.prototype);
+  profile.user = { id: 1, roles: [{ id: 8, name: 'Therapist' }], departments: [{ id: 9, name: 'Clinical' }] };
+  profile.currentUser = { id: 1 };
+  profile.newMode = false;
+  profile.previewRoleIds = [];
+  profile.roles = [];
+  profile.departments = [];
+  profile.profileFields = { groups: [{ fields: [{ name: 'roleId', options: [] }, { name: 'departmentId', options: [] }] }] };
+  profile.populateProfileRelationLabels();
+  profile.updateDepartmentFieldForSelectedRoles();
+  assert.strictEqual(profile.profileFields.groups[0].fields[0].options[0].label, 'Therapist');
+  assert.strictEqual(profile.profileFields.groups[0].fields[1].options[0].label, 'Clinical');
+});
+test('both assignment request events have labels and descriptions in every language', () => {
+  const { NotificationEvent, NotificationEventLabel, NotificationEventDescription } = require(path.join(root,
+    'pages/notifications/@types/notification.ts'));
+  for (const event of [NotificationEvent.CASE_MANAGER_ASSIGNMENT_REQUEST, NotificationEvent.CASE_SUPERVISOR_ASSIGNMENT_REQUEST]) {
+    assert.ok(event);
+    for (const locale of ['es', 'en', 'de', 'nl']) {
+      const dictionary = require(path.resolve(root, '../translations', locale + '.ts')).default;
+      assert.ok(getTranslation(dictionary, NotificationEventLabel[event]));
+      assert.ok(getTranslation(dictionary, NotificationEventDescription[event]));
+    }
+  }
+});
+
+test('the dashboard opens authenticated consent without generating a public token', () => {
+  const { DashboardComponent } = require(path.join(root, 'pages/dashboard/dashboard.component.ts'));
+  const dashboard = Object.create(DashboardComponent.prototype);
+  let navigation;
+  dashboard.router = { createUrlTree: (route, options) => { navigation = { route, options }; return navigation; }, serializeUrl: () => '/pending' };
+  dashboard.locationStrategy = { prepareExternalUrl: url => url };
+  const previousOpen = window.open;
+  window.open = () => {};
+  try { dashboard.openPendingConsent({ managementId: 42 }); } finally { window.open = previousOpen; }
+  assert.deepStrictEqual(navigation.route, ['/psira/informed-consent/pending']);
+  assert.deepStrictEqual(navigation.options.queryParams, { managementId: 42 });
+});
+test('saving notification scopes sends one request and permits an inactive configuration without an email template', () => {
+  const { FormBuilder } = require('@angular/forms');
+  const { NotificationConfigurationEditorComponent } = require(path.join(root,
+    'pages/notifications/notification-configuration-editor/notification-configuration-editor.component.ts'));
+  const { NotificationChannel, NotificationEvent } = require(path.join(root, 'pages/notifications/@types/notification.ts'));
+  const editor = Object.create(NotificationConfigurationEditorComponent.prototype);
+  editor.form = new FormBuilder().group({ departmentIds: [[]], channel: [NotificationChannel.EMAIL], active: [false],
+    event: [NotificationEvent.CASE_MANAGER_ASSIGNMENT_REQUEST], recipientRoleId: [2], mailTemplateId: [null], notes: [''] });
+  const requests = [];
+  editor.notificationsService = { saveConfigurations: value => { requests.push(value); return of({}); } };
+  editor.message = { success: () => {}, warning: () => { throw new Error('Unexpected invalid form'); } };
+  editor.router = { navigate: () => {} };
+  editor.translate = { instant: key => key };
+  editor.save();
+  assert.strictEqual(requests.length, 1);
+  assert.deepStrictEqual(requests[0].departmentIds, []);
+  assert.strictEqual(requests[0].mailTemplateId, null);
+});
+if (process.env.PSIRA_CLINICAL_SCHEMA_PATH) test('calendar, consent and notification requests match the backend schema', () => {
+  const { buildSchema, validate } = require('graphql');
+  const schema = buildSchema(fs.readFileSync(process.env.PSIRA_CLINICAL_SCHEMA_PATH, 'utf8'));
+  const { CalendarQueries } = require(path.join(root, '@graphql/queries/calendar.ts'));
+  const { NotificationsGraphql } = require(path.join(root, 'pages/notifications/@graphql/notifications.ts'));
+  const { InformedConsentGraphql } = require(path.join(root, 'pages/informed-consent/@graphql/informed-consent.ts'));
+  for (const query of [CalendarQueries.calendarTargets, CalendarQueries.clinicalSessions, CalendarQueries.calendarEvents,
+    NotificationsGraphql.saveNotificationConfigurations, InformedConsentGraphql.responses]) {
+    assert.deepStrictEqual(validate(schema, query).map(error => error.message), []);
+  }
+});
 console.log(count + ' local regression checks passed');

@@ -77,6 +77,12 @@ const notificationPreference = gql`
   }
 `;
 
+const saveNotificationConfigurations = gql`
+  mutation($input: SaveNotificationConfigurationsInput!) {
+    saveNotificationConfigurations(input: $input) { ${configurationFields} }
+  }
+`;
+
 const createNotificationConfiguration = gql`
   mutation($input: CreateNotificationConfigurationInput!) {
     createNotificationConfiguration(input: $input) {
@@ -108,6 +114,7 @@ const updateNotificationPreference = gql`
 `;
 
 export const NotificationsGraphql = {
+  saveNotificationConfigurations,
   notificationConfigurations,
   notificationConfiguration,
   notificationTemplateShortcuts,

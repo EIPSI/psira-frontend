@@ -384,6 +384,7 @@ export class SessionsListComponent implements OnChanges {
 
   canEditSession(session?: ClinicalSession): boolean {
     if (!session || !this.currentUser?.id) return false;
+    if (session.canEdit !== undefined) return session.canEdit;
     if (this.perms.isSuperAdmin()) return true;
     const responsibleUserIds = (session.responsibleUsers || []).map((user) => user.id);
     const legacyResponsibleId = session.sessionKind === ClinicalSessionKind.SUPERVISION

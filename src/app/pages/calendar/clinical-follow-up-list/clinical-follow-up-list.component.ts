@@ -169,6 +169,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
 
   canEdit(session: ClinicalSession): boolean {
     if (session.clinicalStatus === 'CANCELLED') return false;
+    if (session.canEdit === false) return false;
     if (this.perms.isSuperAdmin()) return true;
     if (!this.settings) return true;
     const editUntil = new Date(session.calendarOccurrence.startAt);

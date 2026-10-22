@@ -16,7 +16,7 @@
         <nz-form-label nzRequired>{{ 'notifications.event' | translate }}</nz-form-label>
         <nz-form-control [nzErrorTip]="'notifications.eventRequired' | translate">
           <nz-select formControlName="event" (ngModelChange)="onEventChange($event)">
-            <nz-option *ngFor="let event of events" [nzValue]="event" [nzLabel]="eventLabel[event]"></nz-option>
+            <nz-option *ngFor="let event of events" [nzValue]="event" [nzLabel]="eventLabel[event] | translate"></nz-option>
           </nz-select>
           <button
             nz-button
@@ -62,7 +62,7 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label nzRequired>{{ 'notifications.emailTemplate' | translate }}</nz-form-label>
+        <nz-form-label [nzRequired]="emailTemplateRequired()">{{ 'notifications.emailTemplate' | translate }}</nz-form-label>
         <nz-form-control [nzErrorTip]="'notifications.emailTemplateRequired' | translate">
           <nz-select formControlName="mailTemplateId" nzShowSearch>
             <nz-option *ngFor="let template of templates" [nzValue]="template.id" [nzLabel]="template.name"></nz-option>

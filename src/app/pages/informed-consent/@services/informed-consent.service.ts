@@ -90,8 +90,8 @@ export class InformedConsentService {
       .pipe(map((result: any) => result.data.deleteInformedConsentManagement));
   }
 
-  getResponses(): Observable<InformedConsentResponse[]> {
-    return this.apollo.query({ query: InformedConsentGraphql.responses, fetchPolicy: 'no-cache' })
+  getResponses(patientId?: number, userId?: number): Observable<InformedConsentResponse[]> {
+    return this.apollo.query({ query: InformedConsentGraphql.responses, variables: { patientId, userId }, fetchPolicy: 'no-cache' })
       .pipe(map((result: any) => result.data.informedConsentResponses));
   }
 

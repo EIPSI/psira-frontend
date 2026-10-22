@@ -18,7 +18,7 @@ import {
   InformedConsentResponse,
   InformedConsentResponseStatus,
 } from '../@types/informed-consent';
-import { encryptRoutePayload, decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { decryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
 
 type ConsentBlockType = 'TEXT' | 'QUESTION';
 
@@ -110,7 +110,7 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
       return;
     }
     this.loading = true;
-    const request = this.ownOnly ? this.service.getMyResponses() : this.service.getResponses();
+    const request = this.ownOnly ? this.service.getMyResponses() : this.service.getResponses(this.patientId, this.userId);
     request.pipe(finalize(() => (this.loading = false))).subscribe(
       (responses) => {
         this.responses = responses || [];
@@ -153,27 +153,15 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
         request.subscribe(
           () => {
             this.message.success(this.translate.instant('informedConsent.consentReactivated'));
-            const publicToken = this.ownOnly ? this.publicConsentToken(response.signerUserId) : undefined;
-            if (publicToken) {
-              const tree = this.router.createUrlTree(['/informed-consent/pending'], {
-                queryParams: {
-                  managementId: response.managementId,
-                  editingResponseId: response.id,
-                  previousStatus: response.status,
-                  token: publicToken,
-                },
-              });
-              window.open(this.router.serializeUrl(tree), '_blank');
-              return;
-            }
-            this.router.navigate([publicToken ? '/informed-consent/pending' : '/psira/informed-consent/pending'], {
-              queryParams: {
+            if (this.ownOnly) {
+              this.router.navigate(['/psira/informed-consent/pending'], { queryParams: {
                 managementId: response.managementId,
                 editingResponseId: response.id,
                 previousStatus: response.status,
-                ...(publicToken ? { token: publicToken } : {}),
-              },
-            });
+              } });
+            } else {
+              this.load();
+            }
           },
           (error) =>
             this.errorService.handleError(error, {
@@ -407,6 +395,7 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
     return this.perms.permissionsOnly([
       PermissionKey.INFORMED_CONSENT_RESPONSES_VIEW_DEPARTMENT,
       PermissionKey.INFORMED_CONSENT_RESPONSES_REVIEW_DEPARTMENT,
+      PermissionKey.CLINICAL_VIEW_ASSIGNED,
     ]);
   }
 
@@ -493,9 +482,5 @@ export class InformedConsentResponsesListComponent implements OnInit, OnChanges 
     return undefined;
   }
 
-  private publicConsentToken(userId: number): string {
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 6);
-    return encryptRoutePayload(JSON.stringify({ userId, exp: expiresAt.getTime() }), environment.secretKey);
-  }
+
 }

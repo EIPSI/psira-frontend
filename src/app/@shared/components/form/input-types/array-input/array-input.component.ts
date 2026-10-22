@@ -40,14 +40,13 @@ export class ArrayInputComponent implements OnInit {
   }
 
   removeRow(rowIndex: number) {
+    if (this.field.rows.length <= (this.field.minRows || 0)) return;
     this.field.rows.splice(rowIndex, 1);
     this.emitRowRemoved(this.field);
   }
 
   emitRowRemoved(field: Field) {
-    if (this.field.rows.length > 0) {
-      this.rowRemoved.emit(field);
-    }
+    this.rowRemoved.emit(field);
   }
 
   handleInputChange(child: Field, value: boolean | number | string | number[] | string[], rowIndex: number) {

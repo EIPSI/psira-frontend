@@ -36,6 +36,11 @@ import {
 export class CalendarService {
   constructor(private apollo: Apollo) {}
 
+  getTargets(): Observable<any[]> {
+    return this.apollo.query({ query: CalendarQueries.calendarTargets, fetchPolicy: 'no-cache' })
+      .pipe(map((result: any) => result.data.calendarTargets));
+  }
+
   getOccurrences(filter: CalendarOccurrenceFilter): Observable<CalendarOccurrence[]> {
     return this.apollo
       .query({

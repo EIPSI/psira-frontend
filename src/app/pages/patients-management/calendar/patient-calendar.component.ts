@@ -648,6 +648,16 @@ export class PatientCalendarComponent implements OnChanges {
     this.eventUiService.allowDrop(event);
   }
 
+  onCreateStartChange(startAt: Date): void {
+    this.createStartAt = startAt;
+    if (startAt) this.createEndAt = this.eventUiService.endFromDuration(startAt, 60);
+  }
+
+  onEditStartChange(startAt: Date): void {
+    this.editStartAt = startAt;
+    if (startAt) this.setEditDurationMinutes(60);
+  }
+
   setEditDurationMinutes(minutes: number): void {
     if (!this.editStartAt) return;
     this.editEndAt = this.eventUiService.endFromDuration(this.editStartAt, minutes);

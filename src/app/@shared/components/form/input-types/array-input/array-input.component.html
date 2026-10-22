@@ -7,7 +7,7 @@
           <button nz-button nzType="primary" nzShape="circle" (click)="addRow()">
             <i nz-icon nzType="plus" nzTheme="outline"></i>
           </button>
-          <button nz-button nzType="primary" nzDanger nzShape="circle" (click)="removeRow(i)">
+          <button nz-button nzType="primary" nzDanger nzShape="circle" [disabled]="field.rows.length <= (field.minRows || 0)" (click)="removeRow(i)">
             <i nz-icon nzType="minus" nzTheme="outline"></i>
           </button>
         </div>
@@ -121,7 +121,7 @@
         <button nz-button nzType="primary" nzShape="circle" (click)="addRow()">
           <i nz-icon nzType="plus" nzTheme="outline"></i>
         </button>
-        <button nz-button nzType="primary" nzDanger nzShape="circle" (click)="removeRow(i)">
+        <button nz-button nzType="primary" nzDanger nzShape="circle" [disabled]="field.rows.length <= (field.minRows || 0)" (click)="removeRow(i)">
           <i nz-icon nzType="minus" nzTheme="outline"></i>
         </button>
       </div>

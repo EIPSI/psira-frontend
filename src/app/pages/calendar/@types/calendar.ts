@@ -216,6 +216,7 @@ export interface ClinicalSessionListFilter {
 }
 
 export interface ClinicalSession {
+  canEdit?: boolean;
   id: number;
   sessionKind: ClinicalSessionKind;
   sessionNumber?: number;

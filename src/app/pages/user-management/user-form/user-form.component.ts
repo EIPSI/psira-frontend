@@ -139,6 +139,7 @@ export class UserFormComponent implements OnInit {
       this.inputMode = false;
       this.showCancelButton = true;
       this.profileFields = this.copyForm(userForms.userProfileEdit);
+      this.populateProfileRelationLabels();
       this.populateForm = true;
     } else {
       this.getUserFromUrl();
@@ -232,6 +233,7 @@ export class UserFormComponent implements OnInit {
             if (field.name === 'roleId') field.options = options;
           })
         );
+        this.populateProfileRelationLabels();
         this.applyDefaultRole();
         this.updateDepartmentFieldForSelectedRoles();
         if (this.section !== 'settings') {
@@ -317,6 +319,7 @@ export class UserFormComponent implements OnInit {
         this.user = this.withProfileRelations(decryptedData);
         if (this.user.birthDate) this.user.birthDate = decryptedData.birthDate.slice(0, 10);
         this.profileFields = this.copyForm(userForms.userProfileEdit);
+        this.populateProfileRelationLabels();
         this.populateForm = true;
         if (this.section !== 'settings') {
           this.loadAssignmentOptions();
@@ -361,10 +364,26 @@ export class UserFormComponent implements OnInit {
           this.inputMode = false;
           this.showCancelButton = true;
           this.profileFields = this.copyForm(userForms.userProfileEdit);
+          this.populateProfileRelationLabels();
           this.populateForm = true;
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load profile' })
       );
+  }
+
+  private populateProfileRelationLabels(): void {
+    for (const group of this.profileFields.groups || []) {
+      for (const field of group.fields) {
+        const relations = field.name === 'roleId' ? this.user?.roles : field.name === 'departmentId' ? this.user?.departments : null;
+        if (relations) {
+          const options = new Map((field.options || []).map(option => [Number(option.value), option]));
+          (relations as Array<{ id?: number; name?: string }>).forEach((relation) => {
+            if (relation.id) options.set(Number(relation.id), { value: relation.id, label: relation.name || String(relation.id) });
+          });
+          field.options = Array.from(options.values());
+        }
+      }
+    }
   }
 
   public handleProfileInputChange(change: { name: string; value: any }): void {
@@ -856,6 +875,10 @@ export class UserFormComponent implements OnInit {
     const roleCodes = this.getRoleCodes(normalizedRoleIds.map(Number));
     const departmentField = this.findProfileField('departmentId');
     if (!departmentField) return;
+    if (!this.newMode && this.isOwnUserProfile) {
+      this.populateProfileRelationLabels();
+      return;
+    }
 
     const filteredDepartments = roleCodes.length
       ? this.departments.filter((department) => this.departmentAppliesToAnyRole(department, roleCodes))

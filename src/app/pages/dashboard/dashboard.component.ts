@@ -154,10 +154,9 @@ export class DashboardComponent implements OnInit {
   }
 
   public openPendingConsent(consent: PendingInformedConsent): void {
-    const tree = this.router.createUrlTree(['/informed-consent/pending'], {
+    const tree = this.router.createUrlTree(['/psira/informed-consent/pending'], {
       queryParams: {
         managementId: consent.managementId,
-        token: this.publicConsentToken(),
       },
     });
     const url = this.locationStrategy.prepareExternalUrl(this.router.serializeUrl(tree));
@@ -533,11 +532,6 @@ export class DashboardComponent implements OnInit {
     return date;
   }
 
-  private publicConsentToken(): string {
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 6);
-    return encryptRoutePayload(JSON.stringify({ userId: this.user.id, exp: expiresAt.getTime() }), environment.secretKey);
-  }
 
   private loadDepartmentFilters(): void {
     if (this.perms.isSuperAdmin()) {

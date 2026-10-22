@@ -30,6 +30,11 @@ export class NotificationsService {
       .pipe(map((result: any) => result.data.notificationConfiguration));
   }
 
+  saveConfigurations(input: Partial<NotificationConfiguration> & { departmentIds: number[] }): Observable<NotificationConfiguration[]> {
+    return this.apollo.mutate({ mutation: NotificationsGraphql.saveNotificationConfigurations, variables: { input }, fetchPolicy: 'no-cache' })
+      .pipe(map((result: any) => result.data.saveNotificationConfigurations));
+  }
+
   createConfiguration(input: Partial<NotificationConfiguration>): Observable<NotificationConfiguration> {
     return this.apollo
       .mutate({
