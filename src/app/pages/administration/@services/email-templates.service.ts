@@ -27,7 +27,7 @@ export class EmailTemplatesService {
             variables: {
                 paging: params && params.paging ? params.paging : undefined,
                 filter: params && params.filter ? params.filter : undefined,
-                sorting: params && params.sorting ? params.sorting : undefined,
+                tableSorting: params && params.sorting ? params.sorting : undefined,
                 departmentIds: params?.departmentIds?.length ? params.departmentIds : undefined,
             },
             fetchPolicy: 'no-cache',

@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 const login = gql`
-  mutation($identifier: String!, $password: String!) {
-    login(identifier: $identifier, password: $password) {
+  mutation($identifier: String!, $password: String!, $detectedTimezone: String) {
+    login(identifier: $identifier, password: $password, detectedTimezone: $detectedTimezone) {
       accessToken
       refreshToken
       user {
@@ -14,6 +14,8 @@ const login = gql`
         email
         address
         isSuperUser
+        timezone
+        detectedTimezone
         passwordChangeRequired
         gender
         birthDate

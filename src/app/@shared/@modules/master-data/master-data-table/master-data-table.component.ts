@@ -1,4 +1,6 @@
-import { Component, Input, EventEmitter, Output } from '@angular/core';
+import { compareTableRows } from '@shared/utils/table-sort.util';
+import { TranslateService } from '@ngx-translate/core';
+import { Component, Input, EventEmitter, Output, Optional } from '@angular/core';
 import { NzDropdownMenuComponent, NzContextMenuService } from 'ng-zorro-antd/dropdown';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { TableColumn, SortField } from '../@types/list';
@@ -9,6 +11,8 @@ import { TableColumn, SortField } from '../@types/list';
   styleUrls: ['./master-data-table.component.scss'],
 })
 export class MasterDataTableComponent<T> {
+  @Input() public remoteSort?: boolean;
+
   @Input()
   public columns: TableColumn<T>[] = [];
 
@@ -33,7 +37,9 @@ export class MasterDataTableComponent<T> {
   @Output()
   public sort = new EventEmitter<SortField<T>[]>();
 
-  constructor(private contextMenuService: NzContextMenuService) {}
+  private sortComparators = new Map<any, (left: T, right: T) => number>();
+
+  constructor(private contextMenuService: NzContextMenuService, @Optional() private translate?: TranslateService) {}
 
   public onOpenContextMenu(event: MouseEvent, context: T): void {
     event.preventDefault();
@@ -41,6 +47,16 @@ export class MasterDataTableComponent<T> {
     this.context = context;
     this.contextChange.emit(context);
     this.contextMenuService.create(event, this.contextMenu);
+  }
+
+  public sortFunction(column: TableColumn<T>): boolean | ((left: T, right: T) => number) {
+    if (!column.sort) return false;
+    if (this.remoteSort === undefined ? this.sort.observers.length > 0 : this.remoteSort) return true;
+    if (!this.sortComparators.has(column)) {
+      this.sortComparators.set(column, (left, right) => compareTableRows(left, right,
+        { name: String(column.name), render: column.render }, (text) => this.translate ? this.translate.instant(text) : text));
+    }
+    return this.sortComparators.get(column);
   }
 
   public onSort({ sort }: NzTableQueryParams) {
@@ -55,7 +71,7 @@ export class MasterDataTableComponent<T> {
       // use altName for sorting if exists
       .map((sortField) => {
         const column = this.columns.find((col) => col.name === sortField.field);
-        return column.altName ? { ...sortField, field: column.altName } : sortField;
+        return column?.altName ? { ...sortField, field: column.altName } : sortField;
       });
     this.sort.emit(sortFields);
   }

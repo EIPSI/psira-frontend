@@ -3,7 +3,7 @@
     <ng-container *ngIf="field.translationPath; else plainTitle">
       <span [translate]="field.translationPath"></span>
     </ng-container>
-    <ng-template #plainTitle> {{ field?.title }} </ng-template>
+    <ng-template #plainTitle> {{ field?.title | translate }} </ng-template>
     <span style="color: red" *ngIf="field?.isRequired && inputMode"> *</span>
   </b>
   <small class="field-description" *ngIf="field.showDescription && field.description">{{ field.description | translate }}</small>
@@ -15,13 +15,21 @@
       [nzPlaceHolder]="field.description | translate"
       [formControlName]="field.name"
       [nzMode]="field.mode || 'default'"
+      [nzShowSearch]="!!field.optionGroups?.length"
       [nzDisabled]="field.disabled"
       [ngClass]="{
         'has-error': inputIsValid() === false,
         'has-success': inputIsValid() === true
       }"
     >
-      <nz-option *ngFor="let option of field.options" [nzValue]="option.value" [nzLabel]="option.label | translate"> </nz-option>
+      <ng-container *ngIf="field.optionGroups?.length; else flatOptions">
+        <nz-option-group *ngFor="let group of field.optionGroups" [nzLabel]="group.label">
+          <nz-option *ngFor="let option of group.options" [nzValue]="option.value" [nzLabel]="option.label | translate"></nz-option>
+        </nz-option-group>
+      </ng-container>
+      <ng-template #flatOptions>
+        <nz-option *ngFor="let option of field.options" [nzValue]="option.value" [nzLabel]="option.label | translate"></nz-option>
+      </ng-template>
     </nz-select>
   </nz-input-group>
 </ng-container>

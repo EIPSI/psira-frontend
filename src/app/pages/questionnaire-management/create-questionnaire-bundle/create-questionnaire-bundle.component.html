@@ -24,7 +24,7 @@
   <nz-form-item>
     <nz-form-label [nzSpan]="6">{{ 'questionnaireBundles.packageHeader' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
-      <angular-editor
+      <angular-editor id="bundle-header"
         [config]="editorConfig"
         [placeholder]="'questionnaireBundles.packageHeaderPlaceholder' | translate"
         formControlName="headerHtml"
@@ -35,7 +35,7 @@
   <nz-form-item>
     <nz-form-label [nzSpan]="6">{{ 'questionnaireBundles.footerNotice' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
-      <angular-editor
+      <angular-editor id="bundle-notice"
         [config]="editorConfig"
         [placeholder]="'questionnaireBundles.footerNoticePlaceholder' | translate"
         formControlName="noticeHtml"
@@ -77,38 +77,8 @@
   </section>
 
   <section class="root-node" *ngIf="rootNode as root">
-    <div class="node-row root-row">
-      <span class="drag-placeholder"></span>
-      <span class="node-kind">{{ 'questionnaireBundles.rootGroup' | translate }}</span>
-      <input
-        class="group-label"
-        nz-input
-        [(ngModel)]="root.label"
-        [ngModelOptions]="{ standalone: true }"
-        [placeholder]="'questionnaireBundles.rootGroupLabel' | translate"
-      />
-      <nz-select class="mode-select" [ngModel]="root.type" [ngModelOptions]="{ standalone: true }" (ngModelChange)="setRootType($event)">
-        <nz-option nzValue="FIXED_GROUP" [nzLabel]="'questionnaireBundles.fixedGroup' | translate"></nz-option>
-        <nz-option nzValue="RANDOM_GROUP" [nzLabel]="'questionnaireBundles.randomizedGroup' | translate"></nz-option>
-      </nz-select>
-      <ng-container *ngIf="root.type === 'RANDOM_GROUP'">
-        <nz-select class="mode-select" [(ngModel)]="root.randomizationMode" [ngModelOptions]="{ standalone: true }">
-          <nz-option nzValue="RANDOM_ORDER" [nzLabel]="'questionnaireBundles.randomOrder' | translate"></nz-option>
-          <nz-option nzValue="REPLACEMENT" [nzLabel]="'questionnaireBundles.replacement' | translate"></nz-option>
-        </nz-select>
-        <label class="number-field" *ngIf="root.randomizationMode === 'REPLACEMENT'">
-          <span>{{ 'questionnaireBundles.itemsToSelect' | translate }}</span>
-          <nz-input-number
-            [(ngModel)]="root.selectionCount"
-            [ngModelOptions]="{ standalone: true }"
-            [nzMin]="1"
-          ></nz-input-number>
-        </label>
-      </ng-container>
-    </div>
-
+    <p>{{ 'questionnaireBundles.minimumStructureHelp' | translate }}</p>
     <div class="child-toolbar">
-      <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(root)">{{ 'questionnaireBundles.addQuestionnaire' | translate }}</button>
       <button type="button" nz-button nzSize="small" (click)="addChildScreen(root)">{{ 'questionnaireBundles.addScreen' | translate }}</button>
       <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(root)">{{ 'questionnaireBundles.addFixedGroup' | translate }}</button>
       <button type="button" nz-button nzSize="small" (click)="addChildRandomGroup(root)">{{ 'questionnaireBundles.addRandomizedGroup' | translate }}</button>
@@ -136,12 +106,20 @@
     (cdkDropListDropped)="dropNode($event)"
     [style.--level]="level"
   >
-    <div class="node" *ngFor="let node of nodes; let i = index" cdkDrag>
+    <div class="node" [class.page-break]="node.type === 'SCREEN'" *ngFor="let node of nodes; let i = index; trackBy: trackNode" cdkDrag [cdkDragDisabled]="isRequiredNode(node)">
       <div class="node-row">
         <button type="button" nz-button nzShape="circle" class="drag-handle" cdkDragHandle>
           <i nz-icon nzType="drag"></i>
         </button>
-        <span class="node-kind">{{ node.type }}</span>
+        <span class="node-kind">{{ (node.type === 'SCREEN' ? (isRequiredNode(node) ? 'questionnaireBundles.firstPage' : 'questionnaireBundles.screen') :
+          node.type === 'FIXED_GROUP' ? 'questionnaireBundles.fixedGroup' :
+          node.type === 'RANDOM_GROUP' ? 'questionnaireBundles.randomizedGroup' : 'core.questionnaire') | translate }}</span>
+        <span *ngIf="isRequiredNode(node)">{{ 'questionnaireBundles.requiredStructure' | translate }}</span>
+        <nz-select *ngIf="node.type === 'FIXED_GROUP' || node.type === 'RANDOM_GROUP'" class="mode-select"
+          [ngModel]="node.type" [ngModelOptions]="{ standalone: true }" (ngModelChange)="setGroupType(node, $event)">
+          <nz-option nzValue="FIXED_GROUP" [nzLabel]="'questionnaireBundles.fixedGroup' | translate"></nz-option>
+          <nz-option nzValue="RANDOM_GROUP" [nzLabel]="'questionnaireBundles.randomizedGroup' | translate"></nz-option>
+        </nz-select>
 
         <ng-container [ngSwitch]="node.type">
           <nz-select
@@ -214,39 +192,41 @@
           ></nz-input-number>
         </label>
 
-        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, -1)" [disabled]="i === 0">
+        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, -1)" [disabled]="i === 0 || isRequiredNode(node) || (nodes === structure && i === 2)">
           <i nz-icon nzType="up"></i>
         </button>
-        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, 1)" [disabled]="i === nodes.length - 1">
+        <button type="button" nz-button nzShape="circle" (click)="moveNode(nodes, i, 1)" [disabled]="i === nodes.length - 1 || isRequiredNode(node)">
           <i nz-icon nzType="down"></i>
         </button>
-        <button type="button" nz-button nzDanger nzShape="circle" (click)="removeNode(nodes, i)">
+        <button type="button" nz-button nzDanger nzShape="circle" (click)="removeNode(nodes, i)" [disabled]="isRequiredNode(node)">
           <i nz-icon nzType="delete"></i>
         </button>
       </div>
 
       <div class="screen-rich-texts" *ngIf="node.type === 'SCREEN'">
-        <label>
-          <span>{{ 'questionnaireBundles.screenHeader' | translate }}</span>
+        <div>
+          <span>{{ (isRequiredNode(node) ? 'questionnaireBundles.firstPageHeader' : 'questionnaireBundles.screenHeader') | translate }}</span>
           <angular-editor
+            [id]="'page-header-' + node.id"
             [config]="editorConfig"
             [placeholder]="'questionnaireBundles.screenHeaderPlaceholder' | translate"
             [(ngModel)]="node.headerHtml"
             [ngModelOptions]="{ standalone: true }"
           ></angular-editor>
-        </label>
-        <label>
-          <span>{{ 'questionnaireBundles.screenFooter' | translate }}</span>
+        </div>
+        <div>
+          <span>{{ (isRequiredNode(node) ? 'questionnaireBundles.firstPageFooter' : 'questionnaireBundles.screenFooter') | translate }}</span>
           <angular-editor
+            [id]="'page-footer-' + node.id"
             [config]="editorConfig"
             [placeholder]="'questionnaireBundles.screenFooterPlaceholder' | translate"
             [(ngModel)]="node.footerHtml"
             [ngModelOptions]="{ standalone: true }"
           ></angular-editor>
-        </label>
+        </div>
       </div>
 
-      <div class="child-toolbar" *ngIf="node.type !== 'QUESTIONNAIRE'">
+      <div class="child-toolbar" *ngIf="node.type !== 'QUESTIONNAIRE' && node.type !== 'SCREEN'">
         <button type="button" nz-button nzSize="small" (click)="addChildQuestionnaire(node)">{{ 'questionnaireBundles.addChildQuestionnaire' | translate }}</button>
         <button type="button" nz-button nzSize="small" (click)="addChildScreen(node)">{{ 'questionnaireBundles.addChildScreen' | translate }}</button>
         <button type="button" nz-button nzSize="small" (click)="addChildFixedGroup(node)">{{ 'questionnaireBundles.addChildFixedGroup' | translate }}</button>
@@ -256,7 +236,7 @@
         {{ 'questionnaireBundles.randomHelp' | translate }}
       </p>
 
-      <ng-container *ngIf="node.type !== 'QUESTIONNAIRE'">
+      <ng-container *ngIf="node.type !== 'QUESTIONNAIRE' && node.type !== 'SCREEN'">
         <ng-container
           *ngTemplateOutlet="
             nodeList;

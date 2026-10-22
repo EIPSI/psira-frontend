@@ -107,6 +107,15 @@
                     </div>
                   </a>
                 </li>
+                <li *ngIf="!hasBlockingInformedConsent" nz-menu-item>
+                  <a routerLink="/psira/user-management/my-settings" class="p-v-5 p-h-10">
+                    <div nz-row>
+                      <div nz-col><i class="opacity-04 font-size-16" nz-icon nzType="setting" theme="outline"></i></div>
+                      <div nz-col nzFlex="auto"><span class="m-l-10">{{ 'userSettings.title' | translate }}</span></div>
+                      <div nz-col><i class="font-size-10" nz-icon nzType="right" theme="outline"></i></div>
+                    </div>
+                  </a>
+                </li>
                 <li nz-menu-item>
                   <a (click)="logout()" class="p-v-5 d-flex align-items-center justify-content-between">
                     <div nz-row>

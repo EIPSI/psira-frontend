@@ -132,6 +132,8 @@ export interface InformedConsentManagement {
   mandatory: boolean;
   appliesToAllDepartments: boolean;
   appliesToAllRoles: boolean;
+  reminderOffsets?: number[];
+  reminderUnit?: string;
   priority: number;
   active: boolean;
   model?: InformedConsentModel;

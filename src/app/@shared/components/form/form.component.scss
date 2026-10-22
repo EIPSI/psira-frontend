@@ -172,3 +172,20 @@ nz-select {
 .required-mark {
   color: red;
 }
+
+:host ::ng-deep .definition-form {
+  .definition-description {
+    display: block;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+  }
+
+  .definition-control nz-select,
+  .definition-control nz-input-number,
+  .definition-control input {
+    max-width: 100%;
+    width: 100%;
+  }
+}

@@ -133,6 +133,7 @@ export class AssessmentsListComponent {
 
     public onSort(sorting : SortField < FormattedAssessment > []): void {
         this.assessmentRequestOptions.sorting = sorting;
+    this.assessmentRequestOptions.paging = { first: DEFAULT_PAGE_SIZE };
         this.getAssessments();
     }
 
@@ -252,25 +253,21 @@ export class AssessmentsListComponent {
         if(!this.onlyArchivedAssessments){
             options.filter = {
               ...options.filter,
-              and: [{ deleted: {is: false} }, ...(options.filter.and ?? [])],
+              and: [{ or: [{ deleted: { is: false } }, { deleted: { is: null } }] }, ...(options.filter.and ?? [])],
             };
           }  
 
-        // apply for only my patients
-        if (this.onlyMyAssessments) 
+        // Include assessments of managed cases even when automation assigned another clinician.
+        if (this.onlyMyAssessments) {
             options.filter = {
-                ... options.filter,
-                and: [
-                    {
-                        clinician: {
-                            id: {
-                                eq: this.userId
-                            }
-                        }
-                    },
-                    ...(options.filter.and ?? [])
-                ]
+                ...options.filter,
+                and: [{ or: [
+                    { clinician: { id: { eq: this.userId } } },
+                    { responsibleUsers: { id: { eq: this.userId } } },
+                    { patient: { caseManagers: { id: { eq: this.userId } } } },
+                ] }, ...(options.filter.and ?? [])],
             };
+        }
 
         // apply for archived assessments
         if (this.onlyArchivedAssessments){

@@ -31,6 +31,9 @@
                 <ng-template #plainFieldTitle>{{ (field.displayLabel || field.title || field.label) | translate }}</ng-template>
                 <span class="required-mark" *ngIf="field?.isRequired && inputMode"> *</span>
               </b>
+              <small class="definition-description" *ngIf="field.showDescription && field.description">
+                {{ field.description | translate }}
+              </small>
             </div>
             <div class="definition-control">
             <ng-container *ngIf="definitionLayout && !inputMode; else editableField">

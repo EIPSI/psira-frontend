@@ -1,3 +1,4 @@
+import { configuredMoment, fromUserDateInput } from '@shared/utils/system-settings.util';
 import { Injectable } from '@angular/core';
 import { CalendarEvent } from '../@types/calendar';
 
@@ -16,14 +17,14 @@ export class CalendarEventUiService {
   }
 
   droppedWindow(calendarEvent: CalendarEvent, date: Date, hour?: number): { startAt: Date; endAt: Date } {
-    const originalStart = new Date(calendarEvent.startAt);
+    const originalStart = configuredMoment(calendarEvent.startAt);
     const originalEnd = new Date(calendarEvent.endAt);
-    const duration = originalEnd.getTime() - originalStart.getTime();
+    const duration = originalEnd.getTime() - originalStart.valueOf();
     const startAt = new Date(date);
-    startAt.setHours(hour ?? originalStart.getHours(), originalStart.getMinutes(), 0, 0);
+    startAt.setHours(hour ?? originalStart.hour(), originalStart.minute(), 0, 0);
     return {
-      startAt,
-      endAt: new Date(startAt.getTime() + duration),
+      startAt: fromUserDateInput(startAt),
+      endAt: new Date(fromUserDateInput(startAt).getTime() + duration),
     };
   }
 

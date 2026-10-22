@@ -17,6 +17,7 @@
     <app-master-data-table
       [data]="data"
       [columns]="columns"
+      [remoteSort]="sort.observers.length > 0"
       [loading]="loading"
       [contextMenu]="contextMenu"
       [(context)]="context"

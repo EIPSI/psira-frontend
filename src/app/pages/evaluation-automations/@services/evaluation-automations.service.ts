@@ -1,3 +1,4 @@
+import { combineFilters } from '@shared/utils/query-filter.util';
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { Observable } from 'rxjs';
@@ -24,7 +25,7 @@ export class EvaluationAutomationsService {
         query: EvaluationAutomationQueries.evaluationAutomations,
         variables: {
           paging: params?.paging,
-          filter: params?.filter,
+          filter: combineFilters({ active: { is: true } }, params?.filter),
           sorting: params?.sorting,
         },
         fetchPolicy: 'no-cache',

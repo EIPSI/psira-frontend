@@ -1,3 +1,5 @@
+import gql from 'graphql-tag';
+import { browserTimezone } from '@shared/utils/system-settings.util';
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { AuthMutations } from '@app/@graphql/mutations/auth';
@@ -17,8 +19,17 @@ export class AuthService {
   login(credentials: any): Observable<FetchResult<any>> {
     return this.apollo.query({
       query: AuthMutations.login,
-      variables: credentials,
+      variables: { ...credentials, detectedTimezone: browserTimezone() },
       fetchPolicy: 'no-cache',
+    });
+  }
+
+  updateMyPreferences(input: { timezone?: string; detectedTimezone?: string }): Observable<FetchResult<any>> {
+    return this.apollo.mutate({
+      mutation: gql`mutation($input: UserPreferencesInput!) {
+        updateMyPreferences(input: $input) { id timezone detectedTimezone }
+      }`,
+      variables: { input },
     });
   }
 

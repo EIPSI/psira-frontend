@@ -182,6 +182,9 @@ export class SchemeEditorComponent implements OnInit, AfterViewInit {
     startingDay: [1],
     numberOfDays: [7],
     numberOfWeeks: [1],
+    extensionUnit: ['WEEKS'],
+    extensionCount: [1],
+    customGroupDays: [7],
     triggerMode: [FixedTriggerMode.BLOCK_START],
     availabilityDurationMinutes: [60],
     availabilityDurationUnit: ['MINUTES'],
@@ -772,6 +775,9 @@ export class SchemeEditorComponent implements OnInit, AfterViewInit {
       startingDay: 1,
       numberOfDays: 7,
       numberOfWeeks: 1,
+      extensionUnit: 'WEEKS',
+      extensionCount: 1,
+      customGroupDays: 7,
       triggerMode: FixedTriggerMode.BLOCK_START,
       availabilityDurationMinutes: 60,
       availabilityDurationUnit: 'MINUTES',
@@ -798,11 +804,11 @@ export class SchemeEditorComponent implements OnInit, AfterViewInit {
     }
 
     if (mode === FixedRepeatRuleMode.EXTEND_LAST_DAY) {
-      slots = this.buildExtendLastDaySlots();
+      slots = this.buildExtendLastGroupSlots();
     }
 
     if (mode === FixedRepeatRuleMode.EXTEND_LAST_WEEK) {
-      slots = this.buildExtendLastWeekSlots();
+      slots = this.buildExtendLastGroupSlots();
     }
 
     if (!slots.length) {
@@ -1442,47 +1448,24 @@ export class SchemeEditorComponent implements OnInit, AfterViewInit {
     return slots;
   }
 
-  private buildExtendLastDaySlots(): any[] {
+  private buildExtendLastGroupSlots(): any[] {
     const lastDay = this.lastProgrammedDay();
     if (lastDay === null) return [];
-    const daysToExtend = Math.max(1, Number(this.repeatRuleForm.get('numberOfDays')?.value || 1));
-    const sourceSlots = this.fixedSlots().filter((slot) => Number(slot.relativeDay) === lastDay);
+    const value = this.repeatRuleForm.value;
+    const groupDays = value.extensionUnit === 'CUSTOM'
+      ? Number(value.customGroupDays)
+      : ({ DAYS: 1, WEEKS: 7, FORTNIGHTS: 15, MONTHS: 30 } as any)[value.extensionUnit];
+    const count = Number(value.extensionCount);
+    if (!Number.isInteger(groupDays) || groupDays < 1 || !Number.isInteger(count) || count < 1) return [];
+    const firstDay = lastDay - groupDays + 1;
+    const source = this.fixedSlots().filter((slot) => Number(slot.relativeDay) >= firstDay);
     const slots: any[] = [];
-
-    for (let offset = 1; offset <= daysToExtend; offset++) {
-      const targetDay = lastDay + offset;
-      sourceSlots.forEach((slot) => {
-        slots.push({
-          ...this.copyFixedSlotPayload(slot),
-          relativeDay: targetDay,
-        });
-      });
+    for (let repetition = 1; repetition <= count; repetition++) {
+      source.forEach((slot) => slots.push({
+        ...this.copyFixedSlotPayload(slot),
+        relativeDay: lastDay + 1 + (repetition - 1) * groupDays + Number(slot.relativeDay) - firstDay,
+      }));
     }
-
-    return slots;
-  }
-
-  private buildExtendLastWeekSlots(): any[] {
-    const lastDay = this.lastProgrammedDay();
-    if (lastDay === null) return [];
-    const weeksToExtend = Math.max(1, Number(this.repeatRuleForm.get('numberOfWeeks')?.value || 1));
-    const weekStart = Math.max(0, lastDay - 6);
-    const sourceSlots = this.fixedSlots().filter((slot) => {
-      const day = Number(slot.relativeDay);
-      return day >= weekStart && day <= lastDay;
-    });
-    const slots: any[] = [];
-
-    for (let week = 1; week <= weeksToExtend; week++) {
-      sourceSlots.forEach((slot) => {
-        const targetDay = Number(slot.relativeDay) + week * 7;
-        slots.push({
-          ...this.copyFixedSlotPayload(slot),
-          relativeDay: targetDay,
-        });
-      });
-    }
-
     return slots;
   }
 
@@ -1711,7 +1694,6 @@ export class SchemeEditorComponent implements OnInit, AfterViewInit {
     return [
       { name: { iLike: `%${searchString}%` } },
       { abbreviation: { iLike: `%${searchString}%` } },
-      { keywords: { iLike: `%${searchString}%` } },
     ];
   }
 }

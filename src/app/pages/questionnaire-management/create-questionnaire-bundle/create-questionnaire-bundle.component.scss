@@ -112,7 +112,7 @@
   margin: 10px 0 8px 64px;
 }
 
-.screen-rich-texts label {
+.screen-rich-texts > div {
   display: grid;
   gap: 6px;
   color: #475467;
@@ -216,4 +216,9 @@
 .bundle-preview__copy {
   color: #344054;
   margin: 12px 0;
+}
+
+.node.page-break {
+  border-top: 3px solid #186fb5;
+  padding-top: 12px;
 }

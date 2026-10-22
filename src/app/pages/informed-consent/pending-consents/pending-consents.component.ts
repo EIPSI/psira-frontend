@@ -1,3 +1,5 @@
+import { encryptRoutePayload } from '@app/@shared/utils/route-crypto.util';
+import { environment } from '../../../../environments/environment';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
@@ -22,6 +24,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
   loading = false;
   savingId?: number;
   pending: PendingInformedConsent[] = [];
+  completedCount = 0;
   visiblePendingItems: PendingInformedConsent[] = [];
   selectedManagementId?: number;
   editingResponseId?: number;
@@ -53,7 +56,7 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
     this.editingResponseId = Number.isFinite(editingResponseId) && editingResponseId > 0 ? editingResponseId : undefined;
     this.previousStatus = this.route.snapshot.queryParamMap.get('previousStatus') as InformedConsentResponseStatus;
     const token = this.route.snapshot.queryParamMap.get('token') || undefined;
-    this.publicToken = this.hasAuthenticatedSession() ? undefined : token;
+    this.publicToken = token;
     this.load();
   }
 
@@ -65,12 +68,28 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
     return !!localStorage.getItem('auth_app_token');
   }
 
-  load(): void {
+  load(afterSubmit: boolean = false, thankYouHtml?: string): void {
     this.loading = true;
     const request = this.publicToken ? this.service.getPublicPending(this.publicToken) : this.service.getPending();
     request.pipe(finalize(() => (this.loading = false))).subscribe(
       (pending) => {
         this.pending = pending || [];
+        const assessmentUuid = this.route.snapshot.queryParamMap.get('assessment');
+        if (assessmentUuid && !this.pending.length) {
+          this.router.navigate(['/assessment'], { queryParams: {
+            assessment: encryptRoutePayload(assessmentUuid, environment.secretKey),
+          } });
+          return;
+        }
+        if (afterSubmit && !this.pending.length) {
+          this.submittedThankYouHtml = thankYouHtml;
+          if (!this.publicToken) this.router.navigate(['/psira/dashboard']);
+          return;
+        }
+        // A targeted consent may have been answered while other consents are still pending.
+        if (afterSubmit && !this.pending.some((item) => Number(item.managementId) === this.selectedManagementId)) {
+          this.selectedManagementId = undefined;
+        }
         this.syncVisiblePendingItems();
         this.visiblePendingItems.forEach((item) => this.loadModel(item.modelId));
       },
@@ -118,12 +137,11 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
     request.pipe(finalize(() => (this.savingId = undefined))).subscribe(
       () => {
         this.editCompleted = true;
-        this.submittedThankYouHtml = model.currentPublishedVersion?.thankYouHtml || `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`;
+        this.completedCount += 1;
         this.message.success(this.translate.instant('informedConsent.consentRegistered'));
-        if (!this.publicToken) {
-          this.router.navigate(['/psira/dashboard']);
-          return;
-        }
+        const thankYouHtml = model.currentPublishedVersion?.thankYouHtml ||
+          `<p>${this.translate.instant('informedConsent.defaultThankYou')}</p>`;
+        this.load(true, thankYouHtml);
       },
       (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableSubmitConsent') })
     );
@@ -160,21 +178,8 @@ export class PendingInformedConsentsComponent implements OnInit, OnDestroy {
 
   private syncVisiblePendingItems(): void {
     this.visiblePendingItems = this.selectedManagementId
-      ? this.pending.filter((item) => Number(item.managementId) === Number(this.selectedManagementId))
-      : this.pending;
-  }
-
-  private loadAfterSubmit(): void {
-    this.loading = true;
-    const request = this.publicToken ? this.service.getPublicPending(this.publicToken) : this.service.getPending();
-    request.pipe(finalize(() => (this.loading = false))).subscribe(
-      (pending) => {
-        this.pending = pending || [];
-        this.syncVisiblePendingItems();
-        this.visiblePendingItems.forEach((pendingItem) => this.loadModel(pendingItem.modelId));
-      },
-      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadPending') })
-    );
+      ? this.pending.filter((item) => Number(item.managementId) === Number(this.selectedManagementId)).slice(0, 1)
+      : this.pending.slice(0, 1);
   }
 
   goHome(): void {

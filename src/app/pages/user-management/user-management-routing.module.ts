@@ -1,3 +1,4 @@
+import { UserSettingsComponent } from './user-settings/user-settings.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { UsersListComponent } from './users-list/users-list.component';
@@ -67,6 +68,11 @@ const routes: Routes = [
           },
         },
         canActivate: [PermissionGuard],
+      },
+      {
+        path: 'my-settings',
+        component: UserSettingsComponent,
+        data: { breadcrumbI18nKey: 'userSettings.title' },
       },
       {
         path: 'my-profile',

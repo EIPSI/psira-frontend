@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 const getUsers = gql`
-  query($paging: CursorPaging, $filter: UserFilter, $sorting: [UserSort!]) {
-    users(paging: $paging, filter: $filter, sorting: $sorting) {
+  query($paging: CursorPaging, $filter: UserFilter, $sorting: [UserSort!], $relationSorting: [UserRelationSortInput!]) {
+    users(paging: $paging, filter: $filter, sorting: $sorting, relationSorting: $relationSorting) {
       pageInfo {
         hasNextPage
         hasPreviousPage
@@ -70,6 +70,8 @@ const getUserProfile = gql`
       email
       address
       isSuperUser
+      timezone
+      detectedTimezone
       passwordChangeRequired
       gender
       birthDate

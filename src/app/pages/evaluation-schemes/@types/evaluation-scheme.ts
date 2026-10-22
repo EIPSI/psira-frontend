@@ -22,8 +22,8 @@ export interface EvaluationScheme {
   updatedAt?: string;
   sessionTemplates?: any[];
   independentEvaluationTemplates?: any[];
-  formattedSchemeType?: { color: string; title: string };
-  formattedStatus?: { color: string; title: string };
+  formattedSchemeType?: { color: string; title: string; translationPath?: string };
+  formattedStatus?: { color: string; title: string; translationPath?: string };
 }
 
 export enum ClinicalSessionKind {

@@ -26,7 +26,7 @@ export class ReportsService {
       variables: {
         paging: params && params.paging ? params.paging : undefined,
         filter: params && params.filter ? params.filter : undefined,
-        sorting: params && params.sorting ? params.sorting : undefined,
+        tableSorting: params && params.sorting ? params.sorting : undefined,
       },
       fetchPolicy: 'no-cache',
     });

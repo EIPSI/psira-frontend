@@ -135,7 +135,7 @@
         <th
           *ngFor="let column of listOfColumn"
           [nzWidth]="column.width"
-          [nzSortFn]="column.sort"
+          [nzSortFn]="sortFunction(column)"
           [nzColumnKey]="column.name"
           [nzSortDirections]="column.sortDirections"
         >
@@ -179,7 +179,7 @@
     </thead>
     <tbody>
       <ng-container *ngFor="let data of rowSelectionTable.data; let i = index">
-        <tr class="table-row" (click)="handleRowClick(data, i)" (contextmenu)="openContextMenu($event, i)">
+        <tr class="table-row" (click)="handleRowClick(data, sourceRowIndex(data))" (contextmenu)="openContextMenu($event, sourceRowIndex(data))">
           <td
             *ngIf="showCheckBoxColumn"
             (nzCheckedChange)="onItemChecked(data.id, $event)"
@@ -204,11 +204,11 @@
           </td>
 
           <td *ngIf="showActionColumn" nzRight>
-            <a *ngIf="showView" (click)="onViewAction(data, i)"><i nz-icon nzType="eye"></i></a>
+            <a *ngIf="showView" (click)="onViewAction(data, sourceRowIndex(data))"><i nz-icon nzType="eye"></i></a>
             <nz-divider *ngIf="showView" nzType="vertical"></nz-divider>
-            <a *ngIf="showEdit" (click)="onEditAction(data, i)"><i nz-icon nzType="edit"></i></a>
+            <a *ngIf="showEdit" (click)="onEditAction(data, sourceRowIndex(data))"><i nz-icon nzType="edit"></i></a>
             <nz-divider *ngIf="showEdit" nzType="vertical"></nz-divider>
-            <a *ngIf="showDelete" (click)="onDeleteAction(data, i)"><i nz-icon nzType="delete"></i></a>
+            <a *ngIf="showDelete" (click)="onDeleteAction(data, sourceRowIndex(data))"><i nz-icon nzType="delete"></i></a>
             <nz-divider *ngIf="showDelete" nzType="vertical"></nz-divider>
             <a *ngIf="showCustomActions" nz-button nz-dropdown [nzDropdownMenu]="actionMenu" nzType="link"
               ><i nz-icon nzType="more"></i
@@ -216,7 +216,7 @@
             <nz-dropdown-menu #actionMenu="nzDropdownMenu">
               <ul nz-menu>
                 <li *ngFor="let action of listOfCustomActions" nz-menu-item>
-                  <a (click)="onCustomActionEvent(action, data); emitAction(action, i)">{{ action.name | translate }}</a>
+                  <a (click)="onCustomActionEvent(action, data); emitAction(action, sourceRowIndex(data))">{{ action.name | translate }}</a>
                 </li>
               </ul>
             </nz-dropdown-menu>

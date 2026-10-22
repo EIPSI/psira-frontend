@@ -1,3 +1,4 @@
+import { browserTimezone } from '@shared/utils/system-settings.util';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AuthService } from '@app/auth/auth.service';
 import { Router } from '@angular/router';
@@ -57,6 +58,15 @@ export class HeaderComponent implements OnInit {
       ({ data }) => {
         this.user = data.getUserProfile;
         localStorage.setItem('user', JSON.stringify(data.getUserProfile));
+        if (this.user.detectedTimezone !== browserTimezone()) {
+          this.authService.updateMyPreferences({ detectedTimezone: browserTimezone() }).subscribe(
+            ({ data: preferenceData }) => {
+              this.user = { ...this.user, ...preferenceData.updateMyPreferences };
+              localStorage.setItem('user', JSON.stringify(this.user));
+            },
+            (error) => this.errorService.handleError(error),
+          );
+        }
       },
       (err) => this.errorService.handleError(err, { prefix: this.translate.instant('systemMessages.unableGetUserProfile') })
     );

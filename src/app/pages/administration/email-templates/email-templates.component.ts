@@ -68,6 +68,7 @@ export class EmailTemplatesComponent implements OnInit {
 
   public onSort(sorting: SortField<any>[]): void {
     this.emailTemplatesRequestOptions.sorting = sorting;
+    this.emailTemplatesRequestOptions.paging = { first: DEFAULT_PAGE_SIZE };
   }
 
   public onFilter(filter: Filter): void {

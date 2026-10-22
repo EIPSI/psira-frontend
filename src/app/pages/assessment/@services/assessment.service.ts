@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { Observable } from 'rxjs';
@@ -20,6 +21,14 @@ import { Answer } from '../../../assessment-form/@types/answer';
 export class AssessmentService {
   constructor(private apollo: Apollo) {}
 
+  resolvePublicAssessmentLink(token: string): Observable<string> {
+    return this.apollo.query({
+      query: gql`query($token: String!) { resolvePublicAssessmentLink(token: $token) }`,
+      variables: { token },
+      fetchPolicy: 'no-cache',
+    }).pipe(map((result: any) => result.data.resolvePublicAssessmentLink));
+  }
+
   getAssessments(params?: {
     paging?: Paging;
     filter?: Filter;
@@ -31,7 +40,7 @@ export class AssessmentService {
         variables: {
           paging: params && params.paging ? params.paging : undefined,
           filter: params && params.filter ? params.filter : undefined,
-          sorting: params && params.sorting?.length ? params.sorting : undefined,
+          tableSorting: params && params.sorting?.length ? params.sorting : undefined,
         },
         fetchPolicy: 'no-cache',
       })

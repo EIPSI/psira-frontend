@@ -48,12 +48,13 @@ export class DynamicTranslationLoader extends TranslateLoader {
     return String(lang || '').toLowerCase().split('-')[0].split('_')[0];
   }
 
-  private deepMerge(base: any, overrides: any): any {
+  private deepMerge(base: any, overrides: any, prefix: string = ''): any {
     const result = { ...(base || {}) };
     Object.keys(overrides || {}).forEach((key) => {
+      const path = prefix ? `${prefix}.${key}` : key;
       if (overrides[key] && typeof overrides[key] === 'object' && !Array.isArray(overrides[key])) {
-        result[key] = this.deepMerge(result[key], overrides[key]);
-      } else if (overrides[key] !== undefined && overrides[key] !== null && overrides[key] !== '') {
+        result[key] = this.deepMerge(result[key], overrides[key], path);
+      } else if (overrides[key] !== undefined && overrides[key] !== null && overrides[key] !== '' && overrides[key] !== path) {
         result[key] = overrides[key];
       }
     });

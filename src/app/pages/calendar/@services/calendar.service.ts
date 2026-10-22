@@ -1,3 +1,4 @@
+import { fromUserDateInput } from '@shared/utils/system-settings.util';
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { Observable } from 'rxjs';
@@ -56,8 +57,8 @@ export class CalendarService {
         variables: {
           filter: {
             ...filter,
-            from: filter.from.toISOString(),
-            to: filter.to.toISOString(),
+            from: fromUserDateInput(filter.from).toISOString(),
+            to: fromUserDateInput(filter.to).toISOString(),
           },
         },
         fetchPolicy: 'no-cache',
@@ -558,7 +559,7 @@ export class CalendarService {
             ...input,
             startAt: input.startAt.toISOString(),
             endAt: input.endAt.toISOString(),
-            endDate: input.endDate?.toISOString(),
+            endDate: input.endDate ? fromUserDateInput(input.endDate).toISOString() : undefined,
           },
         },
         fetchPolicy: 'no-cache',

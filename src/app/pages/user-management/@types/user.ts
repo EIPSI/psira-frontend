@@ -5,6 +5,8 @@ import { Permission } from '@app/pages/administration/@types/permission';
 export interface User {
   id?: number;
   isSuperUser?: boolean;
+  timezone?: string;
+  detectedTimezone?: string;
   username?: string;
   active?: boolean;
   firstName?: string;

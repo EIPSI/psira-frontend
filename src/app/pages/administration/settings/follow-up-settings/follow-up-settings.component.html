@@ -1,15 +1,17 @@
 <nz-card [nzTitle]="'clinicalSettings.title' | translate" [nzLoading]="loading">
   <div class="setting-form" *ngIf="settings">
     <label>
-      <span>{{ 'clinicalSettings.editWindow' | translate }}</span>
+      <span>{{ 'clinicalSettings.editWindow' | translate }}
+        <small>{{ 'clinicalSettings.daysFromSessionDate' | translate }}</small>
+      </span>
       <input nz-input type="number" min="0" [(ngModel)]="settings.editWindowDays" />
     </label>
-    <span>{{ 'clinicalSettings.daysFromSessionDate' | translate }}</span>
     <label>
-      <span>{{ 'clinicalSettings.dashboardLookahead' | translate }}</span>
+      <span>{{ 'clinicalSettings.dashboardLookahead' | translate }}
+        <small>{{ 'clinicalSettings.daysBeforeDashboard' | translate }}</small>
+      </span>
       <input nz-input type="number" min="0" [(ngModel)]="settings.dashboardLookaheadDays" />
     </label>
-    <span>{{ 'clinicalSettings.daysBeforeDashboard' | translate }}</span>
 
     <label>
       <span>{{ 'clinicalSettings.caseManagerRoles' | translate }}</span>

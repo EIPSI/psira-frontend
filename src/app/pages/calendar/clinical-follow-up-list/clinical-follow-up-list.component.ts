@@ -1,3 +1,4 @@
+import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { Component, Input, OnChanges } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -59,7 +60,8 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   constructor(
     private calendarService: CalendarService,
     private errorService: ErrorHandlerService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private perms: AppPermissionsService
   ) {}
 
   ngOnChanges(): void {
@@ -167,6 +169,7 @@ export class ClinicalFollowUpListComponent implements OnChanges {
 
   canEdit(session: ClinicalSession): boolean {
     if (session.clinicalStatus === 'CANCELLED') return false;
+    if (this.perms.isSuperAdmin()) return true;
     if (!this.settings) return true;
     const editUntil = new Date(session.calendarOccurrence.startAt);
     editUntil.setDate(editUntil.getDate() + this.settings.editWindowDays);

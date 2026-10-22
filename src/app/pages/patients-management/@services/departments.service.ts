@@ -1,3 +1,4 @@
+import { combineFilters } from '@shared/utils/query-filter.util';
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { Observable } from 'rxjs';
@@ -29,7 +30,7 @@ export class DepartmentsService {
       query: this.nestJsQueriesService.getManyQuery('department', graphqlString),
       variables: {
         paging: params && params.paging ? params.paging : undefined,
-        filter: params && params.filter ? params.filter : undefined,
+        filter: combineFilters({ active: { is: true } }, params?.filter),
         sorting: params && params.sorting ? params.sorting : undefined,
       },
       fetchPolicy: 'no-cache',

@@ -41,6 +41,7 @@ interface BundleNode {
 })
 export class CreateQuestionnaireBundleComponent implements OnInit {
   public structure: BundleNode[] = [];
+  private sequenceRoot: BundleNode = { id: 'bundle-sequence-root', type: 'FIXED_GROUP', children: [] };
   public questionnaires: QuestionnaireVersion[] = [];
   public departmentsRequestOptions: { paging: Paging; filter: Filter; sorting: Sorting[] } = {
     paging: { first: 50 },
@@ -80,7 +81,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.structure = [this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.defaultSequenceLabel'))];
+    this.structure = this.normalizeRootStructure([]);
     this.getDepartments();
     this.getQuestionnaires();
     this.route.params.subscribe((data) => {
@@ -102,7 +103,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
             this.bundleForm.controls['noticeHtml'].setValue(this.bundle?.noticeHtml || '');
             this.bundleForm.controls['active'].setValue(this.bundle?.active !== false);
             this.selectedDepartments = this.bundle?.departmentIds || [];
-            this.structure = this.normalizeRootStructure(this.parseStructure(this.bundle?.structureJson));
+            this.structure = this.normalizeRootStructure(this.flattenLegacyScreens(this.parseStructure(this.bundle?.structureJson)));
           });
       }
     });
@@ -253,8 +254,8 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   }
 
   get rootNode(): BundleNode {
-    this.structure = this.normalizeRootStructure(this.structure);
-    return this.structure[0];
+    this.sequenceRoot.children = this.structure;
+    return this.sequenceRoot;
   }
 
   get rootChildren(): BundleNode[] {
@@ -263,7 +264,11 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
     return root.children as BundleNode[];
   }
 
-  addQuestionnaire(nodes: BundleNode[] = this.rootChildren): void {
+  addQuestionnaire(nodes?: BundleNode[]): void {
+    if (!nodes || nodes === this.structure) {
+      this.ensureChildren(this.structure[1]);
+      nodes = this.structure[1].children;
+    }
     nodes.push({
       id: this.createNodeId(),
       type: 'QUESTIONNAIRE',
@@ -307,17 +312,25 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   }
 
   removeNode(nodes: BundleNode[], index: number): void {
+    if (this.isRequiredNode(nodes[index])) return;
     nodes.splice(index, 1);
   }
 
   moveNode(nodes: BundleNode[], index: number, direction: -1 | 1): void {
     const target = index + direction;
-    if (target < 0 || target >= nodes.length) return;
+    if (target < 0 || target >= nodes.length || this.isRequiredNode(nodes[index])) return;
+    if (nodes === this.structure && target < 2) return;
     const [node] = nodes.splice(index, 1);
     nodes.splice(target, 0, node);
   }
 
   dropNode(event: CdkDragDrop<BundleNode[]>): void {
+    const moving = event.previousContainer.data[event.previousIndex];
+    if (!moving || this.isRequiredNode(moving)) return;
+    const containsTarget = (node: BundleNode): boolean =>
+      node.children === event.container.data || (node.children || []).some(containsTarget);
+    if (containsTarget(moving)) return;
+    if (event.container.data === this.structure && (event.currentIndex < 2 || moving.type === 'QUESTIONNAIRE')) return;
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       return;
@@ -326,15 +339,14 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
     transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
   }
 
-  setRootType(type: Exclude<BundleNodeType, 'QUESTIONNAIRE'>): void {
-    this.rootNode.type = type;
-    if (type === 'RANDOM_GROUP') {
-      this.rootNode.randomizationMode = this.rootNode.randomizationMode || 'RANDOM_ORDER';
-      this.rootNode.selectionCount = this.rootNode.selectionCount || 1;
-    } else {
-      this.rootNode.randomizationMode = null;
-      this.rootNode.selectionCount = null;
-    }
+  isRequiredNode(node: BundleNode): boolean {
+    return node === this.structure[0] || node === this.structure[1];
+  }
+
+  setGroupType(node: BundleNode, type: 'FIXED_GROUP' | 'RANDOM_GROUP'): void {
+    node.type = type;
+    node.randomizationMode = type === 'RANDOM_GROUP' ? node.randomizationMode || 'RANDOM_ORDER' : null;
+    node.selectionCount = type === 'RANDOM_GROUP' ? node.selectionCount || 1 : null;
   }
 
   dropListId(node: BundleNode): string {
@@ -343,7 +355,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
 
   dropListIds(): string[] {
     const ids: string[] = [];
-    this.collectDropListIds(this.structure, ids);
+    this.collectDropListIds([this.rootNode], ids);
     return ids;
   }
 
@@ -376,43 +388,20 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   }
 
   previewScreens(): Array<{ title: string; headerHtml?: string; footerHtml?: string; questionnaires: any[] }> {
+    const root = this.rootNode;
     const screens: Array<{ title: string; headerHtml?: string; footerHtml?: string; questionnaires: any[] }> = [];
-    const collectQuestionnaires = (nodes: BundleNode[] = [], target: any[]) => {
-      nodes.forEach((node) => {
-        if (node.type === 'QUESTIONNAIRE') {
-          const title = node.displayTitle || (node.showTitle === false ? '' : this.questionnaireName(node.questionnaireId));
-          const questionnaire = this.questionnaireById(node.questionnaireId);
-          target.push({
-            title,
-            questionGroups: (questionnaire as any)?.questionGroups || [],
-          });
-          return;
-        }
-        collectQuestionnaires(node.children || [], target);
-      });
-    };
-    const visit = (nodes: BundleNode[] = []) => {
-      nodes.forEach((node) => {
-        if (node.type === 'SCREEN') {
-          const questionnaires: any[] = [];
-          collectQuestionnaires(node.children || [], questionnaires);
-          screens.push({
-            title: node.displayTitle || '',
-            headerHtml: node.headerHtml,
-            footerHtml: node.footerHtml,
-            questionnaires,
-          });
-          return;
-        }
-        visit(node.children || []);
-      });
-    };
-    visit(this.structure);
-    if (!screens.length) {
-      const questionnaires: any[] = [];
-      collectQuestionnaires(this.rootChildren, questionnaires);
-      screens.push({ title: '', questionnaires });
-    }
+    const visit = (nodes: BundleNode[]) => nodes.forEach((node) => {
+      if (node.type === 'SCREEN') {
+        screens.push({ title: node.displayTitle || '', headerHtml: node.headerHtml, footerHtml: node.footerHtml, questionnaires: [] });
+      } else if (node.type === 'QUESTIONNAIRE') {
+        const questionnaire = this.questionnaireById(node.questionnaireId);
+        screens[screens.length - 1].questionnaires.push({
+          title: node.displayTitle || (node.showTitle === false ? '' : this.questionnaireName(node.questionnaireId)),
+          questionGroups: (questionnaire as any)?.questionGroups || [],
+        });
+      } else visit(node.children || []);
+    });
+    visit(root.children || []);
     return screens;
   }
 
@@ -458,23 +447,45 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
   }
 
   private normalizeRootStructure(nodes: BundleNode[]): BundleNode[] {
-    const currentNodes = nodes || [];
-
-    if (!currentNodes.length) {
-      return [this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.defaultSequenceLabel'))];
+    const content = [...(nodes || [])];
+    const first = content[0];
+    const firstPage = first?.type === 'SCREEN' ? content.shift() : {
+      ...this.createGroupNode('SCREEN', this.translate.instant('questionnaireBundles.firstPage')),
+      headerHtml: first?.headerHtml || null,
+      footerHtml: first?.footerHtml || null,
+    };
+    const result: BundleNode[] = [firstPage];
+    let looseGroup: BundleNode;
+    content.forEach((node) => {
+      if (node.type === 'QUESTIONNAIRE') {
+        if (!looseGroup) {
+          looseGroup = this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.fixedGroup'));
+          result.push(looseGroup);
+        }
+        looseGroup.children.push(node);
+      } else {
+        looseGroup = undefined;
+        result.push(node);
+      }
+    });
+    if (!result[1] || !['FIXED_GROUP', 'RANDOM_GROUP'].includes(result[1].type)) {
+      result.splice(1, 0, this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.fixedGroup')));
     }
+    return result;
+  }
 
-    if (currentNodes.length === 1 && currentNodes[0].type !== 'QUESTIONNAIRE') {
-      currentNodes[0].children = currentNodes[0].children || [];
-      return currentNodes;
-    }
+  private flattenLegacyScreens(nodes: BundleNode[]): BundleNode[] {
+    return (nodes || []).reduce((result: BundleNode[], node: BundleNode) => {
+      const children = this.flattenLegacyScreens(node.children || []);
+      if (node.type === 'SCREEN') {
+        return [...result, { ...node, children: [] }, ...children];
+      }
+      return [...result, { ...node, children }];
+    }, []);
+  }
 
-    return [
-      {
-        ...this.createGroupNode('FIXED_GROUP', this.translate.instant('questionnaireBundles.defaultSequenceLabel')),
-        children: currentNodes,
-      },
-    ];
+  public trackNode(index: number, node: BundleNode): string {
+    return node.id;
   }
 
   private sanitizeNodes(nodes: BundleNode[]): BundleNode[] {
@@ -497,7 +508,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
       sanitized.displayTitle = node.displayTitle || null;
       sanitized.headerHtml = node.headerHtml || null;
       sanitized.footerHtml = node.footerHtml || null;
-      sanitized.children = this.sanitizeNodes(node.children || []);
+      sanitized.children = node.type === 'SCREEN' ? [] : this.sanitizeNodes(node.children || []);
 
       if (node.type === 'RANDOM_GROUP') {
         sanitized.randomizationMode = node.randomizationMode || 'RANDOM_ORDER';
@@ -529,7 +540,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
 
   private collectDropListIds(nodes: BundleNode[], ids: string[]): void {
     (nodes || []).forEach((node: BundleNode) => {
-      if (node.type === 'QUESTIONNAIRE') return;
+      if (node.type === 'QUESTIONNAIRE' || node.type === 'SCREEN') return;
       ids.push(this.dropListId(node));
       this.collectDropListIds(node.children || [], ids);
     });

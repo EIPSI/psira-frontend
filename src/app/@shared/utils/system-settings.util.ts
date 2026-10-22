@@ -10,7 +10,7 @@ export interface SystemDateSettings {
 
 const fallbackSettings: Required<SystemDateSettings> = {
   systemLocale: '',
-  systemTimezone: 'Africa/Dar_es_Salaam',
+  systemTimezone: 'UTC',
   dateFormat: 'YYYY-MM-DD',
   timeFormat: 'LT',
   dateTimeFormat: 'YYYY-MM-DD LT',
@@ -22,9 +22,10 @@ export function getSystemSettings(): Required<SystemDateSettings> {
     return {
       ...fallbackSettings,
       ...stored,
+      systemTimezone: userTimezone(),
     };
   } catch (_error) {
-    return fallbackSettings;
+    return { ...fallbackSettings, systemTimezone: userTimezone() };
   }
 }
 
@@ -32,7 +33,9 @@ export function configuredMoment(date: string | Date): moment.Moment {
   const settings = getSystemSettings();
   const locale = settings.systemLocale || localStorage.getItem('language') || 'en';
   const timezone = settings.systemTimezone || fallbackSettings.systemTimezone;
-  const value = moment(date);
+  const value = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? moment.tz(date, 'YYYY-MM-DD', timezone)
+    : moment(date);
   return timezone && moment.tz.zone(timezone)
     ? value.tz(timezone).locale(locale)
     : value.locale(locale);
@@ -54,9 +57,45 @@ export function formatSystemDateTime(date: string | Date): string {
   return formatSystemDate(date, resolveDateTimeFormat(settings));
 }
 
+export function browserTimezone(): string {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return moment.tz.zone(timezone) ? timezone : 'UTC';
+  } catch (_error) {
+    return 'UTC';
+  }
+}
+
+export function userTimezone(): string {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user?.timezone && moment.tz.zone(user.timezone)) return user.timezone;
+  } catch (_error) {}
+  return browserTimezone();
+}
+
 export function systemTimezone(): string {
-  const settings = getSystemSettings();
-  return settings.systemTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  return userTimezone();
+}
+
+// Date pickers represent wall-clock values in the browser zone. Translate only
+// at their boundary; models, API requests and stored dates remain real instants.
+export function toUserDateInput(value: Date | string): Date {
+  if (!value) return null;
+  const date = configuredMoment(value);
+  return new Date(date.year(), date.month(), date.date(), date.hour(), date.minute(), date.second(), date.millisecond());
+}
+
+export function fromUserDateInput(value: Date): Date {
+  if (!value) return null;
+  return moment.tz([
+    value.getFullYear(), value.getMonth(), value.getDate(), value.getHours(),
+    value.getMinutes(), value.getSeconds(), value.getMilliseconds(),
+  ], userTimezone()).toDate();
+}
+
+export function calendarDateMoment(value: Date): moment.Moment {
+  return configuredMoment(fromUserDateInput(value));
 }
 
 function resolveDateTimeFormat(settings: Required<SystemDateSettings>): string {

@@ -1,4 +1,5 @@
 <app-form
+  layoutMode="definition"
   [isLoading]="isLoading"
   [loadingMessage]="loadingMessage"
   [inputMode]="perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
@@ -18,24 +19,26 @@
   </div>
 
   <label class="integration-field">
-    <span>{{ 'systemSettings.notifications' | translate }}</span>
+    <span>{{ 'systemSettings.notifications' | translate }}
+      <small>{{ 'systemSettings.notificationsDescription' | translate }}</small>
+    </span>
     <div class="feature-toggle-control">
       <nz-switch
         [(ngModel)]="featureSettings.notificationsEnabled"
         [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       ></nz-switch>
-      <small>{{ 'systemSettings.notificationsDescription' | translate }}</small>
     </div>
   </label>
 
   <label class="integration-field">
-    <span>{{ 'systemSettings.informedConsent' | translate }}</span>
+    <span>{{ 'systemSettings.informedConsent' | translate }}
+      <small>{{ 'systemSettings.informedConsentDescription' | translate }}</small>
+    </span>
     <div class="feature-toggle-control">
       <nz-switch
         [(ngModel)]="featureSettings.informedConsentEnabled"
         [nzDisabled]="!perms.permissionsOnly([PK.SYSTEM_EDIT_ALL])"
       ></nz-switch>
-      <small>{{ 'systemSettings.informedConsentDescription' | translate }}</small>
     </div>
   </label>
 

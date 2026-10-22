@@ -45,6 +45,8 @@ export class InformedConsentManagementEditorComponent implements OnInit {
     appliesToAllRoles: [true],
     roleIds: [[]],
     priority: [100, Validators.required],
+    reminderOffsets: ['', Validators.pattern(/^\s*(?:[1-9]\d*\s*(?:,\s*[1-9]\d*\s*)*)?$/)],
+    reminderUnit: ['DAYS'],
     active: [true],
   });
 
@@ -97,6 +99,8 @@ export class InformedConsentManagementEditorComponent implements OnInit {
         appliesToAllRoles: item.appliesToAllRoles,
         roleIds: item.roles?.map((role) => role.id) || [],
         priority: item.priority,
+        reminderOffsets: (item.reminderOffsets || []).join(', '),
+        reminderUnit: item.reminderUnit || 'DAYS',
         active: item.active,
       }),
       (error) => this.errorService.handleError(error, { prefix: this.translate.instant('informedConsent.unableLoadManagement') })
@@ -115,6 +119,8 @@ export class InformedConsentManagementEditorComponent implements OnInit {
     const payload = {
       ...value,
       appliesToAllDepartments: !departmentIds.length,
+      reminderOffsets: String(value.reminderOffsets || '')
+        .split(',').map((offset) => Number(offset.trim())).filter((offset) => offset > 0),
       departmentIds,
       appliesToAllRoles: !roleIds.length,
       roleIds,

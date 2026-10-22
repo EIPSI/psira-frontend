@@ -34,6 +34,7 @@ export const EmailTemplatesColumns: TableColumn<any>[] = [
   {
     title: 'emailTemplates.status',
     name: 'formattedStatus',
+    altName: 'status',
     render: 'tag',
     translationPath: 'emailTemplates.status',
     sort: true,

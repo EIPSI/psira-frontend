@@ -180,19 +180,16 @@ export class QuestionnaireFormComponent {
 
     if (!missing.length) return true;
 
-    const modal = this.modalService.confirm({
-      nzOnCancel: () => false,
-      nzOnOk: () => true,
-      nzCancelText: this.translate.instant('modal.cancel'),
-      nzOkText: this.translate.instant('modal.ok'),
-      nzTitle: this.translate.instant('modal.continue'),
+    const modal = this.modalService.warning({
+      nzOkText: this.translate.instant('core.understood'),
+      nzTitle: this.translate.instant('core.requiredAnswers'),
       nzWidth: 800,
       nzClosable: false,
-      nzContent: this.translate.instant('modal.unansweredQuestions', { count: missing.length }),
+      nzContent: this.translate.instant('core.requiredAnswersBeforeContinue', { count: missing.length }),
     });
 
-    const shouldContinue = await modal.afterClose.toPromise();
-    return !!shouldContinue;
+    await modal.afterClose.toPromise();
+    return false;
   }
 
   private buildScreens(assessment: FullAssessment): AssessmentScreen[] {

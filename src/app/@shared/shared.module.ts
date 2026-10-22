@@ -1,3 +1,4 @@
+import { UserDateTimeModule } from './directives/user-date-time/user-date-time.module';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -10,9 +11,9 @@ import { PaginationService } from '@shared/services/pagination.service';
 import { NestJsQueriesService } from '@shared/services/nestjs-queries.service';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, NgxInputSearchModule, ReactiveFormsModule, ComponentsModule],
+  imports: [UserDateTimeModule,CommonModule, FormsModule, NgxInputSearchModule, ReactiveFormsModule, ComponentsModule],
   declarations: [],
-  exports: [ComponentsModule],
+  exports: [UserDateTimeModule,ComponentsModule],
   providers: [XlsExportService, DateService, AppPermissionsService, NestJsQueriesService, PaginationService],
 })
 export class SharedModule {}

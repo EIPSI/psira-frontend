@@ -11,9 +11,9 @@
 
 .integration-field {
   display: grid;
-  grid-template-columns: 180px minmax(260px, 560px);
-  align-items: center;
-  gap: 16px;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
   margin-bottom: 14px;
 }
 
@@ -31,4 +31,23 @@
 .feature-toggle-control small {
   color: #6b7280;
   line-height: 1.35;
+}
+
+.integration-field small {
+  display: block;
+  color: #6b7280;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.integration-field > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .integration-field { grid-template-columns: 1fr; gap: 8px; }
+  .integration-status { flex-wrap: wrap; }
 }

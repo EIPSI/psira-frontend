@@ -79,6 +79,7 @@ export class ReportsComponent implements OnInit {
 
   public onSort(sorting: SortField<FormattedReport>[]): void {
     this.reportsRequestOptions.sorting = sorting;
+    this.reportsRequestOptions.paging = { first: DEFAULT_PAGE_SIZE };
     this.getReports();
   }
 

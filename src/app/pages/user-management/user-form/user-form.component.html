@@ -48,11 +48,8 @@
     <nz-tab [nzTitle]="'core.profile' | translate">
       <ng-container *ngTemplateOutlet="profileSection"></ng-container>
     </nz-tab>
-    <nz-tab [nzTitle]="'core.settings' | translate">
+    <nz-tab *ngIf="!newMode" [nzTitle]="'core.settings' | translate">
       <ng-container *ngTemplateOutlet="settingsSection"></ng-container>
-    </nz-tab>
-    <nz-tab [nzTitle]="'notifications.title' | translate" *ngIf="isOwnUserProfile">
-      <app-notification-preferences [userId]="user.id" [accountMode]="true"></app-notification-preferences>
     </nz-tab>
     <nz-tab [nzTitle]="'informedConsent.mySignedConsents' | translate" *ngIf="isOwnUserProfile">
       <app-informed-consent-responses-list
@@ -160,7 +157,7 @@
             (ngModelChange)="toggleAutomationPreview(automation.automationId, $event)"
           >
             <strong>{{ automation.title }}</strong>
-            <span>{{ 'patientsManagement.resource' | translate }}: {{ automation.resourceName }} · {{ automation.delayLabel }}</span>
+            <span><ng-container *ngIf="automation.resourceName">{{ automation.resourceName }} · </ng-container>{{ automation.delayLabel }}</span>
           </label>
         </div>
       </div>
@@ -188,6 +185,9 @@
     </button>
   </div>
 
+  <div *ngFor="let request of pendingSupervisorRequests">
+    {{ request.assignee?.firstName }} {{ request.assignee?.lastName }} — {{ 'assignmentRequests.status.PENDING' | translate }}
+  </div>
   <ul nz-list [nzDataSource]="assignedSupervisors" [nzLoading]="assignmentLoading">
     <li nz-list-item *ngFor="let supervisor of assignedSupervisors" nzNoFlex>
       {{ supervisor.firstName }} {{ supervisor.lastName }}
