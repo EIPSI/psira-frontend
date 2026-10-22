@@ -1,3 +1,4 @@
+import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { Component, Input, OnChanges } from '@angular/core';
 import { Observable } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
@@ -96,7 +97,8 @@ export class SessionsListComponent implements OnChanges {
     private errorService: ErrorHandlerService,
     private schemesService: EvaluationSchemesService,
     private modalService: NzModalService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private perms: AppPermissionsService
   ) {}
 
   ngOnChanges(): void {
@@ -382,6 +384,7 @@ export class SessionsListComponent implements OnChanges {
 
   canEditSession(session?: ClinicalSession): boolean {
     if (!session || !this.currentUser?.id) return false;
+    if (this.perms.isSuperAdmin()) return true;
     const responsibleUserIds = (session.responsibleUsers || []).map((user) => user.id);
     const legacyResponsibleId = session.sessionKind === ClinicalSessionKind.SUPERVISION
       ? session.supervisorId

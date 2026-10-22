@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 const reports = gql`
-  query($paging: CursorPaging, $filter: ReportFilter, $sorting: [ReportSort!]) {
-    reports(paging: $paging, filter: $filter, sorting: $sorting) {
+  query($paging: CursorPaging, $filter: ReportFilter, $tableSorting: [TableSortInput!]) {
+    reports(paging: $paging, filter: $filter, tableSorting: $tableSorting) {
       edges {
         cursor
         node {

@@ -1,3 +1,4 @@
+import { toUserDateInput } from '@shared/utils/system-settings.util';
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import { finalize } from 'rxjs/operators';
@@ -37,7 +38,7 @@ export class CalendarComponent implements OnChanges, OnInit {
   CV = CalendarView;
   CET = CalendarEventType;
   PK = PermissionKey;
-  selectedDate = new Date();
+  selectedDate = toUserDateInput(new Date());
   view = CalendarView.MONTH;
   selectedTypes: CalendarEventType[] = [];
   selectedDepartmentIds: number[] = [];

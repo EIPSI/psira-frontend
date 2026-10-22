@@ -112,6 +112,7 @@ export class AssessmentsComponent implements OnInit {
 
   public onSort(sorting: SortField<FormattedAssessment>[]): void {
     this.assessmentRequestOptions.sorting = sorting;
+    this.assessmentRequestOptions.paging = { first: DEFAULT_PAGE_SIZE };
     this.getAssessments();
   }
 

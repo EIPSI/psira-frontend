@@ -112,6 +112,7 @@ export class DepartmentsComponent implements OnInit {
 
   public onSort(sorting: SortField<FormattedDepartment>[]): void {
     this.departmentsRequestOptions.sorting = sorting;
+    this.departmentsRequestOptions.paging = { first: DEFAULT_PAGE_SIZE };
     this.getDepartments();
   }
 
@@ -281,7 +282,7 @@ export class DepartmentsComponent implements OnInit {
   private getDepartments(): void {
     this.isLoading = true;
     this.departmentsService
-      .departments(this.departmentsRequestOptions)
+      .departments({ ...this.departmentsRequestOptions, includeInactive: true })
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         ({ data }: any) => {

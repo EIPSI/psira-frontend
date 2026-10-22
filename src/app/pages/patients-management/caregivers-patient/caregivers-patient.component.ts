@@ -187,7 +187,7 @@ export class CaregiversPatientComponent implements OnInit {
     const options = { ...this.caregiverRequestOptions };
     options.filter = {
       ...options.filter,
-      and: [getAllCaregivers ? {} : { patient: { id: { eq: this.patient?.id } } }, ...(options.filter.and ?? [])],
+      and: [...(getAllCaregivers ? [] : [{ patient: { id: { eq: this.patient?.id } } }]), ...(options.filter.and ?? [])],
     };
 
     this.caregiversPatientService

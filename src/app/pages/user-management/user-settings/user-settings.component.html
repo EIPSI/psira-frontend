@@ -1,0 +1,18 @@
+<h1>{{ 'userSettings.title' | translate }}</h1>
+<nz-spin [nzSpinning]="loading">
+  <nz-card [nzTitle]="'userSettings.timezone' | translate" *ngIf="user">
+    <p>{{ 'userSettings.timezoneHelp' | translate }}</p>
+    <p>{{ 'userSettings.emailTimezoneHelp' | translate }}</p>
+    <p>{{ 'userSettings.timezoneReferenceHelp' | translate }}</p>
+    <label nz-checkbox [(ngModel)]="automatic">{{ 'userSettings.automatic' | translate }}</label>
+    <p>{{ 'userSettings.detected' | translate }}: {{ detectedTimezone }}</p>
+    <nz-select *ngIf="!automatic" [(ngModel)]="selectedTimezone" nzShowSearch style="width: 100%; max-width: 460px;">
+      <nz-option *ngFor="let timezone of timezoneOptions" [nzValue]="timezone.value" [nzLabel]="timezone.label"></nz-option>
+    </nz-select>
+    <p>{{ 'userSettings.current' | translate }}: {{ currentTimezone() }} · {{ previewTime() }}</p>
+    <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">{{ 'core.save' | translate }}</button>
+  </nz-card>
+  <nz-card *ngIf="user" [nzTitle]="'notifications.title' | translate" style="margin-top: 16px;">
+    <app-notification-preferences [userId]="user.id" [accountMode]="true"></app-notification-preferences>
+  </nz-card>
+</nz-spin>

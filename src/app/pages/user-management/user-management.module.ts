@@ -1,3 +1,4 @@
+import { UserSettingsComponent } from './user-settings/user-settings.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -68,6 +69,6 @@ const antModules = [
     NotificationPreferencesModule,
     InformedConsentSharedModule,
   ],
-  declarations: [UsersListComponent, UserFormComponent, UserProfileTabsComponent],
+  declarations: [UserSettingsComponent, UsersListComponent, UserFormComponent, UserProfileTabsComponent],
 })
 export class UserManagementModule {}

@@ -1,3 +1,4 @@
+import { UserDateTimeModule } from '../../directives/user-date-time/user-date-time.module';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -149,7 +150,7 @@ const antModules = [
 ];
 
 @NgModule({
-  imports: [...antModules, CommonModule, FormsModule, NgxInputSearchModule, ReactiveFormsModule, TranslateModule],
+  imports: [UserDateTimeModule,...antModules, CommonModule, FormsModule, NgxInputSearchModule, ReactiveFormsModule, TranslateModule],
   declarations: [
     FormComponent,
     TextInputComponent,

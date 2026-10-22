@@ -90,7 +90,17 @@ const pendingPatientCaseManagerRequests = gql`
   ${assignmentRequestFields}
 `;
 
+const pendingTherapistSupervisorRequests = gql`
+  query($therapistId: Int!) {
+    pendingTherapistSupervisorRequests(therapistId: $therapistId) {
+      ...AssignmentRequestFields
+    }
+  }
+  ${assignmentRequestFields}
+`;
+
 export const AssignmentRequestsQueries = {
+  pendingTherapistSupervisorRequests,
   pendingAssignmentRequests,
   pendingPatientCaseManagerRequests,
 };

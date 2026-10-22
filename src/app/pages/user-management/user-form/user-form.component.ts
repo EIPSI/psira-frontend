@@ -1,3 +1,4 @@
+import { AssignmentRequestsService } from '@app/@shared/services/assignment-requests.service';
 import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { userForms } from '@app/pages/user-management/@forms/user.form';
@@ -49,16 +50,16 @@ export class UserFormComponent implements OnInit {
   populateForm = false;
   resetForm = false;
   modalType: ModalType;
-  updatePasswordForm: Form = userForms.updateUserPassword;
+  updatePasswordForm: Form = this.copyForm(userForms.updateUserPassword);
   changePasswordModal: ModalType = {
     title: 'userManagement.changePassword',
     type: 'changePassword',
   };
   newMode = false;
   loadingMessage = '';
-  profileFields: Form = userForms.userProfileEdit;
-  userRolesPermissionsFields: Form = userForms.userRolesPermissions;
-  updateUserPasswordFields: Form = userForms.updateUserPassword;
+  profileFields: Form = this.copyForm(userForms.userProfileEdit);
+  userRolesPermissionsFields: Form = this.copyForm(userForms.userRolesPermissions);
+  updateUserPasswordFields: Form = this.copyForm(userForms.updateUserPassword);
   tabSub: any;
   routeSub: any;
   tabIndexSub: any;
@@ -77,6 +78,7 @@ export class UserFormComponent implements OnInit {
   availableSupervisors: User[] = [];
   availableTherapists: User[] = [];
   assignedSupervisors: User[] = [];
+  pendingSupervisorRequests: any[] = [];
   assignedTherapists: User[] = [];
   public defaultRoleCode: string;
   public automationPreview: any[] = [];
@@ -86,6 +88,17 @@ export class UserFormComponent implements OnInit {
   private particularDepartment?: Department;
   private previewRoleIds: number[] = [];
   private previewDepartmentIds: number[] = [];
+
+  private copyForm<T>(value: T): T {
+    if (Array.isArray(value)) return value.map((item) => this.copyForm(item)) as any;
+    if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+      return Object.keys(value).reduce((copy, key) => {
+        copy[key] = this.copyForm((value as any)[key]);
+        return copy;
+      }, {} as any);
+    }
+    return value;
+  }
 
   get userTitle(): string {
     const name = [this.user?.firstName, this.user?.middleName, this.user?.lastName].filter((s) => !!s).join(' ');
@@ -106,6 +119,7 @@ export class UserFormComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private usersService: UsersService,
+    private assignmentRequestsService: AssignmentRequestsService,
     private message: NzMessageService,
     private errorService: ErrorHandlerService,
     private rolesService: RolesService,
@@ -124,7 +138,7 @@ export class UserFormComponent implements OnInit {
       this.newMode = false;
       this.inputMode = false;
       this.showCancelButton = true;
-      this.profileFields = userForms.userProfileEdit;
+      this.profileFields = this.copyForm(userForms.userProfileEdit);
       this.populateForm = true;
     } else {
       this.getUserFromUrl();
@@ -291,6 +305,8 @@ export class UserFormComponent implements OnInit {
     this.routeSub = this.activatedRoute.queryParams.subscribe((params) => {
       this.populateForm = false;
       this.resetForm = false;
+      this.isLoading = false;
+      this.loadingMessage = '';
       if (params.user) {
         this.defaultRoleCode = params.roleCode;
         this.newMode = false;
@@ -300,7 +316,7 @@ export class UserFormComponent implements OnInit {
         const decryptedData = JSON.parse(bytes);
         this.user = this.withProfileRelations(decryptedData);
         if (this.user.birthDate) this.user.birthDate = decryptedData.birthDate.slice(0, 10);
-        this.profileFields = userForms.userProfileEdit;
+        this.profileFields = this.copyForm(userForms.userProfileEdit);
         this.populateForm = true;
         if (this.section !== 'settings') {
           this.loadAssignmentOptions();
@@ -317,7 +333,7 @@ export class UserFormComponent implements OnInit {
         this.resetForm = false;
         this.newMode = true;
         this.inputMode = true;
-        this.profileFields = userForms.userProfile;
+        this.profileFields = this.copyForm(userForms.userProfile);
         this.applyDefaultRole();
         this.populateForm = true;
         this.showCancelButton = false;
@@ -344,7 +360,7 @@ export class UserFormComponent implements OnInit {
           this.newMode = false;
           this.inputMode = false;
           this.showCancelButton = true;
-          this.profileFields = userForms.userProfileEdit;
+          this.profileFields = this.copyForm(userForms.userProfileEdit);
           this.populateForm = true;
         },
         (error) => this.errorService.handleError(error, { prefix: 'Unable to load profile' })
@@ -462,7 +478,9 @@ export class UserFormComponent implements OnInit {
         async ({ data }) => {
           this.user = UserModel.fromJson(data.updateOneUser);
           this.user = this.withProfileRelations(this.user);
-          this._child.toggleEdit();
+          this.inputMode = false;
+          this._child.inputMode = false;
+          this.populateForm = true;
           this.message.create('success', this.translate.instant('userManagement.userUpdated'));
         },
         (error) => {
@@ -518,6 +536,7 @@ export class UserFormComponent implements OnInit {
       .subscribe(
         () => {
           this.selectedSupervisorId = null;
+          this.message.success(this.translate.instant('assignmentRequests.requestSent'));
           this.loadAssignedSupervisors();
         },
         (error) => this.errorService.handleError(error, { prefix: this.translate.instant('userManagement.unableAssignSupervisor') })
@@ -946,6 +965,10 @@ export class UserFormComponent implements OnInit {
   private loadAssignedSupervisors(): void {
     if (!this.user?.id || this.defaultRoleCode !== 'THERAPIST') return;
 
+    this.assignmentRequestsService.pendingTherapistSupervisorRequests(this.user.id).subscribe(
+      ({ data }: any) => this.pendingSupervisorRequests = data.pendingTherapistSupervisorRequests || [],
+      (error) => this.errorService.handleError(error)
+    );
     this.assignmentLoading = true;
     this.usersService
       .getSupervisors({ first: 50, therapistId: this.user.id })

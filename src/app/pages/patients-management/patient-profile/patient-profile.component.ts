@@ -396,15 +396,21 @@ export class PatientProfileComponent implements OnInit {
 
 
   canViewClinicalSections(): boolean {
-    return this.perms.permissionsOnly([PermissionKey.CLINICAL_VIEW_ALL, PermissionKey.CLINICAL_VIEW_DEPARTMENT, PermissionKey.CLINICAL_VIEW_ASSIGNED]);
+    return this.perms.permissionsOnly([
+      PermissionKey.CLINICAL_VIEW_ALL, PermissionKey.CLINICAL_VIEW_DEPARTMENT, PermissionKey.CLINICAL_VIEW_ASSIGNED,
+    ]);
   }
 
   canViewReportSections(): boolean {
-    return this.perms.permissionsOnly([PermissionKey.REPORTS_VIEW_ALL, PermissionKey.REPORTS_VIEW_DEPARTMENT, PermissionKey.REPORTS_VIEW_ASSIGNED]);
+    return this.perms.permissionsOnly([
+      PermissionKey.REPORTS_VIEW_ALL, PermissionKey.REPORTS_VIEW_DEPARTMENT, PermissionKey.REPORTS_VIEW_ASSIGNED,
+    ]);
   }
 
   canViewMoreSections(): boolean {
-    return this.perms.permissionsOnly([PermissionKey.ASSESSMENTS_VIEW_ALL, PermissionKey.ASSESSMENTS_VIEW_DEPARTMENT, PermissionKey.ASSESSMENTS_VIEW_ASSIGNED]);
+    return this.perms.permissionsOnly([
+      PermissionKey.ASSESSMENTS_VIEW_ALL, PermissionKey.ASSESSMENTS_VIEW_DEPARTMENT, PermissionKey.ASSESSMENTS_VIEW_ASSIGNED,
+    ]);
   }
 
   caseDataMainTabIndex(): number {

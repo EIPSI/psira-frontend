@@ -1,3 +1,4 @@
+import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PatientStatus } from '@app/pages/patients-management/@types/patient-status';
@@ -32,6 +33,7 @@ export class PatientStatusesComponent implements OnInit {
     first: 10,
   };
   pageInfo: any;
+  sorting: Sorting[] = [];
   patientStatusesTable: { columns: any[]; rows: PatientStatus[] } = {
     columns: PatientStatusesTable.columns,
     rows: [],
@@ -70,12 +72,12 @@ export class PatientStatusesComponent implements OnInit {
     this.getPatientStatuses();
   }
 
-  getPatientStatuses(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting }) {
+  getPatientStatuses(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[] }) {
     this.isLoading = true;
     this.patientStatuses = [];
     this.patientStatusesTable.rows = [];
     this.patientStatusesService
-      .patientStatuses(params)
+      .patientStatuses({ ...params, sorting: this.sorting })
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         ({ data }: any) => {
@@ -92,6 +94,17 @@ export class PatientStatusesComponent implements OnInit {
             prefix: this.translate.instant('patientStatuses.unableLoadPatientStatuses'),
           })
       );
+  }
+
+  handleTableParams(params: NzTableQueryParams): void {
+    const sorting = params.sort.filter((item) => !!item.value).map((item) => ({
+      field: item.key.replace(/^formatted/, '').replace(/^./, (letter: string) => letter.toLowerCase()),
+      direction: item.value === 'ascend' ? 'ASC' : 'DESC',
+    }));
+    if (JSON.stringify(sorting) === JSON.stringify(this.sorting)) return;
+    this.sorting = sorting;
+    this.paging = { first: 10 };
+    this.getPatientStatuses({ paging: this.paging });
   }
 
   navigatePages(direction: string, pageSize: number = 10) {

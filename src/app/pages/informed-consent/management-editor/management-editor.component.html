@@ -68,6 +68,17 @@
       </nz-form-control>
     </nz-form-item>
     <nz-form-item>
+      <nz-form-label>{{ 'informedConsent.reminders' | translate }}</nz-form-label>
+      <nz-form-control>
+        <input nz-input formControlName="reminderOffsets" placeholder="1, 3, 7" />
+        <nz-select formControlName="reminderUnit">
+          <nz-option *ngFor="let unit of ['DAYS', 'WEEKS', 'MONTHS']" [nzValue]="unit"
+            [nzLabel]="('evaluationSchemes.extensionUnits.' + unit) | translate"></nz-option>
+        </nz-select>
+        <p>{{ 'informedConsent.remindersHelp' | translate }}</p>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
       <nz-form-label>{{ 'informedConsent.priority' | translate }}</nz-form-label>
       <nz-form-control><input nz-input type="number" formControlName="priority" /></nz-form-control>
     </nz-form-item>

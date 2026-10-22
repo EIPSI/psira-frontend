@@ -15,6 +15,7 @@ export const AssessmentAdministrationColumns: TableColumn<Partial<FormattedAsses
   {
     title: 'tables.department.formattedStatus',
     name: 'formattedStatus',
+    altName: 'status',
     translationPath: 'tables.department.formattedStatus',
     render: 'tag',
     sort: true,

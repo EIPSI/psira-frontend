@@ -388,7 +388,9 @@ export class PatientsListComponent {
       this.actions = [...this.actions, { key: ActionKey.RESTORE_PATIENT, title: 'patientsManagement.restorePatient' }];
     }
 
-    if (this.perms.permissionsOnly([PermissionKey.PATIENTS_DELETE_ALL, PermissionKey.PATIENTS_DELETE_DEPARTMENT, PermissionKey.PATIENTS_DELETE_ASSIGNED])) {
+    if (this.perms.permissionsOnly([
+      PermissionKey.PATIENTS_DELETE_ALL, PermissionKey.PATIENTS_DELETE_DEPARTMENT, PermissionKey.PATIENTS_DELETE_ASSIGNED,
+    ])) {
       this.actions = [...this.actions, { key: ActionKey.DELETE_PATIENT, title: 'patientsManagement.deletePatient' }];
     }
   }

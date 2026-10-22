@@ -3,7 +3,7 @@
     <ng-container *ngIf="field.translationPath; else plainTitle">
       <span [translate]="field.translationPath"></span>
     </ng-container>
-    <ng-template #plainTitle> {{ field?.title }} </ng-template>
+    <ng-template #plainTitle> {{ field?.title | translate }} </ng-template>
     <span style="color: red" *ngIf="field?.isRequired && inputMode"> *</span>
   </b>
   <small class="field-description" *ngIf="field.showDescription && field.description">{{ field.description | translate }}</small>

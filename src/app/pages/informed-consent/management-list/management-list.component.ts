@@ -181,6 +181,7 @@ export class InformedConsentManagementListComponent implements OnInit {
         formattedStatus: {
           color: item.active ? 'green' : 'default',
           title: this.translate.instant(this.statusLabel[item.status] || item.status),
+          translationPath: this.statusLabel[item.status],
         },
       }))
       .filter(

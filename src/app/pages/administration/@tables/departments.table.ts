@@ -43,7 +43,7 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
     translationPath: 'departments.appliesToRoles',
     name: 'formattedAppliedRoles',
     altName: 'appliedRoleCodes',
-    sort: false,
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,
@@ -54,7 +54,7 @@ export const DepartmentColumns: TableColumn<Partial<FormattedDepartment>>[] = [
     translationPath: 'departments.defaultForRoles',
     name: 'formattedDefaultRoles',
     altName: 'defaultRoleCodes',
-    sort: false,
+    sort: true,
     filterField: {
       type: 'text',
       value: undefined,

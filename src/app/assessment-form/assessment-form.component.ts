@@ -15,6 +15,7 @@ import { I18nService } from '@app/i18n/i18n.service';
 })
 export class AssessmentFormComponent implements OnInit {
   public assessment: any;
+  public loadError = false;
   public AssessmentStatus = AssessmentStatus;
 
   constructor(
@@ -29,6 +30,14 @@ export class AssessmentFormComponent implements OnInit {
         untilDestroyed(this),
       )
       .subscribe((oldAssessment: FullAssessment) => {
+      if ((oldAssessment as any).consentLink) {
+        window.location.assign((oldAssessment as any).consentLink);
+        return;
+      }
+      if ((oldAssessment as any).loadError) {
+        this.loadError = true;
+        return;
+      }
       const assessment = structuredClone(oldAssessment);
       this.applyResolvedQuestionnaireSequence(assessment);
       for (const questionnaire of assessment.questionnaireAssessment.questionnaires) {

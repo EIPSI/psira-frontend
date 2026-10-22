@@ -24,7 +24,7 @@
               <nz-option
                 *ngFor="let type of schemeTypes"
                 [nzValue]="type"
-                [nzLabel]="schemeTypeLabel[type]"
+                [nzLabel]="schemeTypeLabel[type] | translate"
               ></nz-option>
             </nz-select>
           </nz-form-control>
@@ -223,7 +223,7 @@
               <nz-option
                 *ngFor="let role of responderRoleOptions"
                 [nzValue]="role.value"
-                [nzLabel]="role.label"
+                [nzLabel]="role.label | translate"
               ></nz-option>
             </nz-select>
           </nz-form-control>
@@ -494,7 +494,7 @@
               <nz-option
                 *ngFor="let role of responderRoleOptions"
                 [nzValue]="role.value"
-                [nzLabel]="role.label"
+                [nzLabel]="role.label | translate"
               ></nz-option>
             </nz-select>
           </nz-form-control>
@@ -524,8 +524,7 @@
           <nz-form-control>
             <nz-select formControlName="mode">
               <nz-option [nzValue]="FRM.ADD_FROM_INTERACTION" [nzLabel]="'evaluationSchemes.addFromInteraction' | translate"></nz-option>
-              <nz-option [nzValue]="FRM.EXTEND_LAST_DAY" [nzLabel]="'evaluationSchemes.extendLastDay' | translate"></nz-option>
-              <nz-option [nzValue]="FRM.EXTEND_LAST_WEEK" [nzLabel]="'evaluationSchemes.extendLastWeek' | translate"></nz-option>
+              <nz-option [nzValue]="FRM.EXTEND_LAST_DAY" [nzLabel]="'evaluationSchemes.extendLastGroup' | translate"></nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
@@ -659,7 +658,7 @@
                 <nz-option
                   *ngFor="let role of responderRoleOptions"
                   [nzValue]="role.value"
-                  [nzLabel]="role.label"
+                  [nzLabel]="role.label | translate"
                 ></nz-option>
               </nz-select>
             </nz-form-control>
@@ -671,15 +670,25 @@
           </div>
         </ng-container>
 
-        <nz-form-item *ngIf="repeatRuleForm.get('mode')?.value === FRM.EXTEND_LAST_DAY">
-          <nz-form-label>{{ 'evaluationSchemes.numberOfDays' | translate }}</nz-form-label>
-          <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfDays" /></nz-form-control>
-        </nz-form-item>
-
-        <nz-form-item *ngIf="repeatRuleForm.get('mode')?.value === FRM.EXTEND_LAST_WEEK">
-          <nz-form-label>{{ 'evaluationSchemes.numberOfWeeks' | translate }}</nz-form-label>
-          <nz-form-control><input nz-input type="number" min="1" formControlName="numberOfWeeks" /></nz-form-control>
-        </nz-form-item>
+        <ng-container *ngIf="repeatRuleForm.get('mode')?.value === FRM.EXTEND_LAST_DAY">
+          <nz-form-item>
+            <nz-form-label>{{ 'evaluationSchemes.extensionCount' | translate }}</nz-form-label>
+            <nz-form-control><input nz-input type="number" min="1" step="1" formControlName="extensionCount" /></nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label>{{ 'evaluationSchemes.extensionUnit' | translate }}</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="extensionUnit">
+                <nz-option *ngFor="let unit of ['DAYS', 'WEEKS', 'FORTNIGHTS', 'MONTHS', 'CUSTOM']"
+                  [nzValue]="unit" [nzLabel]="('evaluationSchemes.extensionUnits.' + unit) | translate"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item *ngIf="repeatRuleForm.get('extensionUnit')?.value === 'CUSTOM'">
+            <nz-form-label>{{ 'evaluationSchemes.customGroupDays' | translate }}</nz-form-label>
+            <nz-form-control><input nz-input type="number" min="1" step="1" formControlName="customGroupDays" /></nz-form-control>
+          </nz-form-item>
+        </ng-container>
       </div>
     </form>
   </nz-modal>

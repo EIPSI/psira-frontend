@@ -1,3 +1,4 @@
+import { NzTableQueryParams } from 'ng-zorro-antd/table';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Paging } from '@shared/@types/paging';
@@ -35,6 +36,7 @@ export class RolesComponent implements OnInit {
     first: 10,
   };
   pageInfo: any;
+  sorting: Sorting[] = [];
   rolesTable: { columns: any[]; rows: Role[] } = {
     columns: RolesTable.columns,
     rows: [],
@@ -71,12 +73,12 @@ export class RolesComponent implements OnInit {
     this.getRoles();
   }
 
-  getRoles(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting }) {
+  getRoles(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[] }) {
     this.isLoading = true;
     this.roles = [];
     this.rolesTable.rows = [];
     this.rolesService
-      .roles(params)
+      .roles({ ...params, sorting: this.sorting })
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         ({ data }: any) => {
@@ -90,6 +92,17 @@ export class RolesComponent implements OnInit {
         },
         (error) => this.errorService.handleError(error, { prefix: this.translate.instant('roles.unableLoadRoles') })
       );
+  }
+
+  handleTableParams(params: NzTableQueryParams): void {
+    const sorting = params.sort.filter((item) => !!item.value).map((item) => ({
+      field: item.key.replace(/^formatted/, '').replace(/^./, (letter: string) => letter.toLowerCase()),
+      direction: item.value === 'ascend' ? 'ASC' : 'DESC',
+    }));
+    if (JSON.stringify(sorting) === JSON.stringify(this.sorting)) return;
+    this.sorting = sorting;
+    this.paging = { first: 10 };
+    this.getRoles({ paging: this.paging });
   }
 
   navigatePages(direction: 'next' | 'previous', pageSize: number = 10) {

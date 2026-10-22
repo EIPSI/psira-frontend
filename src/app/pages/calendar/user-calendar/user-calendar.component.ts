@@ -1,3 +1,4 @@
+import { toUserDateInput } from '@shared/utils/system-settings.util';
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import {
   endOfDay,
@@ -43,7 +44,7 @@ import { CalendarEventUiService } from '../@services/calendar-event-ui.service';
 import { CalendarService } from '../@services/calendar.service';
 import { CalendarRecurrenceService, RepeatEndMode, RepeatUnit } from '../@services/calendar-recurrence.service';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
-import { systemTimezone } from '@shared/utils/system-settings.util';
+import { systemTimezone, fromUserDateInput, configuredMoment } from '@shared/utils/system-settings.util';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
 import {
@@ -90,7 +91,7 @@ export class UserCalendarComponent implements OnChanges {
   @Input() embeddedCreateMode = false;
   @Output() createSaved = new EventEmitter<void>();
 
-  selectedDate = new Date();
+  selectedDate = toUserDateInput(new Date());
   view = CalendarView.MONTH;
   loading = false;
   saving = false;
@@ -241,8 +242,8 @@ export class UserCalendarComponent implements OnChanges {
     startAt.setHours(hour ?? 9, 0, 0, 0);
     this.createType = CalendarCreateType.SESSION;
     this.createTitle = this.translate.instant('dashboard.supervision');
-    this.createStartAt = startAt;
-    this.createEndAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+    this.createStartAt = fromUserDateInput(startAt);
+    this.createEndAt = new Date(this.createStartAt.getTime() + 60 * 60 * 1000);
     this.createResponsibleUserIds = this.defaultSupervisorIds();
     this.createSupervisor = this.primaryResponsibleUser();
     this.createModality = ClinicalSessionModality.IN_PERSON;
@@ -253,7 +254,7 @@ export class UserCalendarComponent implements OnChanges {
     this.repeatSession = false;
     this.repeatEvery = 1;
     this.repeatUnit = RepeatUnit.WEEK;
-    this.repeatOnDays = [startAt.getDay()];
+    this.repeatOnDays = [configuredMoment(this.createStartAt).day()];
     this.repeatEndMode = RepeatEndMode.AFTER_COUNT;
     this.repeatEndDate = undefined;
     this.repeatCount = 12;
@@ -604,19 +605,19 @@ export class UserCalendarComponent implements OnChanges {
     const amount = Math.max(0, Number(this.simpleAvailabilityMinutes || 0));
     switch (this.simpleAvailabilityUnit) {
       case 'HOURS':
-        expirationDate.setHours(expirationDate.getHours() + amount);
+        expirationDate.setUTCHours(expirationDate.getUTCHours() + amount);
         break;
       case 'DAYS':
-        expirationDate.setDate(expirationDate.getDate() + amount);
+        expirationDate.setUTCDate(expirationDate.getUTCDate() + amount);
         break;
       case 'WEEKS':
-        expirationDate.setDate(expirationDate.getDate() + amount * 7);
+        expirationDate.setUTCDate(expirationDate.getUTCDate() + amount * 7);
         break;
       case 'MONTHS':
-        expirationDate.setMonth(expirationDate.getMonth() + amount);
+        expirationDate.setUTCMonth(expirationDate.getUTCMonth() + amount);
         break;
       default:
-        expirationDate.setMinutes(expirationDate.getMinutes() + amount);
+        expirationDate.setUTCMinutes(expirationDate.getUTCMinutes() + amount);
     }
     return expirationDate;
   }

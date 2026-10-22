@@ -35,6 +35,7 @@ export interface Field {
   isValid?: boolean;
   span?: number;
   translationPath?: string;
+  optionGroups?: { label: string; options: { value: number | boolean | string; label: string }[] }[];
   options?: {
     value: number | boolean | string;
     label: string;

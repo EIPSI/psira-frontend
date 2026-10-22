@@ -11,10 +11,12 @@ export class EvaluationSchemeModel {
       formattedSchemeType: {
         color: json.schemeType === EvaluationSchemeType.SESSION_BASED ? 'geekblue' : 'purple',
         title: EvaluationSchemeTypeLabel[json.schemeType] || json.schemeType,
+        translationPath: EvaluationSchemeTypeLabel[json.schemeType],
       },
       formattedStatus: {
         color: json.active ? 'green' : 'default',
         title: json.active ? 'evaluationSchemes.active' : 'evaluationSchemes.inactive',
+        translationPath: json.active ? 'evaluationSchemes.active' : 'evaluationSchemes.inactive',
       },
     };
   }

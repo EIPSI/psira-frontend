@@ -8,6 +8,9 @@
     </article>
 
     <ng-template #pendingConsentList>
+      <p *ngIf="pending.length">{{ 'informedConsent.consentProgress' | translate:{
+        current: completedCount + 1, total: completedCount + pending.length
+      } }}</p>
       <nz-empty *ngIf="!visiblePendingItems.length" [nzNotFoundContent]="'informedConsent.noPendingConsents' | translate"></nz-empty>
 
       <article class="ci-document" *ngFor="let item of visiblePendingItems">

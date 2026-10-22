@@ -1,3 +1,5 @@
+import { AppPermissionsService } from '@shared/services/app-permissions.service';
+import { toUserDateInput } from '@shared/utils/system-settings.util';
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import {
   endOfDay,
@@ -44,7 +46,7 @@ import { FormattedPatient } from '../@types/formatted-patient';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
-import { systemTimezone } from '@shared/utils/system-settings.util';
+import { systemTimezone, fromUserDateInput, configuredMoment } from '@shared/utils/system-settings.util';
 import { RandomizationsService } from '@app/pages/randomizations/@services/randomizations.service';
 import { RandomizationRule, RandomizationRuleType } from '@app/pages/randomizations/@types/randomization';
 import { EvaluationAutomationsService } from '@app/pages/evaluation-automations/@services/evaluation-automations.service';
@@ -90,7 +92,7 @@ export class PatientCalendarComponent implements OnChanges {
   @Input() embeddedCreateMode = false;
   @Output() createSaved = new EventEmitter<void>();
 
-  selectedDate = new Date();
+  selectedDate = toUserDateInput(new Date());
   view = CalendarView.MONTH;
   loading = false;
   applying = false;
@@ -220,7 +222,8 @@ export class PatientCalendarComponent implements OnChanges {
     private randomizationsService: RandomizationsService,
     private evaluationAutomationsService: EvaluationAutomationsService,
     private recurrenceService: CalendarRecurrenceService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private perms: AppPermissionsService
   ) {}
 
   ngOnChanges(): void {
@@ -257,8 +260,8 @@ export class PatientCalendarComponent implements OnChanges {
     this.createType = CalendarCreateType.SESSION;
     this.createTitle = 'Sesión clínica';
     this.createSessionKind = ClinicalSessionKind.CLINICAL;
-    this.createStartAt = startAt;
-    this.createEndAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+    this.createStartAt = fromUserDateInput(startAt);
+    this.createEndAt = new Date(this.createStartAt.getTime() + 60 * 60 * 1000);
     this.createResponsibleUserIds = this.defaultCaseAdministratorIds();
     this.createTherapist = this.primaryResponsibleUser();
     this.createModality = ClinicalSessionModality.IN_PERSON;
@@ -269,7 +272,7 @@ export class PatientCalendarComponent implements OnChanges {
     this.repeatSession = false;
     this.repeatEvery = 1;
     this.repeatUnit = RepeatUnit.WEEK;
-    this.repeatOnDays = [startAt.getDay()];
+    this.repeatOnDays = [configuredMoment(this.createStartAt).day()];
     this.repeatEndMode = RepeatEndMode.AFTER_COUNT;
     this.repeatEndDate = undefined;
     this.repeatCount = 12;
@@ -392,7 +395,7 @@ export class PatientCalendarComponent implements OnChanges {
       (this.fixedSchemeSelectionType === FixedSchemeSelectionType.RANDOMIZATION && !this.createFixedRandomizationRuleIds.length)
     ) return;
     const patient = this.patient;
-    const startDate = startOfDay(this.createStartAt);
+    const startDate = configuredMoment(this.createStartAt).startOf('day').toDate();
     const primaryResponsibleUserId = this.primaryResponsibleUserId();
     const selectedItems: FixedSchemeApplySelection[] = this.fixedSchemeSelectionType === FixedSchemeSelectionType.SCHEME
       ? this.createFixedSchemeIds.map((schemeId) => ({ schemeId }))
@@ -963,7 +966,7 @@ export class PatientCalendarComponent implements OnChanges {
   }
 
   private canManagePatientCalendar(): boolean {
-    if (this.allowExternalManagement) return true;
+    if (this.allowExternalManagement || this.perms.isSuperAdmin()) return true;
     const currentUserId = Number(this.currentUser?.id);
     return !!currentUserId && this.caseAdministrators.some((user) => Number(user.id) === currentUserId);
   }

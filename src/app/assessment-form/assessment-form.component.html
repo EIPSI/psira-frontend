@@ -1,3 +1,4 @@
+<p role="alert" *ngIf="loadError">{{ 'core.publicAssessmentLoadError' | translate }}</p>
 <article class="article" *ngIf="assessmentFormService.assessment$ | async as assessment">
   <div>
     <div class="progress">

@@ -1,3 +1,4 @@
+import { UserDateTimeModule } from '../directives/user-date-time/user-date-time.module';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -179,7 +180,7 @@ const PIPES = [
 ];
 
 @NgModule({
-  imports: [
+  imports: [UserDateTimeModule,
     ...antModules,
     CommonModule,
     FormsModule,

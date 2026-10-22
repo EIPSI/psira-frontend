@@ -1,3 +1,5 @@
+import { TranslateService } from '@ngx-translate/core';
+import { timezoneReference, timezoneReferenceOptions } from '@shared/utils/timezone-options.util';
 import { Component, OnInit } from '@angular/core';
 import { Setting } from '../../@types/setting';
 import { Form } from '../../../../@shared/components/form/@types/form';
@@ -30,7 +32,7 @@ export class SystemConfigurationComponent implements OnInit {
   };
   loadingMessage = '';
 
-  constructor(private settingsService: SettingsService, public perms: AppPermissionsService) {}
+  constructor(private settingsService: SettingsService, public perms: AppPermissionsService, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.getFormat();
@@ -60,7 +62,8 @@ export class SystemConfigurationComponent implements OnInit {
 
         this.settingsForm.groups.map((group) => {
           group.fields.map((field) => {
-            field.value = this.settings[field.name];
+            field.value = field.name === 'systemTimezone'
+              ? timezoneReference(this.settings[field.name]) : this.settings[field.name];
           });
         });
         this.isLoading = false;
@@ -72,6 +75,9 @@ export class SystemConfigurationComponent implements OnInit {
   }
 
   saveSettings($event: any) {
+    if ($event.systemTimezone === timezoneReference(this.settings.systemTimezone)) {
+      $event = { ...$event, systemTimezone: this.settings.systemTimezone };
+    }
     this.isLoading = true;
     this.settingsService.updateSetting($event).subscribe(
       async ({ data }) => {
@@ -144,14 +150,12 @@ export class SystemConfigurationComponent implements OnInit {
   }
 
   private getZones() {
-    const momentTimeZone = require('moment-timezone');
-    const zones = momentTimeZone.tz.names();
+    const options = timezoneReferenceOptions(this.translate.currentLang);
     this.settingsForm.groups.map((group) => {
       group.fields.map((field) => {
         if (field.name === 'systemTimezone') {
-          field.options = zones.map((zone: string) => {
-            return { value: zone, label: zone };
-          });
+          field.optionGroups = undefined;
+          field.options = options;
         }
       });
     });

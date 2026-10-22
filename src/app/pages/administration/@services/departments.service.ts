@@ -1,3 +1,4 @@
+import { combineFilters } from '@shared/utils/query-filter.util';
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { Observable } from 'rxjs';
@@ -16,12 +17,12 @@ import { RolesMutations } from '@app/@graphql/mutations/roles';
 export class DepartmentsService {
   constructor(private apollo: Apollo) {}
 
-  departments(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[] }): Observable<FetchResult<any>> {
+  departments(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting[]; includeInactive?: boolean }): Observable<FetchResult<any>> {
     return this.apollo.query({
       query: DepartmentsQueries.departments,
       variables: {
         paging: params && params.paging ? params.paging : undefined,
-        filter: params && params.filter ? params.filter : undefined,
+        filter: params?.includeInactive ? params.filter : combineFilters({ active: { is: true } }, params?.filter),
         sorting: params && params.sorting ? params.sorting : undefined,
       },
       fetchPolicy: 'no-cache',

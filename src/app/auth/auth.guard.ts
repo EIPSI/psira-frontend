@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
 
     return this.informedConsentService.getPending().pipe(
       map((pending) => {
-        if ((pending || []).some((consent) => consent.blocking)) {
+        if ((pending || []).some((consent) => (consent.mandatory || consent.blocking))) {
           this.router.navigate(['/psira/dashboard']);
           return false;
         }
@@ -42,6 +42,6 @@ export class AuthGuard implements CanActivate {
   }
 
   private isAllowedDuringInformedConsentBlock(url: string): boolean {
-    return url.startsWith('/psira/dashboard') || url.startsWith('/auth/change-password');
+    return url.startsWith('/psira/dashboard') || url.startsWith('/psira/informed-consent/pending') || url.startsWith('/auth/change-password');
   }
 }

@@ -1,3 +1,4 @@
+import { toUserDateInput } from '@shared/utils/system-settings.util';
 import { Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import {
   addDays,
@@ -19,7 +20,7 @@ import {
   CalendarView,
   ClinicalSessionCancellationType,
 } from '../@types/calendar';
-import { formatSystemDateTime, formatSystemTime, configuredMoment } from '@shared/utils/system-settings.util';
+import { formatSystemDateTime, formatSystemTime, configuredMoment, calendarDateMoment } from '@shared/utils/system-settings.util';
 
 @Component({
   selector: 'app-calendar-grid',
@@ -28,7 +29,7 @@ import { formatSystemDateTime, formatSystemTime, configuredMoment } from '@share
 })
 export class CalendarGridComponent implements OnInit, OnDestroy {
   CV = CalendarView;
-  today = new Date();
+  today = toUserDateInput(new Date());
   private draggingEvent = false;
   private suppressActivationUntil = 0;
   private pointerDragCandidate?: CalendarEvent;
@@ -42,7 +43,7 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
 
   @Input() events: CalendarEvent[] = [];
   @Input() loading = false;
-  @Input() selectedDate = new Date();
+  @Input() selectedDate = toUserDateInput(new Date());
   @Input() view = CalendarView.MONTH;
 
   @Output() selectedDateChange = new EventEmitter<Date>();
@@ -65,12 +66,13 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
     document.removeEventListener('contextmenu', this.nativeContextMenuHandler, true);
   }
 
+
   get title(): string {
-    if (this.view === CalendarView.DAY) return configuredMoment(this.selectedDate).format('dddd D MMMM YYYY');
+    if (this.view === CalendarView.DAY) return calendarDateMoment(this.selectedDate).format('dddd D MMMM YYYY');
     if (this.view === CalendarView.WEEK) {
-      return `${configuredMoment(startOfWeek(this.selectedDate)).format('D MMM')} - ${configuredMoment(endOfWeek(this.selectedDate)).format('D MMM YYYY')}`;
+      return `${calendarDateMoment(startOfWeek(this.selectedDate)).format('D MMM')} - ${calendarDateMoment(endOfWeek(this.selectedDate)).format('D MMM YYYY')}`;
     }
-    return configuredMoment(this.selectedDate).format('MMMM YYYY');
+    return calendarDateMoment(this.selectedDate).format('MMMM YYYY');
   }
 
   get monthDays(): Date[] {
@@ -103,7 +105,7 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   }
 
   goToday(): void {
-    this.updateSelectedDate(new Date());
+    this.updateSelectedDate(toUserDateInput(new Date()));
   }
 
   setView(view: CalendarView): void {
@@ -117,11 +119,12 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   }
 
   eventsForDate(date: Date): CalendarEvent[] {
-    return this.events.filter((event) => isSameDay(new Date(event.startAt), date));
+    const key = calendarDateMoment(date).format('YYYY-MM-DD');
+    return this.events.filter((event) => configuredMoment(event.startAt).format('YYYY-MM-DD') === key);
   }
 
   eventsForHour(date: Date, hour: number): CalendarEvent[] {
-    return this.eventsForDate(date).filter((event) => new Date(event.startAt).getHours() === hour);
+    return this.eventsForDate(date).filter((event) => configuredMoment(event.startAt).hour() === hour);
   }
 
   eventClass(event: CalendarEvent): string {
@@ -142,11 +145,11 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   }
 
   formatWeekday(value: Date, long: boolean = false): string {
-    return configuredMoment(value).format(long ? 'dddd' : 'ddd');
+    return calendarDateMoment(value).format(long ? 'dddd' : 'ddd');
   }
 
   formatDay(value: Date): string {
-    return configuredMoment(value).format('D');
+    return calendarDateMoment(value).format('D');
   }
 
   isToday(value: Date): boolean {

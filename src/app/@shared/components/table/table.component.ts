@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { compareTableRows } from '@shared/utils/table-sort.util';
+import { TranslateService } from '@ngx-translate/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild, Optional } from '@angular/core';
 import { ExportChoiceType } from './export-choice.type';
 import { XlsExportService } from '@shared/services/xls-export.service';
 import { NzTableQueryParams } from 'ng-zorro-antd/table';
@@ -66,10 +68,12 @@ export class TableComponent implements OnInit, OnChanges {
   listOfCurrentPageData: any[] = [];
   setOfCheckedId = new Set<number>();
   contextMenuIndex = -1;
+  private sortComparators = new Map<any, (left: any, right: any) => number>();
 
   @ViewChild('rowContextMenu', { static: false }) rowContextMenu: NzDropdownMenuComponent;
 
-  constructor(private xlsExportService: XlsExportService, private contextMenuService: NzContextMenuService) {}
+  constructor(private xlsExportService: XlsExportService, private contextMenuService: NzContextMenuService,
+    @Optional() private translate?: TranslateService) {}
 
   ngOnInit(): void {
     this.onFilterSearch(null);
@@ -134,6 +138,20 @@ export class TableComponent implements OnInit, OnChanges {
     this.xlsExportService.exportExcel(this.listOfDisplayData, 'exportedData');
   }
 
+  sortFunction(column: any): boolean | ((left: any, right: any) => number) {
+    if (!column.sort) return false;
+    if (this.onParamChange.observers.length) return true;
+    if (!this.sortComparators.has(column)) {
+      this.sortComparators.set(column, (left, right) => compareTableRows(left, right, column,
+        (text) => this.translate ? this.translate.instant(text) : text));
+    }
+    return this.sortComparators.get(column);
+  }
+
+  sourceRowIndex(data: any): number {
+    return this.listOfData.indexOf(data);
+  }
+
   onQueryParamsChange(params: NzTableQueryParams) {
     this.onParamChange.emit(params);
   }
@@ -191,7 +209,7 @@ export class TableComponent implements OnInit, OnChanges {
   emitContextAction(action: any): void {
     if (this.contextMenuIndex < 0) return;
 
-    const data = this.listOfDisplayData[this.contextMenuIndex];
+    const data = this.listOfData[this.contextMenuIndex];
     this.onCustomActionEvent({ ...action }, data);
     this.emitAction(action, this.contextMenuIndex);
   }

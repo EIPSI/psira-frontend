@@ -9,9 +9,9 @@
 >
   <thead>
     <tr>
-      <th *ngFor="let column of columns" [nzColumnKey]="column.name" [nzSortFn]="column.sort">
+      <th *ngFor="let column of columns" [nzColumnKey]="column.name" [nzSortFn]="sortFunction(column)">
         <span *ngIf="column.translationPath; else plainTitle" [translate]="column.translationPath"></span>
-        <ng-template #plainTitle> {{ column.title }} </ng-template>
+        <ng-template #plainTitle> {{ column.title | translate }} </ng-template>
       </th>
     </tr>
   </thead>

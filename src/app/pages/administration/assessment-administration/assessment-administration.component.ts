@@ -76,6 +76,7 @@ export class AssessmentAdministrationComponent implements OnInit {
 
   public onSort(sorting: SortField<AssessmentAdministration>[]): void {
     this.assessmentAdministrationRequestOptions.sorting = sorting;
+    this.assessmentAdministrationRequestOptions.paging = { first: DEFAULT_PAGE_SIZE };
     this.getAssessmentTypes();
   }
 

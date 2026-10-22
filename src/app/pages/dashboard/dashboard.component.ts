@@ -257,7 +257,8 @@ export class DashboardComponent implements OnInit {
 
   public showGeneralTab(): boolean {
     if (!this.user) return true;
-    return !this.acceptedTerm || this.consentsLoading || this.assignmentRequestsLoading || this.assessmentsLoading || this.sessionsLoading || this.totalPendingItemsCount() > 0;
+    return !this.acceptedTerm || this.consentsLoading || this.assignmentRequestsLoading ||
+      this.assessmentsLoading || this.sessionsLoading || this.totalPendingItemsCount() > 0;
   }
 
   public showReportsTab(): boolean {

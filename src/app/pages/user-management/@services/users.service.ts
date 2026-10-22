@@ -22,7 +22,11 @@ export class UsersService {
       variables: {
         paging: options && options.paging ? options.paging : undefined,
         filter: options && options.filter ? options.filter : undefined,
-        sorting: options && options.sorting ? options.sorting : undefined,
+        relationSorting: options?.sorting?.filter((sort) => ['roles', 'departments'].includes(sort.field)),
+        sorting: options?.sorting?.map((sort) => ({
+          ...sort,
+          field: ({ formattedStatus: 'active' } as any)[sort.field] || sort.field,
+        })).filter((sort) => !['formattedRoles', 'formattedDepartments', 'roles', 'departments'].includes(sort.field)),
       },
       fetchPolicy: 'no-cache',
     });

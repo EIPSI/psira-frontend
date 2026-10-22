@@ -2,6 +2,8 @@ import { Form } from '../../../../@shared/components/form/@types/form';
 import { Setting } from '../../@types/setting';
 
 const general: Form & { groups: { fields: { name: keyof Setting }[] }[] } = {
+  layout: 'definition',
+  labelWidth: '42%',
   submitButtonText: 'core.save',
   groups: [
     {

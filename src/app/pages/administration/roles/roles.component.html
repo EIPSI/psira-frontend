@@ -13,6 +13,7 @@
       [buttonText]="'roles.createRole' | translate"
       [hasNextPage]="pageInfo?.hasNextPage"
       [hasPreviousPage]="pageInfo?.hasPreviousPage"
+      (onParamChange)="handleTableParams($event)"
       (onNext)="navigatePages('next')"
       (onPrevious)="navigatePages('previous')"
       (onAction)="handleActionClick($event)"

@@ -1,5 +1,6 @@
+import { configuredMoment, fromUserDateInput } from '@shared/utils/system-settings.util';
+import * as moment from 'moment-timezone';
 import { Injectable } from '@angular/core';
-import { addDays, addMonths, addWeeks, addYears, endOfDay, startOfWeek } from 'date-fns';
 
 export enum RepeatUnit {
   DAY = 'DAY',
@@ -56,10 +57,13 @@ export class CalendarRecurrenceService {
     if (!config.enabled) return [{ startAt: config.startAt, endAt: config.endAt }];
 
     const duration = config.endAt.getTime() - config.startAt.getTime();
-    return this.buildStarts(config).map((startAt) => ({
-      startAt,
-      endAt: new Date(startAt.getTime() + duration),
-    }));
+    // Weekday choices are entered in the viewer's zone; recurrence arithmetic is UTC.
+    const dayShift = config.startAt.getUTCDay() - configuredMoment(config.startAt).day();
+    const utcConfig = {
+      ...config,
+      repeatOnDays: config.repeatOnDays.map((day) => (day + dayShift + 7) % 7).sort((a, b) => a - b),
+    };
+    return this.buildStarts(utcConfig).map((startAt) => ({ startAt, endAt: new Date(startAt.getTime() + duration) }));
   }
 
   private buildStarts(config: RecurrenceConfig): Date[] {
@@ -71,13 +75,16 @@ export class CalendarRecurrenceService {
         : config.endMode === RepeatEndMode.ON_DATE
         ? 366
         : 12;
-    const until = config.endMode === RepeatEndMode.ON_DATE && config.endDate ? endOfDay(config.endDate) : undefined;
+    const until =
+      config.endMode === RepeatEndMode.ON_DATE && config.endDate
+        ? fromUserDateInput(moment(config.endDate).endOf('day').toDate())
+        : undefined;
 
     if (config.unit === RepeatUnit.WEEK && config.repeatOnDays.length) {
       for (let weekIndex = 0; starts.length < maxCount; weekIndex += every) {
-        const weekStart = startOfWeek(addWeeks(config.startAt, weekIndex));
+        const weekStart = moment.utc(config.startAt).add(weekIndex, 'weeks').day(0).startOf('day').toDate();
         for (const day of config.repeatOnDays) {
-          const candidate = this.copyTime(addDays(weekStart, day), config.startAt);
+          const candidate = this.copyTime(moment.utc(weekStart).add(day, 'days').toDate(), config.startAt);
           if (candidate.getTime() < config.startAt.getTime()) continue;
           if (until && candidate.getTime() > until.getTime()) return starts;
           starts.push(candidate);
@@ -97,15 +104,15 @@ export class CalendarRecurrenceService {
   }
 
   private addRepeatPeriod(date: Date, amount: number, unit: RepeatUnit): Date {
-    if (unit === RepeatUnit.DAY) return addDays(date, amount);
-    if (unit === RepeatUnit.MONTH) return addMonths(date, amount);
-    if (unit === RepeatUnit.YEAR) return addYears(date, amount);
-    return addWeeks(date, amount);
+    if (unit === RepeatUnit.DAY) return moment.utc(date).add(amount, 'days').toDate();
+    if (unit === RepeatUnit.MONTH) return moment.utc(date).add(amount, 'months').toDate();
+    if (unit === RepeatUnit.YEAR) return moment.utc(date).add(amount, 'years').toDate();
+    return moment.utc(date).add(amount, 'weeks').toDate();
   }
 
   private copyTime(date: Date, source: Date): Date {
     const copied = new Date(date);
-    copied.setHours(source.getHours(), source.getMinutes(), source.getSeconds(), source.getMilliseconds());
+    copied.setUTCHours(source.getUTCHours(), source.getUTCMinutes(), source.getUTCSeconds(), source.getUTCMilliseconds());
     return copied;
   }
 }

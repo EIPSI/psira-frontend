@@ -15,7 +15,7 @@ import { PatientStatus } from '../@types/patient-status';
 export class PatientStatusesService {
   constructor(private apollo: Apollo) {}
 
-  patientStatuses(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting }): Observable<FetchResult<any>> {
+  patientStatuses(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting | Sorting[] }): Observable<FetchResult<any>> {
     return this.apollo.query({
       query: PatientStatusesQueries.patientStatuses,
       variables: {

@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 const assessments = gql`
-  query($paging: CursorPaging, $filter: AssessmentFilter, $sorting: [AssessmentSort!]) {
-    assessments(paging: $paging, filter: $filter, sorting: $sorting) {
+  query($paging: CursorPaging, $filter: AssessmentFilter, $tableSorting: [TableSortInput!]) {
+    assessments(paging: $paging, filter: $filter, tableSorting: $tableSorting) {
       edges {
         cursor
         node {
@@ -694,6 +694,7 @@ const getFullAssessment = gql`
 const getFullPublicAssessment = gql`
   query($uuid: String!) {
     getFullPublicAssessment(uuid: $uuid) {
+      consentLink
       id
       uuid
       date

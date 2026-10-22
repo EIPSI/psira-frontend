@@ -64,6 +64,8 @@ const managementFields = `
   appliesToAllDepartments
   appliesToAllRoles
   priority
+  reminderOffsets
+  reminderUnit
   active
   model { id name kind currentPublishedVersionId }
   departments { id name }

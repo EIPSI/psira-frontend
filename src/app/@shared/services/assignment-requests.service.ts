@@ -24,6 +24,14 @@ export class AssignmentRequestsService {
     });
   }
 
+  pendingTherapistSupervisorRequests(therapistId: number): Observable<FetchResult<any>> {
+    return this.apollo.query({
+      query: AssignmentRequestsQueries.pendingTherapistSupervisorRequests,
+      variables: { therapistId },
+      fetchPolicy: 'no-cache',
+    });
+  }
+
   accept(id: number): Observable<FetchResult<any>> {
     return this.apollo.mutate({
       mutation: AssignmentRequestsMutations.acceptAssignmentRequest,
