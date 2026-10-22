@@ -16,6 +16,8 @@ export enum NotificationEvent {
   ASSESSMENT_NOT_ANSWERED = 'ASSESSMENT_NOT_ANSWERED',
   ASSESSMENT_PERIODIC_SUMMARY = 'ASSESSMENT_PERIODIC_SUMMARY',
   CASE_UPDATED = 'CASE_UPDATED',
+  CASE_MANAGER_ASSIGNMENT_REQUEST = 'CASE_MANAGER_ASSIGNMENT_REQUEST',
+  CASE_SUPERVISOR_ASSIGNMENT_REQUEST = 'CASE_SUPERVISOR_ASSIGNMENT_REQUEST',
   USER_CREATED = 'USER_CREATED',
   FIRST_LOGIN = 'FIRST_LOGIN',
   LAST_LOGIN = 'LAST_LOGIN',
@@ -53,6 +55,8 @@ export const NotificationEventLabel: Record<NotificationEvent, string> = {
   [NotificationEvent.ASSESSMENT_NOT_ANSWERED]: 'Evaluación no respondida',
   [NotificationEvent.ASSESSMENT_PERIODIC_SUMMARY]: 'Resumen periódico de evaluaciones',
   [NotificationEvent.CASE_UPDATED]: 'Actualización del caso',
+  [NotificationEvent.CASE_MANAGER_ASSIGNMENT_REQUEST]: 'notifications.caseManagerAssignmentRequest',
+  [NotificationEvent.CASE_SUPERVISOR_ASSIGNMENT_REQUEST]: 'notifications.supervisorAssignmentRequest',
   [NotificationEvent.USER_CREATED]: 'Creación de usuario',
   [NotificationEvent.FIRST_LOGIN]: 'Primer login',
   [NotificationEvent.LAST_LOGIN]: 'Último login',
@@ -77,6 +81,8 @@ export const NotificationEventDescription: Record<NotificationEvent, string> = {
     'Aviso para responsables del caso cuando una evaluación queda pendiente o no fue respondida en el plazo esperado.',
   [NotificationEvent.ASSESSMENT_PERIODIC_SUMMARY]:
     'Resumen agrupado de evaluaciones respondidas y pendientes durante el período configurado.',
+  [NotificationEvent.CASE_MANAGER_ASSIGNMENT_REQUEST]: 'notifications.caseManagerAssignmentRequestDescription',
+  [NotificationEvent.CASE_SUPERVISOR_ASSIGNMENT_REQUEST]: 'notifications.supervisorAssignmentRequestDescription',
   [NotificationEvent.CASE_UPDATED]:
     'Aviso genérico para cambios relevantes en el caso, el tratamiento o la supervisión.',
   [NotificationEvent.USER_CREATED]:

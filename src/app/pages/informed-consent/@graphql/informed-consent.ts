@@ -139,7 +139,7 @@ export const InformedConsentGraphql = {
   updateManagement: gql`mutation($input: UpdateInformedConsentManagementInput!) { updateInformedConsentManagement(input: $input) { ${managementFields} } }`,
   duplicateManagement: gql`mutation($id: Int!) { duplicateInformedConsentManagement(id: $id) { ${managementFields} } }`,
   deleteManagement: gql`mutation($id: Int!) { deleteInformedConsentManagement(id: $id) }`,
-  responses: gql`query { informedConsentResponses { ${responseFields} } }`,
+  responses: gql`query($patientId: Int, $userId: Int) { informedConsentResponses(patientId: $patientId, userId: $userId) { ${responseFields} } }`,
   myResponses: gql`query { myInformedConsentResponses { ${responseFields} } }`,
   response: gql`query($id: Int!) { informedConsentResponse(id: $id) { ${responseFields} } }`,
   pending: gql`query { pendingInformedConsents { managementId modelId versionId title kind trigger mandatory blocking responseId responseStatus } }`,

@@ -46,6 +46,8 @@ export default {
     updated: 'Bundle updated successfully!',
   },
   calendar: {
+    unableLoadTargets: 'Beschikbare personen voor de kalender konden niet worden geladen',
+    duration45: '45 min',
     createEvent: 'Create Event',
     createSession: 'Create Session',
     details: 'Details',
@@ -1060,6 +1062,10 @@ export default {
       'You have {{count}} unanswered required question(s). Are you sure you want to finish the questionnaire?',
   },
   notifications: {
+    supervisorAssignmentRequestDescription: 'Meldt een verzoek om een therapeut te superviseren. Het verzoek kan via het dashboard worden geaccepteerd of afgewezen.',
+    caseManagerAssignmentRequestDescription: 'Meldt een verzoek om een patiënt te begeleiden. Het verzoek kan via het dashboard worden geaccepteerd of afgewezen.',
+    supervisorAssignmentRequest: 'Verzoek om supervisor te worden',
+    caseManagerAssignmentRequest: 'Verzoek om casemanager te worden',
     channel: 'Channel',
     configurableNotificationType: 'Configurable notification type in PSIRA.',
     configurationHelp: 'Define which template is used for each event, department and recipient role.',

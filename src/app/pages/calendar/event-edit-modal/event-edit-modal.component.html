@@ -61,6 +61,7 @@
     <div class="duration-actions">
       <span>{{ 'evaluationSchemes.duration' | translate }}</span>
       <button nz-button nzSize="small" [disabled]="!canEdit" (click)="durationChange.emit(30)">{{ 'calendar.duration30' | translate }}</button>
+      <button nz-button nzSize="small" [disabled]="!canEdit" (click)="durationChange.emit(45)">{{ 'calendar.duration45' | translate }}</button>
       <button nz-button nzSize="small" [disabled]="!canEdit" (click)="durationChange.emit(60)">{{ 'calendar.duration60' | translate }}</button>
       <button nz-button nzSize="small" [disabled]="!canEdit" (click)="durationChange.emit(90)">{{ 'calendar.duration90' | translate }}</button>
     </div>

@@ -143,7 +143,12 @@ export class FormComponent implements OnInit {
         }
         rowData[item.name] = item.value;
       }
-      items.push(rowData);
+      const hasContactData = Object.keys(rowData).some((key) =>
+        key !== 'id' && rowData[key] !== null && rowData[key] !== undefined && String(rowData[key]).trim() !== ''
+      );
+      if (field.name !== 'emergencyContacts' || hasContactData) {
+        items.push(rowData);
+      }
     }
     return items;
   }
@@ -166,7 +171,7 @@ export class FormComponent implements OnInit {
   parseArrayDataForEdit(objectToBeEdited: any, field: Field, parent?: Field, row: any[] = []) {
     field.rows = [];
     const objectString = JSON.stringify(field);
-    const items = objectToBeEdited ? objectToBeEdited[field.name] : [];
+    const items = objectToBeEdited?.[field.name] || [];
     items.map((item: any) => {
       const rowItem: any[] = [];
       const object = JSON.parse(objectString);
@@ -191,6 +196,9 @@ export class FormComponent implements OnInit {
       field.rows.push(rowItem);
       row.push(rowItem);
     });
+    while (field.rows.length < (field.minRows || 0)) {
+      field.rows.push(JSON.parse(JSON.stringify(field.children)).map((child: Field): Field => ({ ...child, value: '' })));
+    }
     if (parent) {
       parent.rows.push(row);
     }

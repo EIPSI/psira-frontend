@@ -338,6 +338,7 @@ const googleCalendarIntegrationStatus = gql`
 const clinicalSessions = gql`
   query($filter: ClinicalSessionListFilterInput) {
     clinicalSessions(filter: $filter) {
+      canEdit
       id
       sessionKind
       sessionNumber
@@ -496,7 +497,10 @@ const treatmentCycles = gql`
   }
 `;
 
+const calendarTargets = gql`query { calendarTargets { id firstName middleName lastName email workID roles { id code name } departments { id name } } }`;
+
 export const CalendarQueries = {
+  calendarTargets,
   calendarOccurrences,
   calendarEvents,
   clinicalSessionSchemeApplications,

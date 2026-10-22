@@ -198,6 +198,11 @@ export class CalendarComponent implements OnChanges, OnInit {
     );
   }
 
+  onEditStartChange(startAt: Date): void {
+    this.editStartAt = startAt;
+    if (startAt) this.setEditDurationMinutes(60);
+  }
+
   setEditDurationMinutes(minutes: number): void {
     if (!this.editStartAt) return;
     this.editEndAt = this.eventUiService.endFromDuration(this.editStartAt, minutes);
@@ -476,21 +481,13 @@ export class CalendarComponent implements OnChanges, OnInit {
   }
 
   private loadTargetUsers(): void {
-    this.usersService
-      .getUsers({
-        paging: { first: 50 },
-        sorting: [{ field: 'firstName', direction: 'ASC' } as any, { field: 'lastName', direction: 'ASC' } as any],
-      })
-      .subscribe(
-        ({ data }: any) => {
-          this.targetUsers = (data?.users?.edges || [])
-            .map((edge: any) => edge.node)
-            .filter((user: User) => this.canEditTargetUser(user));
-          if (this.targetUserId)
-            this.targetUser = this.targetUsers.find((user) => Number(user.id) === Number(this.targetUserId));
-        },
-        () => (this.targetUsers = [])
-      );
+    this.calendarService.getTargets().subscribe(
+      (users) => {
+        this.targetUsers = users;
+        if (this.targetUserId) this.targetUser = users.find(user => Number(user.id) === Number(this.targetUserId));
+      },
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadTargets') })
+    );
   }
 
   private prepareTargetCalendarCreateModal(): void {

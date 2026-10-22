@@ -19,6 +19,8 @@ export class NotificationConfigurationModel {
       },
       formattedEvent: {
         title: NotificationEventLabel[configuration.event] || configuration.event,
+        translationPath: NotificationEventLabel[configuration.event]?.startsWith('notifications.')
+          ? NotificationEventLabel[configuration.event] : undefined,
         color: 'purple',
       },
       recipientRoleName: configuration.recipientRole?.name || String(configuration.recipientRoleId),

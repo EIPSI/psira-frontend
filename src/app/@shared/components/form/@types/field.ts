@@ -24,6 +24,7 @@ export interface Field {
   rows?: any;
   iconName?: string;
   pattern?: string;
+  minRows?: number;
   minLength?: number;
   maxLength?: number;
   min?: number;

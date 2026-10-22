@@ -383,6 +383,16 @@ export class UserCalendarComponent implements OnChanges {
     return this.translate.instant('dashboard.supervision');
   }
 
+  onCreateStartChange(startAt: Date): void {
+    this.createStartAt = startAt;
+    if (startAt) this.createEndAt = this.eventUiService.endFromDuration(startAt, 60);
+  }
+
+  onEditStartChange(startAt: Date): void {
+    this.editStartAt = startAt;
+    if (startAt) this.setEditDurationMinutes(60);
+  }
+
   setEditDurationMinutes(minutes: number): void {
     if (!this.editStartAt) return;
     this.editEndAt = this.eventUiService.endFromDuration(this.editStartAt, minutes);

@@ -8,13 +8,12 @@ import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { TranslateService } from '@ngx-translate/core';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { NotificationsService } from '../@services/notifications.service';
 import {
   NotificationChannel,
   NotificationChannelLabel,
-  NotificationConfiguration,
   NotificationEvent,
   NotificationEventDescription,
   NotificationEventLabel,
@@ -74,6 +73,8 @@ export class NotificationConfigurationEditorComponent implements OnInit {
   }
 
   save(): void {
+    this.form.controls.mailTemplateId.setValidators(this.emailTemplateRequired() ? Validators.required : null);
+    this.form.controls.mailTemplateId.updateValueAndValidity({ emitEvent: false });
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.message.warning(this.translate.instant('systemMessages.requiredFields'));
@@ -81,21 +82,13 @@ export class NotificationConfigurationEditorComponent implements OnInit {
     }
     const value = this.form.value;
     const departmentIds = (value.departmentIds || []).map((id: any) => Number(id)).filter((id: number) => !!id);
-    const scopes: Array<number | null> = departmentIds.length ? departmentIds : [null];
-    const basePayload: Partial<NotificationConfiguration> = {
+    const request = this.notificationsService.saveConfigurations({
       ...value,
+      id: this.configurationId,
+      departmentIds,
       family: this.eventFamily(value.event),
-      mailTemplateId: value.mailTemplateId || undefined,
-    };
-    delete (basePayload as any).departmentIds;
-    const requests = scopes.map((departmentId: number | null, index: number) => {
-      const payload = { ...basePayload, departmentId: departmentId || undefined };
-      if (this.configurationId && index === 0) {
-        return this.notificationsService.updateConfiguration({ id: this.configurationId, ...payload });
-      }
-      return this.notificationsService.createConfiguration(payload);
+      mailTemplateId: value.mailTemplateId,
     });
-    const request = requests.length ? forkJoin(requests) : of([]);
 
     this.saving = true;
     request.pipe(finalize(() => (this.saving = false))).subscribe(
@@ -109,14 +102,18 @@ export class NotificationConfigurationEditorComponent implements OnInit {
     );
   }
 
+  emailTemplateRequired(): boolean {
+    return this.form.controls.channel.value === NotificationChannel.EMAIL && this.form.controls.active.value !== false;
+  }
+
   onEventChange(event: NotificationEvent): void {
     this.form.controls.family.setValue(this.eventFamily(event));
   }
 
   showEventDescription(event: NotificationEvent): void {
     this.modalService.info({
-      nzTitle: this.eventLabel[event] || event,
-      nzContent: this.eventDescription[event] || this.translate.instant('notifications.configurableNotificationType'),
+      nzTitle: this.translate.instant(this.eventLabel[event] || event),
+      nzContent: this.translate.instant(this.eventDescription[event] || 'notifications.configurableNotificationType'),
       nzOkText: this.translate.instant('core.close'),
     });
   }

@@ -410,6 +410,10 @@ export default {
     placeholder: 'Feedback works!',
   },
   notifications: {
+    supervisorAssignmentRequestDescription: 'Notifies a user of a request to supervise a therapist. They can accept or reject it from the dashboard.',
+    caseManagerAssignmentRequestDescription: 'Notifies a user of a request to manage a patient. They can accept or reject it from the dashboard.',
+    supervisorAssignmentRequest: 'Supervisor assignment request',
+    caseManagerAssignmentRequest: 'Case manager assignment request',
     title: 'Notifications',
     createConfiguration: 'Create configuration',
     editConfiguration: 'Edit configuration',
@@ -560,6 +564,8 @@ export default {
     notArchivedPatients: 'Show not Archived',
   },
   calendar: {
+    unableLoadTargets: 'Unable to load available calendar targets',
+    duration45: '45 min',
     type: 'Event type',
     emptyDay: 'No events for this day',
     details: 'Details',
