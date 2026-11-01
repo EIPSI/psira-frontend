@@ -1,3 +1,4 @@
+import { buildQuestionnairePages } from '@app/assessment-form/assessment-pages';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -64,6 +65,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
     headerHtml: [''],
     noticeHtml: [''],
     active: [true],
+    progressMode: ['NONE'],
     departmentIds: [],
   });
   listOfDepartments: any[] = [];
@@ -101,6 +103,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
             this.bundleForm.controls['name'].setValue(this.bundle?.name);
             this.bundleForm.controls['headerHtml'].setValue(this.bundle?.headerHtml || '');
             this.bundleForm.controls['noticeHtml'].setValue(this.bundle?.noticeHtml || '');
+            this.bundleForm.controls['progressMode'].setValue(this.bundle?.progressMode || 'NONE');
             this.bundleForm.controls['active'].setValue(this.bundle?.active !== false);
             this.selectedDepartments = this.bundle?.departmentIds || [];
             this.structure = this.normalizeRootStructure(this.flattenLegacyScreens(this.parseStructure(this.bundle?.structureJson)));
@@ -402,7 +405,20 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
       } else visit(node.children || []);
     });
     visit(root.children || []);
-    return screens;
+    const resolved = screens.flatMap((screen, index) => screen.questionnaires.map((questionnaire) => ({
+      ...questionnaire,
+      sourceBundleId: 'preview',
+      screenId: `preview-${index}`,
+      screenLabel: screen.title,
+      screenHeaderHtml: screen.headerHtml,
+      screenFooterHtml: screen.footerHtml,
+    })));
+    return buildQuestionnairePages(resolved).map(page => ({
+      title: page.label,
+      headerHtml: page.headerHtml,
+      footerHtml: page.footerHtml,
+      questionnaires: page.questionnaires,
+    }));
   }
 
   questionnaireById(questionnaireId: string | null | undefined): QuestionnaireVersion | undefined {
@@ -431,6 +447,7 @@ export class CreateQuestionnaireBundleComponent implements OnInit {
       name: this.bundleForm.value.name,
       headerHtml: this.bundleForm.value.headerHtml || '',
       noticeHtml: this.bundleForm.value.noticeHtml || '',
+      progressMode: this.bundleForm.value.progressMode || 'NONE',
       active: this.bundleForm.value.active !== false,
       departmentIds: this.selectedDepartments || [],
       structure,

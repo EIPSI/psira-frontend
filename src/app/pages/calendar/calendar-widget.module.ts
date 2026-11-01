@@ -19,6 +19,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { AppliedAutomationsListComponent } from './applied-automations-list/applied-automations-list.component';
+import { CalendarOverflowDirective } from './calendar-grid/calendar-overflow.directive';
 import { CalendarGridComponent } from './calendar-grid/calendar-grid.component';
 import { CalendarComponent } from './calendar.component';
 import { ClinicalFollowUpListComponent } from './clinical-follow-up-list/clinical-follow-up-list.component';
@@ -31,6 +32,7 @@ import { PatientCalendarComponent } from '@app/pages/patients-management/calenda
 
 @NgModule({
   declarations: [
+    CalendarOverflowDirective,
     CalendarComponent,
     CalendarGridComponent,
     AppliedAutomationsListComponent,

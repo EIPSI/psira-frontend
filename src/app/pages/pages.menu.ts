@@ -164,7 +164,8 @@ export const MENU: SideNavInterface[] | any = [
   {
     path: 'administration',
     title: 'menu.administration',
-    permissions: [PK.ROLES_VIEW_ALL, PK.SETTINGS_VIEW_ALL, PK.SYSTEM_VIEW_ALL],
+    permissions: [PK.ROLES_VIEW_ALL, PK.ROLES_VIEW_DEPARTMENT_HIERARCHY, PK.SETTINGS_VIEW_DEPARTMENT, PK.SETTINGS_VIEW_ALL,
+      PK.SYSTEM_VIEW_ALL, PK.CLINICAL_SETTINGS_VIEW_DEPARTMENT, PK.CLINICAL_SETTINGS_VIEW_ALL],
     iconType: 'nzIcon',
     iconTheme: 'outline',
     icon: 'setting',
@@ -180,7 +181,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/permission-matrix',
         title: 'menu.permissionMatrix',
-        permissions: [PK.ROLES_VIEW_ALL],
+        permissions: [PK.ROLES_VIEW_ALL, PK.ROLES_VIEW_DEPARTMENT_HIERARCHY],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -188,7 +189,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/roles',
         title: 'menu.roles',
-        permissions: [PK.ROLES_VIEW_ALL],
+        permissions: [PK.ROLES_VIEW_ALL, PK.ROLES_VIEW_DEPARTMENT_HIERARCHY],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -196,7 +197,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/departments',
         title: 'menu.departments',
-        permissions: [PK.SETTINGS_VIEW_ALL],
+        permissions: [PK.SETTINGS_VIEW_ALL, PK.DEPARTMENTS_VIEW_ALL, PK.DEPARTMENTS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         icon: '',
@@ -205,7 +206,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/disclaimers',
         title: 'menu.disclaimers',
-        permissions: [PK.SETTINGS_VIEW_ALL],
+        permissions: [PK.SETTINGS_VIEW_ALL, PK.SETTINGS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         icon: '',
@@ -214,7 +215,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/assessments',
         title: 'menu.assessments',
-        permissions: [PK.SETTINGS_VIEW_ALL],
+        permissions: [PK.SETTINGS_VIEW_ALL, PK.SETTINGS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         icon: '',
@@ -223,7 +224,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/patient-statuses',
         title: 'menu.patientStatuses',
-        permissions: [PK.SETTINGS_VIEW_ALL],
+        permissions: [PK.SETTINGS_VIEW_ALL, PK.SETTINGS_VIEW_DEPARTMENT],
         iconType: '',
         iconTheme: '',
         submenu: [],
@@ -231,7 +232,7 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/version',
         title: 'menu.version',
-        permissions: [PK.SETTINGS_VIEW_ALL],
+        permissions: [PK.SETTINGS_VIEW_ALL, PK.SETTINGS_VIEW_DEPARTMENT],
         iconType: 'nzIcon',
         iconTheme: 'outline',
         icon: 'code',
@@ -240,7 +241,8 @@ export const MENU: SideNavInterface[] | any = [
       {
         path: 'administration/settings',
         title: 'menu.settings',
-        permissions: [PK.SETTINGS_VIEW_ALL, PK.SYSTEM_VIEW_ALL],
+        permissions: [PK.SETTINGS_VIEW_ALL, PK.SETTINGS_VIEW_DEPARTMENT, PK.SYSTEM_VIEW_ALL,
+          PK.CLINICAL_SETTINGS_VIEW_DEPARTMENT, PK.CLINICAL_SETTINGS_VIEW_ALL],
         iconType: '',
         iconTheme: '',
         submenu: [
@@ -255,7 +257,7 @@ export const MENU: SideNavInterface[] | any = [
           {
             path: 'administration/settings/follow-up-settings',
             title: 'clinicalSettings.title',
-            permissions: [PK.SETTINGS_VIEW_ALL],
+            permissions: [PK.SETTINGS_VIEW_ALL, PK.CLINICAL_SETTINGS_VIEW_ALL, PK.CLINICAL_SETTINGS_VIEW_DEPARTMENT],
             iconType: '',
             iconTheme: '',
             submenu: [],
@@ -263,7 +265,7 @@ export const MENU: SideNavInterface[] | any = [
           {
             path: 'administration/settings/session-cancellation-reasons',
             title: 'menu.reasonConfiguration',
-            permissions: [PK.SETTINGS_VIEW_ALL],
+            permissions: [PK.SETTINGS_VIEW_ALL, PK.SETTINGS_VIEW_DEPARTMENT],
             iconType: '',
             iconTheme: '',
             submenu: [],
@@ -271,7 +273,7 @@ export const MENU: SideNavInterface[] | any = [
           {
             path: 'administration/settings/language',
             title: 'menu.language',
-            permissions: [PK.SETTINGS_VIEW_ALL],
+            permissions: [PK.SETTINGS_VIEW_ALL, PK.SETTINGS_VIEW_DEPARTMENT],
             iconType: '',
             iconTheme: '',
             submenu: [],

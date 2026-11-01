@@ -1,3 +1,6 @@
+import { AppPermissionsService } from '@shared/services/app-permissions.service';
+import { PermissionKey } from '@shared/@types/permission';
+import { DepartmentsService } from '../@services/departments.service';
 import { Component, OnInit } from '@angular/core';
 import { Disclaimers } from '@app/pages/administration/@types/disclaimers';
 import { TableColumn } from '@shared/@modules/master-data/@types/list';
@@ -17,6 +20,9 @@ import { AngularEditorConfig } from '@kolkov/angular-editor';
   styleUrls: ['./disclaimers.component.scss'],
 })
 export class DisclaimersComponent implements OnInit {
+  departmentId = 0;
+  globalAccess = false;
+  departments: Array<{ id: number; name: string }> = [];
   public data: Partial<Disclaimers>[];
   public columns: TableColumn<Partial<Disclaimers>>[] = DisclaimersColumns;
   public disclaimers: Disclaimers;
@@ -38,10 +44,18 @@ export class DisclaimersComponent implements OnInit {
     private disclaimersService: DisclaimersService,
     private errorService: ErrorHandlerService,
     private authService: AuthService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private perms: AppPermissionsService,
+    private departmentsService: DepartmentsService
   ) {}
 
   ngOnInit(): void {
+    this.globalAccess = this.perms.permissionsOnly(PermissionKey.SETTINGS_EDIT_ALL);
+    this.departments = JSON.parse(localStorage.getItem('user') || '{}').departments || [];
+    if (!this.globalAccess) this.departmentId = this.departments[0]?.id || 0;
+    else this.departmentsService.departments({ paging: { first: 50 } }).subscribe(({ data }: any) => {
+      this.departments = data.departments.edges.map((edge: any) => edge.node);
+    }, (error) => this.errorService.handleError(error));
     this.getDisclaimers();
     this.getUser();
   }
@@ -95,7 +109,7 @@ export class DisclaimersComponent implements OnInit {
   }
 
   public updateDisclaimer() {
-    const sendResult = { type: this.disclaimer.type, description: this.description || '' };
+    const sendResult = { departmentId: this.departmentId || undefined, type: this.disclaimer.type, description: this.description || '' };
 
     return this.disclaimersService
       .updateDisclaimer(sendResult)
@@ -112,10 +126,10 @@ export class DisclaimersComponent implements OnInit {
       );
   }
 
-  private getDisclaimers(): void {
+  getDisclaimers(): void {
     this.isLoading = true;
     this.disclaimersService
-      .disclaimers()
+      .disclaimers(this.departmentId)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe(
         ({ data }: any) => {

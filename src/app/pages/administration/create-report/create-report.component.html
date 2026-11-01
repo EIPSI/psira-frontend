@@ -4,6 +4,13 @@
 <div class="parent-div">
   <div class="form-div">
     <div class="report-field">
+      <label><b>{{ 'notifications.department' | translate }} <span *ngIf="departmentRequired" class="required-mark">*</span></b></label>
+      <nz-select nzMode="multiple" [(ngModel)]="reportDraft.departmentIds" [nzDisabled]="!inputMode" style="width: 100%">
+        <nz-option *ngFor="let option of departmentOptions" [nzValue]="option.value" [nzLabel]="option.label"></nz-option>
+      </nz-select>
+      <small>{{ 'researchRoles.reportDepartmentsDescription' | translate }}</small>
+    </div>
+    <div class="report-field">
       <label>
         <b>{{ 'forms.createReportForm.reportName' | translate }} <span class="required-mark">*</span></b>
       </label>

@@ -1,6 +1,7 @@
+import { PermissionKey } from '@shared/@types/permission';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { Component, Input, OnChanges } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
 import { CalendarService } from '../@services/calendar.service';
@@ -48,9 +49,11 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   sortDirection: 'ASC' | 'DESC' = 'DESC';
   showFutureSessions = false;
   historyEntries: CaseHistoryEntry[] = [];
+  standaloneAssessments: CalendarAssessment[] = [];
   documentItems: Array<
     { type: 'SESSION'; date: string; session: ClinicalSession } |
-    { type: 'ENTRY'; date: string; entry: CaseHistoryEntry }
+    { type: 'ENTRY'; date: string; entry: CaseHistoryEntry } |
+    { type: 'ASSESSMENT'; date: string; assessment: CalendarAssessment }
   > = [];
   noteModalVisible = false;
   noteOccurredAt = new Date();
@@ -160,7 +163,15 @@ export class ClinicalFollowUpListComponent implements OnChanges {
         date: entry.occurredAt,
         entry,
       }));
-    this.documentItems = [...sessionItems, ...entryItems].sort((a, b) => {
+    const notedIds = new Set(this.historyEntries.map(entry => entry.assessmentId).filter(Boolean));
+    const assessmentItems = this.standaloneAssessments
+      .filter(assessment => !notedIds.has(assessment.id))
+      .filter(assessment => {
+        const date = new Date(this.standaloneAssessmentDate(assessment));
+        return (!from || date >= from) && (!to || date <= to) && (this.showFutureSessions || date.getTime() <= Date.now());
+      })
+      .map(assessment => ({ type: 'ASSESSMENT' as const, date: this.standaloneAssessmentDate(assessment), assessment }));
+    this.documentItems = [...sessionItems, ...entryItems, ...assessmentItems].sort((a, b) => {
       const left = new Date(a.date).getTime();
       const right = new Date(b.date).getTime();
       return this.sortDirection === 'ASC' ? left - right : right - left;
@@ -170,7 +181,9 @@ export class ClinicalFollowUpListComponent implements OnChanges {
   canEdit(session: ClinicalSession): boolean {
     if (session.clinicalStatus === 'CANCELLED') return false;
     if (session.canEdit === false) return false;
-    if (this.perms.isSuperAdmin()) return true;
+    if (this.perms.isSuperAdmin() || this.perms.permissionsOnly([
+      PermissionKey.CLINICAL_EDIT_ALL, PermissionKey.CLINICAL_EDIT_DEPARTMENT,
+    ])) return true;
     if (!this.settings) return true;
     const editUntil = new Date(session.calendarOccurrence.startAt);
     editUntil.setDate(editUntil.getDate() + this.settings.editWindowDays);
@@ -256,6 +269,25 @@ export class ClinicalFollowUpListComponent implements OnChanges {
     );
   }
 
+  standaloneAssessmentDate(assessment: CalendarAssessment): string {
+    return assessment.deliveryDate || assessment.createdAt || '';
+  }
+
+  standaloneAssessmentLabel(assessment: CalendarAssessment): string {
+    return assessment.name || assessment.assessmentType?.name || `${this.translate.instant('plannedAssessments.assessment')} ${assessment.id}`;
+  }
+
+  openStandaloneAssessment(assessment: CalendarAssessment): void {
+    this.openRawAssessment({ id: assessment.id, assessment } as ClinicalSessionResource);
+  }
+
+  entryAssessmentIsAnswered(entry: CaseHistoryEntry): boolean {
+    const assessment = this.standaloneAssessments.find(item => item.id === entry.assessmentId) ||
+      this.sessions.flatMap(session => this.assessmentResources(session))
+        .find(resource => resource.assessment?.id === entry.assessmentId)?.assessment;
+    return this.assessmentIsAnswered(assessment);
+  }
+
   entryIsAssessmentNote(entry: CaseHistoryEntry): boolean {
     return !!entry.assessmentId;
   }
@@ -307,6 +339,8 @@ export class ClinicalFollowUpListComponent implements OnChanges {
         sessionKind: this.sessionKind,
         includeCancelled: true,
       }),
+      assessments: this.patientId || this.therapistId
+        ? this.calendarService.getCaseHistoryAssessments(this.patientId, this.therapistId) : of([]),
       entries: this.calendarService.getCaseHistoryEntries({
         patientId: this.patientId,
         therapistId: this.therapistId,
@@ -316,9 +350,10 @@ export class ClinicalFollowUpListComponent implements OnChanges {
     })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(
-        ({ sessions, entries }: { sessions: ClinicalSession[]; entries: CaseHistoryEntry[] }) => {
+        ({ sessions, entries, assessments }: { sessions: ClinicalSession[]; entries: CaseHistoryEntry[]; assessments: CalendarAssessment[] }) => {
           this.sessions = sessions;
           this.historyEntries = entries;
+          this.standaloneAssessments = assessments;
           this.applyFilters();
         },
         (error: any) => this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableLoadFollowUps') })

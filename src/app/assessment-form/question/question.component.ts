@@ -23,10 +23,20 @@ export class QuestionComponent {
     return this._question;
   }
 
+  @Input() showRequiredError = false;
+  public saveError = false;
   public QuestionType = QuestionType;
 
+  public get isRange(): boolean { return ['slider', 'vas'].includes(this.question?.appearance?.toLowerCase()) && !!this.question?.presentation; }
+  public get invalidQuestion(): boolean { return this.saveError || (this.showRequiredError && !this.answer?.valid); }
+
+
   @Input()
-  public questionnaire: QuestionnaireVersion;
+  public set questionnaire(value: QuestionnaireVersion) {
+    this._questionnaire = value;
+    if (this._question) this.initAnswer(this._question);
+  }
+  public get questionnaire(): QuestionnaireVersion { return this._questionnaire; }
 
   public dateFormat: string;
 
@@ -35,6 +45,7 @@ export class QuestionComponent {
   public answerGiven = new Subject<Answer>();
 
   private _question: Question;
+  private _questionnaire: QuestionnaireVersion;
 
   constructor(private assessmentFormService: AssessmentFormService, private errorService: ErrorHandlerService) {
     this.dateFormat = toNzDateFormat();
@@ -44,6 +55,7 @@ export class QuestionComponent {
   }
 
   public addAnswer(answer: Answer): void {
+    this.saveError = false;
     const request = {
         question: answer.question,
         textValue: answer.textValue,
@@ -77,7 +89,7 @@ export class QuestionComponent {
               multipleChoiceValue: this.answer.multipleChoiceValue,
             } as Partial<Answer>
           )),
-        (err) => this.errorService.handleError(err, { prefix: 'Unable to answer question' })
+        (err) => { this.saveError = true; this.errorService.handleError(err, { prefix: 'Unable to answer question' }); }
       );
   }
 

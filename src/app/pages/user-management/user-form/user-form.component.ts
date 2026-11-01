@@ -377,8 +377,10 @@ export class UserFormComponent implements OnInit {
         const relations = field.name === 'roleId' ? this.user?.roles : field.name === 'departmentId' ? this.user?.departments : null;
         if (relations) {
           const options = new Map((field.options || []).map(option => [Number(option.value), option]));
-          (relations as Array<{ id?: number; name?: string }>).forEach((relation) => {
-            if (relation.id) options.set(Number(relation.id), { value: relation.id, label: relation.name || String(relation.id) });
+          (relations as Array<{ id?: number; name?: string; code?: string }>).forEach((relation) => {
+            const label = relation.code === 'RESEARCH_ADMIN' ? this.translate.instant('roles.researchAdmin')
+              : relation.code === 'PROJECT_RESEARCHER' ? this.translate.instant('roles.projectResearcher') : relation.name;
+            if (relation.id) options.set(Number(relation.id), { value: relation.id, label: label || String(relation.id) });
           });
           field.options = Array.from(options.values());
         }
@@ -888,7 +890,7 @@ export class UserFormComponent implements OnInit {
       value: department.id,
       label: department.name,
     }));
-    departmentField.isRequired = !roleCodes.includes('SUPER_ADMIN');
+    departmentField.isRequired = !roleCodes.some(code => ['SUPER_ADMIN', 'RESEARCH_ADMIN'].includes(code));
 
     const currentValue = this.currentProfileFieldValue('departmentId') || (this.user as any)?.departmentId || [];
     const currentDepartmentIds = Array.isArray(currentValue) ? currentValue.map(Number) : [Number(currentValue)].filter(Boolean);

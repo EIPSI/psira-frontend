@@ -1,3 +1,4 @@
+import { DepartmentsService } from '@app/pages/administration/@services/departments.service';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -33,6 +34,8 @@ import { encryptRouteObject, encryptRoutePayload, decryptRoutePayload } from '@a
 })
 export class CreateReportComponent implements OnInit {
   roles: Role[] = [];
+  departmentOptions: Field['options'] = [];
+  departmentRequired = false;
   selectedRoles: Role[] = [];
   shinyApps: ShinyApp[] = [];
   report: Reports;
@@ -70,13 +73,26 @@ export class CreateReportComponent implements OnInit {
     private reportsService: ReportsService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private departmentsService: DepartmentsService
   ) {}
 
   ngOnInit(): void {
     this.configureResourceField();
     this.getReportFromUrl();
     this.getRoles();
+    const departmentField = this.getField('departmentIds');
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    departmentField.isRequired = currentUser.roles?.some((role: Role) => role.code === 'PROJECT_RESEARCHER') &&
+      !currentUser.roles?.some((role: Role) => ['SUPER_ADMIN', 'RESEARCH_ADMIN'].includes(role.code));
+    this.departmentRequired = departmentField.isRequired;
+    this.departmentsService.departments({ paging: { first: 50 } }).subscribe(
+      ({ data }: any) => {
+        this.departmentOptions = data.departments.edges.map((edge: any) => ({ value: edge.node.id, label: edge.node.name }));
+        departmentField.options = this.departmentOptions;
+      },
+      (error) => this.errorService.handleError(error)
+    );
     this.getAvailableShinyApps();
     if(this.report){
       this.selectedRoles = this.report?.roles?.filter((role) => this.reportHasRole(role.id));
@@ -317,6 +333,7 @@ export class CreateReportComponent implements OnInit {
       url: reportData.url || this.getUrlForApp(reportData.appName),
       resources: (reportData.resources || '').trim(),
       roles,
+      departmentIds: reportData.departmentIds || [],
     };
   }
 
@@ -377,6 +394,10 @@ export class CreateReportComponent implements OnInit {
   }
 
   private validateRequiredReportFields(reportData: CreateReportInput): boolean {
+    if (this.departmentRequired && !reportData.departmentIds?.length) {
+      this.message.warning(this.translate.instant('systemMessages.requiredFields'));
+      return false;
+    }
     const requiredFields = [
       { name: 'name', message: 'forms.createReportForm.reportNameValidation' },
       { name: 'resources', message: 'forms.createReportForm.resourcesValidation' },

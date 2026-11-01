@@ -3,6 +3,7 @@
 .calendar-event {
   white-space: normal;
   overflow-wrap: anywhere;
+  transition: filter 0.12s ease, box-shadow 0.12s ease;
 }
 
 .calendar-event-title,
@@ -14,4 +15,120 @@
   margin-top: 3px;
   font-size: 10px;
   line-height: 1.3;
+}
+
+.month-day {
+  grid-template-rows: 24px minmax(0, auto);
+  height: 224px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.month-events {
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+}
+
+.month-events-scroll {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  border-radius: 4px;
+}
+
+.month-events-scroll:focus-visible {
+  outline: 2px solid #186fb5;
+  outline-offset: -2px;
+}
+
+.month-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding-bottom: 12px;
+}
+
+.month-events-list .calendar-event {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1 0 auto;
+  font-size: 12px;
+  line-height: 1.35;
+  min-height: 78px;
+  padding: 9px 10px;
+  box-sizing: border-box;
+}
+
+.month-events-list .calendar-event-time {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  opacity: 0.9;
+}
+
+.month-events-list .calendar-event-title {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  width: 100%;
+  white-space: normal;
+}
+
+.month-events-list .calendar-event-people {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  margin-top: auto;
+  padding-top: 4px;
+  width: 100%;
+  white-space: normal;
+}
+
+.month-events-more {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  bottom: 1px;
+  color: #475467;
+  display: flex;
+  font-size: 10px;
+  height: 14px;
+  justify-content: center;
+  left: 50%;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+  width: 28px;
+  z-index: 2;
+}
+
+.has-more-events + .month-events-more {
+  opacity: 1;
+}
+
+.month-day:hover,
+.time-cell:hover {
+  background: #f2f4f7;
+}
+
+.month-day:hover .calendar-event,
+.time-cell:hover .calendar-event {
+  filter: brightness(0.92);
+}
+
+.month-day .calendar-event:hover,
+.time-cell .calendar-event:hover {
+  box-shadow: inset 0 0 0 2px rgba(16, 24, 40, 0.3);
+  filter: brightness(0.8);
 }

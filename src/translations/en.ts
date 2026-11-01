@@ -1,4 +1,8 @@
 export default {
+  researchRoles: {
+    dataExports: 'Research exports',
+    reportDepartmentsDescription: 'Select the report departments. A global administrator must modify shared reports.',
+  },
   storageNotice: {
     title: 'Privacy and browser storage',
     message:
@@ -235,6 +239,8 @@ export default {
     saveGoogleCalendar: 'Save Google Calendar',
   },
   clinicalSettings: {
+    globalDefaults: 'Global defaults',
+    departmentScopeDescription: 'Changes apply only to the selected department. Departments without their own configuration inherit the global defaults.',
     title: 'Clinical settings',
     editWindow: 'Editing window per session',
     daysFromSessionDate: 'days from the session date',
@@ -930,6 +936,8 @@ export default {
     unableLoadParticularDepartment: 'Unable to load default Particular department',
   },
   roles: {
+    researchAdmin: 'Research administrator',
+    projectResearcher: 'Project researcher',
     createRole: 'Create Role',
     editRole: 'Edit role',
     deleteRole: 'Delete role',
@@ -2106,5 +2114,22 @@ export default {
     updated: 'Bundle updated successfully!',
     deleted: 'Bundle deleted successfully!',
     unableToLoad: 'Unable to load bundles!',
+  },
+  assessmentPresentation: {
+    progressSetting: 'Progress indicator',
+    progressNone: 'No indicator',
+    progressPages: 'Current page and total',
+    progressBar: 'Progress bar',
+    pageOf: 'Page {{current}} of {{total}}',
+
+    invalidAnswer: 'Review this answer before continuing.',
+    required: 'Required',
+    question: 'Question',
+    unanswered: 'Not answered',
+    rangeInstruction: 'Move or touch the scale to answer. You can also press Enter to confirm with the keyboard.',
+    progress: 'Assessment progress',
+    downloadLocalizedExampleWorkbook: 'Download the complete test questionnaire',
+    downloadWorkbook: 'Download the Excel questionnaire guide and examples',
+    workbookDescription: 'Includes all types, presentation options, Likert matrices, VAS and compatibility limitations.',
   },
 };

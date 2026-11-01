@@ -12,4 +12,9 @@ const disclaimers = gql`
 
 export const DisclaimersQueries = {
   disclaimers,
+  departmentDisclaimers: gql`
+    query($departmentId: Int) {
+      disclaimers: departmentDisclaimers(departmentId: $departmentId) { type description updatedAt }
+    }
+  `,
 };

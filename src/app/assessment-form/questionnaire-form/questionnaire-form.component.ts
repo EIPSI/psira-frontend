@@ -1,3 +1,4 @@
+import { buildQuestionnairePages } from '../assessment-pages';
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AssessmentStatus, FullAssessment } from '@app/pages/assessment/@types/assessment';
@@ -20,6 +21,7 @@ interface AssessmentScreen {
   id: string;
   label: string;
   sourceBundleId?: string;
+  progressMode?: string;
   headerHtml?: string;
   footerHtml?: string;
   bundleHeaderHtml?: string;
@@ -41,6 +43,7 @@ export class QuestionnaireFormComponent {
   public answers: Answer[] = [];
   public mapped: any = {};
   public completed = false;
+  public missingQuestionKeys: string[] = [];
   public AssessmentStatus = AssessmentStatus;
 
   constructor(
@@ -110,6 +113,7 @@ export class QuestionnaireFormComponent {
   }
 
   public addTableAnswer(questionnaire: QuestionnaireVersion, questionId: string, value: string): void {
+    this.mapped[this.mappedKey(questionnaire, questionId)] = value;
     this.assessmentFormService
       .addAnswerForQuestionnaire(questionnaire, { question: questionId, textValue: value?.toString() })
       .subscribe(
@@ -121,12 +125,25 @@ export class QuestionnaireFormComponent {
       );
   }
 
+  public isMissing(questionnaire: any, question: Question): boolean {
+    return this.missingQuestionKeys.includes(this.mappedKey(questionnaire, question._id)) && !this.findAnswer(questionnaire, question._id)?.valid;
+  }
+
   public mappedKey(questionnaire: any, questionId: string): string {
     return `${questionnaire?.occurrenceId || 'single'}:${questionId}`;
   }
 
   public isLastScreen(): boolean {
     return this.currentScreenIdx >= this.screens.length - 1;
+  }
+
+  public progressTotal(): number {
+    return Math.max(1, this.screens.filter(screen => screen.sourceBundleId === this.currentScreen?.sourceBundleId).length);
+  }
+
+  public progressPage(): number {
+    const pages = this.screens.filter(screen => screen.sourceBundleId === this.currentScreen?.sourceBundleId);
+    return Math.max(1, pages.indexOf(this.currentScreen) + 1);
   }
 
   public screenProgress(): string {
@@ -178,6 +195,7 @@ export class QuestionnaireFormComponent {
       return !this.findAnswer(questionnaire, question._id)?.valid;
     });
 
+    this.missingQuestionKeys = missing.map(({ questionnaire, question }) => this.mappedKey(questionnaire, question._id));
     if (!missing.length) return true;
 
     const modal = this.modalService.warning({
@@ -189,32 +207,14 @@ export class QuestionnaireFormComponent {
     });
 
     await modal.afterClose.toPromise();
+    const element = document.getElementById?.('question-' + this.missingQuestionKeys[0]);
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    (element?.querySelector('input, textarea, button, select') as HTMLElement)?.focus({ preventScroll: true });
     return false;
   }
 
   private buildScreens(assessment: FullAssessment): AssessmentScreen[] {
-    const questionnaires = assessment.questionnaireAssessment.questionnaires || [];
-    const grouped = new Map<string, AssessmentScreen>();
-
-    questionnaires.forEach((questionnaire: any, index: number) => {
-      const screenId = questionnaire.screenId || `questionnaire-${questionnaire.occurrenceId || questionnaire._id || index}`;
-      const label = questionnaire.screenLabel || '';
-      if (!grouped.has(screenId)) {
-        grouped.set(screenId, {
-          id: screenId,
-          label,
-          sourceBundleId: questionnaire.sourceBundleId,
-          headerHtml: questionnaire.screenHeaderHtml,
-          footerHtml: questionnaire.screenFooterHtml,
-          bundleHeaderHtml: questionnaire.bundleHeaderHtml,
-          bundleNoticeHtml: questionnaire.bundleNoticeHtml,
-          questionnaires: [],
-        });
-      }
-      grouped.get(screenId).questionnaires.push(questionnaire);
-    });
-
-    return Array.from(grouped.values()).filter((screen) => screen.questionnaires.length);
+    return buildQuestionnairePages(assessment.questionnaireAssessment.questionnaires || []);
   }
 
   private buildMappedAnswers(answers: Answer[]): any {

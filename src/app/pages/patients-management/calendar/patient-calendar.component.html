@@ -25,7 +25,8 @@
 
 <app-event-edit-modal
   [(visible)]="editModalVisible"
-  [(startAt)]="editStartAt"
+  [startAt]="editStartAt"
+  (startAtChange)="onEditStartChange($event)"
   [(endAt)]="editEndAt"
   [(sessionNumber)]="editSessionNumber"
   [(modality)]="editModality"

@@ -1,10 +1,6 @@
 <p role="alert" *ngIf="loadError">{{ 'core.publicAssessmentLoadError' | translate }}</p>
 <article class="article" *ngIf="assessmentFormService.assessment$ | async as assessment">
   <div>
-    <div class="progress">
-      <div [style.width]="assessmentFormService.percentageCompleted + '%'"></div>
-    </div>
-
     <h1
       *ngIf="
         AssessmentStatus[assessment.questionnaireAssessment.status] === AssessmentStatus.OPEN_FOR_COMPLETION ||

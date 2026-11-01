@@ -2,6 +2,7 @@ import { TagInfo } from '@shared/@modules/master-data/@types/list';
 import { Role } from '@app/pages/administration/@types/role';
 
 export interface Reports {
+  departmentIds?: number[];
   id: number;
   anonymus: boolean;
   name: string;
@@ -74,6 +75,7 @@ export interface DeleteOneReportInput {
 }
 
 export interface UpdateReport {
+  departmentIds?: number[];
   id?: number;
   anonymus?: boolean;
   name?: string;
@@ -87,6 +89,7 @@ export interface UpdateReport {
 }
 
 export interface CreateReportInput {
+  departmentIds?: number[];
   id?: number;
   anonymus?: boolean;
   name?: string;

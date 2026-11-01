@@ -1,11 +1,19 @@
 <article *ngIf="currentScreen && !completed">
+  <div class="page-progress" *ngIf="currentScreen.progressMode === 'PAGES'" aria-live="polite">
+    {{ 'assessmentPresentation.pageOf' | translate: { current: progressPage(), total: progressTotal() } }}
+  </div>
+  <div class="page-progress-track" *ngIf="currentScreen.progressMode === 'BAR'" role="progressbar"
+    aria-valuemin="0" [attr.aria-valuemax]="progressTotal()" [attr.aria-valuenow]="progressPage()"
+    [attr.aria-label]="'assessmentPresentation.progress' | translate">
+    <div [style.width.%]="100 * progressPage() / progressTotal()"></div>
+  </div>
   <section class="package-header" *ngIf="shouldShowBundleHeader()">
     <div [innerHTML]="currentScreen.bundleHeaderHtml"></div>
   </section>
 
   <section class="head-row" *ngIf="shouldShowScreenHeader()">
     <div>
-      <span class="screen-progress">{{ screenProgress() }}</span>
+
       <h2 *ngIf="hasHtml(currentScreen.label)">{{ currentScreen.label }}</h2>
     </div>
   </section>
@@ -23,29 +31,36 @@
         <app-question
           *ngIf="isVisible(questionnaire, question)"
           class="question"
+          [attr.id]="'question-' + mappedKey(questionnaire, question._id)"
+          [showRequiredError]="isMissing(questionnaire, question)"
           [question]="question"
           [questionnaire]="questionnaire"
         ></app-question>
       </ng-container>
 
       <table class="table-list" *ngFor="let unique of group.uniqueQuestions">
-        <tr>
-          <td></td>
-          <td *ngFor="let choice of unique.choices">{{ choice.label }}</td>
-        </tr>
-        <tr *ngFor="let subQuestion of unique.subQuestions">
-          <td>
-            <h5>{{ subQuestion.label }}</h5>
-          </td>
-          <td colspan="100%">
-            <nz-radio-group
-              [(ngModel)]="mapped[mappedKey(questionnaire, subQuestion._id)]"
-              (ngModelChange)="addTableAnswer(questionnaire, subQuestion._id, mapped[mappedKey(questionnaire, subQuestion._id)])"
-            >
-              <label *ngFor="let choice of unique.choices" nz-radio [nzValue]="choice.name"></label>
-            </nz-radio-group>
-          </td>
-        </tr>
+        <thead><tr><th scope="col"><span class="visually-hidden">{{ 'assessmentPresentation.question' | translate }}</span></th>
+          <th scope="col" *ngFor="let choice of unique.choices">{{ choice.label }}</th>
+        </tr></thead>
+        <tbody><ng-container *ngFor="let subQuestion of unique.subQuestions">
+          <tr *ngIf="isVisible(questionnaire, subQuestion)" [attr.id]="'question-' + mappedKey(questionnaire, subQuestion._id)"
+            [class.missing-answer]="isMissing(questionnaire, subQuestion)">
+            <th scope="row">{{ subQuestion.label }} <span *ngIf="subQuestion.required" class="required-mark">*</span>
+              <small *ngIf="subQuestion.hint">{{ subQuestion.hint }}</small>
+              <small *ngIf="isMissing(questionnaire, subQuestion)" role="alert">{{ subQuestion.requiredMessage ||
+                ('assessmentPresentation.invalidAnswer' | translate) }}</small>
+            </th>
+            <td *ngFor="let choice of unique.choices" [class.matrix-selected]="mapped[mappedKey(questionnaire, subQuestion._id)] === choice.name">
+              <label class="matrix-option">
+                <input type="radio" [name]="mappedKey(questionnaire, subQuestion._id)" [value]="choice.name"
+                  [checked]="mapped[mappedKey(questionnaire, subQuestion._id)] === choice.name"
+                  [attr.aria-label]="subQuestion.label + ': ' + choice.label"
+                  (change)="addTableAnswer(questionnaire, subQuestion._id, choice.name)" />
+                <span class="mobile-option-label">{{ choice.label }}</span>
+              </label>
+            </td>
+          </tr>
+        </ng-container></tbody>
       </table>
     </section>
   </section>
@@ -62,18 +77,6 @@
     <button nz-button nzType="primary" [disabled]="currentScreenIdx <= 0" (click)="previous()">
       {{ translations.assessmentForm.prev | translate }}
     </button>
-    <div class="nav-pills">
-      <button
-        *ngFor="let screen of screens; let index = index"
-        nz-button
-        nzShape="circle"
-        nzSize="small"
-        [nzType]="index === currentScreenIdx ? 'primary' : 'default'"
-        [attr.aria-label]="('assessmentForm.screenNumber' | translate: { number: index + 1 })"
-        (click)="goToScreen(index)"
-      >
-      </button>
-    </div>
     <button nz-button nzType="primary" (click)="next()">
       {{
         (isLastScreen()

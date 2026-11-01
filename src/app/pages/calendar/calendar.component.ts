@@ -1,7 +1,9 @@
+import { EvaluationSchemesService } from '@app/pages/evaluation-schemes/@services/evaluation-schemes.service';
+import { EvaluationScheme, EvaluationSchemeType } from '@app/pages/evaluation-schemes/@types/evaluation-scheme';
 import { toUserDateInput } from '@shared/utils/system-settings.util';
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
-import { finalize } from 'rxjs/operators';
+import { finalize, switchMap } from 'rxjs/operators';
 import { NzContextMenuService, NzDropdownMenuComponent } from 'ng-zorro-antd/dropdown';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { TranslateService } from '@ngx-translate/core';
@@ -14,7 +16,10 @@ import { CaseManagersService } from '@app/pages/patients-management/@services/ca
 import { PermissionKey } from '@shared/@types/permission';
 import { AppPermissionsService } from '@shared/services/app-permissions.service';
 import { ErrorHandlerService } from '@shared/services/error-handler.service';
-import { CalendarEvent, CalendarEventType, CalendarView, ClinicalSessionKind, ClinicalSessionModality } from './@types/calendar';
+import {
+  AddClinicalSessionSchemesApplicationMode, ClinicalSessionSchemeApplication, CalendarEvent, CalendarEventType,
+  CalendarView, ClinicalSessionKind, ClinicalSessionModality,
+} from './@types/calendar';
 import { CalendarEventUiService } from './@services/calendar-event-ui.service';
 import { CalendarService } from './@services/calendar.service';
 import { formatSystemDateTime, systemTimezone } from '@shared/utils/system-settings.util';
@@ -62,6 +67,16 @@ export class CalendarComponent implements OnChanges, OnInit {
   originalEditResponsibleUserIds: number[] = [];
   editResponsibleUserOptions: ResponsibleUserOption[] = [];
   editResponsibleUsersPropagate = false;
+  sessionSchemes: EvaluationScheme[] = [];
+  activeSchemeApplications: ClinicalSessionSchemeApplication[] = [];
+  editAddSchemeIds: number[] = [];
+  editAddSchemesPropagate = false;
+  editOverwriteExistingSchemes = false;
+  editAddSchemesApplicationMode = AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION;
+  addSchemeApplicationModeOptions = [
+    { label: 'patientsManagement.fromThisSession', value: AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION },
+    { label: 'patientsManagement.originalStructure', value: AddClinicalSessionSchemesApplicationMode.ORIGINAL_SESSION_NUMBER },
+  ];
   modalityOptions = [
     { label: 'patientsManagement.inPerson', value: ClinicalSessionModality.IN_PERSON },
     { label: 'patientsManagement.online', value: ClinicalSessionModality.ONLINE },
@@ -88,7 +103,8 @@ export class CalendarComponent implements OnChanges, OnInit {
     private modalService: NzModalService,
     private errorService: ErrorHandlerService,
     public perms: AppPermissionsService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private schemesService: EvaluationSchemesService
   ) {}
 
   ngOnInit(): void {
@@ -163,6 +179,13 @@ export class CalendarComponent implements OnChanges, OnInit {
     this.originalEditResponsibleUserIds = [...this.editResponsibleUserIds];
     this.editResponsibleUsersPropagate = false;
     this.loadEditResponsibleUserOptions(event);
+    this.sessionSchemes = [];
+    this.activeSchemeApplications = [];
+    this.editAddSchemeIds = [];
+    this.editAddSchemesPropagate = false;
+    this.editOverwriteExistingSchemes = false;
+    this.editAddSchemesApplicationMode = AddClinicalSessionSchemesApplicationMode.RELATIVE_FROM_SESSION;
+    if (event.type === CalendarEventType.SESSION && event.clinicalSessionId) this.loadEditSchemes(event);
     this.editModalVisible = true;
   }
 
@@ -188,7 +211,16 @@ export class CalendarComponent implements OnChanges, OnInit {
         })
       : this.calendarService.moveCalendarEvent(this.selectedEvent, this.editStartAt, this.editEndAt);
 
-    update$.pipe(finalize(() => (this.saving = false))).subscribe(
+    const save$ = this.editAddSchemeIds.length && this.selectedEvent.type === CalendarEventType.SESSION
+      ? update$.pipe(switchMap(() => this.calendarService.addClinicalSessionSchemes({
+          clinicalSessionId: this.selectedEvent.clinicalSessionId,
+          schemeIds: this.editAddSchemeIds,
+          propagateFuture: this.editAddSchemesPropagate,
+          applicationMode: this.editAddSchemesApplicationMode,
+          overwriteExisting: this.editOverwriteExistingSchemes,
+        })))
+      : update$;
+    save$.pipe(finalize(() => (this.saving = false))).subscribe(
       () => {
         this.editModalVisible = false;
         this.loadEvents();
@@ -196,6 +228,30 @@ export class CalendarComponent implements OnChanges, OnInit {
       (error) =>
         this.errorService.handleError(error, { prefix: this.translate.instant('calendar.unableUpdateCalendarEvent') })
     );
+  }
+
+  stopActiveScheme(application: ClinicalSessionSchemeApplication): void {
+    if (!this.selectedEvent?.clinicalSessionId) return;
+    this.modalService.confirm({
+      nzTitle: this.translate.instant('patientsManagement.stopScheme'),
+      nzContent: this.translate.instant('patientsManagement.stopSchemeConfirm'),
+      nzOkText: this.translate.instant('patientsManagement.stop'),
+      nzOkDanger: true,
+      nzCancelText: this.translate.instant('patientsManagement.back'),
+      nzOnOk: () => {
+        this.saving = true;
+        this.calendarService
+          .stopClinicalSessionScheme(this.selectedEvent.clinicalSessionId as number, application.schemeId)
+          .pipe(finalize(() => (this.saving = false)))
+          .subscribe(
+            () => {
+              this.loadEditSchemes(this.selectedEvent);
+              this.loadEvents();
+            },
+            (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableStopEvaluationScheme') })
+          );
+      },
+    });
   }
 
   onEditStartChange(startAt: Date): void {
@@ -480,6 +536,30 @@ export class CalendarComponent implements OnChanges, OnInit {
       );
   }
 
+  private loadEditSchemes(event: CalendarEvent, after?: string): void {
+    const sessionId = event.clinicalSessionId;
+    if (!sessionId) return;
+    if (!after) this.calendarService.getClinicalSessionSchemeApplications(sessionId).subscribe(
+      (applications) => {
+        if (this.selectedEvent?.clinicalSessionId === sessionId) this.activeSchemeApplications = applications || [];
+      },
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableLoadSchemes') })
+    );
+    this.schemesService.getSchemes({
+      paging: { first: 50, ...(after ? { after } : {}) },
+      departmentIds: event.departments?.map(department => department.id),
+      filter: { active: { is: true }, schemeType: { eq: EvaluationSchemeType.SESSION_BASED } },
+    }).subscribe(
+      ({ edges, pageInfo }) => {
+        if (this.selectedEvent?.clinicalSessionId !== sessionId) return;
+        const schemes = edges.map((edge: any) => edge.node);
+        this.sessionSchemes = after ? [...this.sessionSchemes, ...schemes] : schemes;
+        if (pageInfo?.hasNextPage && pageInfo.endCursor) this.loadEditSchemes(event, pageInfo.endCursor);
+      },
+      (error) => this.errorService.handleError(error, { prefix: this.translate.instant('patientsManagement.unableLoadSchemes') })
+    );
+  }
+
   private loadTargetUsers(): void {
     this.calendarService.getTargets().subscribe(
       (users) => {
@@ -642,11 +722,12 @@ export class CalendarComponent implements OnChanges, OnInit {
   }
 
   private displayTitle(event: CalendarEvent): string {
-    const pieces = [event.title];
-    const person = this.eventPrimaryPerson(event);
-    if (person) pieces.push(person);
-    if (event.sessionNumber)
-      pieces.push(this.translate.instant('dashboard.sessionNumber', { number: event.sessionNumber }));
-    return pieces.filter(Boolean).join(' · ');
+    const title = event.title || '';
+    const session = event.sessionNumber
+      ? this.translate.instant('dashboard.sessionNumber', { number: event.sessionNumber })
+      : '';
+    return session && !title.toLocaleLowerCase().includes(session.toLocaleLowerCase())
+      ? [title, session].filter(Boolean).join(' · ')
+      : title;
   }
 }

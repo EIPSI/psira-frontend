@@ -45,8 +45,8 @@ export class AssessmentFormComponent implements OnInit {
           const questions: any[] = []
           const uniqueQuestions = {};
           group.questions.map((question: { appearance: string; choices: any[]; type: any }) => {
-              if (group.appearance?.toLowerCase() === 'table-list' && question.type === 'select_one') {
-                  const choices = question.choices.map((choice: { label: any; }) => choice.label)
+              if (['table-list', 'likert-matrix'].includes(group.appearance?.toLowerCase()) && question.type === 'select_one') {
+                  const choices = question.choices.map((choice: { name: string; label: any; }) => [choice.name, choice.label])
                   if (!uniqueQuestions[JSON.stringify(choices)]) {
                       uniqueQuestions[JSON.stringify(choices)] = {
                           questions: [],
@@ -111,6 +111,7 @@ export class AssessmentFormComponent implements OnInit {
           screenFooterHtml: resolved.screenFooterHtml,
           bundleHeaderHtml: resolved.bundleHeaderHtml,
           bundleNoticeHtml: resolved.bundleNoticeHtml,
+          progressMode: resolved.progressMode,
           questionnaireDisplayTitle: resolved.questionnaireDisplayTitle,
           showQuestionnaireTitle: resolved.showQuestionnaireTitle,
           screenIndex: resolved.screenIndex,

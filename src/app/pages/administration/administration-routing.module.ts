@@ -44,7 +44,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.permissionMatrix',
           permissions: {
-            only: [PermissionKey.ROLES_VIEW_ALL],
+            only: [PermissionKey.ROLES_VIEW_ALL, PermissionKey.ROLES_VIEW_DEPARTMENT_HIERARCHY],
           },
         },
         canActivate: [PermissionGuard],
@@ -55,7 +55,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.roles',
           permissions: {
-            only: [PermissionKey.ROLES_VIEW_ALL],
+            only: [PermissionKey.ROLES_VIEW_ALL, PermissionKey.ROLES_VIEW_DEPARTMENT_HIERARCHY],
           },
         },
         canActivate: [PermissionGuard],
@@ -66,7 +66,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.disclaimers',
           permissions: {
-            only: [PermissionKey.ROLES_VIEW_ALL],
+            only: [PermissionKey.ROLES_VIEW_ALL, PermissionKey.ROLES_VIEW_DEPARTMENT_HIERARCHY],
           },
         },
         canActivate: [PermissionGuard],
@@ -77,7 +77,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.assessments',
           permissions: {
-            only: [PermissionKey.ROLES_VIEW_ALL],
+            only: [PermissionKey.ROLES_VIEW_ALL, PermissionKey.ROLES_VIEW_DEPARTMENT_HIERARCHY],
           },
         },
         canActivate: [PermissionGuard],
@@ -88,7 +88,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.patientStatuses',
           permissions: {
-            only: [PermissionKey.SETTINGS_VIEW_ALL],
+            only: [PermissionKey.SETTINGS_VIEW_ALL, PermissionKey.SETTINGS_VIEW_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],
@@ -106,7 +106,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.departments',
           permissions: {
-            only: [PermissionKey.SETTINGS_VIEW_ALL],
+            only: [PermissionKey.SETTINGS_VIEW_ALL, PermissionKey.DEPARTMENTS_VIEW_ALL, PermissionKey.DEPARTMENTS_VIEW_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],
@@ -129,7 +129,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.version',
           permissions: {
-            only: [PermissionKey.SETTINGS_VIEW_ALL],
+            only: [PermissionKey.SETTINGS_VIEW_ALL, PermissionKey.SETTINGS_VIEW_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],

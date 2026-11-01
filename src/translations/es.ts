@@ -1,4 +1,8 @@
 export default {
+  researchRoles: {
+    dataExports: 'Descargas de investigación',
+    reportDepartmentsDescription: 'Seleccioná los departamentos del informe. Los informes compartidos requieren un administrador global para modificarlos.',
+  },
   storageNotice: {
     title: 'Privacidad y almacenamiento del navegador',
     message:
@@ -240,6 +244,8 @@ export default {
     saveGoogleCalendar: 'Guardar Google Calendar',
   },
   clinicalSettings: {
+    globalDefaults: 'Valores globales por defecto',
+    departmentScopeDescription: 'Los cambios se aplican únicamente al departamento seleccionado. Los departamentos sin configuración propia heredan los valores globales.',
     title: 'Ajustes clínicos',
     editWindow: 'Ventana de edición por sesión',
     daysFromSessionDate: 'días desde la fecha de la sesión',
@@ -935,6 +941,8 @@ export default {
     unableLoadParticularDepartment: 'No se pudo cargar el departamento Particular por defecto',
   },
   roles: {
+    researchAdmin: 'Investigador admin',
+    projectResearcher: 'Investigador de proyecto',
     createRole: 'Crear rol',
     editRole: 'Editar rol',
     deleteRole: 'Eliminar rol',
@@ -2124,5 +2132,22 @@ export default {
     updated: '¡Paquete de cuestionarios actualizado exitosamente!',
     deleted: '¡Paquete de cuestionarios eliminado exitosamente!',
     unableToLoad: 'No se puede cargar el paquete de cuestionarios',
+  },
+  assessmentPresentation: {
+    progressSetting: 'Indicador de progreso',
+    progressNone: 'Sin indicador',
+    progressPages: 'Página actual y total',
+    progressBar: 'Barra de progreso',
+    pageOf: 'Página {{current}} de {{total}}',
+
+    invalidAnswer: 'Revisá esta respuesta antes de continuar.',
+    required: 'Obligatoria',
+    question: 'Pregunta',
+    unanswered: 'Sin responder',
+    rangeInstruction: 'Mové o tocá la escala para responder. Con el teclado, también podés confirmar con Enter.',
+    progress: 'Progreso de la evaluación',
+    downloadLocalizedExampleWorkbook: 'Descargar cuestionario completo para probar',
+    downloadWorkbook: 'Descargar guía y ejemplos de cuestionarios en Excel',
+    workbookDescription: 'Incluye todos los tipos, opciones de presentación, matrices Likert, VAS y las limitaciones de compatibilidad.',
   },
 };

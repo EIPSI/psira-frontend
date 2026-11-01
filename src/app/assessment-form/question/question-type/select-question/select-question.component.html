@@ -1,10 +1,15 @@
 <nz-radio-group
   class="radio-group"
+  [class.cards]="question.appearance?.toLowerCase() === 'cards'"
+  [class.likert]="question.appearance?.toLowerCase() === 'likert'"
+  [style.--option-count]="question.choices?.length"
+  [attr.aria-label]="question.label"
   nzButtonStyle="solid"
   [ngModel]="answer.textValue"
   (ngModelChange)="onChange($event)"
 >
   <label class="radio" nz-radio-button *ngFor="let choice of question.choices" [nzValue]="choice.name">
+    <img *ngIf="choice.image" [src]="choice.image" [alt]="choice.label" />
     {{ choice.label }}
   </label>
 </nz-radio-group>

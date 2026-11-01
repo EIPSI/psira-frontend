@@ -48,6 +48,7 @@ export interface QuestionnaireVersion {
   versionNumber?: number;
   replacedById?: string;
   questionGroups: Array<{
+    pageBreakBefore?: boolean;
     label: string;
     questions: Question[];
     uniqueQuestions: any;

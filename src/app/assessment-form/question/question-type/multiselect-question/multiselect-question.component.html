@@ -1,10 +1,12 @@
-<div class="select-group ant-radio-group ant-radio-group-solid">
+<div class="select-group ant-radio-group ant-radio-group-solid"
+  [class.cards]="question.appearance?.toLowerCase() === 'cards'" role="group" [attr.aria-label]="question.label">
   <label
     *ngFor="let choice of question.choices"
     class="select ant-radio-button-wrapper"
     [class.ant-radio-button-wrapper-checked]="isChecked(choice)"
   >
-    <input type="checkbox" (change)="toggle(choice)" />
+    <input type="checkbox" [checked]="isChecked(choice)" (change)="toggle(choice)" />
+    <img *ngIf="choice.image" [src]="choice.image" [alt]="choice.label" />
     <span [class.ant-radio-button-checked]="isChecked(choice)">{{ choice.label }}</span>
   </label>
 </div>

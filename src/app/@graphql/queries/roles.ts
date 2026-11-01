@@ -9,6 +9,7 @@ const roles = gql`
           id
           name
           isSuperAdmin
+          departmentIds
           hierarchy
           code
           createdAt

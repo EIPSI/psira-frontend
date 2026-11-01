@@ -10,6 +10,7 @@ const createQuestionnaireBundle = gql`
       structureJson
       headerHtml
       noticeHtml
+      progressMode
       createdAt
       updatedAt
     }
@@ -26,6 +27,7 @@ const updateQuestionnaireBundle = gql`
       structureJson
       headerHtml
       noticeHtml
+      progressMode
       createdAt
       updatedAt
     }

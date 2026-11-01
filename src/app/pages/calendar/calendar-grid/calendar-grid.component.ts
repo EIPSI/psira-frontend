@@ -1,4 +1,4 @@
-import { toUserDateInput } from '@shared/utils/system-settings.util';
+import { toUserDateInput, userTimezone } from '@shared/utils/system-settings.util';
 import { Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import {
   addDays,
@@ -30,6 +30,15 @@ import { formatSystemDateTime, formatSystemTime, configuredMoment, calendarDateM
 export class CalendarGridComponent implements OnInit, OnDestroy {
   CV = CalendarView;
   today = toUserDateInput(new Date());
+  private monthDaysKey = '';
+  private monthDaysCache: Date[] = [];
+  private weekDaysKey = '';
+  private weekDaysCache: Date[] = [];
+  private indexedEvents?: CalendarEvent[];
+  private indexedTimezone = '';
+  private readonly eventsByDate = new Map<string, CalendarEvent[]>();
+  private readonly eventsByHour = new Map<string, CalendarEvent[]>();
+  private readonly emptyEvents: CalendarEvent[] = [];
   private draggingEvent = false;
   private suppressActivationUntil = 0;
   private pointerDragCandidate?: CalendarEvent;
@@ -69,8 +78,16 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
 
   eventPeople(event: CalendarEvent): string {
     const people = [event.patient || event.targetUser, ...(event.responsibleUsers || []), event.therapist, event.supervisor].filter(Boolean);
-    const names = people.map(person => [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ')).filter(Boolean);
-    return [...new Set(names)].join(' · ');
+    const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const title = ` ${normalize(event.title || '')} `;
+    const names = new Map<string, string>();
+    for (const person of people) {
+      const name = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ');
+      const key = normalize(name);
+      if (key && !title.includes(` ${key} `) && !names.has(key)) names.set(key, name);
+    }
+    return [...names.values()].join(' · ');
   }
 
   get title(): string {
@@ -84,14 +101,23 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
   get monthDays(): Date[] {
     const start = startOfWeek(startOfMonth(this.selectedDate));
     const end = endOfWeek(endOfMonth(this.selectedDate));
-    const days: Date[] = [];
-    for (let date = start; date <= end; date = addDays(date, 1)) days.push(date);
-    return days;
+    const key = `${start.getTime()}:${end.getTime()}`;
+    if (key !== this.monthDaysKey) {
+      this.monthDaysKey = key;
+      this.monthDaysCache = [];
+      for (let date = start; date <= end; date = addDays(date, 1)) this.monthDaysCache.push(date);
+    }
+    return this.monthDaysCache;
   }
 
   get weekDays(): Date[] {
     const start = startOfWeek(this.selectedDate);
-    return Array.from({ length: 7 }).map((_, index) => addDays(start, index));
+    const key = String(start.getTime());
+    if (key !== this.weekDaysKey) {
+      this.weekDaysKey = key;
+      this.weekDaysCache = Array.from({ length: 7 }).map((_, index) => addDays(start, index));
+    }
+    return this.weekDaysCache;
   }
 
   get hourSlots(): number[] {
@@ -126,11 +152,40 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
 
   eventsForDate(date: Date): CalendarEvent[] {
     const key = calendarDateMoment(date).format('YYYY-MM-DD');
-    return this.events.filter((event) => configuredMoment(event.startAt).format('YYYY-MM-DD') === key);
+    this.indexEvents();
+    return this.eventsByDate.get(key) || this.emptyEvents;
   }
 
   eventsForHour(date: Date, hour: number): CalendarEvent[] {
-    return this.eventsForDate(date).filter((event) => configuredMoment(event.startAt).hour() === hour);
+    this.indexEvents();
+    const key = `${calendarDateMoment(date).format('YYYY-MM-DD')}:${hour}`;
+    return this.eventsByHour.get(key) || this.emptyEvents;
+  }
+
+  trackDay(_index: number, day: Date): number {
+    return day.getTime();
+  }
+
+  trackEvent(_index: number, event: CalendarEvent): string {
+    return event.id;
+  }
+
+  private indexEvents(): void {
+    const timezone = userTimezone();
+    if (this.indexedEvents === this.events && this.indexedTimezone === timezone) return;
+    this.indexedEvents = this.events;
+    this.indexedTimezone = timezone;
+    this.eventsByDate.clear();
+    this.eventsByHour.clear();
+    for (const event of this.events) {
+      const start = configuredMoment(event.startAt);
+      const day = start.format('YYYY-MM-DD');
+      const hour = `${day}:${start.hour()}`;
+      if (!this.eventsByDate.has(day)) this.eventsByDate.set(day, []);
+      if (!this.eventsByHour.has(hour)) this.eventsByHour.set(hour, []);
+      this.eventsByDate.get(day).push(event);
+      this.eventsByHour.get(hour).push(event);
+    }
   }
 
   eventClass(event: CalendarEvent): string {
@@ -189,6 +244,8 @@ export class CalendarGridComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const target = domEvent.target as HTMLElement;
+    if (target?.closest?.('.month-events-scroll')) return;
     if (Date.now() < this.suppressActivationUntil) return;
     domEvent.preventDefault();
     domEvent.stopPropagation();

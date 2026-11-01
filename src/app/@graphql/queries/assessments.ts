@@ -170,6 +170,7 @@ const assessments = gql`
               screenFooterHtml
               bundleHeaderHtml
               bundleNoticeHtml
+              progressMode
               questionnaireDisplayTitle
               showQuestionnaireTitle
               screenIndex
@@ -188,6 +189,7 @@ const assessments = gql`
               language
               abbreviation
               questionGroups {
+                pageBreakBefore
                 label
                 questions {
                   _id
@@ -198,13 +200,17 @@ const assessments = gql`
                   relevant
                   calculation
                   constraint
-                  constraintMessage
+                  appearance
+              constraintMessage
+                  presentation {
+                    min max step valuePosition labelFontSize valueFontSize labelBoxes boldLabels gradient colorStart colorEnd
+                    labels { value label position align }
+                  }
                   min
                   max
                   required
                   requiredMessage
                   image
-                  appearance
                   default
                   choices {
                     name
@@ -397,6 +403,7 @@ const patientAssessments = gql`
           screenFooterHtml
           bundleHeaderHtml
           bundleNoticeHtml
+          progressMode
           questionnaireDisplayTitle
           showQuestionnaireTitle
           screenIndex
@@ -588,6 +595,7 @@ const getFullAssessment = gql`
           screenFooterHtml
           bundleHeaderHtml
           bundleNoticeHtml
+          progressMode
           questionnaireDisplayTitle
           showQuestionnaireTitle
           screenIndex
@@ -606,6 +614,7 @@ const getFullAssessment = gql`
           language
           abbreviation
           questionGroups {
+            pageBreakBefore
             label
             questions {
               _id
@@ -616,13 +625,17 @@ const getFullAssessment = gql`
               relevant
               calculation
               constraint
+              appearance
               constraintMessage
+                  presentation {
+                    min max step valuePosition labelFontSize valueFontSize labelBoxes boldLabels gradient colorStart colorEnd
+                    labels { value label position align }
+                  }
               min
               max
               required
               requiredMessage
               image
-              appearance
               default
               choices {
                 name
@@ -733,6 +746,7 @@ const getFullPublicAssessment = gql`
           screenFooterHtml
           bundleHeaderHtml
           bundleNoticeHtml
+          progressMode
           questionnaireDisplayTitle
           showQuestionnaireTitle
           screenIndex
@@ -751,6 +765,7 @@ const getFullPublicAssessment = gql`
           language
           abbreviation
           questionGroups {
+            pageBreakBefore
             label
             appearance
             questions {
@@ -762,7 +777,12 @@ const getFullPublicAssessment = gql`
               relevant
               calculation
               constraint
+              appearance
               constraintMessage
+                  presentation {
+                    min max step valuePosition labelFontSize valueFontSize labelBoxes boldLabels gradient colorStart colorEnd
+                    labels { value label position align }
+                  }
               min
               max
               required

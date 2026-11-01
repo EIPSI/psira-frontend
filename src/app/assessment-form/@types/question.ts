@@ -21,7 +21,30 @@ export interface Choice {
   image?: string;
 }
 
+export interface ScaleLabel {
+  value: number;
+  label: string;
+  position: 'above' | 'below';
+  align: 'auto' | 'left' | 'center' | 'right';
+}
+
+export interface QuestionPresentation {
+  min: number;
+  max: number;
+  step?: number;
+  labels: ScaleLabel[];
+  valuePosition: 'above' | 'below' | 'hidden';
+  labelFontSize: number;
+  valueFontSize: number;
+  labelBoxes: boolean;
+  boldLabels: boolean;
+  gradient: string;
+  colorStart: string;
+  colorEnd: string;
+}
+
 export interface Question {
+  presentation?: QuestionPresentation;
   _id?: string;
   name: string;
   label: string;
