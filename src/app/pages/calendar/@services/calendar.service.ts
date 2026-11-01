@@ -9,6 +9,7 @@ import { AssessmentsMutations } from '@app/@graphql/mutations/assessments';
 import {
   AddClinicalSessionSchemesApplicationMode,
   AssessmentOrigin,
+  CalendarAssessment,
   CalendarEvent,
   CalendarEventType,
   CalendarEventFilter,
@@ -354,13 +355,20 @@ export class CalendarService {
       .pipe(map((result: any) => result.data.clinicalSessionFollowUpVersions));
   }
 
-  getClinicalSessionFollowUpSettings(): Observable<ClinicalSessionFollowUpSettings> {
+  getClinicalSessionFollowUpSettings(departmentId?: number): Observable<ClinicalSessionFollowUpSettings> {
     return this.apollo
       .query({
         query: CalendarQueries.clinicalSessionFollowUpSettings,
+        variables: { departmentId },
         fetchPolicy: 'no-cache',
       })
       .pipe(map((result: any) => result.data.clinicalSessionFollowUpSettings));
+  }
+
+  getCaseHistoryAssessments(patientId?: number, therapistId?: number): Observable<CalendarAssessment[]> {
+    return this.apollo.query({ query: CalendarQueries.caseHistoryAssessments,
+      variables: { patientId, therapistId }, fetchPolicy: 'no-cache' })
+      .pipe(map((result: any) => result.data.caseHistoryAssessments));
   }
 
   getCaseHistoryEntries(filter: {
@@ -494,6 +502,9 @@ export class CalendarService {
   updateClinicalSessionFollowUpSettings(settings: {
     editWindowDays: number;
     dashboardLookaheadDays?: number;
+    departmentId?: number;
+    patientCaseManagerRoleCodes?: string[];
+    therapistSupervisorRoleCodes?: string[];
   }): Observable<ClinicalSessionFollowUpSettings> {
     return this.apollo
       .mutate({

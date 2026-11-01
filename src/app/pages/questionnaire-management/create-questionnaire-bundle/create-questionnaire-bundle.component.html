@@ -4,6 +4,17 @@
 
 <form nz-form [formGroup]="bundleForm" class="bundle-form">
   <nz-form-item>
+    <nz-form-label [nzSpan]="6">{{ 'assessmentPresentation.progressSetting' | translate }}</nz-form-label>
+    <nz-form-control [nzSpan]="14">
+      <nz-select formControlName="progressMode">
+        <nz-option nzValue="NONE" [nzLabel]="'assessmentPresentation.progressNone' | translate"></nz-option>
+        <nz-option nzValue="PAGES" [nzLabel]="'assessmentPresentation.progressPages' | translate"></nz-option>
+        <nz-option nzValue="BAR" [nzLabel]="'assessmentPresentation.progressBar' | translate"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
     <nz-form-label [nzSpan]="6">{{ 'emailTemplates.name' | translate }}</nz-form-label>
     <nz-form-control [nzSpan]="14">
       <input [placeholder]="'questionnaireBundles.selectBundleName' | translate" formControlName="name" nz-input name="name" type="text" id="name" />
@@ -259,7 +270,14 @@
   <div *nzModalContent class="bundle-preview">
     <section class="bundle-preview__header" *ngIf="bundleForm.value.headerHtml" [innerHTML]="bundleForm.value.headerHtml"></section>
     <article class="bundle-preview__screen" *ngFor="let screen of previewScreenItems; let i = index">
-      <span class="screen-progress">{{ i + 1 }} / {{ previewScreenItems.length }}</span>
+      <span class="screen-progress" *ngIf="bundleForm.value.progressMode === 'PAGES'">
+        {{ 'assessmentPresentation.pageOf' | translate: { current: i + 1, total: previewScreenItems.length } }}
+      </span>
+      <div *ngIf="bundleForm.value.progressMode === 'BAR'" class="preview-progress"
+        role="progressbar" aria-valuemin="0" [attr.aria-valuemax]="previewScreenItems.length" [attr.aria-valuenow]="i + 1"
+        [attr.aria-label]="'assessmentPresentation.progress' | translate">
+        <div [style.width.%]="100 * (i + 1) / previewScreenItems.length"></div>
+      </div>
       <h2 *ngIf="screen.title">{{ screen.title }}</h2>
       <div class="bundle-preview__copy" *ngIf="screen.headerHtml" [innerHTML]="screen.headerHtml"></div>
       <div class="bundle-preview__questionnaire" *ngFor="let questionnaire of screen.questionnaires">

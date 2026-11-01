@@ -107,7 +107,7 @@
 
 .screen-rich-texts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, auto));
   gap: 12px;
   margin: 10px 0 8px 64px;
 }
@@ -157,7 +157,7 @@
 }
 
 .cdk-drop-list-dragging .node:not(.cdk-drag-placeholder) {
-  transition: transform 160ms ease;
+  transition: transform 0.16s ease;
 }
 
 .bundle-preview {
@@ -221,4 +221,16 @@
 .node.page-break {
   border-top: 3px solid #186fb5;
   padding-top: 12px;
+}
+
+.preview-progress {
+  height: 8px;
+  border-radius: 8px;
+  background: #e5edf5;
+  overflow: hidden;
+  margin: 0 0 16px;
+  > div {
+    height: 100%;
+    background: #3b6caa;
+  }
 }

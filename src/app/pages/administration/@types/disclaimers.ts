@@ -16,6 +16,7 @@ export interface Disclaimers {
 }
 
 export interface UpdateDisclaimerInput {
+  departmentId?: number;
   type: string;
   description: string;
   updatedAt?: Date;

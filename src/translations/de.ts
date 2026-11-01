@@ -1,4 +1,8 @@
 export default {
+  researchRoles: {
+    dataExports: 'Forschungsexporte',
+    reportDepartmentsDescription: 'Wählen Sie die Abteilungen des Berichts aus. Gemeinsame Berichte können nur von einem globalen Administrator geändert werden.',
+  },
   storageNotice: {
     title: 'Datenschutz und Browserspeicher',
     message:
@@ -237,6 +241,8 @@ export default {
     searchCaregiver: 'Suchen Sie nach der Nummer oder dem Namen einer bereits registrierten Betreuers',
   },
   clinicalSettings: {
+    globalDefaults: 'Globale Standardwerte',
+    departmentScopeDescription: 'Änderungen gelten nur für die ausgewählte Abteilung. Abteilungen ohne eigene Konfiguration übernehmen die globalen Standardwerte.',
     dashboardLookahead: 'Dashboard anticipation',
     daysBeforeDashboard: 'days before sessions and assessments appear',
     caseManagerRoles: 'Roles allowed as case managers',
@@ -1921,6 +1927,8 @@ export default {
     unableDeleteDepartment: 'Unable to delete department',
   },
   roles: {
+    researchAdmin: 'Forschungsadministrator',
+    projectResearcher: 'Projektforscher',
     createRole: 'Rolle erstellen',
     editRole: 'Edit role',
     deleteRole: 'Delete role',
@@ -2101,5 +2109,22 @@ export default {
     choiceThree: 'Choice three',
     choiceFour: 'Choice four',
     choiceFive: 'Choice five',
+  },
+  assessmentPresentation: {
+    progressSetting: 'Fortschrittsanzeige',
+    progressNone: 'Keine Anzeige',
+    progressPages: 'Aktuelle Seite und Gesamtzahl',
+    progressBar: 'Fortschrittsbalken',
+    pageOf: 'Seite {{current}} von {{total}}',
+
+    invalidAnswer: 'Prüfen Sie diese Antwort, bevor Sie fortfahren.',
+    required: 'Erforderlich',
+    question: 'Frage',
+    unanswered: 'Nicht beantwortet',
+    rangeInstruction: 'Bewegen oder berühren Sie die Skala. Mit der Eingabetaste können Sie ebenfalls bestätigen.',
+    progress: 'Fortschritt der Auswertung',
+    downloadLocalizedExampleWorkbook: 'Vollständigen Testfragebogen herunterladen',
+    downloadWorkbook: 'Excel-Anleitung und Fragebogenbeispiele herunterladen',
+    workbookDescription: 'Enthält alle Typen, Darstellungsoptionen, Likert-Matrizen, VAS und Kompatibilitätshinweise.',
   },
 };

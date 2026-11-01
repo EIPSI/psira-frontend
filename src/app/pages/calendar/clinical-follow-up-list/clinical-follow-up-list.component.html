@@ -65,6 +65,25 @@
         </div>
       </ng-container>
 
+      <ng-container *ngIf="item.type === 'ASSESSMENT'">
+        <header class="card-header">
+          <div>
+            <h3>{{ standaloneAssessmentLabel(item.assessment) }}</h3>
+            <span>{{ item.date | formatDateTime }}</span>
+          </div>
+        </header>
+        <p class="follow-up-text" *ngIf="item.assessment.note">{{ item.assessment.note }}</p>
+        <div class="assessment-strip">
+          <button type="button" class="assessment-pill"
+            [class.assessment-pill--done]="assessmentIsAnswered(item.assessment)"
+            [class.assessment-pill--pending]="!assessmentIsAnswered(item.assessment)"
+            [disabled]="!assessmentIsAnswered(item.assessment)"
+            (click)="openStandaloneAssessment(item.assessment)">
+            {{ standaloneAssessmentLabel(item.assessment) }}
+          </button>
+        </div>
+      </ng-container>
+
       <ng-container *ngIf="item.type === 'ENTRY'">
         <header class="card-header">
           <div>
@@ -82,8 +101,10 @@
         <div class="assessment-strip" *ngIf="entryIsAssessmentNote(item.entry)">
           <button
             type="button"
-            class="assessment-pill assessment-pill--done"
-            [disabled]="!item.entry.questionnaireAssessmentId"
+            class="assessment-pill"
+            [class.assessment-pill--done]="entryAssessmentIsAnswered(item.entry)"
+            [class.assessment-pill--pending]="!entryAssessmentIsAnswered(item.entry)"
+            [disabled]="!entryAssessmentIsAnswered(item.entry) || !item.entry.questionnaireAssessmentId"
             (click)="openRawAssessmentEntry(item.entry)"
           >
             {{ entryAssessmentLabel(item.entry) }}

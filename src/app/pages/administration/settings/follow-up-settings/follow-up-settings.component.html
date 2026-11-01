@@ -1,4 +1,12 @@
 <nz-card [nzTitle]="'clinicalSettings.title' | translate" [nzLoading]="loading">
+  <label>
+    <span>{{ 'notifications.department' | translate }}</span>
+    <nz-select [(ngModel)]="departmentId" (ngModelChange)="loadSettings()" style="width: 100%">
+      <nz-option *ngIf="globalAccess" [nzValue]="0" [nzLabel]="'clinicalSettings.globalDefaults' | translate"></nz-option>
+      <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
+    </nz-select>
+  </label>
+  <p>{{ 'clinicalSettings.departmentScopeDescription' | translate }}</p>
   <div class="setting-form" *ngIf="settings">
     <label>
       <span>{{ 'clinicalSettings.editWindow' | translate }}

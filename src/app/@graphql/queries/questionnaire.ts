@@ -29,6 +29,7 @@ const getQuestionnaires = gql`
           versionNumber
           replacedById
           questionGroups {
+            pageBreakBefore
             label
             questions {
               _id
@@ -74,6 +75,7 @@ const getQuestionnairesVersion = gql`
           versionNumber
           replacedById
           questionGroups {
+            pageBreakBefore
             label
             questions {
               _id

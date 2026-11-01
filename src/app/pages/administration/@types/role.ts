@@ -2,6 +2,7 @@ import { Permission } from './permission';
 import { User } from '@app/pages/user-management/@types/user';
 
 export interface Role {
+  departmentIds?: number[];
   id: number;
   name: string;
   isSuperAdmin?: boolean;

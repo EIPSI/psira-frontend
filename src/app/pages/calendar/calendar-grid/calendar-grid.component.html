@@ -22,12 +22,12 @@
 
   <nz-spin [nzSpinning]="loading">
     <section *ngIf="view === CV.MONTH" class="month-view">
-      <div class="weekday" *ngFor="let day of weekDays">{{ formatWeekday(day) }}</div>
+      <div class="weekday" *ngFor="let day of weekDays; trackBy: trackDay">{{ formatWeekday(day) }}</div>
       <div
         role="button"
         tabindex="0"
         class="month-day"
-        *ngFor="let day of monthDays"
+        *ngFor="let day of monthDays; trackBy: trackDay"
         [class.month-day--muted]="isMutedMonthDay(day)"
         [class.month-day--today]="isToday(day)"
         (mouseup)="onCellMouseUp($event, day)"
@@ -37,31 +37,41 @@
         (drop)="onDrop($event, day)"
       >
         <span class="day-number">{{ formatDay(day) }}</span>
-        <div
-          class="calendar-event"
-          *ngFor="let event of eventsForDate(day) | slice:0:4"
-          [attr.data-event-id]="event.id"
-          [ngClass]="eventClass(event)"
-          [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
-          [style.background-color]="event.color || null"
-          [draggable]="event.editable"
-          (dragstart)="onEventDragStart($event, event)"
-          (dragend)="onEventDragEnd()"
-          (mousedown)="onEventMouseDown($event, event)"
-          (mouseup)="onEventMouseUp($event, event)"
-          (click)="onEventNativeClick($event)"
-          (contextmenu)="onEventContextMenu($event, event)"
-        >
-          <span>{{ formatTime(event.startAt) }}</span>
-          <span class="calendar-event-title">{{ event.title }}</span>
-          <small class="calendar-event-people">{{ eventPeople(event) }}</small>
+        <div class="month-events" *ngIf="eventsForDate(day).length">
+          <div class="month-events-scroll" appCalendarOverflow tabindex="0" role="list"
+            [attr.aria-label]="formatWeekday(day, true) + ' ' + formatDay(day)">
+            <div class="month-events-list">
+              <div
+                class="calendar-event"
+                role="listitem"
+                *ngFor="let event of eventsForDate(day); trackBy: trackEvent"
+                [attr.data-event-id]="event.id"
+                [attr.title]="event.title + ' · ' + eventPeople(event)"
+                [ngClass]="eventClass(event)"
+                [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
+                [style.background-color]="event.color || null"
+                [draggable]="event.editable"
+                (dragstart)="onEventDragStart($event, event)"
+                (dragend)="onEventDragEnd()"
+                (mousedown)="onEventMouseDown($event, event)"
+                (mouseup)="onEventMouseUp($event, event)"
+                (click)="onEventNativeClick($event)"
+                (contextmenu)="onEventContextMenu($event, event)"
+              >
+                <span class="calendar-event-time">{{ formatTime(event.startAt) }}</span>
+                <span class="calendar-event-title">{{ event.title }}</span>
+                <small class="calendar-event-people">{{ eventPeople(event) }}</small>
+              </div>
+            </div>
+          </div>
+          <span class="month-events-more" aria-hidden="true"><i nz-icon nzType="down"></i></span>
         </div>
       </div>
     </section>
 
     <section *ngIf="view === CV.WEEK" class="time-grid">
       <div class="time-corner"></div>
-      <div class="time-day-header" *ngFor="let day of weekDays">
+      <div class="time-day-header" *ngFor="let day of weekDays; trackBy: trackDay">
         <strong>{{ formatWeekday(day) }}</strong>
         <span>{{ formatDay(day) }}</span>
       </div>
@@ -72,7 +82,7 @@
           role="button"
           tabindex="0"
           class="time-cell"
-          *ngFor="let day of weekDays"
+          *ngFor="let day of weekDays; trackBy: trackDay"
           (mouseup)="onCellMouseUp($event, day, hour)"
           (contextmenu)="onCellContextMenu($event)"
           (dragenter)="onDragOver($event)"
@@ -81,7 +91,7 @@
         >
           <div
             class="calendar-event calendar-event--timed"
-            *ngFor="let event of eventsForHour(day, hour)"
+            *ngFor="let event of eventsForHour(day, hour); trackBy: trackEvent"
             [attr.data-event-id]="event.id"
             [ngClass]="eventClass(event)"
             [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"
@@ -122,7 +132,7 @@
         >
           <div
             class="calendar-event calendar-event--timed"
-            *ngFor="let event of eventsForHour(selectedDate, hour)"
+            *ngFor="let event of eventsForHour(selectedDate, hour); trackBy: trackEvent"
             [attr.data-event-id]="event.id"
             [ngClass]="eventClass(event)"
             [class.calendar-event--dragging]="dragPreviewEvent?.id === event.id"

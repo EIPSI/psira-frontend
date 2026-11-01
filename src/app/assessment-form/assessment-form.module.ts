@@ -1,3 +1,4 @@
+import { RangeQuestionComponent } from './question/question-type/range-question/range-question.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AssessmentFormRoutingModule } from './assessment-form-routing.module';
@@ -36,6 +37,7 @@ import { SharedModule } from '@shared';
     QuestionComponent,
     QuestionBaseComponent,
     SelectQuestionComponent,
+    RangeQuestionComponent,
     MultiselectQuestionComponent,
   ],
   imports: [

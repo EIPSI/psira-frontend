@@ -76,6 +76,7 @@ export interface QuestionnaireAssessment {
 }
 
 export interface ResolvedQuestionnaire {
+  progressMode?: 'NONE' | 'PAGES' | 'BAR';
   occurrenceId: string;
   questionnaireId: string;
   sourceBundleId?: string;

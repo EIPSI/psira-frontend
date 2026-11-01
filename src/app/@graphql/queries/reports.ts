@@ -12,6 +12,8 @@ const reports = gql`
           description
           status
           repositoryLink
+
+          departmentIds
           appName
           url
           resources

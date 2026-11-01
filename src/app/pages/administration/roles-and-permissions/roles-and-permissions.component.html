@@ -25,7 +25,7 @@
             <td *ngFor="let role of matrix.roles" nzAlign="center">
               <div
                 nz-checkbox
-                [disabled]="role.isSuperAdmin || !perms.permissionsOnly([PK.ROLES_EDIT_ALL]) || role.hierarchy <= perms.getUserHierarchy() || !getUserPermissions(permission.name)"
+                [disabled]="role.isSuperAdmin || (!perms.permissionsOnly([PK.ROLES_EDIT_ALL]) && !role.departmentIds?.length) || !perms.permissionsOnly([PK.ROLES_EDIT_ALL, PK.ROLES_EDIT_DEPARTMENT_HIERARCHY]) || role.hierarchy <= perms.getUserHierarchy() || !getUserPermissions(permission.name)"
                 [ngModel]="permissionInRole(permission, role)"
                 (ngModelChange)="assignPermissionToRole(permission, role, $event)"
               ></div>

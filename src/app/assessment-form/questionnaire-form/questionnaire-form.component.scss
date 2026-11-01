@@ -29,7 +29,7 @@ article {
 
   .question {
     display: block;
-    margin: 4rem 0;
+    margin: 1.75rem 0;
   }
 }
 
@@ -42,8 +42,12 @@ article {
 }
 
 .screen-questionnaire {
+  padding-top: 0;
+}
+
+.screen-questionnaire ~ .screen-questionnaire {
   border-top: 1px solid #e4e7ec;
-  padding-top: 18px;
+  padding-top: 24px;
 }
 
 .screen-questionnaire h3 {
@@ -57,19 +61,101 @@ article {
 .table-list {
   width: 100%;
   margin: 1rem 0 2rem;
+  table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 0 10px;
+  border-spacing: 0;
+  border: 1px solid #dce4ee;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(49, 91, 142, 0.06);
+  th,
+  td {
+    padding: 12px 8px;
+    border: 0;
+    border-bottom: 1px solid #e3eaf3;
+    text-align: center;
+    overflow-wrap: anywhere;
+    transition: background-color 0.15s ease;
+  }
+  thead th {
+    background: #eaf1f9;
+    color: #284b72;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  tbody th {
+    background: transparent;
+    color: #344054;
+    font-weight: 500;
+  }
+  tr:nth-child(even) {
+    background: #f8fafd;
+  }
+  tbody tr:hover {
+    background: #eef4fb;
+  }
+  th:first-child {
+    width: 32%;
+    text-align: left;
+  }
+  small {
+    display: block;
+    font-weight: 400;
+    margin-top: 6px;
+  }
+  .missing-answer th {
+    color: #800000;
+    border-color: #800000;
+  }
+  .matrix-selected {
+    background: #dce9f8;
+    box-shadow: inset 0 0 0 2px #3b6caa;
+  }
 }
-
-.table-list td {
-  padding: 8px 10px;
-  vertical-align: middle;
-}
-
-.table-list nz-radio-group {
+.matrix-option {
   display: flex;
-  width: 100%;
-  justify-content: space-around;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+  &:hover {
+    background: rgba(59, 108, 170, 0.1);
+  }
+  input {
+    width: 22px;
+    height: 22px;
+    appearance: none;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid #a8bad0;
+    background: #fff;
+    cursor: pointer;
+    &:checked {
+      border-color: #3b6caa;
+      background: #3b6caa;
+      box-shadow: inset 0 0 0 4px #fff;
+    }
+  }
+}
+.matrix-option:focus-within {
+  outline: 2px solid #3b6caa;
+  outline-offset: 2px;
+}
+.mobile-option-label {
+  display: none;
+}
+.required-mark {
+  color: #800000;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
 }
 
 .completed-message {
@@ -84,18 +170,25 @@ article {
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  .nav-pills {
-    margin: 0 1em;
-  }
 }
 
 @media (max-width: 767px) {
-  .head-row,
-  .controls {
+  .head-row {
     align-items: stretch;
     flex-direction: column;
     gap: 12px;
+  }
+  .controls {
+    flex-wrap: wrap;
+    gap: 10px;
+    button {
+      flex: 1 1 120px;
+      min-height: 44px;
+      height: auto;
+      white-space: normal;
+      line-height: 1.4;
+      padding: 10px;
+    }
   }
 
   article {
@@ -105,7 +198,7 @@ article {
     }
 
     .question {
-      margin: 2rem 0;
+      margin: 1.25rem 0;
     }
   }
 
@@ -116,13 +209,67 @@ article {
 
   .table-list {
     display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    thead {
+      display: none;
+    }
+    tbody,
+    tr {
+      display: block;
+      width: 100%;
+    }
+    tr {
+      margin-bottom: 18px;
+      border: 1px solid #dce4ee;
+      border-radius: 9px;
+      overflow: hidden;
+    }
+    th:first-child {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: 0;
+    }
+    td {
+      display: block;
+      border: 0;
+      border-top: 1px solid #e7edf5;
+      padding: 4px 14px;
+    }
   }
+  .matrix-option {
+    justify-content: flex-start;
+    gap: 12px;
+    text-align: left;
+  }
+  .mobile-option-label {
+    display: inline;
+  }
+}
 
-  .table-list nz-radio-group {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
+.page-progress {
+  color: #52657a;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 20px;
+  text-align: right;
+}
+.page-progress-track {
+  height: 8px;
+  border-radius: 8px;
+  background: #e5edf5;
+  overflow: hidden;
+  margin: 0 0 24px;
+  > div {
+    height: 100%;
+    background: #3b6caa;
+    transition: width 0.2s ease;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-progress-track > div,
+  .matrix-option,
+  .table-list td,
+  .table-list th {
+    transition: none;
   }
 }

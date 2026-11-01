@@ -1,3 +1,5 @@
+import { TranslateService } from '@ngx-translate/core';
+import { questionnaireWorkbookFile } from '@shared/utils/questionnaire-workbook.util';
 import { finalize } from 'rxjs/operators';
 import { Component } from '@angular/core';
 import { QuestionnaireManagementService } from '../../@services/questionnaire-management.service';
@@ -44,6 +46,14 @@ export class QuestionnaireFormComponent {
     return !!this.existingId;
   }
 
+  public get guideWorkbookFile(): string {
+    return questionnaireWorkbookFile('guide', this.translate.currentLang || this.translate.defaultLang);
+  }
+
+  public get exampleWorkbookFile(): string {
+    return questionnaireWorkbookFile('example', this.translate.currentLang || this.translate.defaultLang);
+  }
+
   constructor(
     private qmService: QuestionnaireManagementService,
     private messageService: NzMessageService,
@@ -51,7 +61,8 @@ export class QuestionnaireFormComponent {
     private activatedRoute: ActivatedRoute,
     public perms: AppPermissionsService,
     private router: Router,
-    private departmentsService: DepartmentsService
+    private departmentsService: DepartmentsService,
+    private translate: TranslateService
   ) {
     this.resetForm = true;
     this.loadDepartments();

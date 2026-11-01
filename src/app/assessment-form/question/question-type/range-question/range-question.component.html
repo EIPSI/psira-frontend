@@ -1,0 +1,21 @@
+<div class="range-question" [class.unanswered]="!answered" [class.boxed-labels]="config.labelBoxes" [class.bold-labels]="config.boldLabels"
+  [style.--label-size]="config.labelFontSize + 'px'" [style.--value-size]="config.valueFontSize + 'px'">
+  <div class="scale-value" *ngIf="config.valuePosition === 'above'" aria-live="polite">
+    {{ answered ? (value | number: '1.0-3') : ('assessmentPresentation.unanswered' | translate) }}
+  </div>
+  <div class="range-axis">
+  <div class="scale-labels above" *ngIf="labels('above').length">
+    <span *ngFor="let label of labels('above')" [style.left.%]="position(label)" [attr.data-align]="alignment(label)">{{ label.label }}</span>
+  </div>
+  <input class="range-input" #rangeInput type="range" [min]="config.min" [max]="config.max" [step]="config.step || 'any'" [value]="value"
+    [style.background-image]="background" [attr.aria-label]="question.label" [attr.aria-valuetext]="answered ? (value | number: '1.0-3') : ('assessmentPresentation.unanswered' | translate)"
+    (input)="input(rangeInput.value)" (change)="commit(rangeInput.value)" (pointerup)="commit(rangeInput.value)" (keyup.enter)="commit(rangeInput.value)" />
+  <div class="scale-labels below" *ngIf="labels('below').length">
+    <span *ngFor="let label of labels('below')" [style.left.%]="position(label)" [attr.data-align]="alignment(label)">{{ label.label }}</span>
+  </div>
+  </div>
+  <div class="scale-value" *ngIf="config.valuePosition === 'below'" aria-live="polite">
+    {{ answered ? (value | number: '1.0-3') : ('assessmentPresentation.unanswered' | translate) }}
+  </div>
+  <small *ngIf="!answered">{{ 'assessmentPresentation.rangeInstruction' | translate }}</small>
+</div>

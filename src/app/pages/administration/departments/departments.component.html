@@ -18,7 +18,7 @@
       nzType="primary"
       nzShape="circle"
       (click)="openCreatePanel()"
-      *ngIf="perms.permissionsOnly(PK.SETTINGS_EDIT_ALL)"
+      *ngIf="perms.permissionsOnly([PK.SETTINGS_EDIT_ALL, PK.DEPARTMENTS_CREATE_ALL, PK.DEPARTMENTS_CREATE_DEPARTMENT])"
     >
       <i nz-icon nzType="plus"></i>
     </button>
@@ -65,7 +65,7 @@
       </nz-form-control>
     </nz-form-item>
 
-    <nz-form-item>
+    <nz-form-item *ngIf="perms.permissionsOnly([PK.SETTINGS_EDIT_ALL, PK.DEPARTMENTS_EDIT_ALL, PK.DEPARTMENTS_EDIT_DEPARTMENT])">
       <nz-form-label nzRequired>{{ 'departments.appliesToRoles' | translate }}</nz-form-label>
       <nz-form-control [nzErrorTip]="'departments.rolesValidation' | translate">
         <nz-select
@@ -80,7 +80,7 @@
       </nz-form-control>
     </nz-form-item>
 
-    <nz-form-item>
+    <nz-form-item *ngIf="perms.permissionsOnly([PK.SETTINGS_EDIT_ALL, PK.DEPARTMENTS_EDIT_ALL, PK.DEPARTMENTS_EDIT_DEPARTMENT])">
       <nz-form-label>{{ 'departments.defaultForRoles' | translate }}</nz-form-label>
       <nz-form-control>
         <nz-select

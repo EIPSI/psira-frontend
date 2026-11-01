@@ -1,3 +1,5 @@
+import { TranslateService } from '@ngx-translate/core';
+import { map } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { Observable } from 'rxjs';
@@ -13,7 +15,7 @@ import { RolesMutations } from '@app/@graphql/mutations/roles';
   providedIn: 'root',
 })
 export class RolesService {
-  constructor(private apollo: Apollo) {}
+  constructor(private apollo: Apollo, private translate: TranslateService) {}
 
   roles(params?: { paging?: Paging; filter?: Filter; sorting?: Sorting | Sorting[] }): Observable<FetchResult<any>> {
     return this.apollo.query({
@@ -24,7 +26,12 @@ export class RolesService {
         sorting: params && params.sorting ? params.sorting : undefined,
       },
       fetchPolicy: 'no-cache',
-    });
+    }).pipe(map((result: any) => ({ ...result, data: { ...result.data, roles: { ...result.data.roles,
+      edges: result.data.roles.edges.map((edge: any) => ({ ...edge, node: { ...edge.node,
+        name: edge.node.code === 'RESEARCH_ADMIN' ? this.translate.instant('roles.researchAdmin')
+          : edge.node.code === 'PROJECT_RESEARCHER' ? this.translate.instant('roles.projectResearcher') : edge.node.name,
+      } })),
+    } } })));
   }
 
   createRole(role: Role): Observable<FetchResult<any>> {

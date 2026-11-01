@@ -1,0 +1,107 @@
+:host {
+  display: block;
+}
+.range-question {
+  padding: 8px 0;
+}
+.range-axis {
+  margin: 0 16px;
+}
+.range-input {
+  display: block;
+  width: calc(100% + 26px);
+  padding: 0;
+  border: 0;
+  appearance: none;
+  height: 44px;
+  background-size: calc(100% - 26px) 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin: 6px -13px;
+  border-radius: 8px;
+  cursor: pointer;
+  &:focus-visible {
+    outline: 3px solid #3b6caa;
+    outline-offset: 8px;
+  }
+}
+.scale-labels {
+  position: relative;
+  min-height: 0;
+  font-size: var(--label-size, 14px);
+  span {
+    position: absolute;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    max-width: 120px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    padding: 2px 4px;
+  }
+  [data-align="left"] {
+    text-align: left;
+  }
+  [data-align="center"] {
+    text-align: center;
+  }
+  [data-align="right"] {
+    text-align: right;
+  }
+  &.above span {
+    bottom: 0;
+  }
+}
+.scale-value {
+  text-align: center;
+  color: #315b8e;
+  font-size: var(--value-size, 18px);
+  font-weight: 600;
+}
+.unanswered {
+  color: #667085;
+  input {
+    opacity: 0.65;
+  }
+}
+.boxed-labels .scale-labels span {
+  border: 1px solid #d6e1ef;
+  border-radius: 6px;
+  background: #f4f8fd;
+  padding: 5px 7px;
+}
+.bold-labels .scale-labels span {
+  font-weight: 700;
+}
+small {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+}
+@media (max-width: 480px) {
+  .range-question {
+    padding: 8px 0;
+  }
+}
+
+.range-input::-webkit-slider-thumb {
+  appearance: none;
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  background: #3b6caa;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px #526579;
+}
+.range-input::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  background: #3b6caa;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px #526579;
+}
+.range-input::-moz-range-track {
+  background: transparent;
+}

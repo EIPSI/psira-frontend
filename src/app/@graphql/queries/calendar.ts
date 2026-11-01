@@ -275,9 +275,12 @@ const clinicalSessionFollowUpVersions = gql`
 `;
 
 const clinicalSessionFollowUpSettings = gql`
-  query {
-    clinicalSessionFollowUpSettings {
+  query($departmentId: Int) {
+    clinicalSessionFollowUpSettings(departmentId: $departmentId) {
       id
+      departmentId
+      patientCaseManagerRoleCodes
+      therapistSupervisorRoleCodes
       editWindowDays
       dashboardLookaheadDays
       updatedAt
@@ -499,7 +502,17 @@ const treatmentCycles = gql`
 
 const calendarTargets = gql`query { calendarTargets { id firstName middleName lastName email workID roles { id code name } departments { id name } } }`;
 
+const caseHistoryAssessments = gql`
+  query($patientId: Int, $therapistId: Int) {
+    caseHistoryAssessments(patientId: $patientId, therapistId: $therapistId) {
+      id name note status questionnaireAssessmentId deliveryDate expirationDate createdAt
+      assessmentType { id name }
+    }
+  }
+`;
+
 export const CalendarQueries = {
+  caseHistoryAssessments,
   calendarTargets,
   calendarOccurrences,
   calendarEvents,

@@ -12,10 +12,10 @@ import { DisclaimersMutation } from '../../../@graphql/mutations/disclaimers';
 export class DisclaimersService {
   constructor(private apollo: Apollo) {}
 
-  disclaimers(): Observable<FetchResult<any>> {
+  disclaimers(departmentId?: number): Observable<FetchResult<any>> {
     return this.apollo.query({
-      query: DisclaimersQueries.disclaimers,
-      variables: {},
+      query: localStorage.getItem('user') ? DisclaimersQueries.departmentDisclaimers : DisclaimersQueries.disclaimers,
+      variables: { departmentId },
       fetchPolicy: 'no-cache',
     });
   }

@@ -8,6 +8,11 @@ export const ReportForm: Form = {
     {
       fields: [
         {
+          name: 'departmentIds', value: [], title: 'notifications.department', label: 'notifications.department',
+          translationPath: 'notifications.department', type: 'select', isRequired: false, mode: 'multiple',
+          options: [], span: 24, description: 'researchRoles.reportDepartmentsDescription',
+        },
+        {
           value: '',
           name: 'name',
           title: 'forms.createReportForm.reportName',

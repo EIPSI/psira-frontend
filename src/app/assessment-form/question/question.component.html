@@ -1,16 +1,25 @@
 <nz-card
-  [nzTitle]="question.label"
-  [nzExtra]="hint"
+  [nzTitle]="questionTitle"
+  [class.invalid-question]="invalidQuestion"
+  [attr.aria-invalid]="invalidQuestion"
   class="multiline-header"
+  [class.range-question-card]="isRange"
   [class.required-question]="question.required"
   *ngIf="question.type !== QuestionType.NOTE; else note"
 >
+  <p *ngIf="question.hint" class="question-hint">{{ question.hint }}</p>
+  <img *ngIf="question.image" class="question-image" [src]="question.image" [alt]="question.label" />
+  <ng-container *ngIf="isRange; else standardInput">
+    <app-range-question [question]="question" [answer]="answer" (answerChange)="addAnswer($event)"></app-range-question>
+  </ng-container>
+  <ng-template #standardInput>
   <nz-form-item>
     <nz-form-control>
       <ng-container [ngSwitch]="question.type" *ngIf="question && answer?.question">
         <ng-container *ngSwitchCase="QuestionType.TEXT">
           <textarea
             #textInput
+            [attr.aria-label]="question.label"
             nz-input
             [required]="question.required"
             [(ngModel)]="answer.textValue"
@@ -36,7 +45,7 @@
           ></nz-input-number>
         </ng-container>
         <ng-container *ngSwitchCase="QuestionType.CHECKBOX">
-          <label nz-checkbox [(ngModel)]="answer.booleanValue" (ngModelChange)="addAnswer(answer)"></label>
+          <label nz-checkbox [attr.aria-label]="question.label" [(ngModel)]="answer.booleanValue" (ngModelChange)="addAnswer(answer)"></label>
         </ng-container>
         <ng-container *ngSwitchCase="QuestionType.DATE">
           <nz-date-picker
@@ -49,6 +58,7 @@
           <input
             #timeInput
             type="time"
+            [attr.aria-label]="question.label"
             nz-input
             [value]="answer.textValue"
             (change)="answer.textValue = timeInput.value; answerGiven.next(answer)"
@@ -64,6 +74,7 @@
             <input
               #timeInput
               type="time"
+            [attr.aria-label]="question.label"
               nz-input
               [value]="answer.textValue"
               (change)="answer.textValue = timeInput.value; answerGiven.next(answer)"
@@ -93,21 +104,16 @@
       </ng-container>
     </nz-form-control>
   </nz-form-item>
+  </ng-template>
+  <p *ngIf="invalidQuestion" class="answer-error" role="alert">
+    {{ (showRequiredError ? question.requiredMessage : question.constraintMessage) || ('assessmentPresentation.invalidAnswer' | translate) }}
+  </p>
 </nz-card>
 
-<ng-template #hint>
-  <button
-    *ngIf="question.hint"
-    nz-button
-    nzShape="circle"
-    nzSize="small"
-    nz-tooltip
-    [nzTooltipTitle]="question.hint"
-    class="hint"
-  >
-    <i nz-icon nzType="question"></i>
-  </button>
+<ng-template #questionTitle>
+  {{ question.label }} <span *ngIf="question.required" class="required-mark" [attr.aria-label]="'assessmentPresentation.required' | translate">*</span>
 </ng-template>
+
 
 <ng-template #note>
   <nz-card>
@@ -115,5 +121,7 @@
       <i nz-icon nzType="exclamation-circle" nzSize="big"></i>
       <p>{{ question.label }}</p>
     </div>
+    <p *ngIf="question.hint" class="question-hint">{{ question.hint }}</p>
+    <img *ngIf="question.image" class="question-image" [src]="question.image" [alt]="question.label" />
   </nz-card>
 </ng-template>

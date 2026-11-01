@@ -96,12 +96,18 @@ export class DepartmentsComponent implements OnInit {
     this.getRoles();
     this.getDepartments();
 
-    if (this.perms.permissionsOnly(PermissionKey.SETTINGS_EDIT_ALL)) {
+    if (this.perms.permissionsOnly([PermissionKey.SETTINGS_EDIT_ALL, PermissionKey.DEPARTMENTS_EDIT_ALL,
+      PermissionKey.DEPARTMENTS_EDIT_DEPARTMENT])) {
       this.actions = [
         { key: ActionKey.EDIT_DEPARTMENT, title: this.translate.instant('departments.editDepartment') },
         { key: ActionKey.DUPLICATE_DEPARTMENT, title: this.translate.instant('core.duplicate') },
         { key: ActionKey.DELETE_DEPARTMENT, title: this.translate.instant('departments.deleteDepartment') },
       ];
+      if (!this.perms.permissionsOnly([PermissionKey.SETTINGS_EDIT_ALL, PermissionKey.DEPARTMENTS_EDIT_ALL])) {
+        this.actions = this.actions.filter(action => action.key === ActionKey.EDIT_DEPARTMENT ||
+          (action.key === ActionKey.DELETE_DEPARTMENT && this.perms.permissionsOnly(PermissionKey.DEPARTMENTS_DELETE_DEPARTMENT)) ||
+          (action.key === ActionKey.DUPLICATE_DEPARTMENT && this.perms.permissionsOnly(PermissionKey.DEPARTMENTS_CREATE_DEPARTMENT)));
+      }
     }
   }
 

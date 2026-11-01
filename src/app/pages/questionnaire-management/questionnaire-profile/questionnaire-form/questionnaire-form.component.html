@@ -1,8 +1,12 @@
 <p class="info-tip">
   <span nz-icon nzType="info-circle" nzTheme="outline"></span>
-  {{ 'questionnaires.xlsValidationPrefix' | translate }}
-  <a target="_blank" href="https://getodk.org/xlsform/">{{ 'questionnaires.xlsValidationLink' | translate }}</a>
-  {{ 'questionnaires.xlsValidationSuffix' | translate }}
+  <a [href]="'assets/templates/' + guideWorkbookFile" [attr.download]="guideWorkbookFile">
+    {{ 'assessmentPresentation.downloadWorkbook' | translate }}
+  </a>
+  {{ 'assessmentPresentation.workbookDescription' | translate }}
+  <a [href]="'assets/templates/' + exampleWorkbookFile" [attr.download]="exampleWorkbookFile">
+    {{ 'assessmentPresentation.downloadLocalizedExampleWorkbook' | translate }}
+  </a>
 </p>
 <div class="parent-div">
   <div class="form-div">

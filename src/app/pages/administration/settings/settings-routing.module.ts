@@ -28,7 +28,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'clinicalSettings.title',
           permissions: {
-            only: [PermissionKey.SETTINGS_VIEW_ALL],
+            only: [PermissionKey.SETTINGS_VIEW_ALL, PermissionKey.CLINICAL_SETTINGS_VIEW_ALL, PermissionKey.CLINICAL_SETTINGS_VIEW_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],
@@ -39,7 +39,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.reasonConfiguration',
           permissions: {
-            only: [PermissionKey.SETTINGS_VIEW_ALL],
+            only: [PermissionKey.SETTINGS_VIEW_ALL, PermissionKey.SETTINGS_VIEW_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],
@@ -50,7 +50,7 @@ const routes: Routes = [
         data: {
           breadcrumbI18nKey: 'menu.language',
           permissions: {
-            only: [PermissionKey.SETTINGS_VIEW_ALL],
+            only: [PermissionKey.SETTINGS_VIEW_ALL, PermissionKey.SETTINGS_VIEW_DEPARTMENT],
           },
         },
         canActivate: [PermissionGuard],

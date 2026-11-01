@@ -1,3 +1,7 @@
+<nz-select [(ngModel)]="departmentId" (ngModelChange)="getDisclaimers()" style="min-width: 260px; margin-bottom: 16px">
+  <nz-option *ngIf="globalAccess" [nzValue]="0" [nzLabel]="'clinicalSettings.globalDefaults' | translate"></nz-option>
+  <nz-option *ngFor="let department of departments" [nzValue]="department.id" [nzLabel]="department.name"></nz-option>
+</nz-select>
 <app-master-data-list [data]="data" [columns]="columns" (rowClick)="handleRowClick($event)"> </app-master-data-list>
 
 <nz-drawer

@@ -62,7 +62,7 @@ export class SkipLogic {
       solvedParts.splice(
         0,
         2,
-        conditionalParts[0] === 'or' ? solvedParts[0] || solvedParts[1] : solvedParts[0] && solvedParts[1]
+        conditionalParts.shift() === 'or' ? solvedParts[0] || solvedParts[1] : solvedParts[0] && solvedParts[1]
       );
     }
 
@@ -74,21 +74,24 @@ export class SkipLogic {
     const logicParts: string[] = [];
     const conditionalParts: Array<'or' | 'and'> = [];
 
-    // find all logic parts and split them up at and/or
-    while (logic.toLowerCase().includes('or') || logic.toLowerCase().includes('and')) {
-      const orIdx = logic.toLowerCase().indexOf('or');
-      const andIdx = logic.toLowerCase().indexOf('and');
-
-      if (orIdx >= 0) {
-        logicParts.push(logic.substr(0, orIdx).trim());
-        logic = logic.substr(orIdx + 2).trim();
-        conditionalParts.push('or');
-      } else if (andIdx) {
-        logicParts.push(logic.substr(0, andIdx).trim());
-        logic = logic.substr(andIdx + 3).trim();
-        conditionalParts.push('and');
-      }
+    // Only split standalone operators outside strings and selected(...).
+    let quote = '';
+    let depth = 0;
+    let start = 0;
+    for (let index = 0; index < logic.length; index++) {
+      const character = logic[index];
+      if (quote) { if (character === quote) quote = ''; continue; }
+      if (character === '\'' || character === '"') { quote = character; continue; }
+      if (character === '(') depth++;
+      if (character === ')') depth--;
+      const operator = depth === 0 ? logic.slice(index).match(/^\s+(and|or)\s+/i) : null;
+      if (!operator) continue;
+      logicParts.push(logic.slice(start, index).trim());
+      conditionalParts.push(operator[1].toLowerCase() as 'and' | 'or');
+      index += operator[0].length - 1;
+      start = index + 1;
     }
+    logic = logic.slice(start).trim();
 
     logicParts.push(logic);
     return [logicParts, conditionalParts];
@@ -103,6 +106,11 @@ export class SkipLogic {
         // get parts and compare
         const [left, right] = condition.split(conditional).map((p) => p.trim());
         return SkipLogic.extractValue(left, relevantQuestions) === SkipLogic.extractValue(right, relevantQuestions);
+
+      case '<':
+      case '>':
+        const [numericLeft, numericRight] = condition.split(conditional).map(part => SkipLogic.extractValue<number>(part.trim(), relevantQuestions));
+        return conditional === '<' ? numericLeft < numericRight : numericLeft > numericRight;
 
       case 'selected':
         // get question and targetValue
@@ -142,7 +150,7 @@ export class SkipLogic {
     }
 
     // convert to number if possible
-    if (!Number.isNaN(value)) {
+    if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
       return Number(value);
     }
 

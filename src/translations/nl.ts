@@ -1,4 +1,8 @@
 export default {
+  researchRoles: {
+    dataExports: 'Onderzoeksexport',
+    reportDepartmentsDescription: 'Selecteer de afdelingen van het rapport. Gedeelde rapporten kunnen alleen door een globale beheerder worden gewijzigd.',
+  },
   storageNotice: {
     title: 'Privacy en browseropslag',
     message:
@@ -237,6 +241,8 @@ export default {
     searchCaregiver: 'Search existing caregiver number or name',
   },
   clinicalSettings: {
+    globalDefaults: 'Globale standaardwaarden',
+    departmentScopeDescription: 'Wijzigingen gelden alleen voor de geselecteerde afdeling. Afdelingen zonder eigen configuratie gebruiken de globale standaardwaarden.',
     dashboardLookahead: 'Dashboard anticipation',
     daysBeforeDashboard: 'days before sessions and assessments appear',
     caseManagerRoles: 'Roles allowed as case managers',
@@ -1919,6 +1925,8 @@ export default {
     unableDeleteDepartment: 'Unable to delete department',
   },
   roles: {
+    researchAdmin: 'Onderzoeksbeheerder',
+    projectResearcher: 'Projectonderzoeker',
     createRole: 'Rol aanmaken',
     editRole: 'Edit role',
     deleteRole: 'Delete role',
@@ -2099,5 +2107,22 @@ export default {
     choiceThree: 'Choice three',
     choiceFour: 'Choice four',
     choiceFive: 'Choice five',
+  },
+  assessmentPresentation: {
+    progressSetting: 'Voortgangsindicator',
+    progressNone: 'Geen indicator',
+    progressPages: 'Huidige pagina en totaal',
+    progressBar: 'Voortgangsbalk',
+    pageOf: 'Pagina {{current}} van {{total}}',
+
+    invalidAnswer: 'Controleer dit antwoord voordat u doorgaat.',
+    required: 'Verplicht',
+    question: 'Vraag',
+    unanswered: 'Niet beantwoord',
+    rangeInstruction: 'Verplaats of raak de schaal aan. U kunt ook met Enter bevestigen.',
+    progress: 'Voortgang van de beoordeling',
+    downloadLocalizedExampleWorkbook: 'Download de volledige testvragenlijst',
+    downloadWorkbook: 'Download de Excel-handleiding en voorbeeldvragenlijsten',
+    workbookDescription: 'Bevat alle typen, weergaveopties, Likert-matrices, VAS en compatibiliteitsbeperkingen.',
   },
 };

@@ -9,6 +9,8 @@ const createOneReport = gql`
       description
       status
       repositoryLink
+
+      departmentIds
       appName
       url
       resources
@@ -31,6 +33,8 @@ const createManyReports = gql`
       description
       status
       repositoryLink
+
+      departmentIds
       appName
       url
       resources
@@ -49,6 +53,8 @@ const updateOneReport = gql`
       description
       status
       repositoryLink
+
+      departmentIds
       appName
       url
       resources
@@ -71,6 +77,8 @@ const updateManyReports = gql`
       description
       status
       repositoryLink
+
+      departmentIds
       appName
       url
       resources

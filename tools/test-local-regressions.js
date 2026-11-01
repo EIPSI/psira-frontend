@@ -37,6 +37,25 @@ test('timezone choices contain one reference per UTC offset, ordered from -12 to
   assert.ok(options.find(option => option.offset === 570).label.includes('Adelaide'));
   assert.ok(options.find(option => option.offset === 600).label.includes('Sydney'));
 });
+test('workbook downloads follow the current language, including regional variants and live changes', () => {
+  const { questionnaireWorkbookFile } = require(path.join(root, '@shared/utils/questionnaire-workbook.util.ts'));
+  const { QuestionnaireFormComponent } = require(path.join(root,
+    'pages/questionnaire-management/questionnaire-profile/questionnaire-form/questionnaire-form.component.ts'));
+  const component = Object.create(QuestionnaireFormComponent.prototype);
+  component.translate = { currentLang: 'es-AR', defaultLang: 'en' };
+  for (const [language, code] of [['es-AR', 'es'], ['EN-gb', 'en'], ['de-DE', 'de'], ['nl_NL', 'nl'], ['fr', 'en']]) {
+    component.translate.currentLang = language;
+    assert.strictEqual(component.guideWorkbookFile, 'PSIRA-cuestionarios-guia-' + code + '.xlsx');
+    assert.strictEqual(component.exampleWorkbookFile, 'PSIRA-cuestionario-ejemplo-completo-' + code + '.xlsx');
+    for (const kind of ['guide', 'example']) {
+      const filename = questionnaireWorkbookFile(kind, language);
+      assert.ok(fs.existsSync(path.resolve(root, '../assets/templates', filename)), filename);
+    }
+  }
+  component.translate.currentLang = '';
+  component.translate.defaultLang = 'de';
+  assert.strictEqual(component.guideWorkbookFile, 'PSIRA-cuestionarios-guia-de.xlsx');
+});
 const translationKeys = [
   'tables.casemanagers.departments',
   'evaluationSchemes.sessionBased',
@@ -467,15 +486,393 @@ test('saving notification scopes sends one request and permits an inactive confi
   assert.deepStrictEqual(requests[0].departmentIds, []);
   assert.strictEqual(requests[0].mailTemplateId, null);
 });
+test('particular calendar templates invoke the start-time recalculation handler', () => {
+  const { parseTemplate } = require('@angular/compiler');
+  for (const file of ['pages/patients-management/calendar/patient-calendar.component.html',
+    'pages/calendar/user-calendar/user-calendar.component.html', 'pages/calendar/calendar.component.html']) {
+    const template = parseTemplate(fs.readFileSync(path.join(root, file), 'utf8'), file);
+    const editors = [];
+    const visit = nodes => nodes.forEach(node => {
+      if (node.name === 'app-event-edit-modal') editors.push(node);
+      if (node.children) visit(node.children);
+      if (node.templateAttrs && node.children) return;
+    });
+    visit(template.nodes);
+    assert.strictEqual(editors.length, 1);
+    assert.strictEqual(editors[0].outputs.find(output => output.name === 'startAtChange').handler.source, 'onEditStartChange($event)');
+  }
+});
+test('the general editor loads active applications and every page of schemes, then saves additions', () => {
+  const { CalendarComponent } = require(path.join(root, 'pages/calendar/calendar.component.ts'));
+  const component = Object.create(CalendarComponent.prototype);
+  const requests = [];
+  const operations = [];
+  component.schemesService = { getSchemes: request => {
+    requests.push(request);
+    return of({ edges: [{ node: { id: request.paging.after ? 12 : 11, name: 'Scheme' } }],
+      pageInfo: request.paging.after ? { hasNextPage: false } : { hasNextPage: true, endCursor: 'next' } });
+  } };
+  component.calendarService = {
+    getClinicalSessionSchemeApplications: () => of([{ id: 1, schemeId: 10 }]),
+    updateClinicalSession: input => { operations.push(['update', input]); return of({}); },
+    addClinicalSessionSchemes: input => { operations.push(['add', input]); return of([]); },
+  };
+  component.loadEditResponsibleUserOptions = () => {};
+  component.loadEvents = () => {};
+  component.modalService = { confirm: options => options.nzOnOk() };
+  component.calendarService.stopClinicalSessionScheme = (sessionId, schemeId) => {
+    operations.push(['stop', { sessionId, schemeId }]);
+    component.calendarService.getClinicalSessionSchemeApplications = () => of([]);
+    return of({});
+  };
+  component.errorService = { handleError: error => { throw error; } };
+  component.translate = { instant: key => key };
+  component.openEdit({ id: 'session:3', type: 'SESSION', editable: true, clinicalSessionId: 3,
+    startAt: '2026-10-01T12:00:00Z', endAt: '2026-10-01T13:00:00Z',
+    responsibleUserIds: [20], departments: [{ id: 2 }] });
+  assert.deepStrictEqual(component.activeSchemeApplications.map(item => item.schemeId), [10]);
+  assert.deepStrictEqual(component.sessionSchemes.map(item => item.id), [11, 12]);
+  assert.deepStrictEqual(requests[0].departmentIds, [2]);
+  component.editAddSchemeIds = [11];
+  component.editAddSchemesPropagate = true;
+  component.saveEdit();
+  assert.deepStrictEqual(operations.map(item => item[0]), ['update', 'add']);
+  assert.deepStrictEqual(operations[1][1].schemeIds, [11]);
+  assert.strictEqual(operations[1][1].clinicalSessionId, 3);
+  assert.strictEqual(operations[1][1].propagateFuture, true);
+  component.stopActiveScheme({ schemeId: 10 });
+  assert.deepStrictEqual(operations[2], ['stop', { sessionId: 3, schemeId: 10 }]);
+  assert.deepStrictEqual(component.activeSchemeApplications, []);
+});
+test('history renders independent automated evaluations without duplicating assessment notes', () => {
+  const { ClinicalFollowUpListComponent } = require(path.join(root, 'pages/calendar/clinical-follow-up-list/clinical-follow-up-list.component.ts'));
+  const requests = [];
+  const component = new ClinicalFollowUpListComponent({
+    getClinicalSessions: () => of([]),
+    getCaseHistoryEntries: () => of([{ id: 1, assessmentId: 10, occurredAt: '2026-01-01T12:00:00Z' }]),
+    getCaseHistoryAssessments: (patient, therapist) => { requests.push([patient, therapist]); return of([
+      { id: 10, status: 'COMPLETED', deliveryDate: '2026-01-01T12:00:00Z' },
+      { id: 11, name: 'Automatic', status: 'OPEN_FOR_COMPLETION', deliveryDate: '2026-01-02T12:00:00Z' },
+      { id: 12, name: 'Fixed', status: 'COMPLETED', deliveryDate: '2026-01-03T12:00:00Z' },
+    ]); },
+  }, { handleError: error => { throw error; } }, { instant: key => key }, {});
+  component.patientId = 20;
+  component.loadDocument();
+  assert.deepStrictEqual(requests, [[20, undefined]]);
+  assert.strictEqual(component.documentItems.length, 3);
+  assert.deepStrictEqual(component.documentItems.filter(item => item.type === 'ASSESSMENT').map(item => item.assessment.id), [12, 11]);
+  assert.strictEqual(component.entryAssessmentIsAnswered(component.historyEntries[0]), true);
+  component.dateRange = [new Date('2026-01-02'), new Date('2026-01-02')];
+  component.applyFilters();
+  assert.deepStrictEqual(component.documentItems.map(item => item.assessment.id), [11]);
+});
+
 if (process.env.PSIRA_CLINICAL_SCHEMA_PATH) test('calendar, consent and notification requests match the backend schema', () => {
   const { buildSchema, validate } = require('graphql');
   const schema = buildSchema(fs.readFileSync(process.env.PSIRA_CLINICAL_SCHEMA_PATH, 'utf8'));
   const { CalendarQueries } = require(path.join(root, '@graphql/queries/calendar.ts'));
+  const { CalendarMutations } = require(path.join(root, '@graphql/mutations/calendar.ts'));
+  const { ReportsQueries } = require(path.join(root, '@graphql/queries/reports.ts'));
+  const { ReportsMutations } = require(path.join(root, '@graphql/mutations/reports.ts'));
+  const { DepartmentsMutations } = require(path.join(root, '@graphql/mutations/departments.ts'));
+  const { DisclaimersQueries } = require(path.join(root, '@graphql/queries/disclaimers.ts'));
+  const { DisclaimersMutation } = require(path.join(root, '@graphql/mutations/disclaimers.ts'));
+  const { RolesQueries } = require(path.join(root, '@graphql/queries/roles.ts'));
+  const { AssessmentsQueries } = require(path.join(root, '@graphql/queries/assessments.ts'));
+  const { AssessmentsMutations } = require(path.join(root, '@graphql/mutations/assessments.ts'));
+  const { BundleQueries } = require(path.join(root, '@graphql/queries/bundles.ts'));
+  const { BundleMutations } = require(path.join(root, '@graphql/mutations/bundles.ts'));
   const { NotificationsGraphql } = require(path.join(root, 'pages/notifications/@graphql/notifications.ts'));
   const { InformedConsentGraphql } = require(path.join(root, 'pages/informed-consent/@graphql/informed-consent.ts'));
-  for (const query of [CalendarQueries.calendarTargets, CalendarQueries.clinicalSessions, CalendarQueries.calendarEvents,
-    NotificationsGraphql.saveNotificationConfigurations, InformedConsentGraphql.responses]) {
+  for (const query of [CalendarQueries.calendarTargets, CalendarQueries.clinicalSessions, CalendarQueries.calendarEvents, CalendarQueries.caseHistoryAssessments,
+    NotificationsGraphql.saveNotificationConfigurations, InformedConsentGraphql.responses,
+    CalendarQueries.clinicalSessionFollowUpSettings, CalendarMutations.updateClinicalSessionFollowUpSettings,
+    ReportsQueries.reports, ReportsMutations.createOneReport, ReportsMutations.updateOneReport,
+    DepartmentsMutations.updateOneDepartment, DepartmentsMutations.deleteOneDepartment,
+    DisclaimersQueries.departmentDisclaimers, DisclaimersMutation.updateDisclaimer, RolesQueries.roles,
+    AssessmentsQueries.getFullAssessment, AssessmentsQueries.getFullPublicAssessment, AssessmentsMutations.addAnswer,
+    BundleQueries.getQuestionnaireBundle, BundleQueries.getQuestionnaireBundles,
+    BundleMutations.createQuestionnaireBundle, BundleMutations.updateQuestionnaireBundle]) {
     assert.deepStrictEqual(validate(schema, query).map(error => error.message), []);
   }
+});
+test('calendar rendering stabilizes without destroying day views on subsequent Angular checks', () => {
+  const { DefaultIterableDiffer } = require('@angular/core');
+  const { CalendarGridComponent } = require(path.join(root, 'pages/calendar/calendar-grid/calendar-grid.component.ts'));
+  const grid = new CalendarGridComponent();
+  grid.selectedDate = new Date(2026, 9, 15);
+  const month = new DefaultIterableDiffer();
+  const week = new DefaultIterableDiffer();
+  assert.ok(month.diff(grid.monthDays));
+  assert.ok(week.diff(grid.weekDays));
+  for (let check = 0; check < 100; check++) {
+    assert.strictEqual(month.diff(grid.monthDays), null);
+    assert.strictEqual(week.diff(grid.weekDays), null);
+  }
+  grid.selectedDate = new Date(2026, 10, 15);
+  assert.ok(month.diff(grid.monthDays));
+  assert.ok(week.diff(grid.weekDays));
+  assert.strictEqual(month.diff(grid.monthDays), null);
+  const key = grid.trackDay(0, grid.monthDays[0]);
+  assert.strictEqual(grid.trackDay(0, new Date(grid.monthDays[0])), key);
+});
+test('calendar event indexing preserves lists and refreshes after a move or timezone change', () => {
+  const { CalendarGridComponent } = require(path.join(root, 'pages/calendar/calendar-grid/calendar-grid.component.ts'));
+  const grid = new CalendarGridComponent();
+  const storage = global.localStorage;
+  let timezone = 'UTC';
+  global.localStorage = { getItem: key => key === 'user' ? JSON.stringify({ timezone }) : null };
+  try {
+    grid.events = [{ id: 'session:1', startAt: '2026-10-31T01:00:00Z' }];
+    const day = new Date(2026, 9, 31);
+    const list = grid.eventsForDate(day);
+    assert.strictEqual(list.length, 1);
+    assert.strictEqual(grid.eventsForDate(day), list);
+    assert.strictEqual(grid.eventsForHour(day, 1)[0], list[0]);
+    assert.strictEqual(grid.eventsForDate(new Date(2026, 9, 29)).length, 0);
+    grid.events = [{ ...grid.events[0], startAt: '2026-10-31T03:00:00Z' }];
+    assert.strictEqual(grid.eventsForHour(day, 1).length, 0);
+    assert.strictEqual(grid.eventsForHour(day, 3).length, 1);
+    timezone = 'America/Argentina/Buenos_Aires';
+    grid.events = [{ ...grid.events[0], startAt: '2026-10-31T01:00:00Z' }];
+    assert.strictEqual(grid.eventsForDate(day).length, 0);
+    assert.strictEqual(grid.eventsForHour(new Date(2026, 9, 30), 22).length, 1);
+  } finally { global.localStorage = storage; }
+});
+test('event blocks show each person and session label only once', () => {
+  const { CalendarGridComponent } = require(path.join(root, 'pages/calendar/calendar-grid/calendar-grid.component.ts'));
+  const { CalendarComponent } = require(path.join(root, 'pages/calendar/calendar.component.ts'));
+  const grid = new CalendarGridComponent();
+  const patient = { id: 5, firstName: 'Ana', lastName: 'Pérez' };
+  const therapist = { id: 8, firstName: 'Luis', lastName: 'Díaz' };
+  const event = { id: 'session:1', title: 'Consulta', patient, therapist, responsibleUsers: [therapist] };
+  assert.strictEqual(grid.eventPeople(event), 'Ana Pérez · Luis Díaz');
+  assert.strictEqual(grid.eventPeople({ ...event, title: 'Consulta · ANA PEREZ' }), 'Luis Díaz');
+  assert.strictEqual(grid.eventPeople({ ...event, title: 'Ana Perez · Luis Diaz' }), '');
+  const calendar = Object.create(CalendarComponent.prototype);
+  calendar.translate = { instant: (_, values) => 'Sesión ' + values.number };
+  assert.strictEqual(calendar.displayTitle({ ...event, sessionNumber: 1 }), 'Consulta · Sesión 1');
+  assert.strictEqual(calendar.displayTitle({ ...event, title: 'Sesión 1', sessionNumber: 1 }), 'Sesión 1');
+});
+test('calendar overflow indicator follows scrolling, content updates and resizing', () => {
+  const { CalendarOverflowDirective } = require(path.join(root, 'pages/calendar/calendar-grid/calendar-overflow.directive.ts'));
+  const classes = new Set();
+  const listeners = {};
+  const element = { scrollHeight: 400, clientHeight: 180, scrollTop: 0, firstElementChild: {},
+    addEventListener: (event, callback) => listeners[event] = callback,
+    removeEventListener: event => delete listeners[event] };
+  const previousObserver = window.ResizeObserver;
+  const previousMutation = global.MutationObserver;
+  const observers = [];
+  class Observer {
+    constructor(callback) { this.callback = callback; this.disconnected = false; observers.push(this); }
+    observe() {}
+    disconnect() { this.disconnected = true; }
+  }
+  window.ResizeObserver = Observer;
+  global.MutationObserver = Observer;
+  const directive = new CalendarOverflowDirective({ nativeElement: element }, {
+    addClass: (_, name) => classes.add(name), removeClass: (_, name) => classes.delete(name),
+  }, { runOutsideAngular: work => work() });
+  try {
+    directive.ngAfterViewInit();
+    assert.strictEqual(classes.has('has-more-events'), true);
+    element.scrollTop = 220;
+    listeners.scroll();
+    assert.strictEqual(classes.has('has-more-events'), false);
+    element.scrollHeight = 500;
+    observers[1].callback();
+    assert.strictEqual(classes.has('has-more-events'), true);
+    element.clientHeight = 500;
+    observers[0].callback();
+    assert.strictEqual(classes.has('has-more-events'), false);
+    directive.ngOnDestroy();
+    assert.strictEqual(listeners.scroll, undefined);
+    assert.ok(observers.every(observer => observer.disconnected));
+  } finally { window.ResizeObserver = previousObserver; global.MutationObserver = previousMutation; }
+});
+test('scrolling the event list does not create a calendar event and pointer drops still work', () => {
+  const { CalendarGridComponent } = require(path.join(root, 'pages/calendar/calendar-grid/calendar-grid.component.ts'));
+  const grid = new CalendarGridComponent();
+  const date = new Date();
+  const event = { button: 0, target: { closest: selector => selector === '.month-events-scroll' ? {} : null },
+    preventDefault: () => {}, stopPropagation: () => {} };
+  let creates = 0;
+  let drops = 0;
+  grid.createEvent.subscribe(() => creates++);
+  grid.eventDrop.subscribe(() => drops++);
+  grid.onCellMouseUp(event, date);
+  assert.strictEqual(creates, 0);
+  grid.pointerDraggedEvent = { id: 'session:1' };
+  grid.onCellMouseUp(event, date);
+  assert.strictEqual(drops, 1);
+  assert.strictEqual(creates, 0);
+  const template = fs.readFileSync(path.join(root, 'pages/calendar/calendar-grid/calendar-grid.component.html'), 'utf8');
+  assert.ok(!template.includes('slice:0:4'));
+});
+test('bundle questionnaires share a page until an authored page break, while each questionnaire can have internal pages', () => {
+  const { buildQuestionnairePages } = require(path.join(root, 'assessment-form/assessment-pages.ts'));
+  const first = { _id: 'q1', occurrenceId: 'one', sourceBundleId: 'package', screenId: 'page1',
+    questionGroups: [{ questions: [{ _id: 'a' }] }] };
+  const second = { _id: 'q2', occurrenceId: 'two', sourceBundleId: 'package', screenId: 'page1',
+    questionGroups: [{ questions: [{ _id: 'b' }] }] };
+  assert.strictEqual(buildQuestionnairePages([first, second]).length, 1);
+  assert.strictEqual(buildQuestionnairePages([first, { ...second, screenId: 'page2' }]).length, 2);
+  const internal = { ...first, sourceBundleId: undefined, screenId: undefined,
+    questionGroups: [...first.questionGroups, { pageBreakBefore: true, questions: [{ _id: 'c' }] }] };
+  assert.strictEqual(buildQuestionnairePages([internal]).length, 2);
+  assert.strictEqual(buildQuestionnairePages([{ ...internal, sourceBundleId: 'package', screenId: 'page1' },
+    { ...second, screenId: 'page2' }]).length, 3);
+});
+test('internal questionnaire pages compose with bundle pages, preserving occurrence IDs and matrix rows', () => {
+  const { buildQuestionnairePages } = require(path.join(root, 'assessment-form/assessment-pages.ts'));
+  const matrix = { label: 'Matrix', pageBreakBefore: true, uniqueQuestions: [{ subQuestions: [{ _id: 'm1' }, { _id: 'm2' }] }] };
+  const first = { _id: 'q1', occurrenceId: 'repeat1', sourceBundleId: 'bundle1', screenId: 'first', progressMode: 'PAGES',
+    questionGroups: [{ questions: [{ _id: 'a' }] }, matrix] };
+  const second = { _id: 'q2', occurrenceId: 'repeat2', sourceBundleId: 'bundle1', screenId: 'first',
+    questionGroups: [{ questions: [{ _id: 'b' }] }] };
+  const third = { ...second, occurrenceId: 'repeat3', screenId: 'second' };
+  const pages = buildQuestionnairePages([first, second, third]);
+  assert.strictEqual(pages.length, 3);
+  assert.strictEqual(pages[0].questionnaires[0].questionGroups[0].questions[0]._id, 'a');
+  assert.strictEqual(pages[1].questionnaires[0].questionGroups[0], matrix);
+  assert.deepStrictEqual(pages[1].questionnaires.map(q => q.occurrenceId), ['repeat1', 'repeat2']);
+  assert.strictEqual(pages[2].questionnaires[0].occurrenceId, 'repeat3');
+  assert.strictEqual(first.questionGroups.length, 2);
+  const standalone = buildQuestionnairePages([{ ...first, sourceBundleId: undefined, screenId: undefined,
+    questionGroups: [{ ...matrix, pageBreakBefore: true }] }]);
+  assert.strictEqual(standalone.length, 1, 'a break at the beginning must not create an empty page');
+  const repeated = buildQuestionnairePages([first, { ...first, occurrenceId: 'repeat2', screenId: 'other' }, first]);
+  assert.strictEqual(repeated.length, 6, 'noncontiguous bundle pages must never be merged');
+});
+test('read-only progress counts the actual pages of each bundle, including internal questionnaire breaks', () => {
+  const { QuestionnaireFormComponent } = require(path.join(root, 'assessment-form/questionnaire-form/questionnaire-form.component.ts'));
+  const component = Object.create(QuestionnaireFormComponent.prototype);
+  component.screens = [{ sourceBundleId: 'a' }, { sourceBundleId: 'a' }, { sourceBundleId: 'b' }];
+  component.currentScreen = component.screens[1];
+  assert.strictEqual(component.progressPage(), 2);
+  assert.strictEqual(component.progressTotal(), 2);
+  component.currentScreen = component.screens[2];
+  assert.strictEqual(component.progressPage(), 1);
+  assert.strictEqual(component.progressTotal(), 1);
+  const template = fs.readFileSync(path.join(root, 'assessment-form/questionnaire-form/questionnaire-form.component.html'), 'utf8');
+  assert.ok(!template.includes('nav-pills'));
+  assert.ok(!template.includes('nzShape="circle"'));
+});
+test('responsive VAS layout reserves the measured label space, preserving exact endpoints across screen widths', () => {
+  const { rangeLabelLayout } = require(path.join(root, 'assessment-form/question/question-type/range-question/range-layout.ts'));
+  for (const width of [240, 286, 320, 375, 768, 900]) {
+    for (const natural of [[38, 52], [180, 220], [38, 42, 60, 32, 58]]) {
+      const labels = natural.map((value, index) => ({ position: index / (natural.length - 1), row: 'above', width: value }));
+      const layout = rangeLabelLayout(width, labels);
+      const track = width - layout.left - layout.right;
+      assert.ok(track > width * 0.76, 'track should exceed the old fixed 76% width');
+      labels.forEach((label, index) => {
+        const center = layout.left + label.position * track;
+        assert.ok(center - layout.widths[index] / 2 >= -1);
+        assert.ok(center + layout.widths[index] / 2 <= width + 1);
+      });
+      assert.strictEqual(layout.left + track, width - layout.right);
+    }
+  }
+  const readable = rangeLabelLayout(288, [
+    { position: 0, row: 'above', width: 38, minWidth: 38 },
+    { position: 0.5, row: 'above', width: 80, minWidth: 80 },
+    { position: 1, row: 'above', width: 58, minWidth: 58 },
+  ]);
+  assert.strictEqual(readable.widths[1], 80, 'ordinary words should remain intact instead of breaking into narrow fragments');
+  const single = rangeLabelLayout(320, [{ position: 0.5, row: 'above', width: 200 }]);
+  assert.strictEqual(single.left, 16);
+  assert.strictEqual(single.right, 16);
+});
+test('VAS endpoint label centers use the same exact anchors as the scale endpoints', () => {
+  const { RangeQuestionComponent } = require(path.join(root, 'assessment-form/question/question-type/range-question/range-question.component.ts'));
+  const component = new RangeQuestionComponent({ nativeElement: {} });
+  component.question = { presentation: { min: 0, max: 100, labels: [
+    { value: 0, position: 'above', align: 'auto' }, { value: 50, position: 'above', align: 'center' },
+    { value: 100, position: 'above', align: 'auto' }] } };
+  assert.deepStrictEqual(component.config.labels.map(label => component.position(label)), [0, 50, 100]);
+  assert.deepStrictEqual(component.config.labels.map(label => component.alignment(label)), ['center', 'center', 'center']);
+
+});
+test('VAS opening and previewing do not store an implicit answer; zero and a deliberately chosen midpoint are saved', () => {
+  const { RangeQuestionComponent } = require(path.join(root, 'assessment-form/question/question-type/range-question/range-question.component.ts'));
+  const component = new RangeQuestionComponent({ nativeElement: {} });
+  component.question = { name: 'vas', label: 'VAS', presentation: { min: 0, max: 100, labels: [], gradient: 'none' } };
+  component.answer = { question: 'question-id', occurrenceId: 'repeat-id' };
+  const saved = [];
+  component.answerChange.subscribe(answer => saved.push({ ...answer }));
+  assert.strictEqual(component.value, 50);
+  assert.strictEqual(component.answered, false);
+  assert.strictEqual(saved.length, 0);
+  component.input('37.125');
+  assert.strictEqual(component.value, 37.125);
+  assert.strictEqual(component.answer.numberValue, undefined);
+  component.commit('50');
+  component.commit('50'); // native change and pointer-up must not double-submit
+  assert.strictEqual(saved.length, 1);
+  assert.strictEqual(saved[0].numberValue, 50);
+  component.commit('0');
+  assert.strictEqual(component.answered, true);
+  assert.strictEqual(component.value, 0);
+  assert.strictEqual(saved[1].question, 'question-id');
+  assert.strictEqual(saved[1].occurrenceId, 'repeat-id');
+});
+test('documented spreadsheet conditions preserve text codes, numeric comparisons and words containing or', () => {
+  const { SkipLogic } = require(path.join(root, 'assessment-form/skip-logic.ts'));
+  const questions = [{ _id: 'a', name: 'actividad', type: 'select_one' }, { _id: 'b', name: 'sintomas', type: 'select_multiple' },
+    { _id: 'c', name: 'dias', type: 'integer' }];
+  const answers = [{ question: 'a', textValue: 'si' }, { question: 'b', multipleChoiceValue: ['dolor'] }, { question: 'c', numberValue: 4 }];
+  for (const relevant of ["${actividad} = 'si'", "selected(${sintomas}, 'dolor')", '${dias} > 3', '${dias} < 5',
+    "${actividad} = 'no' or ${dias} > 3 and selected(${sintomas}, 'dolor')"]) {
+    assert.strictEqual(SkipLogic.create({ relevant }, questions, answers), true, relevant);
+  }
+  assert.strictEqual(SkipLogic.create({ relevant: "${actividad} = 'no'" }, questions, answers), false);
+});
+test('Likert matrices never merge lists with different answer codes just because their labels match', () => {
+  const previousClone = global.structuredClone;
+  global.structuredClone = value => JSON.parse(JSON.stringify(value));
+  try {
+    const { AssessmentFormComponent } = require(path.join(root, 'assessment-form/assessment-form.component.ts'));
+    let result;
+    const original = { questionnaireAssessment: { questionnaires: [{ _id: 'q', questionnaire: { language: 'es' }, questionGroups: [{
+      appearance: 'likert-matrix', questions: [{ _id: 'one', type: 'select_one', choices: [{ name: 'a', label: 'Same label' }] },
+        { _id: 'two', type: 'select_one', choices: [{ name: 'b', label: 'Same label' }] }],
+    }] }] } };
+    const component = new AssessmentFormComponent({ setAssessment: assessment => result = assessment }, { data: of({ assessment: original }) },
+      { setSupportedLanguages: () => {} });
+    const matrices = result.questionnaireAssessment.questionnaires[0].questionGroups[0].uniqueQuestions;
+    assert.strictEqual(matrices.length, 2);
+    assert.strictEqual(matrices[0].choices[0].name, 'a');
+    assert.strictEqual(matrices[1].choices[0].name, 'b');
+    assert.strictEqual(original.questionnaireAssessment.questionnaires[0].questionGroups[0].questions.length, 2);
+    if (component.ngOnDestroy) component.ngOnDestroy();
+  } finally { global.structuredClone = previousClone; }
+});
+test('reusing a VAS for another occurrence resets the preview instead of borrowing the previous response', () => {
+  const { RangeQuestionComponent } = require(path.join(root, 'assessment-form/question/question-type/range-question/range-question.component.ts'));
+  const component = new RangeQuestionComponent({ nativeElement: {} });
+  component.question = { _id: 'same-question', presentation: { min: 0, max: 100, labels: [] } };
+  component.answer = { question: 'same-question', occurrenceId: 'first', numberValue: 20 };
+  component.ngOnChanges();
+  component.input('75');
+  component.answer = { question: 'same-question', occurrenceId: 'second' };
+  component.ngOnChanges();
+  assert.strictEqual(component.answered, false);
+  assert.strictEqual(component.value, 50);
+  assert.strictEqual(component.answer.numberValue, undefined);
+});
+test('question inputs load the matching occurrence regardless of Angular input assignment order', () => {
+  const { QuestionComponent } = require(path.join(root, 'assessment-form/question/question.component.ts'));
+  const service = { questionnaireSnapshot: { occurrenceId: 'first' }, assessmentSnapshot: { questionnaireAssessment: { answers: [
+    { question: 'same-question', occurrenceId: 'first', numberValue: 20 },
+    { question: 'same-question', occurrenceId: 'second', numberValue: 80 },
+  ] } } };
+  const component = new QuestionComponent(service, {});
+  component.question = { _id: 'same-question', type: 'decimal' };
+  component.questionnaire = { _id: 'q', occurrenceId: 'second' };
+  assert.strictEqual(component.answer.numberValue, 80);
+  assert.strictEqual(component.answer.occurrenceId, 'second');
+  component.answerGiven.complete();
 });
 console.log(count + ' local regression checks passed');

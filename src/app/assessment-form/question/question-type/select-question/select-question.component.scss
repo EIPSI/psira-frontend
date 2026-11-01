@@ -1,25 +1,68 @@
-@import "../../../../../assets/scss/_variables";
-@import "../../../../../theme/theme-variables";
-
 .radio-group {
-  &,
+  display: block;
   .radio {
     display: block;
-  }
-
-  .radio {
-    margin: 0.6em 0;
-    border-radius: 0.25rem;
-    border: 1px solid $gray-300;
-    height: max-content;
-
-    &:before {
+    min-height: 48px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    border: 1px solid #d3deeb;
+    border-radius: 8px;
+    height: auto;
+    white-space: normal;
+    line-height: 1.6;
+    color: #263b50;
+    &::before {
       content: none;
-      display: none;
     }
-
+    &:hover {
+      background: #f2f7fd;
+      border-color: #3b6caa;
+    }
+    &:focus-within {
+      outline: 2px solid #3b6caa;
+      outline-offset: 2px;
+    }
     &.ant-radio-button-wrapper-checked {
-      border: 1px solid $app-green;
+      background: #eaf2fc;
+      border-color: #3b6caa;
+      color: #244e80;
+      font-weight: 600;
+    }
+    img {
+      max-width: 96px;
+      max-height: 96px;
+      display: block;
+      object-fit: contain;
+      margin-bottom: 8px;
+    }
+  }
+  &.cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    .radio {
+      flex: 1 1 180px;
+      margin: 0;
+    }
+  }
+  &.likert {
+    display: flex;
+    gap: 8px;
+    .radio {
+      flex: 1 1 0;
+      min-width: 0;
+      margin: 0;
+      padding: 12px 6px;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+@media (max-width: 480px) {
+  .radio-group.likert {
+    flex-wrap: wrap;
+    .radio {
+      flex-basis: 90px;
     }
   }
 }

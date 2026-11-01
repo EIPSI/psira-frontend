@@ -55,6 +55,9 @@ export interface CalendarPatient extends CalendarPerson {
 
 export interface CalendarAssessment {
   id: number;
+  name?: string;
+  note?: string;
+  createdAt?: string;
   questionnaireAssessmentId?: string;
   status: string;
   deliveryDate?: string;
@@ -251,6 +254,9 @@ export interface ClinicalSessionFollowUpVersion {
 }
 
 export interface ClinicalSessionFollowUpSettings {
+  departmentId?: number;
+  patientCaseManagerRoleCodes?: string[];
+  therapistSupervisorRoleCodes?: string[];
   id: number;
   editWindowDays: number;
   dashboardLookaheadDays: number;

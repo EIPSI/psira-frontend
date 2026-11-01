@@ -253,6 +253,9 @@ const updateClinicalSessionFollowUpSettings = gql`
   mutation($settings: UpdateClinicalSessionFollowUpSettingsInput!) {
     updateClinicalSessionFollowUpSettings(settings: $settings) {
       id
+      departmentId
+      patientCaseManagerRoleCodes
+      therapistSupervisorRoleCodes
       editWindowDays
       dashboardLookaheadDays
       updatedAt
